@@ -1,0 +1,23 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: commit-pinned-digest
+spec:
+  workspaces:
+    - name: source
+  params:
+    - name: dirty_flag
+  steps:
+    - name: commit-changes
+      image: registry.access.redhat.com/ubi8-minimal
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        DIRTY_FLAG="$(params.dirty_flag)"
+        echo $DIRTY_FLAG
+        if [ $DIRTY_FLAG == "true" ]; then
+          echo "Commit changes to temporary branch"
+        else
+          echo "Skipping commit"
+        fi

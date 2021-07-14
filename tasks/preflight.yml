@@ -1,0 +1,22 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: preflight
+spec:
+  results:
+    - name: log_output_file
+    - name: result_output_file
+  workspaces:
+    - name: source
+  steps:
+    - name: preflight-tests
+      image: registry.access.redhat.com/ubi8-minimal
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        echo "Testing"
+
+        touch output.log results.json
+        echo output.log | tee $(results.log_output_file.path)
+        echo results.json | tee $(results.result_output_file.path)
