@@ -1,0 +1,69 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: operator-validation
+spec:
+  params:
+    - name: bundle_path
+    - name: pyxis_url
+      default: https://catalog.redhat.com/api/containers
+    - name: organization
+      # TODO Remove this default. It should be specified by the pipeline
+      default: redhat-marketplace
+  results:
+    - name: package_name
+    - name: bundle_version
+    - name: bundle_ocp_version_range
+    - name: bundle_ocp_latest_supported_version
+    - name: certification_project_id
+  workspaces:
+    - name: source
+  steps:
+    - name: operator-sdk-validation
+      image: registry.access.redhat.com/ubi8-minimal
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        echo "Running operator-sdk-validation"
+    - name: supported-version-check
+      image: quay.io/amisstea/operator-pipeline-tools:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        echo "Checking availability of com.redhat.openshift.versions annotation"
+        BUNDLE_PATH=$(realpath $(params.bundle_path))
+
+        # Get the targetted OCP version range
+        ANNOTATIONS_PATH="$BUNDLE_PATH/metadata/annotations.yaml"
+        OCP_VERSION_RANGE=$(cat $ANNOTATIONS_PATH | yq -r '.annotations."com.redhat.openshift.versions"')
+        echo $OCP_VERSION_RANGE | tee $(results.bundle_ocp_version_range.path)
+
+        curl -L -o indices.json \
+          "$(params.pyxis_url)/v1/operators/indices?organization=$(params.organization)&ocp_versions_range=$OCP_VERSION_RANGE"
+
+        OCP_LATEST_SUPPORTED_VERSION=$(cat indices.json| jq -r ".data[].ocp_version" | sort | tail -n 1)
+        echo $OCP_LATEST_SUPPORTED_VERSION | tee $(results.bundle_ocp_latest_supported_version.path)
+
+    - name: certification-project-check
+      image: registry.access.redhat.com/ubi8-minimal
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        echo "Checking availability of cert project identifier"
+
+        echo "5f0e4759dd19c7063a78b1f8" | tee $(results.certification_project_id.path)
+
+    - name: bundle-parse
+      image: quay.io/amisstea/operator-pipeline-tools:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        BUNDLE_PATH=$(realpath $(params.bundle_path))
+
+        echo -n $BUNDLE_PATH | rev | cut -d '/' -f 2 | tr -d $'\n' | rev | tee $(results.package_name.path)
+        echo -n $BUNDLE_PATH | rev | cut -d '/' -f 1 | tr -d $'\n' | rev | tee $(results.bundle_version.path)

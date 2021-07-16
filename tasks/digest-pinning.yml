@@ -1,0 +1,25 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: digest-pinning
+spec:
+  params:
+    - name: bundle_path
+  results:
+    - name: dirty_flag
+  workspaces:
+    - name: source
+  steps:
+    - name: pin-digest
+      image: quay.io/containerbuildsystem/operator-manifest:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        BUNDLE_PATH=$(realpath $(params.bundle_path))
+        ls -l $BUNDLE_PATH
+        operator-manifest pin $BUNDLE_PATH
+
+        echo "true" | tee $(results.dirty_flag.path)

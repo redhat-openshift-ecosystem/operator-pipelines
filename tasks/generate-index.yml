@@ -1,0 +1,34 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: generate-index
+spec:
+  params:
+    - name: bundle_image
+  results:
+    - name: index_dockerfile
+  workspaces:
+    - name: source
+  steps:
+    - name: generate
+      image: quay.io/amisstea/operator-pipeline-tools:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        # TODO should --from-index be specified?
+        # --permissive is used to overcome errors about the missing bundles
+        # this one replaces.
+        opm index add \
+          --bundles $(params.bundle_image) \
+          --container-tool none \
+          --out-dockerfile Dockerfile.index \
+          --generate \
+          --skip-tls \
+          --permissive
+
+        ls -l
+        cat Dockerfile.index
+        echo Dockerfile.index | tee $(results.index_dockerfile.path)

@@ -1,0 +1,25 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ocp-environment-cleanup
+spec:
+  params:
+    - name: package_name
+    - name: index_image
+  workspaces:
+    - name: source
+  steps:
+    - name: uninstall-operator
+      image: quay.io/amisstea/operator-pipeline-tools:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        echo "Uninstalling operator from a cluster: $(params.package_name)"
+
+    - name: remove-index
+      image: registry.access.redhat.com/ubi8-minimal
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        echo "Removing custom index from ocp: $(params.index_image)"

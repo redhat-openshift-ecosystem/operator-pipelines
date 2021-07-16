@@ -1,0 +1,30 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: open-pull-request
+spec:
+  params:
+    - name: log_url
+    - name: result_url
+    - name: package_name
+    - name: bundle_version
+    - name: certification_project_id
+  results:
+    - name: pr_url
+  workspaces:
+    - name: source
+  steps:
+    - name: open-pull-request
+      image: registry.access.redhat.com/ubi8-minimal
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        echo "Creating a new pull request"
+        echo "Subject: New operator bundle - $(params.package_name):$(params.bundle_version)"
+        echo "Text:"
+        echo "  Test results URL: $(params.result_url)"
+        echo "  Test log URL: $(params.log_url)"
+        echo "  Certification project ID: $(params.certification_project_id)"
+
+        echo https://github.com/foo/pulls/123 | tee $(results.pr_url.path)
