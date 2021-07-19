@@ -13,6 +13,7 @@ spec:
       default: default-route-openshift-image-registry.apps-crc.testing
   workspaces:
     - name: pipeline
+    - name: ssh-dir
   tasks:
     - name: checkout
       taskRef:
@@ -27,6 +28,8 @@ spec:
         - name: output
           workspace: pipeline
           subPath: src
+        - name: ssh-directory
+          workspace: ssh-dir
 
     - name: digest-pinning
       runAfter:
