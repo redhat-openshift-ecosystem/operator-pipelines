@@ -6,12 +6,23 @@ metadata:
 spec:
   params:
     - name: bundle_path
+  results:
+    - name: bundle_dockerfile_path
   workspaces:
     - name: source
   steps:
     - name: generate-dockerfile
-      image: registry.access.redhat.com/ubi8-minimal
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
-        echo "This step will generate a bundle dockerfile"
+        DOCKERFILE_PATH=Dockerfile
+
+        python /home/user/scripts/bundle-dockerfile.py \
+          --bundle-path $(params.bundle_path) \
+          --destination $DOCKERFILE_PATH \
+          --verbose
+
+        cat $DOCKERFILE_PATH
+
+        echo $DOCKERFILE_PATH | tee $(results.bundle_dockerfile_path.path)
