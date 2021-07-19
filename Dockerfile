@@ -24,6 +24,8 @@ WORKDIR /home/user
 COPY requirements.txt ./
 COPY scripts/ scripts/
 
+ENV PATH="/home/user/scripts:${PATH}"
+
 RUN pip3 install -r requirements.txt
 
 # set dir ownership
