@@ -4,6 +4,8 @@ kind: Task
 metadata:
   name: placeholder-run-ci-pipeline
 spec:
+  params:
+    - name: result_resp_code
   steps:
     - name: placeholder-run-ci-pipeline
       image: registry.access.redhat.com/ubi8-minimal
@@ -12,3 +14,8 @@ spec:
         echo "pipeline placeholder-
         will be filled with the templating system.
         See https://projects.engineering.redhat.com/browse/ISV-903"
+
+        RESULT_RESP_CODE ="$(params.result_resp_code)"
+        if [ $RESULT_RESP_CODE == "404" ]; then
+          echo "There is no preflight test results in Pyxis, running the preflight tests"
+        fi

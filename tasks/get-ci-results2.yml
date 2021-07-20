@@ -5,12 +5,11 @@ metadata:
   name: get-ci-results2
 spec:
   params:
+    - name: result_resp_code
     - name: certification_hash
     - name: pyxis_url
     - name: cert_project_id
     - name: operator_version
-  results:
-    - name: result_resp_code
   workspaces:
     - name: results
   steps:
@@ -21,4 +20,8 @@ spec:
         #! /usr/bin/env bash
         # Curl Pyxis results endpoint
         # If results exists, store them in the workspace, if not- fail
-        echo "200" | tee $(results.result_resp_code.path)
+
+        RESULT_RESP_CODE ="$(params.result_resp_code)"
+        if [ $RESULT_RESP_CODE == "404" ]; then
+          echo "Trying to retrieve the preflight results again.."
+        fi

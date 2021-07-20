@@ -14,6 +14,10 @@ spec:
     - name: bundle_path
     - name: preflight_latest_version
     - name: ci_latest_version
+    - name: internal_registry_url
+      default: default-route-openshift-image-registry.apps-crc.testing
+    - name: quay_url
+      default: quay.io
   workspaces:
     - name: repository
     - name: results
@@ -62,6 +66,19 @@ spec:
           value: "$(tasks.submission-validation.results.operator_name)"
 
     # additional checks
+    - name: yaml-lint
+      runAfter:
+        - reserve-operator-name
+      taskRef:
+        name: yaml-lint
+      params:
+        - name: args
+          value: ["-d {extends: relaxed, rules: {line-length: {max: 180}}}", "$(params.bundle_path)"]
+      workspaces:
+        - name: shared-workspace
+          workspace: repository
+          subPath: src
+
     - name: digest-pinning
       runAfter:
         - reserve-operator-name
@@ -144,14 +161,6 @@ spec:
           workspace: results
           subPath: results
 
-    # If we got the CI pipeline results- rebuild images
-    - name: placeholder-rebuild-images
-      runAfter:
-        - get-ci-results1
-      taskRef:
-        name: placeholder-rebuild-images
-
-
     # If we didn't got the CI pipeline results- run pipeline
     # and try to retrieve them again
     - name: placeholder-run-ci-pipeline
@@ -159,6 +168,9 @@ spec:
         - get-ci-results1
       taskRef:
         name: placeholder-run-ci-pipeline
+      params:
+        - name: result_resp_code
+          value: "$(tasks.get-ci-results1.results.result_resp_code)"
 
     - name: get-ci-results2
       runAfter:
@@ -166,6 +178,8 @@ spec:
       taskRef:
         name: get-ci-results2
       params:
+        - name: result_resp_code
+          value: "$(tasks.get-ci-results1.results.result_resp_code)"
         - name: pyxis_url
           value: $(params.pyxis_url)
         - name: certification_hash
@@ -179,7 +193,7 @@ spec:
           workspace: results
           subPath: results
 
-    # Got results- verify them
+    # Verify the CI results
     - name: verify-ci-results
       runAfter:
         - get-ci-results2
@@ -196,6 +210,18 @@ spec:
           workspace: results
           subPath: results
 
+    # Rebuild images.
+    # It's a placeholder, as we are going to use the templating system to use
+    # part of the CI pipeline.
+    - name: placeholder-rebuild-images
+      runAfter:
+        - get-ci-results1
+      taskRef:
+        name: placeholder-rebuild-images
+      params:
+        - name: internal_registry_url
+          value: $(params.internal_registry_url)
+
     # merge PR
     - name: merge-pr
       runAfter:
@@ -209,3 +235,9 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+
+  # Finally- clean up
+  finally:
+    - name: cleanup
+      taskRef:
+        name: cleanup
