@@ -16,6 +16,10 @@ RUN dnf update -y && \
     python3-devel && \
     dnf clean all
 
+RUN curl -LO https://github.com/operator-framework/operator-sdk/releases/download/v1.8.1/operator-sdk_linux_amd64 && \
+    chmod +x operator-sdk_linux_amd64 && \
+    mv operator-sdk_linux_amd64 /usr/local/bin/operator-sdk
+
 RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
 WORKDIR /home/user
