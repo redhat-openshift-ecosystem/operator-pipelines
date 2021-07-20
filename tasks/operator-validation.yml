@@ -21,13 +21,13 @@ spec:
     - name: source
   steps:
     - name: operator-sdk-validation
-      image: registry.access.redhat.com/ubi8-minimal
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
-        echo "Running operator-sdk-validation"
+        operator-sdk bundle validate $(params.bundle_path)
     - name: supported-version-check
-      image: quay.io/amisstea/operator-pipeline-tools:latest
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
@@ -48,16 +48,27 @@ spec:
         echo $OCP_LATEST_SUPPORTED_VERSION | tee $(results.bundle_ocp_latest_supported_version.path)
 
     - name: certification-project-check
-      image: registry.access.redhat.com/ubi8-minimal
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
         echo "Checking availability of cert project identifier"
 
-        echo "5f0e4759dd19c7063a78b1f8" | tee $(results.certification_project_id.path)
+        BUNDLE_PATH=$(realpath $(params.bundle_path))
+
+        CI_FILE_PATH="$BUNDLE_PATH/ci.yaml"
+
+        CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id')
+
+        if [ -z $CERT_PROJECT_ID ]; then
+          echo "Certification project ID is missing in ci.yaml file (cert_project_id)"
+          exit 1
+        fi
+
+        echo $CERT_PROJECT_ID | tee $(results.certification_project_id.path)
 
     - name: bundle-parse
-      image: quay.io/amisstea/operator-pipeline-tools:latest
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
