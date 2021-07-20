@@ -46,7 +46,6 @@ tkn pipeline start operator-ci-pipeline \
   --param git_revision=master \
   --param bundle_path=operators/kogito-operator/1.6.0 \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=pipeline,volumeClaimTemplateFile=test/workspace-template.yml \
   --workspace name=ssh-dir,secret=my-ssh-credentials \
   --showlog
 ```
