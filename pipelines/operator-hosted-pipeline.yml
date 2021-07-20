@@ -141,6 +141,7 @@ spec:
     # Try to retrieve results
     - name: get-ci-results1
       runAfter:
+      - yaml-lint
       - verify-pinned-digest
       - hash-submission-content
       - verify-changed-directories
@@ -197,7 +198,6 @@ spec:
     - name: verify-ci-results
       runAfter:
         - get-ci-results2
-        - placeholder-rebuild-images
       taskRef:
         name: verify-ci-results
       params:
@@ -215,7 +215,7 @@ spec:
     # part of the CI pipeline.
     - name: placeholder-rebuild-images
       runAfter:
-        - get-ci-results1
+        - verify-ci-results
       taskRef:
         name: placeholder-rebuild-images
       params:
@@ -225,7 +225,7 @@ spec:
     # merge PR
     - name: merge-pr
       runAfter:
-        - verify-ci-results
+        - placeholder-rebuild-images
       taskRef:
         name: merge-pr
       params:
