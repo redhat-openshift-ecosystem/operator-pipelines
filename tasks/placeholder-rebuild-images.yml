@@ -14,6 +14,6 @@ spec:
       script: |
         #! /usr/bin/env bash
         echo "rebuild and push bundle and index placeholder-
-        will be filled with the templating system.
-        See https://projects.engineering.redhat.com/browse/ISV-903"
+        will be filled with the CI pipeline tasks.
+        See https://projects.engineering.redhat.com/browse/ISV-904"
 
