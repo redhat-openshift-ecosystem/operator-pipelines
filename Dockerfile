@@ -11,6 +11,7 @@ USER root
 RUN dnf update -y && \
     dnf install -y \
     git \
+    jq \
     openssl-devel \
     pip \
     python3-devel && \
