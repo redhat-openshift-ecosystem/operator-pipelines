@@ -14,4 +14,3 @@ spec:
         # GET request to Hydra via cert_project_id
         # Print checklist points
         echo "ok, 200"
-

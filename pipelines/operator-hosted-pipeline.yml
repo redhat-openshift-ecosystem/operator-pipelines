@@ -152,12 +152,12 @@ spec:
     # Try to retrieve results
     - name: get-ci-results1
       runAfter:
-      - operator-validation
-      - yaml-lint
-      - verify-pinned-digest
-      - content-hash
-      - verify-changed-directories
-      - query-publishing-checklist
+        - operator-validation
+        - yaml-lint
+        - verify-pinned-digest
+        - content-hash
+        - verify-changed-directories
+        - query-publishing-checklist
       taskRef:
         name: get-ci-results1
       params:
