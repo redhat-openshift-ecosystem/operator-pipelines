@@ -1,5 +1,8 @@
 # Operator pipelines
 
+## Local setup
+To create local cluster for sake of testing the pipelines, see [local-dev.md](docs/local-dev.md)
+
 ## Operator CI pipeline
 
 Operator CI pipeline is a pipeline that can be triggered by partner on on-premise
@@ -49,11 +52,17 @@ tkn pipeline start operator-ci-pipeline \
 ```
 
 ## Operator Hosted pipeline
+The Hosted Operator Certification Pipeline is used as a validation of the operator
+bundles. It’s an additional (to CI pipeline) layer of validation that has to run within
+the Red Hat infrastructure. It contains multiple steps from the CI pipeline.
 
 To trigger a Hosted pipeline follow steps below: 
 ```bash
 oc apply -R -f pipelines/operator-hosted-pipeline.yml
 oc apply -R -f tasks
+
+# Install external yaml-lint task
+curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
 
 tkn pipeline start operator-hosted-pipeline \
   --param git_pr_branch=test \
@@ -67,6 +76,5 @@ tkn pipeline start operator-hosted-pipeline \
   --param ci_latest_version=1.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=ssh-dir,secret=my-ssh-credentials \
   --showlog
 ```
