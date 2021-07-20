@@ -83,10 +83,23 @@ spec:
           workspace: pipeline
           subPath: src
 
-    - name: dockerfile-creation
+    - name: content-hash
       runAfter:
         - validation
         - yaml-lint
+      taskRef:
+        name: content-hash
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: dockerfile-creation
+      runAfter:
+        - content-hash
       taskRef:
         name: dockerfile-creation
       params:
