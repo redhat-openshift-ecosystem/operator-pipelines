@@ -64,7 +64,7 @@ spec:
         name: yaml-lint
       params:
         - name: args
-          value: ["-d {extends: relaxed, rules: {line-length: {max: 180}}}", "$(params.bundle_path)"]
+          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}}}", "$(params.bundle_path)"]
       workspaces:
         - name: shared-workspace
           workspace: pipeline
