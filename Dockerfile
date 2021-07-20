@@ -10,6 +10,7 @@ USER root
 
 RUN dnf update -y && \
     dnf install -y \
+    findutils \
     git \
     jq \
     openssl-devel \
