@@ -21,7 +21,7 @@ spec:
         # Curl Pyxis results endpoint
         # If results exists, store them in the workspace, if not- fail
 
-        RESULT_RESP_CODE ="$(params.result_resp_code)"
-        if [ $RESULT_RESP_CODE == "404" ]; then
+        RESULT_RESP_CODE="$(params.result_resp_code)"
+        if [ "$RESULT_RESP_CODE" == "404" ]; then
           echo "Trying to retrieve the preflight results again.."
         fi

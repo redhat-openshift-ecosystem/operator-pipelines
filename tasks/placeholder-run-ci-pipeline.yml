@@ -12,10 +12,11 @@ spec:
       script: |
         #! /usr/bin/env bash
         echo "pipeline placeholder-
-        will be filled with the templating system.
-        See https://projects.engineering.redhat.com/browse/ISV-903"
+        will be filled with the CI pipeline tasks.
+        See https://projects.engineering.redhat.com/browse/ISV-904"
 
-        RESULT_RESP_CODE ="$(params.result_resp_code)"
-        if [ $RESULT_RESP_CODE == "404" ]; then
+        RESULT_RESP_CODE="$(params.result_resp_code)"
+        echo $RESULT_RESP_CODE
+        if [ "$RESULT_RESP_CODE" == "404" ]; then
           echo "There is no preflight test results in Pyxis, running the preflight tests"
         fi

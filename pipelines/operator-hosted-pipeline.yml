@@ -66,6 +66,19 @@ spec:
           value: "$(tasks.submission-validation.results.operator_name)"
 
     # additional checks
+    - name: operator-validation
+      runAfter:
+        - reserve-operator-name
+      taskRef:
+        name: operator-validation
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     - name: yaml-lint
       runAfter:
         - reserve-operator-name
@@ -141,6 +154,7 @@ spec:
     # Try to retrieve results
     - name: get-ci-results1
       runAfter:
+      - operator-validation
       - yaml-lint
       - verify-pinned-digest
       - hash-submission-content
