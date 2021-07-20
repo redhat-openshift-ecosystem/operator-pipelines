@@ -13,4 +13,3 @@ spec:
         #! /usr/bin/env bash
         # POST request to Pyxis
         echo "ok, 200"
-
