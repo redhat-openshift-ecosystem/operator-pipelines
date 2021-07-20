@@ -1,0 +1,21 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: verify-ci-results
+spec:
+  params:
+    - name: preflight_latest_version
+    - name: ci_latest_version
+  workspaces:
+    - name: results
+  steps:
+    - name: verify-ci-results
+      image: registry.access.redhat.com/ubi8-minimal
+      workingDir: $(workspaces.results.path)
+      script: |
+        #! /usr/bin/env bash
+        # Did the tests pass?
+        # did preflight/ CI have the latest version?
+        # If results exists, store them in the workspace
+        # In case of failure- comment on the PR with tailored support link

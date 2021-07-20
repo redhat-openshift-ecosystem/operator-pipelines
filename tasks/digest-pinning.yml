@@ -16,10 +16,10 @@ spec:
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
-        set -xe
+        # set -xe
 
-        BUNDLE_PATH=$(realpath $(params.bundle_path))
-        ls -l $BUNDLE_PATH
-        operator-manifest pin $BUNDLE_PATH
+        # BUNDLE_PATH=$(realpath $(params.bundle_path))
+        # ls -l $BUNDLE_PATH
+        # operator-manifest pin $BUNDLE_PATH
 
         echo "true" | tee $(results.dirty_flag.path)

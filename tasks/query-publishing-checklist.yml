@@ -1,0 +1,17 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: query-publishing-checklist
+spec:
+  params:
+    - name: cert_project_id
+  steps:
+    - name: reserve-operator-name
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        # GET request to Hydra via cert_project_id
+        # Print checklist points
+        echo "ok, 200"
+
