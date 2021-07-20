@@ -4,6 +4,10 @@ kind: Task
 metadata:
   name: placeholder-rebuild-images
 spec:
+  params:
+    - name: internal_registry_url
+  results:
+    - name: image_with_tag
   steps:
     - name: placeholder-rebuild-images
       image: registry.access.redhat.com/ubi8-minimal
@@ -12,3 +16,4 @@ spec:
         echo "rebuild and push bundle and index placeholder-
         will be filled with the templating system.
         See https://projects.engineering.redhat.com/browse/ISV-903"
+

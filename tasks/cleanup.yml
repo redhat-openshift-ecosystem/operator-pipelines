@@ -1,0 +1,13 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cleanup
+spec:
+  steps:
+    - name: cleanup
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        echo "cleaning up internal registries"
+        echo "cleaning up other resources"
