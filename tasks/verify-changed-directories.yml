@@ -1,0 +1,19 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: verify-changed-directories
+spec:
+  params:
+    - name: operator_name
+    - name: operator_version
+    - name: git_pr_branch
+  steps:
+    - name: get-cert-project-id
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        # curl https://api.github.com/repos/operator-framework/community-operators/compare/master...$(params.git_pr_branch)
+        # Operator name and version should correspond to the ancestor directory names. A new release directory should be created.
+        # There should be no additional changes.
+        echo "ok"

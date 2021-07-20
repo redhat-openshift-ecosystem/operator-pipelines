@@ -1,0 +1,24 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-ci-results1
+spec:
+  params:
+    - name: certification_hash
+    - name: pyxis_url
+    - name: cert_project_id
+    - name: operator_version
+  results:
+    - name: result_resp_code
+  workspaces:
+    - name: results
+  steps:
+    - name: get-ci-results
+      image: registry.access.redhat.com/ubi8-minimal
+      workingDir: $(workspaces.results.path)
+      script: |
+        #! /usr/bin/env bash
+        # Curl Pyxis results endpoint
+        # If results exists, store them in the workspace
+        echo "200" | tee $(results.result_resp_code.path)

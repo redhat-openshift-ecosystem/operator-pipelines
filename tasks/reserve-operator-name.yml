@@ -1,0 +1,16 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: reserve-operator-name
+spec:
+  params:
+    - name: operator_name
+  steps:
+    - name: reserve-operator-name
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        # POST request to Pyxis
+        echo "ok, 200"
+

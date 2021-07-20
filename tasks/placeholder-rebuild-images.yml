@@ -1,0 +1,14 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: placeholder-rebuild-images
+spec:
+  steps:
+    - name: placeholder-rebuild-images
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        echo "rebuild and push bundle and index placeholder-
+        will be filled with the templating system.
+        See https://projects.engineering.redhat.com/browse/ISV-903"

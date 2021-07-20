@@ -1,0 +1,211 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: operator-hosted-pipeline
+spec:
+  params:
+    - name: git_pr_branch
+    - name: git_pr_title
+    - name: git_pr_url
+    - name: git_repo_url
+    - name: git_username
+    - name: pyxis_url
+    - name: bundle_path
+    - name: preflight_latest_version
+    - name: ci_latest_version
+  workspaces:
+    - name: repository
+    - name: results
+  tasks:
+    # Git clone
+    - name: checkout
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      params:
+        - name: url
+          value: $(params.git_repo_url)
+        - name: revision
+          value: $(params.git_pr_branch)
+      workspaces:
+        - name: output
+          workspace: repository
+          subPath: src
+
+    # Validate submission
+    - name: submission-validation
+      runAfter:
+        - checkout
+      taskRef:
+        name: submission-validation
+      params:
+        - name: git_username
+          value: $(params.git_username)
+        - name: git_pr_title
+          value: $(params.git_pr_title)
+        - name: pyxis_url
+          value: $(params.pyxis_url)
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # reserve operator name
+    - name: reserve-operator-name
+      runAfter:
+        - submission-validation
+      taskRef:
+        name: reserve-operator-name
+      params:
+        - name: operator_name
+          value: "$(tasks.submission-validation.results.operator_name)"
+
+    # additional checks
+    - name: digest-pinning
+      runAfter:
+        - reserve-operator-name
+      taskRef:
+        name: digest-pinning
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: verify-pinned-digest
+      runAfter:
+        - digest-pinning
+      taskRef:
+        name: verify-pinned-digest
+      params:
+        - name: dirty_flag
+          value: "$(tasks.digest-pinning.results.dirty_flag)"
+
+    - name: hash-submission-content
+      runAfter:
+        - reserve-operator-name
+      taskRef:
+        name: hash-submission-content
+      params:
+        - name: operator_name
+          value: "$(tasks.submission-validation.results.operator_name)"
+        - name: operator_version
+          value: "$(tasks.submission-validation.results.operator_version)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: verify-changed-directories
+      runAfter:
+        - reserve-operator-name
+      taskRef:
+        name: verify-changed-directories
+      params:
+        - name: operator_name
+          value: "$(tasks.submission-validation.results.operator_name)"
+        - name: operator_version
+          value: "$(tasks.submission-validation.results.operator_version)"
+        - name: git_pr_branch
+          value: $(params.git_pr_branch)
+
+    - name: query-publishing-checklist
+      runAfter:
+        - reserve-operator-name
+      taskRef:
+        name: query-publishing-checklist
+      params:
+        - name: cert_project_id
+          value: "$(tasks.submission-validation.results.cert_project_id)"
+
+    # Try to retrieve results
+    - name: get-ci-results1
+      runAfter:
+      - verify-pinned-digest
+      - hash-submission-content
+      - verify-changed-directories
+      - query-publishing-checklist
+      taskRef:
+        name: get-ci-results1
+      params:
+        - name: pyxis_url
+          value: $(params.pyxis_url)
+        - name: certification_hash
+          value: "$(tasks.hash-submission-content.results.certification_hash)"
+        - name: cert_project_id
+          value: "$(tasks.submission-validation.results.cert_project_id)"
+        - name: operator_version
+          value: "$(tasks.submission-validation.results.operator_version)"
+      workspaces:
+        - name: results
+          workspace: results
+          subPath: results
+
+    # If we got the CI pipeline results- rebuild images
+    - name: placeholder-rebuild-images
+      runAfter:
+        - get-ci-results1
+      taskRef:
+        name: placeholder-rebuild-images
+
+
+    # If we didn't got the CI pipeline results- run pipeline
+    # and try to retrieve them again
+    - name: placeholder-run-ci-pipeline
+      runAfter:
+        - get-ci-results1
+      taskRef:
+        name: placeholder-run-ci-pipeline
+
+    - name: get-ci-results2
+      runAfter:
+        - placeholder-run-ci-pipeline
+      taskRef:
+        name: get-ci-results2
+      params:
+        - name: pyxis_url
+          value: $(params.pyxis_url)
+        - name: certification_hash
+          value: "$(tasks.hash-submission-content.results.certification_hash)"
+        - name: cert_project_id
+          value: "$(tasks.submission-validation.results.cert_project_id)"
+        - name: operator_version
+          value: "$(tasks.submission-validation.results.operator_version)"
+      workspaces:
+        - name: results
+          workspace: results
+          subPath: results
+
+    # Got results- verify them
+    - name: verify-ci-results
+      runAfter:
+        - get-ci-results2
+        - placeholder-rebuild-images
+      taskRef:
+        name: verify-ci-results
+      params:
+        - name: preflight_latest_version
+          value: $(params.preflight_latest_version)
+        - name: ci_latest_version
+          value: $(params.ci_latest_version)
+      workspaces:
+        - name: results
+          workspace: results
+          subPath: results
+
+    # merge PR
+    - name: merge-pr
+      runAfter:
+        - verify-ci-results
+      taskRef:
+        name: merge-pr
+      params:
+        - name: git_pr_url
+          value: $(params.git_pr_url)
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src

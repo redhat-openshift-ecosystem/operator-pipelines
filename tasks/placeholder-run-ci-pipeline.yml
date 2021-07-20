@@ -1,0 +1,14 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: placeholder-run-ci-pipeline
+spec:
+  steps:
+    - name: placeholder-run-ci-pipeline
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        echo "pipeline placeholder-
+        will be filled with the templating system.
+        See https://projects.engineering.redhat.com/browse/ISV-903"

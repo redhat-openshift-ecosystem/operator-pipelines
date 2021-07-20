@@ -1,0 +1,17 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: merge-pr
+spec:
+  params:
+    - name: git_pr_url
+  workspaces:
+    - name: source
+  steps:
+    - name: merge-pr
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        # Curl to github API
+        echo "200"

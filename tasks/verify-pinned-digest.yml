@@ -1,0 +1,19 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: verify-pinned-digest
+spec:
+  params:
+    - name: dirty_flag
+  steps:
+    - name: check-dirty-flag
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        DIRTY_FLAG="$(params.dirty_flag)"
+        echo $DIRTY_FLAG
+        if [ $DIRTY_FLAG == "true" ]; then
+          echo "There are unpinned images digests!"
+          # todo: fail this step
+        fi
