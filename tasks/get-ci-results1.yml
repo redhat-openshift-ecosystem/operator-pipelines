@@ -5,7 +5,7 @@ metadata:
   name: get-ci-results1
 spec:
   params:
-    - name: certification_hash
+    - name: md5sum
     - name: pyxis_url
     - name: cert_project_id
     - name: operator_version
