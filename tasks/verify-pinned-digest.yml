@@ -15,5 +15,5 @@ spec:
         echo $DIRTY_FLAG
         if [ $DIRTY_FLAG == "true" ]; then
           echo "There are unpinned images digests!"
-          # todo: fail this step
+          exit 1
         fi
