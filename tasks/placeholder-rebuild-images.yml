@@ -5,7 +5,7 @@ metadata:
   name: placeholder-rebuild-images
 spec:
   params:
-    - name: quay_url
+    - name: registry_url
   results:
     - name: image_with_tag
   steps:
