@@ -60,8 +60,11 @@ To trigger a Hosted pipeline follow steps below:
 oc apply -R -f pipelines/operator-hosted-pipeline.yml
 oc apply -R -f tasks
 
-# Install external yaml-lint task
+# Install external tasks:
+# yaml-lint
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
+# skopeo-copy
+curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/skopeo-copy/0.1/skopeo-copy.yaml | oc apply -f -
 
 tkn pipeline start operator-hosted-pipeline \
   --param git_pr_branch=test \

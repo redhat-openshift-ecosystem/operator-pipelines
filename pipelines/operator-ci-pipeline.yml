@@ -110,6 +110,9 @@ spec:
           workspace: pipeline
           subPath: src
 
+    # Bundle Image (Operator Bundle) is a container image that stores
+    # Kubernetes manifests and metadata associated with an operator.
+    # A bundle is meant to represent a specific version of an operator on cluster.
     - name: build-bundle
       runAfter:
         - dockerfile-creation
@@ -130,6 +133,8 @@ spec:
           workspace: pipeline
           subPath: src
 
+    # Index image contains a record of bundle images from which
+    # manifests could be extract in order to install an operator.
     - name: generate-index
       runAfter:
         - build-bundle
