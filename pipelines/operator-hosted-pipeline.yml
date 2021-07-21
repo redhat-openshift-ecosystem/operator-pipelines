@@ -222,21 +222,79 @@ spec:
           subPath: results
 
     # Rebuild images.
-    # It's a placeholder, as we are going to use the templating system to use
-    # part of the CI pipeline.
-    - name: placeholder-rebuild-images
+    # Those steps are also a part of the CI pipeline.
+    - name: dockerfile-creation
       runAfter:
         - verify-ci-results
       taskRef:
-        name: placeholder-rebuild-images
+        name: dockerfile-creation
       params:
-        - name: registry_url
-          value: $(params.registry_url)
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: build-bundle
+      runAfter:
+        - dockerfile-creation
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      params:
+        - name: IMAGE
+          value: &bundleImage "$(params.registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+        - name: CONTEXT
+          value: "$(params.bundle_path)"
+        # TODO TLS verification disabled for demo purposes
+        - &buildahNoTlsVerify
+          name: TLSVERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: generate-index
+      runAfter:
+        - build-bundle
+      taskRef:
+        name: generate-index
+      params:
+        - name: bundle_image
+          value: *bundleImage
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: build-index
+      runAfter:
+        - generate-index
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      params:
+        - name: IMAGE
+          value: &bundleIndexImage "$(params.registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+        - name: CONTEXT
+          value: "$(params.bundle_path)"
+        # - name: DOCKERFILE
+        #   value: "Dockerfile.index"
+        # TODO TLS verification disabled for demo purposes
+        - &buildahNoTlsVerify
+          name: TLSVERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
 
     # merge PR
     - name: merge-pr
       runAfter:
-        - placeholder-rebuild-images
+        - build-index
       taskRef:
         name: merge-pr
       params:

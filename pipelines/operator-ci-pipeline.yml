@@ -70,7 +70,7 @@ spec:
           workspace: pipeline
           subPath: src
 
-    - name: validation
+    - name: operator-validation
       runAfter:
         - commit-pinned-digest
       taskRef:
@@ -85,7 +85,7 @@ spec:
 
     - name: content-hash
       runAfter:
-        - validation
+        - operator-validation
         - yaml-lint
       taskRef:
         name: content-hash
@@ -118,7 +118,7 @@ spec:
         kind: ClusterTask
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(context.pipelineRun.namespace)/$(tasks.validation.results.package_name):$(tasks.validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
         # TODO TLS verification disabled for demo purposes
@@ -151,7 +151,7 @@ spec:
         kind: ClusterTask
       params:
         - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(context.pipelineRun.namespace)/$(tasks.validation.results.package_name)-index:$(tasks.validation.results.bundle_version)"
+          value: &bundleIndexImage "$(params.registry)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
         # - name: DOCKERFILE
@@ -174,7 +174,7 @@ spec:
         - name: index_image
           value: *bundleIndexImage
         - name: package_name
-          value: "$(tasks.validation.results.package_name)"
+          value: "$(tasks.operator-validation.results.package_name)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -216,7 +216,7 @@ spec:
         - name: index_image
           value: *bundleIndexImage
         - name: package_name
-          value: "$(tasks.validation.results.package_name)"
+          value: "$(tasks.operator-validation.results.package_name)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -233,11 +233,11 @@ spec:
         - name: result_url
           value: "$(tasks.upload-artifacts.results.result_url)"
         - name: package_name
-          value: "$(tasks.validation.results.package_name)"
+          value: "$(tasks.operator-validation.results.package_name)"
         - name: bundle_version
-          value: "$(tasks.validation.results.bundle_version)"
+          value: "$(tasks.operator-validation.results.bundle_version)"
         - name: certification_project_id
-          value: "$(tasks.validation.results.certification_project_id)"
+          value: "$(tasks.operator-validation.results.certification_project_id)"
       workspaces:
         - name: source
           workspace: pipeline
