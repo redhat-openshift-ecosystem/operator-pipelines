@@ -3,7 +3,6 @@ FROM registry.fedoraproject.org/fedora:34
 LABEL description="Cli tools for operator certification pipeline"
 LABEL summary="This image contains tools required for operator bundle certification pipeline."
 
-
 ARG USER_UID=1000
 
 USER root
@@ -26,13 +25,9 @@ RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
 WORKDIR /home/user
 
+COPY . ./
 
-COPY requirements.txt ./
-COPY scripts/ scripts/
-
-ENV PATH="/home/user/scripts:${PATH}"
-
-RUN pip3 install -r requirements.txt
+RUN pip3 install .
 
 # set dir ownership
 RUN chgrp -R 0 /home/user /etc/passwd

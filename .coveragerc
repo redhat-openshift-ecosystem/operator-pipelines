@@ -1,0 +1,5 @@
+[run]
+source = operatorcert
+
+[report]
+omit = operatorcert/entrypoints/*
