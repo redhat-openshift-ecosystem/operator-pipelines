@@ -14,7 +14,7 @@ spec:
     - name: bundle_path
     - name: preflight_min_version
     - name: ci_min_version
-    - name: quay_url
+    - name: registry_url
       default: quay.io
   workspaces:
     - name: repository
@@ -230,8 +230,8 @@ spec:
       taskRef:
         name: placeholder-rebuild-images
       params:
-        - name: quay_url
-          value: $(params.quay_url)
+        - name: registry_url
+          value: $(params.registry_url)
 
     # merge PR
     - name: merge-pr
