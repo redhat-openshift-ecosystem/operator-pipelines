@@ -25,5 +25,3 @@ spec:
         fi
         # Curl Pyxis results endpoint
         # If results exists, store them in the workspace, if not- fail
-
-

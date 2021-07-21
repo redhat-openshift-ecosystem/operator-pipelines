@@ -21,8 +21,8 @@ spec:
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           echo "Preflight results already exists- skipping"
-          echo "do not exists" | tee $(results.log_output_file.path)
-          echo "do not exists" | tee $(results.result_output_file.path)
+          echo "none" | tee $(results.log_output_file.path)
+          echo "none" | tee $(results.result_output_file.path)
           exit 0
         fi
 
