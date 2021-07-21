@@ -12,10 +12,8 @@ spec:
     - name: git_username
     - name: pyxis_url
     - name: bundle_path
-    - name: preflight_latest_version
-    - name: ci_latest_version
-    - name: internal_registry_url
-      default: default-route-openshift-image-registry.apps-crc.testing
+    - name: preflight_min_version
+    - name: ci_min_version
     - name: quay_url
       default: quay.io
   workspaces:
@@ -86,7 +84,7 @@ spec:
         name: yaml-lint
       params:
         - name: args
-          value: ["-d {extends: relaxed, rules: {line-length: {max: 180}}}", "$(params.bundle_path)"]
+          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}}}", "$(params.bundle_path)"]
       workspaces:
         - name: shared-workspace
           workspace: repository
@@ -150,7 +148,7 @@ spec:
           value: "$(tasks.submission-validation.results.cert_project_id)"
 
     # Try to retrieve results
-    - name: get-ci-results1
+    - name: get-ci-results-attempt
       runAfter:
         - operator-validation
         - yaml-lint
@@ -159,7 +157,7 @@ spec:
         - verify-changed-directories
         - query-publishing-checklist
       taskRef:
-        name: get-ci-results1
+        name: get-ci-results-attempt
       params:
         - name: pyxis_url
           value: $(params.pyxis_url)
@@ -174,25 +172,26 @@ spec:
           workspace: results
           subPath: results
 
-    # If we didn't got the CI pipeline results- run pipeline
+    # If we didn't got the CI pipeline preflight test results
+    # - run preflight here
     # and try to retrieve them again
     - name: placeholder-run-ci-pipeline
       runAfter:
-        - get-ci-results1
+        - get-ci-results-attempt
       taskRef:
         name: placeholder-run-ci-pipeline
       params:
-        - name: result_resp_code
-          value: "$(tasks.get-ci-results1.results.result_resp_code)"
+        - name: preflight_results_exists
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
 
-    - name: get-ci-results2
+    - name: get-ci-results
       runAfter:
         - placeholder-run-ci-pipeline
       taskRef:
-        name: get-ci-results2
+        name: get-ci-results
       params:
-        - name: result_resp_code
-          value: "$(tasks.get-ci-results1.results.result_resp_code)"
+        - name: preflight_results_exists
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
         - name: pyxis_url
           value: $(params.pyxis_url)
         - name: md5sum
@@ -209,14 +208,14 @@ spec:
     # Verify the CI results
     - name: verify-ci-results
       runAfter:
-        - get-ci-results2
+        - get-ci-results
       taskRef:
         name: verify-ci-results
       params:
-        - name: preflight_latest_version
-          value: $(params.preflight_latest_version)
-        - name: ci_latest_version
-          value: $(params.ci_latest_version)
+        - name: preflight_min_version
+          value: $(params.preflight_min_version)
+        - name: ci_min_version
+          value: $(params.ci_min_version)
       workspaces:
         - name: results
           workspace: results
@@ -231,8 +230,8 @@ spec:
       taskRef:
         name: placeholder-rebuild-images
       params:
-        - name: internal_registry_url
-          value: $(params.internal_registry_url)
+        - name: quay_url
+          value: $(params.quay_url)
 
     # merge PR
     - name: merge-pr

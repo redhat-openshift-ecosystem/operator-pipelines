@@ -71,8 +71,8 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_username=test_user \
   --param bundle_path=operators/kogito-operator/1.6.0 \
   --param pyxis_url=https://catalog.redhat.com/api/containers \
-  --param preflight_latest_version=1.0.0 \
-  --param ci_latest_version=1.0.0 \
+  --param preflight_min_version=1.0.0 \
+  --param ci_min_version=1.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --showlog
