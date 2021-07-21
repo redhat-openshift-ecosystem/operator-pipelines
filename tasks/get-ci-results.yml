@@ -2,10 +2,10 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: get-ci-results2
+  name: get-ci-results
 spec:
   params:
-    - name: result_resp_code
+    - name: preflight_results_exists
     - name: md5sum
     - name: pyxis_url
     - name: cert_project_id
@@ -21,7 +21,8 @@ spec:
         # Curl Pyxis results endpoint
         # If results exists, store them in the workspace, if not- fail
 
-        RESULT_RESP_CODE="$(params.result_resp_code)"
-        if [ "$RESULT_RESP_CODE" == "404" ]; then
+        PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
+        echo $PREFLIGHT_RESULTS_EXISTS
+        if [ "$PREFLIGHT_RESULTS_EXISTS" == "true" ]; then
           echo "Trying to retrieve the preflight results again.."
         fi

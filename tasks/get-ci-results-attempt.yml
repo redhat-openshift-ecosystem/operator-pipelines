@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: get-ci-results1
+  name: get-ci-results-attempt
 spec:
   params:
     - name: md5sum
@@ -10,7 +10,7 @@ spec:
     - name: cert_project_id
     - name: operator_version
   results:
-    - name: result_resp_code
+    - name: preflight_results_exists
   workspaces:
     - name: results
   steps:
@@ -21,4 +21,4 @@ spec:
         #! /usr/bin/env bash
         # Curl Pyxis results endpoint
         # If results exists, store them in the workspace
-        echo "200" | tee $(results.result_resp_code.path)
+        echo true | tee $(results.preflight_results_exists.path)

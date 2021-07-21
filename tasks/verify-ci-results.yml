@@ -5,8 +5,8 @@ metadata:
   name: verify-ci-results
 spec:
   params:
-    - name: preflight_latest_version
-    - name: ci_latest_version
+    - name: preflight_min_version
+    - name: ci_min_version
   workspaces:
     - name: results
   steps:

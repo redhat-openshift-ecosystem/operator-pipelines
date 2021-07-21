@@ -5,7 +5,7 @@ metadata:
   name: placeholder-run-ci-pipeline
 spec:
   params:
-    - name: result_resp_code
+    - name: preflight_results_exists
   steps:
     - name: placeholder-run-ci-pipeline
       image: registry.access.redhat.com/ubi8-minimal
@@ -15,8 +15,8 @@ spec:
         will be filled with the CI pipeline tasks.
         See https://projects.engineering.redhat.com/browse/ISV-904"
 
-        RESULT_RESP_CODE="$(params.result_resp_code)"
-        echo $RESULT_RESP_CODE
-        if [ "$RESULT_RESP_CODE" == "404" ]; then
+        PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
+        echo $PREFLIGHT_RESULTS_EXISTS
+        if [ "$PREFLIGHT_RESULTS_EXISTS" == "true" ]; then
           echo "There is no preflight test results in Pyxis, running the preflight tests"
         fi
