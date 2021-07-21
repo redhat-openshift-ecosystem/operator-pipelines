@@ -232,7 +232,7 @@ spec:
     - name: get-ci-results-attempt
       runAfter:
         - operator-validation
-        # - yaml-lint
+        - yaml-lint
         - verify-pinned-digest
         - content-hash
         - verify-changed-directories
@@ -267,6 +267,8 @@ spec:
           value: *bundleIndexImage
         - name: package_name
           value: "$(tasks.operator-validation.results.package_name)"
+        - name: preflight_results_exists
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
       workspaces:
         - name: source
           workspace: repository
@@ -277,6 +279,9 @@ spec:
         - ocp-environment-preparation
       taskRef:
         name: preflight
+      params:
+        - name: preflight_results_exists
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
       workspaces:
         - name: source
           workspace: repository
@@ -294,6 +299,8 @@ spec:
           value: "$(tasks.preflight.results.log_output_file)"
         - name: result_file
           value: "$(tasks.preflight.results.result_output_file)"
+        - name: preflight_results_exists
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
       workspaces:
         - name: source
           workspace: repository
@@ -309,6 +316,8 @@ spec:
           value: *bundleIndexImage
         - name: package_name
           value: "$(tasks.operator-validation.results.package_name)"
+        - name: preflight_results_exists
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
       workspaces:
         - name: source
           workspace: repository
