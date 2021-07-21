@@ -14,8 +14,10 @@ spec:
     - name: bundle_path
     - name: preflight_min_version
     - name: ci_min_version
-    - name: registry_url
+    - name: pub_registry_url
       default: quay.io
+    - name: int_registry_url
+      default: default-route-openshift-image-registry.apps-crc.testing
   workspaces:
     - name: repository
     - name: results
@@ -147,7 +149,88 @@ spec:
         - name: cert_project_id
           value: "$(tasks.submission-validation.results.cert_project_id)"
 
-    # Try to retrieve results
+    # Build images- bundle and index.
+    # Those steps are also a part of the CI pipeline.
+    - name: dockerfile-creation
+      runAfter:
+        - operator-validation
+        - yaml-lint
+        - verify-pinned-digest
+        - content-hash
+        - verify-changed-directories
+        - query-publishing-checklist
+      taskRef:
+        name: dockerfile-creation
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # Bundle Image (Operator Bundle) is a container image that stores
+    # Kubernetes manifests and metadata associated with an operator.
+    # A bundle is meant to represent a specific version of an operator on cluster.
+    - name: build-bundle
+      runAfter:
+        - dockerfile-creation
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      params:
+        - name: IMAGE
+          value: &bundleImage "$(params.int_registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+        - name: CONTEXT
+          value: "$(params.bundle_path)"
+        # TODO TLS verification disabled for demo purposes
+        - &buildahNoTlsVerify
+          name: TLSVERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # Index image contains a record of bundle images from which
+    # manifests could be extract in order to install an operator.
+    - name: generate-index
+      runAfter:
+        - build-bundle
+      taskRef:
+        name: generate-index
+      params:
+        - name: bundle_image
+          value: *bundleImage
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: build-index
+      runAfter:
+        - generate-index
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      params:
+        - name: IMAGE
+          value: &bundleIndexImage "$(params.int_registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+        - name: CONTEXT
+          value: "$(params.bundle_path)"
+        # - name: DOCKERFILE
+        #   value: "Dockerfile.index"
+        # TODO TLS verification disabled for demo purposes
+        - &buildahNoTlsVerify
+          name: TLSVERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # Try to retrieve preflight tests results
+    # (they can run on premise)
     - name: get-ci-results-attempt
       runAfter:
         - operator-validation
@@ -173,20 +256,69 @@ spec:
           subPath: results
 
     # If we didn't got the CI pipeline preflight test results
-    # - run preflight here
+    # run preflight here
     # and try to retrieve them again
-    - name: placeholder-run-ci-pipeline
+    - name: ocp-environment-preparation
       runAfter:
         - get-ci-results-attempt
+        - build-index
       taskRef:
-        name: placeholder-run-ci-pipeline
+        name: ocp-environment-preparation
       params:
-        - name: preflight_results_exists
-          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
+        - name: index_image
+          value: *bundleIndexImage
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: preflight
+      runAfter:
+        - ocp-environment-preparation
+      taskRef:
+        name: preflight
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: upload-artifacts
+      runAfter:
+        - preflight
+      taskRef:
+        name: upload-artifacts
+      params:
+        - name: pyxis_api_key
+          value: foo
+        - name: log_file
+          value: "$(tasks.preflight.results.log_output_file)"
+        - name: result_file
+          value: "$(tasks.preflight.results.result_output_file)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: ocp-environment-cleanup
+      runAfter:
+        - upload-artifacts
+      taskRef:
+        name: ocp-environment-cleanup
+      params:
+        - name: index_image
+          value: *bundleIndexImage
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
 
     - name: get-ci-results
       runAfter:
-        - placeholder-run-ci-pipeline
+        - upload-artifacts
       taskRef:
         name: get-ci-results
       params:
@@ -221,80 +353,23 @@ spec:
           workspace: results
           subPath: results
 
-    # Rebuild images.
-    # Those steps are also a part of the CI pipeline.
-    - name: dockerfile-creation
+    # If the results are verified, copy images from
+    # internal to public registry
+    - name: copy-images-to-public-registry
       runAfter:
         - verify-ci-results
       taskRef:
-        name: dockerfile-creation
+        name: skopeo-copy
       params:
-        - name: bundle_path
-          value: "$(params.bundle_path)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
-    - name: build-bundle
-      runAfter:
-        - dockerfile-creation
-      taskRef:
-        name: buildah
-        kind: ClusterTask
-      params:
-        - name: IMAGE
-          value: &bundleImage "$(params.registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
-        - name: CONTEXT
-          value: "$(params.bundle_path)"
-        # TODO TLS verification disabled for demo purposes
-        - &buildahNoTlsVerify
-          name: TLSVERIFY
-          value: "false"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
-    - name: generate-index
-      runAfter:
-        - build-bundle
-      taskRef:
-        name: generate-index
-      params:
-        - name: bundle_image
-          value: *bundleImage
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
-    - name: build-index
-      runAfter:
-        - generate-index
-      taskRef:
-        name: buildah
-        kind: ClusterTask
-      params:
-        - name: IMAGE
-          value: &bundleIndexImage "$(params.registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
-        - name: CONTEXT
-          value: "$(params.bundle_path)"
-        # - name: DOCKERFILE
-        #   value: "Dockerfile.index"
-        # TODO TLS verification disabled for demo purposes
-        - &buildahNoTlsVerify
-          name: TLSVERIFY
-          value: "false"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
+        - name: srcImageURL
+          value: "docker://$(params.int_registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+        - name: destImageURL
+          value: "docker://$(params.pub_registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
 
     # merge PR
     - name: merge-pr
       runAfter:
-        - build-index
+        - copy-images-to-public-registry
       taskRef:
         name: merge-pr
       params:
