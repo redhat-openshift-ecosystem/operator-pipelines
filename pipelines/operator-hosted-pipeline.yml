@@ -14,10 +14,8 @@ spec:
     - name: bundle_path
     - name: preflight_min_version
     - name: ci_min_version
-    - name: pub_registry_url
+    - name: registry
       default: quay.io
-    - name: int_registry_url
-      default: default-route-openshift-image-registry.apps-crc.testing
   workspaces:
     - name: repository
     - name: results
@@ -149,7 +147,7 @@ spec:
         - name: cert_project_id
           value: "$(tasks.submission-validation.results.cert_project_id)"
 
-    # Build images- bundle and index.
+    # Build images- bundle and index and push them to registry.
     # Those steps are also a part of the CI pipeline.
     - name: dockerfile-creation
       runAfter:
@@ -180,7 +178,7 @@ spec:
         kind: ClusterTask
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.int_registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
         # TODO TLS verification disabled for demo purposes
@@ -215,7 +213,7 @@ spec:
         kind: ClusterTask
       params:
         - name: IMAGE
-          value: &bundleIndexImage "$(params.int_registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleIndexImage "$(params.registry)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
         # - name: DOCKERFILE
@@ -234,7 +232,7 @@ spec:
     - name: get-ci-results-attempt
       runAfter:
         - operator-validation
-        - yaml-lint
+        # - yaml-lint
         - verify-pinned-digest
         - content-hash
         - verify-changed-directories
@@ -353,23 +351,10 @@ spec:
           workspace: results
           subPath: results
 
-    # If the results are verified, copy images from
-    # internal to public registry
-    - name: copy-images-to-public-registry
-      runAfter:
-        - verify-ci-results
-      taskRef:
-        name: skopeo-copy
-      params:
-        - name: srcImageURL
-          value: "docker://$(params.int_registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
-        - name: destImageURL
-          value: "docker://$(params.pub_registry_url)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
-
     # merge PR
     - name: merge-pr
       runAfter:
-        - copy-images-to-public-registry
+        - verify-ci-results
       taskRef:
         name: merge-pr
       params:
