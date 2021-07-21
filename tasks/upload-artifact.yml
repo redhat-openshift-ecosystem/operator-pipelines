@@ -10,6 +10,8 @@ spec:
       default: https://catalog.redhat.com/api/containers
     - name: log_file
     - name: result_file
+    - name: preflight_results_exists
+      default: "false"
   results:
     - name: log_url
     - name: result_url
@@ -21,6 +23,13 @@ spec:
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
+        PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
+        if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
+          echo "Preflight results already exists- skipping"
+          echo "do not exists" | tee $(results.log_url.path)
+          exit 0
+        fi
+
         echo "Uploading testing logs $(params.log_file)"
 
         echo https://foo.com/logs/123 | tee $(results.log_url.path)
@@ -30,6 +39,13 @@ spec:
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
+        PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
+        if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
+          echo "Preflight results already exists- skipping"
+          echo "do not exists" | tee $(results.result_url.path)
+          exit 0
+        fi
+
         echo "Uploading testing results $(params.result_file)"
 
         echo https://foo.com/results/123 | tee $(results.result_url.path)
