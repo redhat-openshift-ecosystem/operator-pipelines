@@ -2,14 +2,15 @@ name: Build and Push Image
 on: [ push, pull_request ]
 
 jobs:
-  black:
-    name: black formatter
+  test-lint:
+    name: Run unit tests and linters
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: rickstaa/action-black@v1
-        with:
-          black_args: ". --check"
+    - uses: actions/checkout@v2
+    - uses: fedora-python/tox-github-action@v0.4
+      with:
+        tox_env: black,test
+
   build:
     name: Build and push image
     runs-on: ubuntu-20.04
