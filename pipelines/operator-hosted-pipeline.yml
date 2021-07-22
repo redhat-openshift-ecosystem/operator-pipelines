@@ -295,6 +295,8 @@ spec:
           value: "$(tasks.preflight.results.result_output_file)"
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
+        - name: md5sum
+          value: "$(tasks.content-hash.results.md5sum)"
       workspaces:
         - name: source
           workspace: repository
