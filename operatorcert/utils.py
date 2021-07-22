@@ -130,17 +130,13 @@ def ocp_version_info(bundle_path: pathlib.Path, pyxis_url: str) -> Dict:
     """
     bundle_annotations = get_bundle_annotations(bundle_path)
 
-    ocp_versions_range = str(bundle_annotations.get(OCP_VERSIONS_ANNOTATION))
+    ocp_versions_range = bundle_annotations.get(OCP_VERSIONS_ANNOTATION)
     if not ocp_versions_range:
-        raise ValueError(
-            f"'{OCP_VERSIONS_ANNOTATION}' annotation not defined"
-        )  # pragma: no cover
+        raise ValueError(f"'{OCP_VERSIONS_ANNOTATION}' annotation not defined")
 
     package = bundle_annotations.get(PACKAGE_ANNOTATION)
     if not package:
-        raise ValueError(
-            f"'{PACKAGE_ANNOTATION}' annotation not defined"
-        )  # pragma: no cover
+        raise ValueError(f"'{PACKAGE_ANNOTATION}' annotation not defined")
 
     csv_annotations = get_csv_annotations(bundle_path, package)
 
