@@ -11,6 +11,8 @@ spec:
     - name: bundle_path
     - name: registry
       default: default-route-openshift-image-registry.apps-crc.testing
+    - name: image_stream
+      default: $(context.pipelineRun.namespace)
   workspaces:
     - name: pipeline
     - name: ssh-dir
@@ -64,7 +66,7 @@ spec:
         name: yaml-lint
       params:
         - name: args
-          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}}}", "$(params.bundle_path)"]
+          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(params.bundle_path)"]
       workspaces:
         - name: shared-workspace
           workspace: pipeline
@@ -121,13 +123,9 @@ spec:
         kind: ClusterTask
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(params.image_stream)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
-        # TODO TLS verification disabled for demo purposes
-        - &buildahNoTlsVerify
-          name: TLSVERIFY
-          value: "false"
       workspaces:
         - name: source
           workspace: pipeline
@@ -156,15 +154,11 @@ spec:
         kind: ClusterTask
       params:
         - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(context.pipelineRun.namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleIndexImage "$(params.registry)/$(params.image_stream)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
         # - name: DOCKERFILE
         #   value: "Dockerfile.index"
-        # TODO TLS verification disabled for demo purposes
-        - &buildahNoTlsVerify
-          name: TLSVERIFY
-          value: "false"
       workspaces:
         - name: source
           workspace: pipeline
