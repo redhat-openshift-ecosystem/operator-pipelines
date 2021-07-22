@@ -1,4 +1,14 @@
+import pathlib
 from setuptools import setup, find_packages
+
+here = pathlib.Path(__file__).resolve().parent
+
+with open(here.joinpath("requirements.txt")) as fh:
+    req = fh.readlines()
+
+with open(here.joinpath("requirements-dev.txt")) as fh:
+    req_dev = fh.readlines()
+
 
 setup(
     name="operatorcert",
@@ -7,18 +17,8 @@ setup(
     author="Red Hat, Inc.",
     packages=find_packages(),
     python_requires=">=3.6, <4",
-    install_requires=[
-        "pyyaml==5.4.1",
-        "requests==2.26.0",
-        "yq==2.12.2",
-    ],
-    extras_require={
-        "dev": [
-            "black",
-            "pytest",
-            "pytest-cov",
-        ],
-    },
+    install_requires=req,
+    extras_require={"dev": req_dev},
     entry_points={
         "console_scripts": [
             "bundle-dockerfile=operatorcert.entrypoints.bundle_dockerfile:main",
