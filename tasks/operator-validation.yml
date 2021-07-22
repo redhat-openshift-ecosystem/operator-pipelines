@@ -8,15 +8,17 @@ spec:
     - name: bundle_path
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers
-    - name: organization
-      # TODO Remove this default. It should be specified by the pipeline
-      default: redhat-marketplace
   results:
     - name: package_name
+      description: Operator package name
     - name: bundle_version
-    - name: bundle_ocp_version_range
-    - name: bundle_ocp_latest_supported_version
+      description: Operator bundle version
+    - name: max_supported_ocp_version
+      description: Maximum version of OpenShift supported by this Operator
+    - name: max_supported_index
+      description: Pull spec for the index corresponding to the max OCP version
     - name: certification_project_id
+      description: Identifier of certification project from Red Hat Connect
   workspaces:
     - name: source
   steps:
@@ -33,19 +35,10 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        echo "Checking availability of com.redhat.openshift.versions annotation"
-        BUNDLE_PATH=$(realpath $(params.bundle_path))
-
-        # Get the targetted OCP version range
-        ANNOTATIONS_PATH="$BUNDLE_PATH/metadata/annotations.yaml"
-        OCP_VERSION_RANGE=$(cat $ANNOTATIONS_PATH | yq -r '.annotations."com.redhat.openshift.versions"')
-        echo $OCP_VERSION_RANGE | tee $(results.bundle_ocp_version_range.path)
-
-        curl -L -o indices.json \
-          "$(params.pyxis_url)/v1/operators/indices?organization=$(params.organization)&ocp_versions_range=$OCP_VERSION_RANGE"
-
-        OCP_LATEST_SUPPORTED_VERSION=$(cat indices.json| jq -r ".data[].ocp_version" | sort | tail -n 1)
-        echo $OCP_LATEST_SUPPORTED_VERSION | tee $(results.bundle_ocp_latest_supported_version.path)
+        VERSION_INFO=$(ocp-version-info $(params.bundle_path))
+        echo $VERSION_INFO | jq
+        echo $VERSION_INFO | jq -r '.max_version_index.ocp_version' | tee $(results.max_supported_ocp_version.path)
+        echo $VERSION_INFO | jq -r '.max_version_index.path' | tee $(results.max_supported_index.path)
 
     - name: certification-project-check
       image: quay.io/redhat-isv/operator-pipelines-images:latest
