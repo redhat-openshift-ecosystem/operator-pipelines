@@ -12,6 +12,7 @@ spec:
     - name: result_file
     - name: preflight_results_exists
       default: "false"
+    - name: md5sum
   results:
     - name: log_url
     - name: result_url
