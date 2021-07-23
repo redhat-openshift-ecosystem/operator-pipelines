@@ -21,6 +21,11 @@ RUN curl -LO https://github.com/operator-framework/operator-sdk/releases/downloa
     chmod +x operator-sdk_linux_amd64 && \
     mv operator-sdk_linux_amd64 /usr/local/bin/operator-sdk
 
+# Install opm CLI
+RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.17.5/linux-amd64-opm && \
+    chmod +x linux-amd64-opm && \
+    mv linux-amd64-opm /usr/local/bin/opm
+
 RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
 WORKDIR /home/user
