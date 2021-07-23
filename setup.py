@@ -23,6 +23,7 @@ setup(
         "console_scripts": [
             "bundle-dockerfile=operatorcert.entrypoints.bundle_dockerfile:main",
             "ocp-version-info=operatorcert.entrypoints.ocp_version_info:main",
+            "verify-changed-dirs=operatorcert.entrypoints.verify_changed_dirs:main",
         ],
     },
 )
