@@ -126,3 +126,9 @@ dmypy.json
 
 # VSCode project settings
 .vscode/
+
+# InteliJ project settings
+.idea/
+
+# Vim swap files
+.*.sw?
