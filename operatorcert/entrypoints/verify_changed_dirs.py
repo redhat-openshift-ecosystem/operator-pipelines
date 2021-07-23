@@ -15,6 +15,9 @@ class InvalidChangesPath(Exception):
 def get_changed_files(
     organization: str, repository: str, base_branch: str, pr_head_label: str
 ) -> List[str]:
+    """
+    Get the list of files modified on the branch, against the base branch
+    """
     compare_changes_url = (
         f"https://api.github.com/repos/{organization}/{repository}"
         f"/compare/{base_branch}...{pr_head_label}"
@@ -31,6 +34,11 @@ def get_changed_files(
 def verify_changed_files_location(
     changed_files: List[str], repository: str, operator_name: str, operator_version: str
 ) -> None:
+    """
+    Find the allowed locations in directory tree for changes
+    (basing on the operator name and version).
+    Test if all of the changes are in allowed locations.
+    """
 
     parent_path = f"{repository}/operators/{operator_name}"
     path = parent_path + "/" + operator_version
