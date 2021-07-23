@@ -1,9 +1,9 @@
 import argparse
 import logging
-import os
+import pathlib
 from typing import Any
 
-import yaml
+import operatorcert
 
 
 class AnnotationFileNotFound(Exception):
@@ -31,48 +31,6 @@ def setup_argparser() -> Any:
     return parser
 
 
-def read_annotation(annotation_path: str) -> Any:
-    """
-    Read annotation from annotation yaml file
-
-    Args:
-        annotation_path (str): Path to annotation file
-
-    Returns:
-        Any: Bundle annotation dictionary
-    """
-    with open(annotation_path, "r") as annotation_file:
-        content = yaml.safe_load(annotation_file)
-
-    return content.get("annotations", {})
-
-
-def check_annotation_file(bundle_path: str) -> str:
-    """
-    Check availability of annotation file. The file can have both .yml
-    and .yaml extension.
-
-    Args:
-        bundle_path (str): Path to bundle root directory
-
-    Raises:
-        AnnotationFileNotFound: Exception is raised when annotation file is missing
-
-    Returns:
-        str: Full path to bundle annotation file
-    """
-    possible_paths = ["metadata/annotations.yaml", "metadata/annotations.yml"]
-    for annotation_path in possible_paths:
-        full_path = os.path.join(bundle_path, annotation_path)
-        if os.path.exists(full_path):
-            logging.debug(f"Found the annotation file: {annotation_path}")
-            return full_path
-
-    raise AnnotationFileNotFound(
-        f"Annotation file is not available in any of these locations {possible_paths}"
-    )
-
-
 def generate_dockerfile_content(args: Any) -> str:
     """
     Generate a Dockerfile based on bundle metadata
@@ -88,8 +46,8 @@ def generate_dockerfile_content(args: Any) -> str:
     logging.debug("Generating a dockerfile...")
     dockerfile_content = "FROM scratch\n\n"
 
-    annotation_file_path = check_annotation_file(args.bundle_path)
-    annotations = read_annotation(annotation_file_path)
+    bundle_path = pathlib.Path(args.bundle_path)
+    annotations = operatorcert.get_bundle_annotations(bundle_path)
 
     for annotation_key, annotation_value in annotations.items():
         dockerfile_content += f"LABEL {annotation_key}={annotation_value}\n"
