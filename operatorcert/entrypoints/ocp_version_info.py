@@ -4,7 +4,7 @@ import logging
 import pathlib
 import sys
 
-from operatorcert.utils import ocp_version_info
+from operatorcert import ocp_version_info
 
 
 def main() -> None:
