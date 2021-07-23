@@ -90,7 +90,7 @@ def main() -> None:
         default="redhat-openshift-ecosystem",
     )
     parser.add_argument(
-        "--repository", help="Base branch repository name", default="operator-pipelines"
+        "--repository", help="Base branch repository name"
     )
     parser.add_argument("--base_branch", help="Base branch of the PR", default="main")
     args = parser.parse_args()
