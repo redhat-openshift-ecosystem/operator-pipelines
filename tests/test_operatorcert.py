@@ -110,3 +110,59 @@ def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
 
     with pytest.raises(ValueError):
         operatorcert.ocp_version_info(bundle_root, "")
+
+
+@patch("requests.get")
+def test_get_changed_files(mock_get: MagicMock):
+    mock_rsp = MagicMock()
+    mock_rsp.json.return_value = {
+        "irrelevant_key": "abc",
+        "files": [{"filename": "first"}, {"filename": "second"}],
+    }
+    mock_get.return_value = mock_rsp
+    files = operatorcert.get_changed_files("rh", "operator-repo", "main", "user:fixup")
+    mock_get.assert_called_with(
+        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup"
+    )
+    assert files == ["first", "second"]
+
+
+@pytest.mark.parametrize(
+    "wrong_change",
+    [
+        # no wrong change, happy path
+        "",
+        # wrong repository
+        "other-repository/operators/sample-operator/0.1.0/1.txt",
+        # wrong operator name
+        "sample-repository/operators/other-operator/0.1.0/1.txt",
+        # wrong version
+        "sample-repository/operators/sample-operator/0.1.1/1.txt",
+        # change other than ci.yaml in the operator director level
+        "sample-repository/operators/sample-operator/1.txt",
+    ],
+)
+def test_verify_changed_files_location(wrong_change):
+    changed_files = [
+        "sample-repository/operators/sample-operator/0.1.0/1.txt",
+        "sample-repository/operators/sample-operator/0.1.0/director/2.txt",
+        "sample-repository/operators/sample-operator/ci.yaml",
+    ]
+    repository = "sample-repository"
+    operator_name = "sample-operator"
+    operator_version = "0.1.0"
+
+    # sad paths
+    if wrong_change:
+        with pytest.raises(RuntimeError):
+            operatorcert.verify_changed_files_location(
+                changed_files + [wrong_change],
+                repository,
+                operator_name,
+                operator_version,
+            )
+    # happy path
+    else:
+        operatorcert.verify_changed_files_location(
+            changed_files, repository, operator_name, operator_version
+        )

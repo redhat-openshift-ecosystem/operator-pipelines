@@ -1,72 +1,8 @@
 import argparse
 import logging
-import requests
 import sys
-from typing import List
-from operatorcert.utils import str_color
 
-
-class InvalidChangesPath(Exception):
-    """
-    Exception for changes in wrong path
-    """
-
-
-def get_changed_files(
-    organization: str, repository: str, base_branch: str, pr_head_label: str
-) -> List[str]:
-    """
-    Get the list of files modified on the branch, against the base branch
-    """
-    compare_changes_url = (
-        f"https://api.github.com/repos/{organization}/{repository}"
-        f"/compare/{base_branch}...{pr_head_label}"
-    )
-    pr_data = requests.get(compare_changes_url).json()
-
-    filenames = []
-    for file in pr_data["files"]:
-        filenames.append(file["filename"])
-
-    return filenames
-
-
-def verify_changed_files_location(
-    changed_files: List[str], repository: str, operator_name: str, operator_version: str
-) -> None:
-    """
-    Find the allowed locations in directory tree for changes
-    (basing on the operator name and version).
-    Test if all of the changes are in allowed locations.
-    """
-
-    parent_path = f"{repository}/operators/{operator_name}"
-    path = parent_path + "/" + operator_version
-    config_path = parent_path + "/ci.yaml"
-
-    logging.info(
-        str_color(
-            "blue",
-            f"Changes for operator {operator_name} in version {operator_version}"
-            f" are expected to be in paths: \n"
-            f" -{path}/* \n"
-            f" -{config_path}",
-        )
-    )
-
-    wrong_changes = False
-    for file_path in changed_files:
-        if file_path.startswith(path):
-            logging.info(str_color("green", f"Change path ok: {file_path}"))
-            continue
-        elif file_path == config_path:
-            continue
-        else:
-            logging.error(str_color("red", f"Wrong change path: {file_path}"))
-            wrong_changes = True
-
-    if wrong_changes:
-        raise InvalidChangesPath("There are changes in the invalid path")
+from operatorcert import get_changed_files, verify_changed_files_location
 
 
 def main() -> None:
@@ -89,9 +25,7 @@ def main() -> None:
         help="Base branch repository owner name",
         default="redhat-openshift-ecosystem",
     )
-    parser.add_argument(
-        "--repository", help="Base branch repository name"
-    )
+    parser.add_argument("--repository", help="Base branch repository name")
     parser.add_argument("--base_branch", help="Base branch of the PR", default="main")
     args = parser.parse_args()
 
