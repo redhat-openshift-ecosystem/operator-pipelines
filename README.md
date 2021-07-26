@@ -56,8 +56,9 @@ To trigger a CI pipeline follow steps below:
 oc apply -R -f pipelines/operator-ci-pipeline.yml
 oc apply -R -f tasks
 
-# Install external yaml-lint task
+# Install external dependencies
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
+curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml | oc apply -f -
 
 
 tkn pipeline start operator-ci-pipeline \
@@ -83,8 +84,9 @@ To trigger a Hosted pipeline follow steps below:
 oc apply -R -f pipelines/operator-hosted-pipeline.yml
 oc apply -R -f tasks
 
-# Install external yaml-lint task
+# Install external dependencies
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
+curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml | oc apply -f -
 
 tkn pipeline start operator-hosted-pipeline \
   --param git_pr_branch=main \

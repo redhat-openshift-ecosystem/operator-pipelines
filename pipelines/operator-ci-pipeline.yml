@@ -21,7 +21,7 @@ spec:
     - name: checkout
       taskRef:
         name: git-clone
-        kind: ClusterTask
+        kind: Task
       params:
         - name: url
           value: $(params.git_repo_url)
