@@ -176,17 +176,14 @@ def verify_changed_files_location(
     Test if all of the changes are in allowed locations.
     """
 
-    parent_path = f"{repository}/operators/{operator_name}"
-    path = parent_path + "/" + operator_version
-    config_path = parent_path + "/ci.yaml"
+    path = f"{repository}/operators/{operator_name}/" + operator_version
 
     logging.info(
         str_color(
             "blue",
             f"Changes for operator {operator_name} in version {operator_version}"
-            f" are expected to be in paths: \n"
+            f" are expected to be in path: \n"
             f" -{path}/* \n"
-            f" -{config_path}",
         )
     )
 
@@ -194,8 +191,6 @@ def verify_changed_files_location(
     for file_path in changed_files:
         if file_path.startswith(path):
             logging.info(str_color("green", f"Change path ok: {file_path}"))
-            continue
-        elif file_path == config_path:
             continue
         else:
             logging.error(str_color("red", f"Wrong change path: {file_path}"))
