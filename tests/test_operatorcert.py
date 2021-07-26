@@ -112,6 +112,19 @@ def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
         operatorcert.ocp_version_info(bundle_root, "")
 
 
+def test_get_repo_and_org_from_github_url():
+    org, repo = operatorcert.get_repo_and_org_from_github_url(
+        "https://github.com/redhat-openshift-ecosystem/operator-pipelines.git"
+    )
+    assert org == "redhat-openshift-ecosystem"
+    assert repo == "operator-pipelines"
+
+    with pytest.raises(ValueError):
+        operatorcert.get_repo_and_org_from_github_url(
+            "https://github.com/redhat-openshift-ecosystem/operator-pipelines/something.git"
+        )
+
+
 @patch("requests.get")
 def test_get_files_changed_in_pr(mock_get: MagicMock):
     mock_rsp = MagicMock()

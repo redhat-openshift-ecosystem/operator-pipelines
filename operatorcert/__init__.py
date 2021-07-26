@@ -1,7 +1,7 @@
 import json
 import logging
 import pathlib
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from typing import Dict, List, Tuple
 
 import requests
@@ -148,6 +148,26 @@ def ocp_version_info(bundle_path: pathlib.Path, pyxis_url: str) -> Dict:
     }
 
 
+def get_repo_and_org_from_github_url(git_repo_url: str) -> (str, str):
+    """
+    Parse github repository URL to get the organization (or user) and
+    repository name
+    """
+    parsed = urlparse(git_repo_url)
+    path = parsed.path.rstrip(".git")
+    path_components = path.split("/")
+    if len(path_components) != 3:
+        raise ValueError(
+            f"{git_repo_url} is not a valid repository link. "
+            f"Valid link should look like "
+            f"'https://github.com/redhat-openshift-ecosystem/operator-pipelines'"
+        )
+    repository = path_components[-1]
+    organization = path_components[-2]
+
+    return organization, repository
+
+
 def get_files_changed_in_pr(
     organization: str, repository: str, base_branch: str, pr_head_label: str
 ) -> List[str]:
@@ -161,7 +181,7 @@ def get_files_changed_in_pr(
     pr_data = requests.get(compare_changes_url).json()
 
     filenames = []
-    for file in pr_data["files"]:
+    for file in pr_data.get("files", []):
         filenames.append(file["filename"])
 
     return filenames
@@ -183,7 +203,7 @@ def verify_changed_files_location(
             "blue",
             f"Changes for operator {operator_name} in version {operator_version}"
             f" are expected to be in path: \n"
-            f" -{path}/* \n"
+            f" -{path}/* \n",
         )
     )
 

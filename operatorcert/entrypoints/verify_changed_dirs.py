@@ -2,7 +2,11 @@ import argparse
 import logging
 import sys
 
-from operatorcert import get_files_changed_in_pr, verify_changed_files_location
+from operatorcert import (
+    get_files_changed_in_pr,
+    verify_changed_files_location,
+    get_repo_and_org_from_github_url,
+)
 
 
 def main() -> None:
@@ -21,18 +25,18 @@ def main() -> None:
         help="Label of the branch to be merged. Eg. User:branch-name",
     )
     parser.add_argument(
-        "--organization",
-        help="Base branch repository owner name",
-        default="redhat-openshift-ecosystem",
+        "--git_repo_url",
+        help="Github repository URL",
     )
     parser.add_argument("--repository", help="Base branch repository name")
     parser.add_argument("--base_branch", help="Base branch of the PR", default="main")
     args = parser.parse_args()
 
-    changed_files = get_files_changed_in_pr(
-        args.organization, args.repository, args.base_branch, args.pr_head_label
-    )
+    organization, repository = get_repo_and_org_from_github_url(args.git_repo_url)
 
+    changed_files = get_files_changed_in_pr(
+        organization, repository, args.base_branch, args.pr_head_label
+    )
     verify_changed_files_location(
-        changed_files, args.repository, args.operator_name, args.operator_version
+        changed_files, repository, args.operator_name, args.operator_version
     )
