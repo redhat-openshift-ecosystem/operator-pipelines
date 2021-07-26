@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 
-from operatorcert import get_changed_files, verify_changed_files_location
+from operatorcert import get_files_changed_in_pr, verify_changed_files_location
 
 
 def main() -> None:
@@ -29,7 +29,7 @@ def main() -> None:
     parser.add_argument("--base_branch", help="Base branch of the PR", default="main")
     args = parser.parse_args()
 
-    changed_files = get_changed_files(
+    changed_files = get_files_changed_in_pr(
         args.organization, args.repository, args.base_branch, args.pr_head_label
     )
 

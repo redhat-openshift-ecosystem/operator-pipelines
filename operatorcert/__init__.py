@@ -148,11 +148,11 @@ def ocp_version_info(bundle_path: pathlib.Path, pyxis_url: str) -> Dict:
     }
 
 
-def get_changed_files(
+def get_files_changed_in_pr(
     organization: str, repository: str, base_branch: str, pr_head_label: str
 ) -> List[str]:
     """
-    Get the list of files modified on the branch, against the base branch
+    Get the list of files modified in the PR against the base branch.
     """
     compare_changes_url = (
         f"https://api.github.com/repos/{organization}/{repository}"

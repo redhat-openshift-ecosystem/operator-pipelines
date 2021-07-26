@@ -113,14 +113,16 @@ def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
 
 
 @patch("requests.get")
-def test_get_changed_files(mock_get: MagicMock):
+def test_get_files_changed_in_pr(mock_get: MagicMock):
     mock_rsp = MagicMock()
     mock_rsp.json.return_value = {
         "irrelevant_key": "abc",
         "files": [{"filename": "first"}, {"filename": "second"}],
     }
     mock_get.return_value = mock_rsp
-    files = operatorcert.get_changed_files("rh", "operator-repo", "main", "user:fixup")
+    files = operatorcert.get_files_changed_in_pr(
+        "rh", "operator-repo", "main", "user:fixup"
+    )
     mock_get.assert_called_with(
         "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup"
     )
@@ -138,7 +140,7 @@ def test_get_changed_files(mock_get: MagicMock):
         "sample-repository/operators/other-operator/0.1.0/1.txt",
         # wrong version
         "sample-repository/operators/sample-operator/0.1.1/1.txt",
-        # change other than ci.yaml in the operator director level
+        # change other than ci.yaml in the operator directory level
         "sample-repository/operators/sample-operator/1.txt",
     ],
 )
