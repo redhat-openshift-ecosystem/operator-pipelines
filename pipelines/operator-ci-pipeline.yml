@@ -16,6 +16,7 @@ spec:
   workspaces:
     - name: pipeline
     - name: ssh-dir
+    - name: registry-credentials
   tasks:
     - name: checkout
       taskRef:
@@ -120,8 +121,10 @@ spec:
       runAfter:
         - dockerfile-creation
       taskRef:
+        # custom task that supports auth
+        # TODO: try push auth changes to upstream
         name: buildah
-        kind: ClusterTask
+        kind: Task
       params:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_stream)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
@@ -131,6 +134,8 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
+        - name: credentials
+          workspace: registry-credentials
 
     # Index image contains a record of bundle images from which
     # manifests could be extract in order to install an operator.
@@ -152,7 +157,7 @@ spec:
         - generate-index
       taskRef:
         name: buildah
-        kind: ClusterTask
+        kind: Task
       params:
         - name: IMAGE
           value: &bundleIndexImage "$(params.registry)/$(params.image_stream)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
@@ -164,6 +169,8 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
+        - name: credentials
+          workspace: registry-credentials
 
     - name: ocp-environment-preparation
       runAfter:
