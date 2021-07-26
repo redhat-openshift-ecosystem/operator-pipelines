@@ -112,6 +112,7 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test-repo/pull/1 \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test-repo.git \
   --param git_username=test_user \
+  --param pr_head_label=Allda:test \
   --param bundle_path=operators/kogito-operator/1.6.0 \
   --param pyxis_url=https://catalog.redhat.com/api/containers \
   --param preflight_min_version=1.0.0 \
