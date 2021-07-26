@@ -31,6 +31,26 @@ EOF
 oc create -f ssh-secret.yml
 ```
 
+The CI pipeline supports a custom private registries where bundle and test
+index are pushed. To allow a private registry access user need to create
+auth secret - .dockerconfigjson with registry username and access token.
+
+```bash
+# Download an access token and create a secret
+
+cat << EOF > redhat-isv-redhat-isv-robot-secret.yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redhat-isv-redhat-isv-robot-pull-secret
+data:
+  .dockerconfigjson: < ACCESS CREDENTIALS >
+type: kubernetes.io/dockerconfigjson
+EOF
+
+oc create -f redhat-isv-redhat-isv-robot-secret.yml
+```
+
 To trigger a CI pipeline follow steps below:
 ```bash
 oc apply -R -f pipelines/operator-ci-pipeline.yml
@@ -41,12 +61,15 @@ curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/
 
 
 tkn pipeline start operator-ci-pipeline \
-  --param git_repo_url=https://github.com/Allda/operator-test-repo.git \
-  --param git_repo_name=Allda/operator-test-repo \
-  --param git_revision=master \
+  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test-repo.git \
+  --param git_repo_name=redhat-openshift-ecosystem/operator-pipelines-test-repo \
+  --param git_revision=main \
   --param bundle_path=operators/kogito-operator/1.6.0 \
+  --param registry=quay.io \
+  --param image_stream=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=ssh-dir,secret=my-ssh-credentials \
+  --workspace name=registry-credentials,secret=redhat-isv-redhat-isv-robot-pull-secret \
   --showlog
 ```
 
@@ -55,7 +78,7 @@ The Hosted Operator Certification Pipeline is used as a validation of the operat
 bundles. It’s an additional (to CI pipeline) layer of validation that has to run within
 the Red Hat infrastructure. It contains multiple steps from the CI pipeline.
 
-To trigger a Hosted pipeline follow steps below: 
+To trigger a Hosted pipeline follow steps below:
 ```bash
 oc apply -R -f pipelines/operator-hosted-pipeline.yml
 oc apply -R -f tasks
@@ -64,10 +87,10 @@ oc apply -R -f tasks
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
 
 tkn pipeline start operator-hosted-pipeline \
-  --param git_pr_branch=test \
+  --param git_pr_branch=main \
   --param git_pr_title="Test commit for sample PR" \
-  --param git_pr_url=https://github.com/Allda/operator-test-repo/pull/1 \
-  --param git_repo_url=https://github.com/Allda/operator-test-repo.git \
+  --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test-repo/pull/1 \
+  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test-repo.git \
   --param git_username=test_user \
   --param bundle_path=operators/kogito-operator/1.6.0 \
   --param pyxis_url=https://catalog.redhat.com/api/containers \
