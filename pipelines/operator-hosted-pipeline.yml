@@ -10,6 +10,10 @@ spec:
     - name: git_pr_url
     - name: git_repo_url
     - name: git_username
+    - name: pr_head_label
+    - name: git_organisation
+    - name: base_branch
+    - name: repository
     - name: pyxis_url
     - name: bundle_path
     - name: preflight_min_version
@@ -138,9 +142,14 @@ spec:
           value: "$(tasks.submission-validation.results.operator_name)"
         - name: operator_version
           value: "$(tasks.submission-validation.results.operator_version)"
-        - name: git_pr_branch
-          value: $(params.git_pr_branch)
-
+        - name: pr_head_label
+          value: $(params.pr_head_label)
+        - name: git_organisation
+          value: $(params.git_organisation)
+        - name: repository
+          value: $(params.repository)
+        - name: base_branch
+          value: $(params.base_branch)
     - name: query-publishing-checklist
       runAfter:
         - reserve-operator-name
