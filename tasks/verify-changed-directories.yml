@@ -8,9 +8,9 @@ spec:
     - name: operator_name
     - name: operator_version
     - name: pr_head_label
-    - name: git_organisation
-    - name: repository
+    - name: git_repo_url
     - name: base_branch
+      default: main
   steps:
     - name: get-cert-project-id
       image: quay.io/redhat-isv/operator-pipelines-images:latest
@@ -20,6 +20,5 @@ spec:
           --operator_name="$(params.operator_name)" \
           --operator-version="$(params.operator_version)" \
           --pr_head_label="$(params.pr_head_label)" \
-          --organisation="$(params.git_organisation)" \
-          --repository="$(params.repository)" \
+          --git_repo_url="$(params.git_repo_url)" \
           --base_branch="$(params.base_branch)"
