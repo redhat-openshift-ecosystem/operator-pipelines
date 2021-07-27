@@ -164,7 +164,7 @@ def test_verify_changed_files_location(wrong_change):
     ]
     repository = "sample-repository"
     operator_name = "sample-operator"
-    operator_version = "0.1.0"
+    bundle_version = "0.1.0"
 
     # sad paths
     if wrong_change:
@@ -173,10 +173,10 @@ def test_verify_changed_files_location(wrong_change):
                 changed_files + [wrong_change],
                 repository,
                 operator_name,
-                operator_version,
+                bundle_version,
             )
     # happy path
     else:
         operatorcert.verify_changed_files_location(
-            changed_files, repository, operator_name, operator_version
+            changed_files, repository, operator_name, bundle_version
         )
