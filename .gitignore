@@ -1,3 +1,6 @@
+# SSH secret
+ssh-secret.yml
+
 # VSCode project settings
 .vscode/
 

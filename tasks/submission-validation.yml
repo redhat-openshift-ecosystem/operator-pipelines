@@ -12,7 +12,7 @@ spec:
   results:
     - name: cert_project_id
     - name: operator_name
-    - name: operator_version
+    - name: bundle_version
   workspaces:
     - name: source
   steps:
@@ -40,5 +40,5 @@ spec:
         # 2. Verify that there is no other open PRs for this operator
 
         echo "test" | tee $(results.operator_name.path)
-        echo "1.2.3" | tee $(results.operator_version.path)
+        echo "1.2.3" | tee $(results.bundle_version.path)
         echo "ok"

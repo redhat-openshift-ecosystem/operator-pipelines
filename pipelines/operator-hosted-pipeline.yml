@@ -137,8 +137,8 @@ spec:
       params:
         - name: operator_name
           value: "$(tasks.submission-validation.results.operator_name)"
-        - name: operator_version
-          value: "$(tasks.submission-validation.results.operator_version)"
+        - name: bundle_version
+          value: "$(tasks.submission-validation.results.bundle_version)"
         - name: pr_head_label
           value: $(params.pr_head_label)
         - name: git_repo_url
@@ -247,8 +247,8 @@ spec:
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
           value: "$(tasks.submission-validation.results.cert_project_id)"
-        - name: operator_version
-          value: "$(tasks.submission-validation.results.operator_version)"
+        - name: bundle_version
+          value: "$(tasks.submission-validation.results.bundle_version)"
       workspaces:
         - name: results
           workspace: results
@@ -340,8 +340,8 @@ spec:
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
           value: "$(tasks.submission-validation.results.cert_project_id)"
-        - name: operator_version
-          value: "$(tasks.submission-validation.results.operator_version)"
+        - name: bundle_version
+          value: "$(tasks.submission-validation.results.bundle_version)"
       workspaces:
         - name: results
           workspace: results
