@@ -6,6 +6,7 @@ metadata:
 spec:
   params:
     - name: bundle_path
+    - name: skip
   results:
     - name: dirty_flag
   workspaces:
@@ -18,8 +19,20 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        if [ "$(params.skip)" == "true" ]; then
+          echo "Skip flag is set. Skipping digest pinning..."
+          echo "false" | tee $(results.dirty_flag.path)
+          exit 0
+        fi
+
         BUNDLE_PATH=$(realpath $(params.bundle_path))
         ls -l $BUNDLE_PATH
         operator-manifest pin $BUNDLE_PATH
 
-        echo "true" | tee $(results.dirty_flag.path)
+        if [[ $(git diff --stat) != '' ]]; then
+          echo "Manifests were not pinned."
+          echo "true" | tee $(results.dirty_flag.path)
+        else
+          echo "Manifests are pinned."
+          echo "false" | tee $(results.dirty_flag.path)
+        fi

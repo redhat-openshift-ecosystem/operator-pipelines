@@ -13,6 +13,11 @@ spec:
       default: default-route-openshift-image-registry.apps-crc.testing
     - name: image_stream
       default: $(context.pipelineRun.namespace)
+    - name: test_mode
+      description: The test mode flag skips certain steps to make a pipeline
+        faster for rapid operator development. The flag needs to be set to false
+        for a full CI pipeline run and certification pull-request submission.
+      default: "false"
   workspaces:
     - name: pipeline
     - name: ssh-dir
@@ -42,6 +47,8 @@ spec:
       params:
         - name: bundle_path
           value: "$(params.bundle_path)"
+        - name: skip
+          value: "$(params.test_mode)"
       workspaces:
         - name: source
           workspace: pipeline
