@@ -200,9 +200,9 @@ def verify_changed_files_location(
     path = f"{repository}/operators/{operator_name}/" + bundle_version
 
     logging.info(
-            f"Changes for operator {operator_name} in version {bundle_version}"
-            f" are expected to be in path: \n"
-            f" -{path}/* \n",
+        f"Changes for operator {operator_name} in version {bundle_version}"
+        f" are expected to be in path: \n"
+        f" -{path}/* \n",
     )
 
     wrong_changes = False
