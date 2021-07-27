@@ -9,7 +9,7 @@ spec:
     - name: md5sum
     - name: pyxis_url
     - name: cert_project_id
-    - name: operator_version
+    - name: bundle_version
   workspaces:
     - name: results
   steps:

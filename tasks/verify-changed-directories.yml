@@ -6,7 +6,7 @@ metadata:
 spec:
   params:
     - name: operator_name
-    - name: operator_version
+    - name: bundle_version
     - name: pr_head_label
     - name: git_repo_url
     - name: base_branch
@@ -18,7 +18,7 @@ spec:
         #! /usr/bin/env bash
         verify_changed_dirs \
           --operator_name="$(params.operator_name)" \
-          --operator-version="$(params.operator_version)" \
+          --bundle-version="$(params.bundle_version)" \
           --pr_head_label="$(params.pr_head_label)" \
           --git_repo_url="$(params.git_repo_url)" \
           --base_branch="$(params.base_branch)"
