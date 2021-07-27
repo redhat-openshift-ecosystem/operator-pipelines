@@ -17,7 +17,7 @@ def main() -> None:
     )
     parser.add_argument("--operator_name", help="Unique name of the operator package")
     parser.add_argument(
-        "--operator_version", help="Operator version in the semver format"
+        "--bundle_version", help="Operator Bundle version in the semver format"
     )
     parser.add_argument(
         # Github webhook payload contains it in path pull_request.head.label
@@ -38,5 +38,5 @@ def main() -> None:
         organization, repository, args.base_branch, args.pr_head_label
     )
     verify_changed_files_location(
-        changed_files, repository, args.operator_name, args.operator_version
+        changed_files, repository, args.operator_name, args.bundle_version
     )

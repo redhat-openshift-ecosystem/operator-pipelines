@@ -21,18 +21,3 @@ def find_file(
         if new_path.exists() and new_path.is_file():
             return new_path
     return None
-
-
-def str_color(color, data):
-    # source: https://stackoverflow.com/a/31991678
-    colors = {
-        "pink": "\033[95m",
-        "blue": "\033[94m",
-        "green": "\033[92m",
-        "yellow": "\033[93m",
-        "red": "\033[91m",
-        "ENDC": "\033[0m",
-        "bold": "\033[1m",
-        "underline": "\033[4m",
-    }
-    return colors[color] + str(data) + colors["ENDC"]

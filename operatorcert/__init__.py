@@ -2,12 +2,12 @@ import json
 import logging
 import pathlib
 from urllib.parse import urljoin, urlparse
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import requests
 import yaml
 
-from operatorcert.utils import find_file, str_color
+from operatorcert.utils import find_file
 
 # Bundle annotations
 OCP_VERSIONS_ANNOTATION = "com.redhat.openshift.versions"
@@ -178,17 +178,18 @@ def get_files_changed_in_pr(
         f"https://api.github.com/repos/{organization}/{repository}"
         f"/compare/{base_branch}...{pr_head_label}"
     )
-    pr_data = requests.get(compare_changes_url).json()
+    rsp = requests.get(compare_changes_url).json()
+    rsp.raise_for_status()
 
     filenames = []
-    for file in pr_data.get("files", []):
+    for file in rsp.get("files", []):
         filenames.append(file["filename"])
 
     return filenames
 
 
 def verify_changed_files_location(
-    changed_files: List[str], repository: str, operator_name: str, operator_version: str
+    changed_files: List[str], repository: str, operator_name: str, bundle_version: str
 ) -> None:
     """
     Find the allowed locations in directory tree for changes
@@ -196,24 +197,20 @@ def verify_changed_files_location(
     Test if all of the changes are in allowed locations.
     """
 
-    path = f"{repository}/operators/{operator_name}/" + operator_version
+    path = f"{repository}/operators/{operator_name}/" + bundle_version
 
     logging.info(
-        str_color(
-            "blue",
-            f"Changes for operator {operator_name} in version {operator_version}"
+            f"Changes for operator {operator_name} in version {bundle_version}"
             f" are expected to be in path: \n"
             f" -{path}/* \n",
-        )
     )
 
     wrong_changes = False
     for file_path in changed_files:
         if file_path.startswith(path):
-            logging.info(str_color("green", f"Change path ok: {file_path}"))
-            continue
+            logging.info(f"Change path ok: {file_path}")
         else:
-            logging.error(str_color("red", f"Wrong change path: {file_path}"))
+            logging.error(f"Wrong change path: {file_path}")
             wrong_changes = True
 
     if wrong_changes:
