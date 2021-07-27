@@ -178,11 +178,11 @@ def get_files_changed_in_pr(
         f"https://api.github.com/repos/{organization}/{repository}"
         f"/compare/{base_branch}...{pr_head_label}"
     )
-    rsp = requests.get(compare_changes_url).json()
+    rsp = requests.get(compare_changes_url)
     rsp.raise_for_status()
 
     filenames = []
-    for file in rsp.get("files", []):
+    for file in rsp.json().get("files", []):
         filenames.append(file["filename"])
 
     return filenames
