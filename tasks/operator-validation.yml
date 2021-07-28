@@ -47,9 +47,9 @@ spec:
         #! /usr/bin/env bash
         echo "Checking availability of cert project identifier"
 
-        BUNDLE_PATH=$(realpath $(params.bundle_path))
+        PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
 
-        CI_FILE_PATH="$BUNDLE_PATH/ci.yaml"
+        CI_FILE_PATH="$PKG_PATH/ci.yaml"
 
         CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id')
 
