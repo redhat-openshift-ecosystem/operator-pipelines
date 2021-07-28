@@ -37,8 +37,14 @@ spec:
 
         VERSION_INFO=$(ocp-version-info $(params.bundle_path))
         echo $VERSION_INFO | jq
-        echo $VERSION_INFO | jq -r '.max_version_index.ocp_version' | tee $(results.max_supported_ocp_version.path)
-        echo $VERSION_INFO | jq -r '.max_version_index.path' | tee $(results.max_supported_index.path)
+        echo $VERSION_INFO \
+          | jq -r '.max_version_index.ocp_version' \
+          | tr -d '\n\r' \
+          | tee $(results.max_supported_ocp_version.path)
+        echo $VERSION_INFO \
+          | jq -r '.max_version_index.path' \
+          | tr -d '\n\r' \
+          | tee $(results.max_supported_index.path)
 
     - name: certification-project-check
       image: quay.io/redhat-isv/operator-pipelines-images:latest

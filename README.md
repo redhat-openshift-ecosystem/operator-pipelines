@@ -11,7 +11,9 @@ it in ocp environment. After an operator is installed a pre-flight tests are exe
 that validates that operator meets minimum requirements for Red Hat OpenShift Certification.
 If tests pass a CI pipeline submits a PR for full operator certification workflow.
 
+### Prerequisites
 
+#### Git SSH Secret
 Since CI pipeline needs to make some changes in git repository (for example digest pinning)
 the pipeline requires a write access to provided git repository. Before running a pipeline
 user needs to upload ssh secret key to a cluster where the pipeline will run.
@@ -31,27 +33,31 @@ EOF
 oc create -f ssh-secret.yml
 ```
 
-The CI pipeline supports a custom private registries where bundle and test
-index are pushed. To allow a private registry access user need to create
-auth secret - .dockerconfigjson with registry username and access token.
+#### Registry Credentials
+The CI pipeline requires credentials to push and/or pull from all authenticated
+registries. This includes:
+
+* Red Hat terms-based registry (registry.redhat.io)
+* The registry specified by the `registry` param (including the internal Openshift registry)
+
+The user must create an auth secret containing the docker config with all
+credentials included. For example:
 
 ```bash
-# Download an access token and create a secret
-
-cat << EOF > redhat-isv-redhat-isv-robot-secret.yml
+cat << EOF > my-registry-secret.yml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: redhat-isv-redhat-isv-robot-pull-secret
+  name: my-registry-secret
 data:
-  .dockerconfigjson: < ACCESS CREDENTIALS >
+  .dockerconfigjson: < BASE64 ENCODED DOCKER CONFIG >
 type: kubernetes.io/dockerconfigjson
 EOF
 
-oc create -f redhat-isv-redhat-isv-robot-secret.yml
+oc create -f my-registry-secret.yml
 ```
 
-To trigger a CI pipeline follow steps below:
+### Installation
 ```bash
 oc apply -R -f pipelines/operator-ci-pipeline.yml
 oc apply -R -f tasks
@@ -59,8 +65,12 @@ oc apply -R -f tasks
 # Install external dependencies
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml | oc apply -f -
+```
 
+### Execution
+The CI pipeline can be triggered using the tkn CLI like so:
 
+```bash
 tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test-repo.git \
   --param git_repo_name=redhat-openshift-ecosystem/operator-pipelines-test-repo \
@@ -70,7 +80,7 @@ tkn pipeline start operator-ci-pipeline \
   --param image_stream=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=ssh-dir,secret=my-ssh-credentials \
-  --workspace name=registry-credentials,secret=redhat-isv-redhat-isv-robot-pull-secret \
+  --workspace name=registry-credentials,secret=my-registry-secret \
   --showlog
 ```
 
@@ -79,7 +89,10 @@ The Hosted Operator Certification Pipeline is used as a validation of the operat
 bundles. It’s an additional (to CI pipeline) layer of validation that has to run within
 the Red Hat infrastructure. It contains multiple steps from the CI pipeline.
 
-To trigger a Hosted pipeline follow steps below:
+### Prerequisites
+See the [Registry Credentials](#registry-credentials) section.
+
+### Installation
 ```bash
 oc apply -R -f pipelines/operator-hosted-pipeline.yml
 oc apply -R -f tasks
@@ -87,7 +100,12 @@ oc apply -R -f tasks
 # Install external dependencies
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml | oc apply -f -
+```
 
+### Execution
+The hosted pipeline can be triggered using the tkn CLI like so:
+
+```bash
 tkn pipeline start operator-hosted-pipeline \
   --param git_pr_branch=main \
   --param git_pr_title="Test commit for sample PR" \
@@ -100,5 +118,6 @@ tkn pipeline start operator-hosted-pipeline \
   --param ci_min_version=1.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=registry-credentials,secret=my-registry-secret \
   --showlog
 ```
