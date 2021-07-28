@@ -6,29 +6,36 @@ metadata:
 spec:
   params:
     - name: bundle_image
+      description: Pull spec of a bundle image
+    - name: from_index
+      description: Parent index image the bundle will be added to
   results:
     - name: index_dockerfile
+      description: Path to the generated index Dockerfile
   workspaces:
-    - name: source
+    - name: output
+    - name: credentials
+      description: Docker config for retrieving the parent index image and bundle image
   steps:
     - name: generate
-      image: quay.io/amisstea/operator-pipeline-tools:latest
-      workingDir: $(workspaces.source.path)
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        # TODO should --from-index be specified?
-        # --permissive is used to overcome errors about the missing bundles
-        # this one replaces.
+        # OPM needs the standard docker config directory structure
+        export DOCKER_CONFIG=/tmp/.docker
+        mkdir $DOCKER_CONFIG
+        cp $(workspaces.credentials.path)/.dockerconfigjson $DOCKER_CONFIG/config.json
+
         opm index add \
-          --bundles $(params.bundle_image) \
+          --from-index "$(params.from_index)" \
+          --bundles "$(params.bundle_image)" \
           --container-tool none \
           --out-dockerfile Dockerfile.index \
-          --generate \
-          --skip-tls \
-          --permissive
+          --generate
 
-        ls -l
+        ls -lh
         cat Dockerfile.index
-        echo Dockerfile.index | tee $(results.index_dockerfile.path)
+        echo -n Dockerfile.index | tee $(results.index_dockerfile.path)

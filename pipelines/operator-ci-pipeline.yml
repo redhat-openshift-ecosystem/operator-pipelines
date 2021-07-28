@@ -154,10 +154,14 @@ spec:
       params:
         - name: bundle_image
           value: *bundleImage
+        - name: from_index
+          value: "$(tasks.operator-validation.results.max_supported_index)"
       workspaces:
-        - name: source
+        - name: output
           workspace: pipeline
-          subPath: src
+          subPath: index
+        - name: credentials
+          workspace: registry-credentials
 
     - name: build-index
       runAfter:
@@ -168,14 +172,12 @@ spec:
       params:
         - name: IMAGE
           value: &bundleIndexImage "$(params.registry)/$(params.image_stream)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
-        - name: CONTEXT
-          value: "$(params.bundle_path)"
-        # - name: DOCKERFILE
-        #   value: "Dockerfile.index"
+        - name: DOCKERFILE
+          value: "$(tasks.generate-index.results.index_dockerfile)"
       workspaces:
         - name: source
           workspace: pipeline
-          subPath: src
+          subPath: index
         - name: credentials
           workspace: registry-credentials
 

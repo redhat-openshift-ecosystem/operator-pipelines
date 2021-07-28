@@ -21,6 +21,7 @@ spec:
   workspaces:
     - name: repository
     - name: results
+    - name: registry-credentials
   tasks:
     # Git clone
     - name: checkout
@@ -198,10 +199,14 @@ spec:
       params:
         - name: bundle_image
           value: *bundleImage
+        - name: from_index
+          value: "$(tasks.operator-validation.results.max_supported_index)"
       workspaces:
-        - name: source
+        - name: output
           workspace: repository
-          subPath: src
+          subPath: index
+        - name: credentials
+          workspace: registry-credentials
 
     - name: build-index
       runAfter:
