@@ -196,7 +196,7 @@ def verify_changed_files_location(
     (basing on the operator name and version).
     Test if all of the changes are in allowed locations.
     """
-    parent_path = f"{repository}/operators/{operator_name}"
+    parent_path = f"operators/{operator_name}"
     path = parent_path + "/" + bundle_version
     config_path = parent_path + "/ci.yaml"
 
