@@ -15,21 +15,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Determines the OCP version under test."
     )
-    parser.add_argument("--operator_name", help="Unique name of the operator package")
+    parser.add_argument("--operator-name", help="Unique name of the operator package")
     parser.add_argument(
-        "--bundle_version", help="Operator Bundle version in the semver format"
+        "--bundle-version", help="Operator Bundle version in the semver format"
     )
     parser.add_argument(
         # Github webhook payload contains it in path pull_request.head.label
-        "--pr_head_label",
+        "--pr-head-label",
         help="Label of the branch to be merged. Eg. User:branch-name",
     )
     parser.add_argument(
-        "--git_repo_url",
+        "--git-repo-url",
         help="Github repository URL",
     )
     parser.add_argument("--repository", help="Base branch repository name")
-    parser.add_argument("--base_branch", help="Base branch of the PR", default="main")
+    parser.add_argument("--base-branch", help="Base branch of the PR", default="main")
     args = parser.parse_args()
 
     organization, repository = get_repo_and_org_from_github_url(args.git_repo_url)
