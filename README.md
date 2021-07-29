@@ -72,10 +72,9 @@ The CI pipeline can be triggered using the tkn CLI like so:
 
 ```bash
 tkn pipeline start operator-ci-pipeline \
-  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test-repo.git \
-  --param git_repo_name=redhat-openshift-ecosystem/operator-pipelines-test-repo \
+  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_revision=main \
-  --param bundle_path=operators/kogito-operator/1.6.0 \
+  --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param registry=quay.io \
   --param image_stream=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
@@ -107,18 +106,20 @@ The hosted pipeline can be triggered using the tkn CLI like so:
 
 ```bash
 tkn pipeline start operator-hosted-pipeline \
-  --param git_pr_branch=main \
+  --param git_pr_branch=test-PR-ok \
   --param git_pr_title="Test commit for sample PR" \
-  --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test-repo/pull/1 \
-  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test-repo.git \
+  --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/1 \
+  --param git_fork_url=git@github.com:MarcinGinszt/operator-pipelines-test.git \
+  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_username=test_user \
-  --param pr_head_label=Allda:test \
-  --param bundle_path=operators/kogito-operator/1.6.0 \
+  --param pr_head_label=MarcinGinszt:test-PR-ok \
+  --param bundle_path=operators/kogito-operator/1.6.1-ok \
   --param pyxis_url=https://catalog.redhat.com/api/containers \
   --param preflight_min_version=1.0.0 \
   --param ci_min_version=1.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=ssh-dir,secret=my-ssh-credentials \
   --workspace name=registry-credentials,secret=my-registry-secret \
   --showlog
 ```

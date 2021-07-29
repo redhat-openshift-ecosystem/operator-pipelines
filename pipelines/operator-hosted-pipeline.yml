@@ -8,6 +8,7 @@ spec:
     - name: git_pr_branch
     - name: git_pr_title
     - name: git_pr_url
+    - name: git_fork_url
     - name: git_repo_url
     - name: git_username
     - name: pr_head_label
@@ -19,9 +20,15 @@ spec:
       default: quay.io
     - name: image_stream
       default: $(context.pipelineRun.namespace)
+    - name: test_mode
+      description: The test mode flag skips certain steps to make a pipeline
+        faster for rapid operator development. The flag needs to be set to false
+        for a full CI pipeline run and certification pull-request submission.
+      default: "false"
   workspaces:
     - name: repository
     - name: results
+    - name: ssh-dir
     - name: registry-credentials
   tasks:
     # Git clone
@@ -31,13 +38,15 @@ spec:
         kind: Task
       params:
         - name: url
-          value: $(params.git_repo_url)
+          value: $(params.git_fork_url)
         - name: revision
           value: $(params.git_pr_branch)
       workspaces:
         - name: output
           workspace: repository
           subPath: src
+        - name: ssh-directory
+          workspace: ssh-dir
 
     # Validate submission
     - name: submission-validation
@@ -102,6 +111,8 @@ spec:
       params:
         - name: bundle_path
           value: "$(params.bundle_path)"
+        - name: skip
+          value: "$(params.test_mode)"
       workspaces:
         - name: source
           workspace: repository
@@ -190,6 +201,8 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: credentials
+          workspace: registry-credentials
 
     # Index image contains a record of bundle images from which
     # manifests could be extract in order to install an operator.
@@ -227,6 +240,8 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: credentials
+          workspace: registry-credentials
 
     # Try to retrieve preflight tests results
     # (they can run on premise)

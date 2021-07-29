@@ -39,6 +39,6 @@ spec:
         # 1. verify via regex if PR title follows convention
         # 2. Verify that there is no other open PRs for this operator
 
-        echo "test" | tee $(results.operator_name.path)
-        echo "1.2.3" | tee $(results.bundle_version.path)
+        echo "kogito-operator" | tee $(results.operator_name.path)
+        echo "1.6.1-ok" | tee $(results.bundle_version.path)
         echo "ok"
