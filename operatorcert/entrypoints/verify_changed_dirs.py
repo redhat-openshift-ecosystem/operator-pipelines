@@ -38,5 +38,5 @@ def main() -> None:
         organization, repository, args.base_branch, args.pr_head_label
     )
     verify_changed_files_location(
-        changed_files, repository, args.operator_name, args.bundle_version
+        changed_files, args.operator_name, args.bundle_version
     )

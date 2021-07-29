@@ -189,7 +189,7 @@ def get_files_changed_in_pr(
 
 
 def verify_changed_files_location(
-    changed_files: List[str], repository: str, operator_name: str, bundle_version: str
+    changed_files: List[str], operator_name: str, bundle_version: str
 ) -> None:
     """
     Find the allowed locations in directory tree for changes

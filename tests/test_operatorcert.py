@@ -159,11 +159,10 @@ def test_get_files_changed_in_pr(mock_get: MagicMock):
 )
 def test_verify_changed_files_location(wrong_change):
     changed_files = [
-        "sample-repository/operators/sample-operator/0.1.0/1.txt",
-        "sample-repository/operators/sample-operator/0.1.0/directory/2.txt",
-        "sample-repository/operators/sample-operator/ci.yaml",
+        "operators/sample-operator/0.1.0/1.txt",
+        "operators/sample-operator/0.1.0/directory/2.txt",
+        "operators/sample-operator/ci.yaml",
     ]
-    repository = "sample-repository"
     operator_name = "sample-operator"
     bundle_version = "0.1.0"
 
@@ -172,12 +171,11 @@ def test_verify_changed_files_location(wrong_change):
         with pytest.raises(RuntimeError):
             operatorcert.verify_changed_files_location(
                 changed_files + [wrong_change],
-                repository,
                 operator_name,
                 bundle_version,
             )
     # happy path
     else:
         operatorcert.verify_changed_files_location(
-            changed_files, repository, operator_name, bundle_version
+            changed_files, operator_name, bundle_version
         )
