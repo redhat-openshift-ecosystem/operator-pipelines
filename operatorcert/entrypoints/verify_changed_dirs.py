@@ -13,7 +13,7 @@ def main() -> None:
     logging.basicConfig(stream=sys.stdout, level="INFO", format="%(message)s")
 
     parser = argparse.ArgumentParser(
-        description="Determines the OCP version under test."
+        description="Verify, if only expected directories are changed by submission"
     )
     parser.add_argument("--operator-name", help="Unique name of the operator package")
     parser.add_argument(

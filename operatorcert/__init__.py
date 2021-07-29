@@ -1,6 +1,7 @@
 import json
 import logging
 import pathlib
+import re
 from urllib.parse import urljoin, urlparse
 from typing import Dict, List
 
@@ -66,7 +67,7 @@ def get_csv_annotations(bundle_path: pathlib.Path, package: str) -> Dict:
 
 
 def get_supported_indices(
-    pyxis_url: str, ocp_versions_range: str, max_ocp_version: str = None
+        pyxis_url: str, ocp_versions_range: str, max_ocp_version: str = None
 ) -> List[str]:
     """
     Gets all the known supported OCP indices for this bundle.
@@ -175,7 +176,7 @@ def get_repo_and_org_from_github_url(git_repo_url: str) -> (str, str):
 
 
 def get_files_changed_in_pr(
-    organization: str, repository: str, base_branch: str, pr_head_label: str
+        organization: str, repository: str, base_branch: str, pr_head_label: str
 ) -> List[str]:
     """
     Get the list of files modified in the PR against the base branch.
@@ -195,7 +196,7 @@ def get_files_changed_in_pr(
 
 
 def verify_changed_files_location(
-    changed_files: List[str], operator_name: str, bundle_version: str
+        changed_files: List[str], operator_name: str, bundle_version: str
 ) -> None:
     """
     Find the allowed locations in directory tree for changes
@@ -223,3 +224,52 @@ def verify_changed_files_location(
 
     if wrong_changes:
         raise RuntimeError("There are changes in the invalid path")
+
+
+def parse_pr_title(pr_title: str) -> (str, str):
+    # Verify if PR title follows convention- it should contain the operator name Semver regex from semver.org:
+    # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+    semver_regex = "(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[" \
+                   "1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(" \
+                   "?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"
+
+    regex = f"^operator ([a-zA-Z0-9-]+) \(({semver_regex})\)$"
+
+    if not re.match(regex, pr_title):
+        raise ValueError(f"PR title {pr_title} does not follow the regex 'operator <operator_name> (<semver>)")
+
+    matching = re.search(regex, pr_title)
+    bundle_name = matching.group(1)
+    bundle_version = matching.group(2)
+
+    return bundle_name, bundle_version
+
+
+def verify_pr_uniqueness(environment: str) -> None:
+    repos = {
+        "prod": {
+            # TODO
+            "certified": "",
+            "marketplace": ""
+        },
+        "preprod": {
+            "certified":"certified-operators-preprod",
+            "marketplace": "redhat-marketplace-operators-preprod"
+        }
+    }
+
+    try:
+        repos = repos[environment]
+    except KeyError as e:
+        e.args += f"Wrong environment {environment}- can be one of prod and preprod"
+
+    base_url = "https://github.com/redhat-openshift-ecosystem/"
+
+    for repo in repos:
+        requests.get(base_url + repo)
+        # curl \
+        #   -H "Accept: application/vnd.github.v3+json" \
+        #   https://api.github.com/repos/octocat/hello-world/pulls
+
+
+
