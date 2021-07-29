@@ -12,13 +12,14 @@ spec:
     - name: base_branch
       default: main
   steps:
-    - name: get-cert-project-id
+    - name: verify-changed-directories
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       script: |
         #! /usr/bin/env bash
-        verify_changed_dirs \
+
+        verify-changed-dirs \
           --operator_name="$(params.operator_name)" \
-          --bundle-version="$(params.bundle_version)" \
+          --bundle_version="$(params.bundle_version)" \
           --pr_head_label="$(params.pr_head_label)" \
           --git_repo_url="$(params.git_repo_url)" \
           --base_branch="$(params.base_branch)"
