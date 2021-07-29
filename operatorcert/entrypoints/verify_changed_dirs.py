@@ -40,8 +40,8 @@ def main() -> None:
 
     # Tekton task results have the end of line symbol added.
     # This looks like issue that will be resolved in the incoming versions.
-    operator_name = args.operator_name.replace("\n", "")
-    bundle_version = args.bundle_version.replace("\n", "")
+    operator_name = args.operator_name.lstrip().rstrip()
+    bundle_version = args.bundle_version.lstrip().rstrip()
 
     verify_changed_files_location(changed_files, operator_name, bundle_version)
 
