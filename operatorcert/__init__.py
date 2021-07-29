@@ -154,7 +154,7 @@ def get_repo_and_org_from_github_url(git_repo_url: str) -> (str, str):
     repository name
     """
     parsed = urlparse(git_repo_url)
-    path = parsed.path.rstrip(".git")
+    path = parsed.path.removesuffix(".git")
     path_components = path.split("/")
     if len(path_components) != 3:
         raise ValueError(
@@ -196,18 +196,20 @@ def verify_changed_files_location(
     (basing on the operator name and version).
     Test if all of the changes are in allowed locations.
     """
-
-    path = f"{repository}/operators/{operator_name}/" + bundle_version
+    parent_path = f"{repository}/operators/{operator_name}"
+    path = parent_path + "/" + bundle_version
+    config_path = parent_path + "/ci.yaml"
 
     logging.info(
         f"Changes for operator {operator_name} in version {bundle_version}"
-        f" are expected to be in path: \n"
-        f" -{path}/* \n",
+        f" are expected to be in paths: \n"
+        f" -{path}/* \n"
+        f" -{config_path}",
     )
 
     wrong_changes = False
     for file_path in changed_files:
-        if file_path.startswith(path):
+        if file_path.startswith(path) or file_path == config_path:
             logging.info(f"Change path ok: {file_path}")
         else:
             logging.error(f"Wrong change path: {file_path}")

@@ -153,7 +153,7 @@ def test_get_files_changed_in_pr(mock_get: MagicMock):
         "sample-repository/operators/other-operator/0.1.0/1.txt",
         # wrong version
         "sample-repository/operators/sample-operator/0.1.1/1.txt",
-        # change in the operator directory level
+        # change other than ci.yaml in the operator directory level
         "sample-repository/operators/sample-operator/1.txt",
     ],
 )
@@ -161,6 +161,7 @@ def test_verify_changed_files_location(wrong_change):
     changed_files = [
         "sample-repository/operators/sample-operator/0.1.0/1.txt",
         "sample-repository/operators/sample-operator/0.1.0/directory/2.txt",
+        "sample-repository/operators/sample-operator/ci.yaml",
     ]
     repository = "sample-repository"
     operator_name = "sample-operator"
