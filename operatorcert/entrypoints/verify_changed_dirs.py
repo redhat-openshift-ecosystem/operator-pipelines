@@ -40,3 +40,7 @@ def main() -> None:
     verify_changed_files_location(
         changed_files, args.operator_name, args.bundle_version
     )
+
+
+if __name__ == "__main__":
+    main()

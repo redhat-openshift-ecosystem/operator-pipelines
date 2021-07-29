@@ -114,11 +114,18 @@ def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
 
 def test_get_repo_and_org_from_github_url():
     org, repo = operatorcert.get_repo_and_org_from_github_url(
-        "https://github.com/redhat-openshift-ecosystem/operator-pipelines.git"
+        "git@github.com:redhat-openshift-ecosystem/operator-pipelines.git"
     )
     assert org == "redhat-openshift-ecosystem"
     assert repo == "operator-pipelines"
 
+    # wrong amount of url segments
+    with pytest.raises(ValueError):
+        operatorcert.get_repo_and_org_from_github_url(
+            "git@github.com:redhat-openshift-ecosystem/operator-pipelines/something.git"
+        )
+
+    # https instead of ssh
     with pytest.raises(ValueError):
         operatorcert.get_repo_and_org_from_github_url(
             "https://github.com/redhat-openshift-ecosystem/operator-pipelines/something.git"

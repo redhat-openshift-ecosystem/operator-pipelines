@@ -153,17 +153,23 @@ def get_repo_and_org_from_github_url(git_repo_url: str) -> (str, str):
     Parse github repository URL to get the organization (or user) and
     repository name
     """
+
+    wrong_path_err = (
+        f"{git_repo_url} is not a valid repository link. "
+        f"Valid link should look like "
+        f"'git@github.com:redhat-openshift-ecosystem/operator-pipelines.git'"
+    )
+
     parsed = urlparse(git_repo_url)
-    path = parsed.path.removesuffix(".git")
+    path = parsed.path
+    if not path.startswith("git@github.com:") or not path.endswith(".git"):
+        raise ValueError(wrong_path_err)
+    path = parsed.path.removeprefix("git@github.com:").removesuffix(".git")
     path_components = path.split("/")
-    if len(path_components) != 3:
-        raise ValueError(
-            f"{git_repo_url} is not a valid repository link. "
-            f"Valid link should look like "
-            f"'https://github.com/redhat-openshift-ecosystem/operator-pipelines'"
-        )
-    repository = path_components[-1]
-    organization = path_components[-2]
+    if len(path_components) != 2:
+        raise ValueError(wrong_path_err)
+    organization = path_components[0]
+    repository = path_components[1]
 
     return organization, repository
 
