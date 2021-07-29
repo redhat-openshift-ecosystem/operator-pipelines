@@ -209,8 +209,8 @@ def verify_changed_files_location(
     logging.info(
         f"Changes for operator {operator_name} in version {bundle_version}"
         f" are expected to be in paths: \n"
-        f" -{path}/* \n"
-        f" -{config_path}",
+        f" {path}/* \n"
+        f" {config_path}"
     )
 
     wrong_changes = False

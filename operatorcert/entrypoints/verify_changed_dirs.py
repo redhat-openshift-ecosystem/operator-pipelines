@@ -37,9 +37,13 @@ def main() -> None:
     changed_files = get_files_changed_in_pr(
         organization, repository, args.base_branch, args.pr_head_label
     )
-    verify_changed_files_location(
-        changed_files, args.operator_name, args.bundle_version
-    )
+
+    # Tekton task results have the end of line symbol added.
+    # This looks like issue that will be resolved in the incoming versions.
+    operator_name = args.operator_name.replace("\n", "")
+    bundle_version = args.bundle_version.replace("\n", "")
+
+    verify_changed_files_location(changed_files, operator_name, bundle_version)
 
 
 if __name__ == "__main__":
