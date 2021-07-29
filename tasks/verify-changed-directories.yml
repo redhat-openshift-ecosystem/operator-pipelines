@@ -18,8 +18,8 @@ spec:
         #! /usr/bin/env bash
 
         verify-changed-dirs \
-          --operator_name="$(params.operator_name)" \
-          --bundle_version="$(params.bundle_version)" \
-          --pr_head_label="$(params.pr_head_label)" \
-          --git_repo_url="$(params.git_repo_url)" \
-          --base_branch="$(params.base_branch)"
+          --operator-name="$(params.operator_name)" \
+          --bundle-version="$(params.bundle_version)" \
+          --pr-head-label="$(params.pr_head_label)" \
+          --git-repo-url="$(params.git_repo_url)" \
+          --base-branch="$(params.base_branch)"
