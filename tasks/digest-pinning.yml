@@ -7,6 +7,7 @@ spec:
   params:
     - name: bundle_path
     - name: skip
+      default: "false"
   results:
     - name: dirty_flag
   workspaces:
