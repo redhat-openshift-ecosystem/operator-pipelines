@@ -25,7 +25,3 @@ def main() -> None:
 
     # Verify, that there is no other PR opened for this Bundle
     verify_pr_uniqueness(args.available_repositories, args.pr_url, bundle_name)
-
-
-if __name__ == "__main__":
-    main()
