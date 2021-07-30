@@ -3,7 +3,7 @@ import logging
 import sys
 
 from operatorcert import (
-    get_files_changed_in_pr,
+    get_files_added_in_pr,
     verify_changed_files_location,
     get_repo_and_org_from_github_url,
 )
@@ -34,7 +34,7 @@ def main() -> None:
 
     organization, repository = get_repo_and_org_from_github_url(args.git_repo_url)
 
-    changed_files = get_files_changed_in_pr(
+    changed_files = get_files_added_in_pr(
         organization, repository, args.base_branch, args.pr_head_label
     )
 

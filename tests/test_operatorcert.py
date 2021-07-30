@@ -133,20 +133,41 @@ def test_get_repo_and_org_from_github_url():
 
 
 @patch("requests.get")
-def test_get_files_changed_in_pr(mock_get: MagicMock):
+def test_get_files_added_in_pr(mock_get: MagicMock):
     mock_rsp = MagicMock()
     mock_rsp.json.return_value = {
         "irrelevant_key": "abc",
-        "files": [{"filename": "first"}, {"filename": "second"}],
+        "files": [
+            {"filename": "first", "status": "added"},
+            {"filename": "second", "status": "added"},
+        ],
     }
     mock_get.return_value = mock_rsp
-    files = operatorcert.get_files_changed_in_pr(
+    files = operatorcert.get_files_added_in_pr(
         "rh", "operator-repo", "main", "user:fixup"
     )
     mock_get.assert_called_with(
         "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup"
     )
     assert files == ["first", "second"]
+
+
+@patch("requests.get")
+def test_get_files_added_in_pr_changed_files(mock_get: MagicMock):
+    mock_rsp = MagicMock()
+    mock_rsp.json.return_value = {
+        "irrelevant_key": "abc",
+        "files": [
+            {"filename": "first", "status": "deleted"},
+            {"filename": "second", "status": "changed"},
+        ],
+    }
+    mock_get.return_value = mock_rsp
+    with pytest.raises(RuntimeError):
+        operatorcert.get_files_added_in_pr("rh", "operator-repo", "main", "user:fixup")
+    mock_get.assert_called_with(
+        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup"
+    )
 
 
 @pytest.mark.parametrize(
@@ -164,7 +185,7 @@ def test_get_files_changed_in_pr(mock_get: MagicMock):
         "sample-repository/operators/sample-operator/1.txt",
     ],
 )
-def test_verify_changed_files_location(wrong_change):
+def test_verify_changed_files_location(wrong_change: str):
     changed_files = [
         "operators/sample-operator/0.1.0/1.txt",
         "operators/sample-operator/0.1.0/directory/2.txt",
@@ -185,4 +206,64 @@ def test_verify_changed_files_location(wrong_change):
     else:
         operatorcert.verify_changed_files_location(
             changed_files, operator_name, bundle_version
+        )
+
+
+@pytest.mark.parametrize(
+    "pr_title, is_valid, name, version",
+    [
+        ("operator operator-test123 (1.0.1)", True, "operator-test123", "1.0.1"),
+        ("operator OPERATOR (1.0.1-ok)", True, "OPERATOR", "1.0.1-ok"),
+        ("operator operator-test123 (1.0.1) aa", False, "", ""),
+        ("operator  (1.0.1)", False, "", ""),
+        ("operator-test123 (1.0.1)", False, "", ""),
+        ("operator-test123 (1.0.1)", False, "", ""),
+        ("operator oper@tor-test123 (1.0.1)", False, "", ""),
+        ("operator operator-test123 (1)", False, "", ""),
+    ],
+)
+def test_parse_pr_title(pr_title: str, is_valid: bool, name: str, version: str):
+    if is_valid:
+        res_name, res_version = operatorcert.parse_pr_title(pr_title)
+        assert res_name == name
+        assert res_version == version
+    else:
+        with pytest.raises(ValueError):
+            operatorcert.parse_pr_title(pr_title)
+
+
+@patch("requests.get")
+def test_verify_pr_uniqueness(mock_get: MagicMock):
+    base_pr_url = "https://github.com/user/repo/pulls/1"
+    pr_rsp = [
+        # At first call get return:
+        [
+            {"title": "operator first (1.2.3)", "url": base_pr_url},
+            {"title": "operator second (1.2.3)", "url": base_pr_url.replace("1", "2")},
+            {"title": "operator third (1.2.3)", "url": base_pr_url.replace("1", "3")},
+        ],
+        # At second call return:
+        [{"title": "operator fourth (1.2.3)", "url": base_pr_url.replace("1", "4")}],
+    ]
+
+    mock_rsp = MagicMock()
+    mock_rsp.json.side_effect = pr_rsp
+
+    mock_get.return_value = mock_rsp
+
+    available_repositories = "repo_a,repo_b"
+    base_pr_bundle_name = "first"
+    operatorcert.verify_pr_uniqueness(
+        available_repositories, base_pr_url, base_pr_bundle_name
+    )
+
+    # For second call return PR title with the same operator name, but other version
+    pr_rsp[1].append(
+        {"title": "operator first (1.2.4)", "url": base_pr_url.replace("1", "5")}
+    )
+    mock_rsp.json.side_effect = pr_rsp
+
+    with pytest.raises(RuntimeError):
+        operatorcert.verify_pr_uniqueness(
+            available_repositories, base_pr_url, base_pr_bundle_name
         )

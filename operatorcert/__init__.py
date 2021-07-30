@@ -67,7 +67,7 @@ def get_csv_annotations(bundle_path: pathlib.Path, package: str) -> Dict:
 
 
 def get_supported_indices(
-        pyxis_url: str, ocp_versions_range: str, max_ocp_version: str = None
+    pyxis_url: str, ocp_versions_range: str, max_ocp_version: str = None
 ) -> List[str]:
     """
     Gets all the known supported OCP indices for this bundle.
@@ -175,11 +175,12 @@ def get_repo_and_org_from_github_url(git_repo_url: str) -> (str, str):
     return organization, repository
 
 
-def get_files_changed_in_pr(
-        organization: str, repository: str, base_branch: str, pr_head_label: str
+def get_files_added_in_pr(
+    organization: str, repository: str, base_branch: str, pr_head_label: str
 ) -> List[str]:
     """
-    Get the list of files modified in the PR against the base branch.
+    Get the list of files added in the PR.
+    Raise error if there are changed, existing files.
     """
     compare_changes_url = (
         f"https://api.github.com/repos/{organization}/{repository}"
@@ -188,11 +189,24 @@ def get_files_changed_in_pr(
     rsp = requests.get(compare_changes_url)
     rsp.raise_for_status()
 
-    filenames = []
+    added_files_names = []
+    modified_files = []
     for file in rsp.json().get("files", []):
-        filenames.append(file["filename"])
+        if file["status"] == "added":
+            added_files_names.append(file["filename"])
+        else:
+            # To prevent the modifications to previously merged bundles,
+            # we allow only changed with status "added"
+            modified_files.append(file)
 
-    return filenames
+    if modified_files:
+        for modified_file in modified_files:
+            logging.error(
+                f"Wrong change: file: {modified_file['filename']}, status: {modified_file['status']}"
+            )
+        raise RuntimeError("There are changes done to previously merged Bundles")
+
+    return added_files_names
 
 
 def verify_changed_files_location(
@@ -227,49 +241,72 @@ def verify_changed_files_location(
 
 
 def parse_pr_title(pr_title: str) -> (str, str):
+    """
+    Test, if PR title complies to regex.
+    If yes, extract the Bundle name and version.
+    """
     # Verify if PR title follows convention- it should contain the operator name Semver regex from semver.org:
     # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-    semver_regex = "(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[" \
-                   "1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(" \
-                   "?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"
+    semver_regex = (
+        "(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|["
+        "1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+("
+        "?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"
+    )
 
     regex = f"^operator ([a-zA-Z0-9-]+) \(({semver_regex})\)$"
+    regex_pattern = re.compile(regex)
 
-    if not re.match(regex, pr_title):
-        raise ValueError(f"PR title {pr_title} does not follow the regex 'operator <operator_name> (<semver>)")
+    if not regex_pattern.match(pr_title):
+        raise ValueError(
+            f"PR title {pr_title} does not follow the regex 'operator <operator_name> (<semver>)"
+        )
 
-    matching = re.search(regex, pr_title)
+    matching = regex_pattern.search(pr_title)
     bundle_name = matching.group(1)
     bundle_version = matching.group(2)
 
     return bundle_name, bundle_version
 
 
-def verify_pr_uniqueness(environment: str) -> None:
-    repos = {
-        "prod": {
-            # TODO
-            "certified": "",
-            "marketplace": ""
-        },
-        "preprod": {
-            "certified":"certified-operators-preprod",
-            "marketplace": "redhat-marketplace-operators-preprod"
-        }
-    }
+def verify_pr_uniqueness(
+    available_repositories: str, base_pr_url: str, base_pr_bundle_name: str
+) -> None:
+    """
+    List the active Pull Requests in given GitHub repositories.
+    Find Pull Requests for the same Operator Bundle, and error if they exists.
+    """
+    repos = available_repositories.split(",")
+    base_url = "https://api.github.com/repos/redhat-openshift-ecosystem/"
 
-    try:
-        repos = repos[environment]
-    except KeyError as e:
-        e.args += f"Wrong environment {environment}- can be one of prod and preprod"
-
-    base_url = "https://github.com/redhat-openshift-ecosystem/"
+    # complex regex of semver is replaced with regex valid for any string without whistespaces
+    # - no need to validate semver anymore
+    regex = f"^operator ([a-zA-Z0-9-]+) [^\s]+$"
+    regex_pattern = re.compile(regex)
 
     for repo in repos:
-        requests.get(base_url + repo)
-        # curl \
-        #   -H "Accept: application/vnd.github.v3+json" \
-        #   https://api.github.com/repos/octocat/hello-world/pulls
+        # List the open PRs in the given repositories,
+        rsp = requests.get(base_url + repo + "/pulls")
+        rsp.raise_for_status()
+        prs = rsp.json()
 
+        # find duplicates
+        duplicate_prs = []
+        for pr in prs:
+            pr_title = pr["title"]
+            pr_url = pr["url"]
+            if base_pr_url == pr_url:
+                # We found the base PR
+                continue
+            matching = regex_pattern.search(pr_title)
+            bundle_name = matching.group(1)
+            if bundle_name == base_pr_bundle_name:
+                duplicate_prs.append(f"{pr_title}: {pr_url}")
 
-
+        # Log duplicates and exit with error
+        if duplicate_prs:
+            logging.error(
+                f"There is more than one PR for the Operator Bundle {base_pr_bundle_name}"
+            )
+            for duplicate in duplicate_prs:
+                logging.error(f"DUPLICATE: {duplicate}")
+            raise RuntimeError("Multiple PRs for one Operator Bundle")
