@@ -57,6 +57,14 @@ EOF
 oc create -f my-registry-secret.yml
 ```
 
+#### Container API access
+CI pipelines automatically upload a test results, logs and artifacts using Red Hat
+container API. This requires a partner's API key and the key needs to be created
+as a secret in openshift cluster before running a Tekton pipeline.
+
+```bash
+oc create secret generic pyxis-api-secret --from-literal PYXIS_API_KEY=< API KEY >
+```
 ### Installation
 ```bash
 oc apply -R -f pipelines/operator-ci-pipeline.yml
@@ -114,7 +122,7 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_username=test_user \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
   --param bundle_path=operators/kogito-operator/1.6.1-ok \
-  --param pyxis_url=https://catalog.redhat.com/api/containers \
+  --param pyxis_url=https://catalog.redhat.com/api/containers/ \
   --param preflight_min_version=1.0.0 \
   --param ci_min_version=1.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \

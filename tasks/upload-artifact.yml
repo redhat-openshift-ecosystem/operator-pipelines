@@ -5,23 +5,34 @@ metadata:
   name: upload-artifacts
 spec:
   params:
-    - name: pyxis_api_key
+    - name: pyxis_api_key_secret
+      default: pyxis-api-secret
     - name: pyxis_url
-      default: https://catalog.redhat.com/api/containers
+      default: https://catalog.redhat.com/api/containers/
     - name: log_file
     - name: result_file
+    - name: artifacts_dir
     - name: preflight_results_exists
       default: "false"
     - name: md5sum
+    - name: cert_project_id
+    - name: bundle_version
+    - name: package_name
   results:
     - name: log_url
     - name: result_url
   workspaces:
     - name: source
   steps:
-    - name: upload-test-logs
-      image: registry.access.redhat.com/ubi8-minimal
+    - name: upload-test-artifacts-and-logs
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
+      env:
+        - name: PYXIS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.pyxis_api_key_secret)
+              key: PYXIS_API_KEY
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
@@ -31,22 +42,30 @@ spec:
           exit 0
         fi
 
-        echo "Uploading testing logs $(params.log_file)"
+        echo "Uploading test results and artifacts"
 
-        echo https://foo.com/logs/123 | tee $(results.log_url.path)
+        upload-artifacts \
+          --cert-project-id "$(params.cert_project_id)" \
+          --operator-version "$(params.bundle_version)" \
+          --operator-package-name "$(params.package_name)" \
+          --certification-hash "$(params.md5sum)" \
+          --pyxis-url "$(params.pyxis_url)" \
+          --artifacts-dir "$(params.artifacts_dir)" \
+          --log-file "$(params.log_file)" \
+          --result-file "$(params.result_file)" \
+          --verbose
 
-    - name: upload-test-results
-      image: registry.access.redhat.com/ubi8-minimal
-      workingDir: $(workspaces.source.path)
-      script: |
-        #! /usr/bin/env bash
-        PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
-        if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
-          echo "Preflight results already exists- skipping"
-          echo "none" | tee $(results.result_url.path)
-          exit 0
-        fi
+        cat output.json | jq
 
-        echo "Uploading testing results $(params.result_file)"
+        LOG_ID=$(cat output.json | jq -r ".logs._id")
+        RESULTS_ID=$(cat output.json| jq -r ".test_results._id")
 
-        echo https://foo.com/results/123 | tee $(results.result_url.path)
+        LOG_URL="$(params.pyxis_url)v1/projects/certification/id/$(params.cert_project_id)/artifacts/$LOG_ID"
+        RESULT_URL="$(params.pyxis_url)v1/projects/certification/id/$(params.cert_project_id)/test-results/$RESULTS_ID"
+
+        echo "Test results URL:"
+        echo -n $RESULT_URL | tee $(results.result_url.path)
+
+        echo ""
+        echo "Logs URL: "
+        echo -n $LOG_URL | tee $(results.log_url.path)

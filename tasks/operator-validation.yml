@@ -7,7 +7,7 @@ spec:
   params:
     - name: bundle_path
     - name: pyxis_url
-      default: https://catalog.redhat.com/api/containers
+      default: https://catalog.redhat.com/api/containers/
   results:
     - name: package_name
       description: Operator package name
@@ -64,7 +64,7 @@ spec:
           exit 1
         fi
 
-        echo $CERT_PROJECT_ID | tee $(results.certification_project_id.path)
+        echo -n $CERT_PROJECT_ID | tee $(results.certification_project_id.path)
 
     - name: bundle-parse
       image: quay.io/redhat-isv/operator-pipelines-images:latest
