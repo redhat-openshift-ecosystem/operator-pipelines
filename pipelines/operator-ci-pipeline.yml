@@ -10,6 +10,8 @@ spec:
     - name: bundle_path
     - name: registry
       default: default-route-openshift-image-registry.apps-crc.testing
+    - name: pyxis_url
+      default: https://catalog.redhat.com/api/containers/
     - name: image_stream
       default: $(context.pipelineRun.namespace)
     - name: test_mode
@@ -87,6 +89,8 @@ spec:
       params:
         - name: bundle_path
           value: "$(params.bundle_path)"
+        - name: pyxis_url
+          value: "$(params.pyxis_url)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -212,14 +216,22 @@ spec:
       taskRef:
         name: upload-artifacts
       params:
-        - name: pyxis_api_key
-          value: foo
         - name: log_file
           value: "$(tasks.preflight.results.log_output_file)"
+        - name: artifacts_dir
+          value: "$(tasks.preflight.results.artifacts_output_dir)"
         - name: result_file
           value: "$(tasks.preflight.results.result_output_file)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
+        - name: cert_project_id
+          value: "$(tasks.operator-validation.results.certification_project_id)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: pyxis_url
+          value: "$(params.pyxis_url)"
       workspaces:
         - name: source
           workspace: pipeline

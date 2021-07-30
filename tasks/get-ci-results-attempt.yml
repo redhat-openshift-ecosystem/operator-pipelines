@@ -21,4 +21,4 @@ spec:
         #! /usr/bin/env bash
         # Curl Pyxis results endpoint
         # If results exists, store them in the workspace
-        echo "true" | tee $(results.preflight_results_exists.path)
+        echo -n "true" | tee $(results.preflight_results_exists.path)

@@ -10,24 +10,31 @@ spec:
   results:
     - name: log_output_file
     - name: result_output_file
+    - name: artifacts_output_dir
   workspaces:
     - name: source
   steps:
     - name: preflight-tests
-      image: registry.access.redhat.com/ubi8-minimal
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           echo "Preflight results already exists- skipping"
-          echo "none" | tee $(results.log_output_file.path)
-          echo "none" | tee $(results.result_output_file.path)
+          echo -n "none" | tee $(results.log_output_file.path)
+          echo -n "none" | tee $(results.result_output_file.path)
           exit 0
         fi
 
         echo "Testing"
 
-        touch output.log results.json
-        echo output.log | tee $(results.log_output_file.path)
-        echo results.json | tee $(results.result_output_file.path)
+        # Temporary test data
+        ls -l
+        cp -r /home/user/tests/data/* .
+        ls -l
+
+
+        echo -n preflight.log | tee $(results.log_output_file.path)
+        echo -n results.json | tee $(results.result_output_file.path)
+        echo -n artifacts | tee $(results.artifacts_output_dir.path)

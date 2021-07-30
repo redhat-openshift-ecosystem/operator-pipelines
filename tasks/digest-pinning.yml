@@ -22,7 +22,7 @@ spec:
 
         if [ "$(params.skip)" == "true" ]; then
           echo "Skip flag is set. Skipping digest pinning..."
-          echo "false" | tee $(results.dirty_flag.path)
+          echo -n "false" | tee $(results.dirty_flag.path)
           exit 0
         fi
 
@@ -32,8 +32,8 @@ spec:
 
         if [[ $(git diff --stat) != '' ]]; then
           echo "Manifests were not pinned."
-          echo "true" | tee $(results.dirty_flag.path)
+          echo -n "true" | tee $(results.dirty_flag.path)
         else
           echo "Manifests are pinned."
-          echo "false" | tee $(results.dirty_flag.path)
+          echo -n "false" | tee $(results.dirty_flag.path)
         fi
