@@ -115,8 +115,8 @@ The hosted pipeline can be triggered using the tkn CLI like so:
 ```bash
 tkn pipeline start operator-hosted-pipeline \
   --param git_pr_branch=test-PR-ok \
-  --param git_pr_title="Test commit for sample PR" \
-  --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/1 \
+  --param git_pr_title="operator kogito-operator (1.6.1-ok)" \
+  --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/2 \
   --param git_fork_url=git@github.com:MarcinGinszt/operator-pipelines-test.git \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_username=test_user \

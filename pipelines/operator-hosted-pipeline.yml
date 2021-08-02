@@ -4,6 +4,7 @@ kind: Pipeline
 metadata:
   name: operator-hosted-pipeline
 spec:
+  # TODO: Clean-up git-related params when we'll start using webhooks. Many of them are redundant.
   params:
     - name: git_pr_branch
     - name: git_pr_title
@@ -54,6 +55,8 @@ spec:
           value: $(params.git_username)
         - name: git_pr_title
           value: $(params.git_pr_title)
+        - name: git_pr_url
+          value: $(params.git_pr_url)
         - name: pyxis_url
           value: $(params.pyxis_url)
       workspaces:

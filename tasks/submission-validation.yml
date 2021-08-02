@@ -7,6 +7,7 @@ spec:
   params:
     - name: git_username
     - name: git_pr_title
+    - name: git_pr_url
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers
   results:
@@ -16,38 +17,23 @@ spec:
   workspaces:
     - name: source
   steps:
-    - name: get-cert-project-id
-      image: registry.access.redhat.com/ubi8-minimal
-      script: |
-        #! /usr/bin/env bash
-        # cat ci.yaml | yq e '.cert_project_id' - | tee $(results.cert_project_id.path)
-        echo "1234abcd" | tee $(results.cert_project_id.path)
-
-    - name: verify-user-submiting
-      image: registry.access.redhat.com/ubi8-minimal
-      script: |
-        #! /usr/bin/env bash
-        # Python script
-        echo "ok"
-
-    - name: verify-pr
+    - name: submission-validation
       workingDir: $(workspaces.source.path)
-      # here we'll use custom image with Python script
-      image: registry.access.redhat.com/ubi8-minimal
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       script: |
         #! /usr/bin/env bash
+        set -xe
 
         # 1. Verify via regex if PR title follows convention
+        # 2. Verify, that new version is added and no existing one modified
         # 2. TODO: Verify, if the user which created the PR is allowed to
         # submit the operator
         # 3. Verify that there is no other open PRs for this operator
-
         verify-submission \
-          --pr-title="operator other-cogito-operator (1.6.0-ok)" \
-          --available-repositories=operator-pipelines-test \
-          --pr-url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/5
+          --pr-title "$(params.git_pr_title)" \
+          --available-repositories operator-pipelines-test \
+          --pr-url $(params.git_pr_url) \
+          --verbose
 
-
-        echo -n "kogito-operator" | tee $(results.operator_name.path)
-        echo -n "1.6.1-ok" | tee $(results.bundle_version.path)
-        echo "ok"
+        cat bundle_name | tee $(results.operator_name.path)
+        cat bundle_version | tee $(results.bundle_version.path)
