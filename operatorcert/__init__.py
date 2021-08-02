@@ -180,7 +180,7 @@ def get_files_added_in_pr(
 ) -> List[str]:
     """
     Get the list of files added in the PR.
-    Raise error if there are changed, existing files.
+    Raise error if any existing files are changed
     """
     compare_changes_url = (
         f"https://api.github.com/repos/{organization}/{repository}"
@@ -210,7 +210,7 @@ def get_files_added_in_pr(
 
 
 def verify_changed_files_location(
-        changed_files: List[str], operator_name: str, bundle_version: str
+    changed_files: List[str], operator_name: str, bundle_version: str
 ) -> None:
     """
     Find the allowed locations in directory tree for changes
@@ -248,12 +248,12 @@ def parse_pr_title(pr_title: str) -> (str, str):
     # Verify if PR title follows convention- it should contain the operator name Semver regex from semver.org:
     # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
     semver_regex = (
-        "(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|["
-        "1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+("
-        "?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"
+        r"(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|["
+        r"1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+("
+        r"?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"
     )
 
-    regex = f"^operator ([a-zA-Z0-9-]+) \(({semver_regex})\)$"
+    regex = rf"^operator ([a-zA-Z0-9-]+) \(({semver_regex})\)$"
     regex_pattern = re.compile(regex)
 
     if not regex_pattern.match(pr_title):
