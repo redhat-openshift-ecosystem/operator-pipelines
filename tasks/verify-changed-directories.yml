@@ -16,10 +16,12 @@ spec:
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       script: |
         #! /usr/bin/env bash
+        set -xe
 
         verify-changed-dirs \
           --operator-name="$(params.operator_name)" \
           --bundle-version="$(params.bundle_version)" \
           --pr-head-label="$(params.pr_head_label)" \
           --git-repo-url="$(params.git_repo_url)" \
-          --base-branch="$(params.base_branch)"
+          --base-branch="$(params.base_branch)" \
+          --verbose
