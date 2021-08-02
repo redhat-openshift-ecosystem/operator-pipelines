@@ -1,0 +1,33 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: certification-project-check
+spec:
+  params:
+    - name: bundle_path
+  results:
+    - name: certification_project_id
+      description: Identifier of certification project from Red Hat Connect
+  workspaces:
+    - name: source
+  steps:
+    - name: certification-project-check
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        echo "Checking availability of cert project identifier"
+
+        PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
+
+        CI_FILE_PATH="$PKG_PATH/ci.yaml"
+
+        CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id')
+
+        if [ -z $CERT_PROJECT_ID ]; then
+          echo "Certification project ID is missing in ci.yaml file (cert_project_id)"
+          exit 1
+        fi
+
+        echo -n $CERT_PROJECT_ID | tee $(results.certification_project_id.path)
