@@ -1,5 +1,6 @@
+import logging
 import pathlib
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 
 def find_file(
@@ -21,3 +22,17 @@ def find_file(
         if new_path.exists() and new_path.is_file():
             return new_path
     return None
+
+
+def store_results(results: Dict[str, str]):
+    """
+    Store the given results into files in given directory.
+
+    Args:
+        results (Dict): Dictionary, where key is a result name (name of file to store value),
+        and value is result value (to be stored in file).
+    """
+    for result_name, result_value in results.items():
+        logging.debug(f"Storing {result_name}")
+        with open(result_name, "w") as result_file:
+            result_file.write(result_value)

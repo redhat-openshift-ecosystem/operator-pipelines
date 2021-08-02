@@ -7,9 +7,7 @@ import sys
 from operatorcert import ocp_version_info
 
 
-def main() -> None:
-    logging.basicConfig(stream=sys.stdout, level="INFO", format="%(message)s")
-
+def setup_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Determines the OCP version under test."
     )
@@ -19,8 +17,20 @@ def main() -> None:
         default="https://catalog.redhat.com/api/containers/",
         help="Base URL for Pyxis container metadata API",
     )
+
+    return parser
+
+
+def main() -> None:
+    logging.basicConfig(stream=sys.stdout, level="INFO", format="%(message)s")
+
+    parser = setup_argparser()
     args = parser.parse_args()
 
     bundle_path = pathlib.Path(args.bundle_path)
     version_info = ocp_version_info(bundle_path, args.pyxis_url)
     logging.info(json.dumps(version_info))
+
+
+if __name__ == "__main__":
+    main()

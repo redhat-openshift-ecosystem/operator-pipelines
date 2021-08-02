@@ -238,12 +238,23 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
     pr_rsp = [
         # At first call get return:
         [
-            {"title": "operator first (1.2.3)", "url": base_pr_url},
-            {"title": "operator second (1.2.3)", "url": base_pr_url.replace("1", "2")},
-            {"title": "operator third (1.2.3)", "url": base_pr_url.replace("1", "3")},
+            {"title": "operator first (1.2.3)", "html_url": base_pr_url},
+            {
+                "title": "operator second (1.2.3)",
+                "html_url": base_pr_url.replace("1", "2"),
+            },
+            {
+                "title": "operator third (1.2.3)",
+                "html_url": base_pr_url.replace("1", "3"),
+            },
         ],
         # At second call return:
-        [{"title": "operator fourth (1.2.3)", "url": base_pr_url.replace("1", "4")}],
+        [
+            {
+                "title": "operator fourth (1.2.3)",
+                "html_url": base_pr_url.replace("1", "4"),
+            }
+        ],
     ]
 
     mock_rsp = MagicMock()
@@ -259,7 +270,7 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
 
     # For second call return PR title with the same operator name, but other version
     pr_rsp[1].append(
-        {"title": "operator first (1.2.4)", "url": base_pr_url.replace("1", "5")}
+        {"title": "operator first (1.2.4)", "html_url": base_pr_url.replace("1", "5")}
     )
     mock_rsp.json.side_effect = pr_rsp
 

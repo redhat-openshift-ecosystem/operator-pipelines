@@ -4,6 +4,7 @@ import pathlib
 from typing import Any
 
 import operatorcert
+from operatorcert.utils import store_results
 
 
 class AnnotationFileNotFound(Exception):
@@ -12,7 +13,7 @@ class AnnotationFileNotFound(Exception):
     """
 
 
-def setup_argparser() -> Any:
+def setup_argparser() -> argparse.ArgumentParser:
     """
     Setup argument parser
 
@@ -79,9 +80,8 @@ def main() -> None:
     logging.basicConfig(level=log_level)
     dockerfile_content = generate_dockerfile_content(args)
 
-    logging.info(f"Storing dockerfile: {args.destination}")
-    with open(args.destination, "w") as dockerfile_file:
-        dockerfile_file.write(dockerfile_content)
+    results = {args.destination: dockerfile_content}
+    store_results(results)
 
 
 if __name__ == "__main__":

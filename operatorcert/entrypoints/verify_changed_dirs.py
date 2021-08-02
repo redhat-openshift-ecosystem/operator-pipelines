@@ -9,9 +9,13 @@ from operatorcert import (
 )
 
 
-def main() -> None:
-    logging.basicConfig(stream=sys.stdout, level="INFO", format="%(message)s")
+def setup_argparser() -> argparse.ArgumentParser:
+    """
+    Setup argument parser
 
+    Returns:
+        Any: Initialized argument parser
+    """
     parser = argparse.ArgumentParser(
         description="Verify, if only expected directories are changed by submission"
     )
@@ -30,20 +34,32 @@ def main() -> None:
     )
     parser.add_argument("--repository", help="Base branch repository name")
     parser.add_argument("--base-branch", help="Base branch of the PR", default="main")
+    parser.add_argument("--verbose", action="store_true", help="Verbose output")
+
+    return parser
+
+
+def main() -> None:
+    # Args
+    parser = setup_argparser()
     args = parser.parse_args()
 
+    # logging
+    log_level = "INFO"
+    if args.verbose:
+        log_level = "DEBUG"
+    logging.basicConfig(level=log_level)
+
+    # Logic
     organization, repository = get_repo_and_org_from_github_url(args.git_repo_url)
 
     changed_files = get_files_added_in_pr(
         organization, repository, args.base_branch, args.pr_head_label
     )
 
-    # Tekton task results have the end of line symbol added.
-    # This looks like issue that will be resolved in the incoming versions.
-    operator_name = args.operator_name.strip()
-    bundle_version = args.bundle_version.strip()
-
-    verify_changed_files_location(changed_files, operator_name, bundle_version)
+    verify_changed_files_location(
+        changed_files, args.operator_name, args.bundle_version
+    )
 
 
 if __name__ == "__main__":

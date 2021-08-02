@@ -293,7 +293,7 @@ def verify_pr_uniqueness(
         duplicate_prs = []
         for pr in prs:
             pr_title = pr["title"]
-            pr_url = pr["url"]
+            pr_url = pr["html_url"]
             if base_pr_url == pr_url:
                 # We found the base PR
                 continue
