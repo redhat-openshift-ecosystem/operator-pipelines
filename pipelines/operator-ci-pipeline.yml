@@ -96,10 +96,24 @@ spec:
           workspace: pipeline
           subPath: src
 
+    - name: certification-project-check
+      runAfter:
+        - commit-pinned-digest
+      taskRef:
+        name: certification-project-check
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
     - name: content-hash
       runAfter:
         - operator-validation
         - yaml-lint
+        - certification-project-check
       taskRef:
         name: content-hash
       params:
@@ -114,6 +128,7 @@ spec:
       runAfter:
         - operator-validation
         - yaml-lint
+        - certification-project-check
       taskRef:
         name: dockerfile-creation
       params:
@@ -268,7 +283,7 @@ spec:
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
         - name: certification_project_id
-          value: "$(tasks.operator-validation.results.certification_project_id)"
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
       workspaces:
         - name: source
           workspace: pipeline

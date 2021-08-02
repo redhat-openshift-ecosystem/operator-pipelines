@@ -61,10 +61,24 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: certification-project-check
+      runAfter:
+        - checkout
+      taskRef:
+        name: certification-project-check
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # reserve operator name
     - name: reserve-operator-name
       runAfter:
         - submission-validation
+        - certification-project-check
       taskRef:
         name: reserve-operator-name
       params:
@@ -156,7 +170,7 @@ spec:
         name: query-publishing-checklist
       params:
         - name: cert_project_id
-          value: "$(tasks.submission-validation.results.cert_project_id)"
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
 
     # Build images- bundle and index and push them to registry.
     # Those steps are also a part of the CI pipeline.
@@ -256,7 +270,7 @@ spec:
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
-          value: "$(tasks.submission-validation.results.cert_project_id)"
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
           value: "$(tasks.submission-validation.results.bundle_version)"
       workspaces:
@@ -357,7 +371,7 @@ spec:
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
-          value: "$(tasks.submission-validation.results.cert_project_id)"
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
           value: "$(tasks.submission-validation.results.bundle_version)"
       workspaces:

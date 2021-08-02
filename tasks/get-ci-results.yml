@@ -20,7 +20,7 @@ spec:
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
-          echo "Preflight results already exists- skipping"
+          echo -n "Preflight results already exists- skipping"
           exit 0
         fi
         # Curl Pyxis results endpoint
