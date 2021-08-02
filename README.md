@@ -34,14 +34,10 @@ oc create -f ssh-secret.yml
 ```
 
 #### Registry Credentials
-The CI pipeline requires credentials to push and/or pull from all authenticated
-registries. This includes:
-
-* Red Hat terms-based registry (registry.redhat.io)
-* The registry specified by the `registry` param (including the internal Openshift registry)
-
-The user must create an auth secret containing the docker config with all
-credentials included. For example:
+The CI pipeline can optionally be configured to push images to a remote private
+registry. The user must create an auth secret containing the docker config. This
+secret can then be passed as a workspace named `registry-credentials` when invoking
+the pipeline.
 
 ```bash
 cat << EOF > registry-secret.yml
@@ -55,6 +51,33 @@ type: kubernetes.io/dockerconfigjson
 EOF
 
 oc create -f registry-secret.yml
+```
+
+#### Red Hat Catalog Imagestreams
+
+The pipelines must pull the parent index images through the internal OpenShift
+registry to take advantage of the built-in credentials for Red Hat's terms-based
+registry (registry.redhat.io). The saves the user from needing to provide such
+credentials. The index generation task will always pull published index images
+through imagestreams of the same name in the current namespace. As a result,
+there is a one time configuration for each desired distribution catalog.
+
+```bash
+# Must be run once before certifying against the certified catalog.
+oc import-image certified-operator-index \
+  --from=registry.redhat.io/redhat/certified-operator-index \
+  --reference-policy local \
+  --scheduled \
+  --confirm \
+  --all
+
+# Must be run once before certifying against the Red Hat Martketplace catalog.
+oc import-image redhat-marketplace-index \
+  --from=registry.redhat.io/redhat/redhat-marketplace-index \
+  --reference-policy local \
+  --scheduled \
+  --confirm \
+  --all
 ```
 
 #### Container API access
@@ -97,7 +120,7 @@ bundles. It’s an additional (to CI pipeline) layer of validation that has to r
 the Red Hat infrastructure. It contains multiple steps from the CI pipeline.
 
 ### Prerequisites
-See the [Registry Credentials](#registry-credentials) section.
+See the [Red Hat Catalog Imagestreams](#red-hat-catalog-imagestreams) section.
 
 ### Installation
 ```bash

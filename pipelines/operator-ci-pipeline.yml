@@ -9,7 +9,7 @@ spec:
     - name: git_revision
     - name: bundle_path
     - name: registry
-      default: default-route-openshift-image-registry.apps-crc.testing
+      default: image-registry.openshift-image-registry.svc:5000
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers/
     - name: image_stream
@@ -23,6 +23,7 @@ spec:
     - name: pipeline
     - name: ssh-dir
     - name: registry-credentials
+      optional: true
   tasks:
     - name: checkout
       taskRef:
