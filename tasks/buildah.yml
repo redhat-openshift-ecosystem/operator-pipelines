@@ -65,9 +65,13 @@ spec:
       resources: {}
       # Added authfile argument to support private registries
       script: |
+        EXTRA_ARGS=""
+        if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
+          EXTRA_ARGS+=" --authfile $(workspaces.credentials.path)/.dockerconfigjson"
+        fi
+
         buildah --storage-driver=$(params.STORAGE_DRIVER) push \
-          $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
-          --authfile $(workspaces.credentials.path)/.dockerconfigjson \
+          $(params.PUSH_EXTRA_ARGS) $EXTRA_ARGS --tls-verify=$(params.TLSVERIFY) \
           --digestfile $(workspaces.source.path)/image-digest $(params.IMAGE) \
           docker://$(params.IMAGE)
       volumeMounts:
@@ -84,3 +88,4 @@ spec:
   workspaces:
     - name: source
     - name: credentials
+      optional: true

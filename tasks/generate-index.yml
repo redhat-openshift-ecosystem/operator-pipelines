@@ -9,13 +9,17 @@ spec:
       description: Pull spec of a bundle image
     - name: from_index
       description: Parent index image the bundle will be added to
+    - name: internal_registry
+      description: Host for the internal OpenShift registry
+      default: image-registry.openshift-image-registry.svc:5000
   results:
     - name: index_dockerfile
       description: Path to the generated index Dockerfile
   workspaces:
     - name: output
     - name: credentials
-      description: Docker config for retrieving the parent index image and bundle image
+      description: Docker config for retrieving the bundle image
+      optional: true
   steps:
     - name: generate
       image: quay.io/redhat-isv/operator-pipelines-images:latest
@@ -24,13 +28,23 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        # OPM needs the standard docker config directory structure
-        export DOCKER_CONFIG=/tmp/.docker
-        mkdir $DOCKER_CONFIG
-        cp $(workspaces.credentials.path)/.dockerconfigjson $DOCKER_CONFIG/config.json
+        if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
+          # Setup registry credentials for OPM. Combine the default credentials
+          # with those found in the workspace to maintain access to the internal
+          # registry.
+          export DOCKER_CONFIG=/tmp/.docker
+          mkdir $DOCKER_CONFIG
+          jq -s '.[0] * .[1]' \
+            $(workspaces.credentials.path)/.dockerconfigjson \
+            $HOME/.docker/config.json \
+            > $DOCKER_CONFIG/config.json
+        fi
+
+        INDEX_IMG_STREAM=$(echo $(params.from_index) | rev | cut -f1 -d/ | rev)
+        FROM_INDEX="$(params.internal_registry)/$(context.taskRun.namespace)/$INDEX_IMG_STREAM"
 
         opm index add \
-          --from-index "$(params.from_index)" \
+          --from-index $FROM_INDEX \
           --bundles "$(params.bundle_image)" \
           --container-tool none \
           --out-dockerfile Dockerfile.index \
