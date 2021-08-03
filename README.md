@@ -44,7 +44,7 @@ The user must create an auth secret containing the docker config with all
 credentials included. For example:
 
 ```bash
-cat << EOF > my-registry-secret.yml
+cat << EOF > registry-secret.yml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -54,7 +54,7 @@ data:
 type: kubernetes.io/dockerconfigjson
 EOF
 
-oc create -f my-registry-secret.yml
+oc create -f registry-secret.yml
 ```
 
 #### Container API access
