@@ -19,8 +19,9 @@ spec:
     - name: ci_min_version
     - name: registry
       default: quay.io
-    - name: image_stream
+    - name: image_namespace
       default: $(context.pipelineRun.namespace)
+      description: The namespace/organization all built images will be pushed to.
   workspaces:
     - name: repository
     - name: results
@@ -206,7 +207,7 @@ spec:
         kind: ClusterTask
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(params.image_stream)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
       workspaces:
@@ -243,7 +244,7 @@ spec:
         kind: ClusterTask
       params:
         - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(params.image_stream)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
         # - name: DOCKERFILE

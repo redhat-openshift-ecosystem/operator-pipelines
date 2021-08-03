@@ -12,8 +12,9 @@ spec:
       default: image-registry.openshift-image-registry.svc:5000
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers/
-    - name: image_stream
+    - name: image_namespace
       default: $(context.pipelineRun.namespace)
+      description: The namespace/organization all built images will be pushed to.
     - name: test_mode
       description: The test mode flag skips certain steps to make a pipeline
         faster for rapid operator development. The flag needs to be set to false
@@ -153,7 +154,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(params.image_stream)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
       workspaces:
@@ -190,7 +191,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(params.image_stream)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: DOCKERFILE
           value: "$(tasks.generate-index.results.index_dockerfile)"
       workspaces:

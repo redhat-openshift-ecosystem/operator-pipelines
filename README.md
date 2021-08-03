@@ -57,7 +57,7 @@ oc create -f registry-secret.yml
 
 The pipelines must pull the parent index images through the internal OpenShift
 registry to take advantage of the built-in credentials for Red Hat's terms-based
-registry (registry.redhat.io). The saves the user from needing to provide such
+registry (registry.redhat.io). This saves the user from needing to provide such
 credentials. The index generation task will always pull published index images
 through imagestreams of the same name in the current namespace. As a result,
 there is a one time configuration for each desired distribution catalog.
@@ -99,7 +99,18 @@ curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/
 ```
 
 ### Execution
-The CI pipeline can be triggered using the tkn CLI like so:
+If using the default internal registry, the CI pipeline can be triggered using the tkn CLI like so:
+
+```bash
+tkn pipeline start operator-ci-pipeline \
+  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+  --param git_revision=main \
+  --param bundle_path=operators/kogito-operator/1.6.0-ok \
+  --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=ssh-dir,secret=my-ssh-credentials \
+  --showlog
+```
+If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:
 
 ```bash
 tkn pipeline start operator-ci-pipeline \
@@ -107,7 +118,7 @@ tkn pipeline start operator-ci-pipeline \
   --param git_revision=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param registry=quay.io \
-  --param image_stream=redhat-isv \
+  --param image_namespace=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=ssh-dir,secret=my-ssh-credentials \
   --workspace name=registry-credentials,secret=my-registry-secret \
