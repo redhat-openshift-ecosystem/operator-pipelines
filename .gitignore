@@ -10,4 +10,5 @@ registry-secret.yml
 
 # Vim swap files
 .*.sw?
+ansible/vault-password
 
