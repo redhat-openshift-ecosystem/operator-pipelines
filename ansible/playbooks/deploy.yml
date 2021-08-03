@@ -1,0 +1,10 @@
+---
+- name: Deploy operator-pipeline {{ env }} instance
+  hosts: operator-pipeline-{{ env }}
+  vars_files:
+    - ../vaults/{{ env }}/secret-vars.yml
+  roles:
+    - operator-pipeline
+  environment:
+    K8S_AUTH_API_KEY: '{{ ocp_token }}'
+    K8S_AUTH_HOST: '{{ ocp_host }}'
