@@ -1,0 +1,97 @@
+---
+name: Deployment
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: |
+          pip install --user openshift
+      - name: Deploy dev environment
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbooks/deploy.yml
+          directory: ./ansible
+          requirements: playbooks/requirements.yml
+          vault_password: ${{secrets.VAULT_PASSWORD}}
+          options: |
+            --inventory inventory/operator-pipeline
+            --extra-vars env=dev
+            --verbose
+
+  deploy-qa:
+    runs-on: ubuntu-latest
+    environment:
+      name: qa
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: |
+          pip install --user openshift
+      - name: Deploy qa environment
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbooks/deploy.yml
+          directory: ./ansible
+          requirements: playbooks/requirements.yml
+          vault_password: ${{secrets.VAULT_PASSWORD}}
+          options: |
+            --inventory inventory/operator-pipeline
+            --extra-vars env=qa
+            --verbose
+
+  deploy-stage:
+    runs-on: ubuntu-latest
+    environment:
+      name: stage
+    needs:
+      - deploy-dev
+      - deploy-qa
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: |
+          pip install --user openshift
+      - name: Deploy stage environment
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbooks/deploy.yml
+          directory: ./ansible
+          requirements: playbooks/requirements.yml
+          vault_password: ${{secrets.VAULT_PASSWORD}}
+          options: |
+            --inventory inventory/operator-pipeline
+            --extra-vars env=stage
+            --verbose
+
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+    needs:
+      - deploy-stage
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: |
+          pip install --user openshift
+      - name: Deploy prod environment
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbooks/deploy.yml
+          directory: ./ansible
+          requirements: playbooks/requirements.yml
+          vault_password: ${{secrets.VAULT_PASSWORD}}
+          options: |
+            --inventory inventory/operator-pipeline
+            --extra-vars env=prod
+            --verbose

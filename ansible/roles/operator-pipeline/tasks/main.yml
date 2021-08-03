@@ -30,6 +30,7 @@
     - init
 
 - name: Create Operator pipeline's secrets
+  no_log: yes
   k8s:
     state: present
     force: yes
