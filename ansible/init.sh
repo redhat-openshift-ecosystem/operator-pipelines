@@ -26,7 +26,7 @@ get_environments() {
 # execute playbook for given environment
 execute_playbook() {
     local secret=$(dirname "$0")/vaults/$env/secret-vars.yml
-    if [ ! -z $secret ]; then
+    if [ ! -f $secret ]; then
         touch $secret
         echo "File $secret was not found, empty one was created"
     fi
