@@ -1,0 +1,67 @@
+---
+- name: Creates and init service accounts
+  block:
+    - name: Create service account
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: "{{ service_account_name }}"
+
+    - name: Grant service account admin access
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: "{{ service_account_name }}"
+          roleRef:
+            kind: ClusterRole
+            name: admin
+          subjects:
+            - kind: ServiceAccount
+              name: "{{ service_account_name }}"
+  tags:
+    - init
+
+- name: Create Operator pipeline's secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: operator-pipeline-secrets-{{ suffix }}
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        operator-pipeline.key: "{{ lookup('file', operator_pipeline_private_key_local_path, rstrip=False) | b64encode }}"
+        operator-pipeline.pem: "{{ lookup('file', operator_pipeline_private_cert_local_path, rstrip=False) | b64encode }}"
+
+- name: Deploy pipeline tasks
+  k8s:
+    state: present
+    apply: yes
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_fileglob:
+    - ../templates/openshift/tasks/*
+
+- name: Deploy pipeline
+  k8s:
+    state: present
+    apply: yes
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
