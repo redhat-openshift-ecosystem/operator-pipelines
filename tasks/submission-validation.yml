@@ -31,7 +31,7 @@ spec:
         # 3. Verify that there is no other open PRs for this operator
         verify-submission \
           --pr-title "$(params.git_pr_title)" \
-          --available-repositories operator-pipelines-test \
+          --available-repositories redhat-openshift-ecosystem/operator-pipelines-test \
           --pr-url $(params.git_pr_url) \
           --verbose
 
