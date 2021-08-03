@@ -37,7 +37,8 @@ def main() -> None:
     # TODO
 
     # Verify, that there is no other PR opened for this Bundle
-    verify_pr_uniqueness(args.available_repositories, args.pr_url, bundle_name)
+    repos = args.available_repositories.split(",")
+    verify_pr_uniqueness(repos, args.pr_url, bundle_name)
 
     # Save the results
     results = {"bundle_name": bundle_name, "bundle_version": bundle_version}

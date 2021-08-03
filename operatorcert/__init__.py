@@ -202,7 +202,7 @@ def get_files_added_in_pr(
     if modified_files:
         for modified_file in modified_files:
             logging.error(
-                f"Wrong change: file: {modified_file['filename']}, status: {modified_file['status']}"
+                f"Change not permitted: file: {modified_file['filename']}, status: {modified_file['status']}"
             )
         raise RuntimeError("There are changes done to previously merged Bundles")
 
@@ -245,7 +245,7 @@ def parse_pr_title(pr_title: str) -> (str, str):
     Test, if PR title complies to regex.
     If yes, extract the Bundle name and version.
     """
-    # Verify if PR title follows convention- it should contain the operator name Semver regex from semver.org:
+    # Semver regex from semver.org:
     # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
     semver_regex = (
         r"(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|["
@@ -253,6 +253,7 @@ def parse_pr_title(pr_title: str) -> (str, str):
         r"?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"
     )
 
+    # Verify if PR title follows convention- it should contain the operator name.
     regex = rf"^operator ([a-zA-Z0-9-]+) \(({semver_regex})\)$"
     regex_pattern = re.compile(regex)
 
@@ -269,13 +270,12 @@ def parse_pr_title(pr_title: str) -> (str, str):
 
 
 def verify_pr_uniqueness(
-    available_repositories: str, base_pr_url: str, base_pr_bundle_name: str
+    available_repositories: List[str], base_pr_url: str, base_pr_bundle_name: str
 ) -> None:
     """
     List the active Pull Requests in given GitHub repositories.
     Find Pull Requests for the same Operator Bundle, and error if they exists.
     """
-    repos = available_repositories.split(",")
     base_url = "https://api.github.com/repos/redhat-openshift-ecosystem/"
 
     # complex regex of semver is replaced with regex valid for any string without whistespaces
@@ -283,7 +283,7 @@ def verify_pr_uniqueness(
     regex = f"^operator ([a-zA-Z0-9-]+) [^\s]+$"
     regex_pattern = re.compile(regex)
 
-    for repo in repos:
+    for repo in available_repositories:
         # List the open PRs in the given repositories,
         rsp = requests.get(base_url + repo + "/pulls")
         rsp.raise_for_status()

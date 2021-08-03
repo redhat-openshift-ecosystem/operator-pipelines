@@ -262,7 +262,7 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
 
     mock_get.return_value = mock_rsp
 
-    available_repositories = "repo_a,repo_b"
+    available_repositories = ["repo_a", "repo_b"]
     base_pr_bundle_name = "first"
     operatorcert.verify_pr_uniqueness(
         available_repositories, base_pr_url, base_pr_bundle_name
