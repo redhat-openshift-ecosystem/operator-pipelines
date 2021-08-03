@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 from typing import Dict
 
 import pytest
@@ -262,7 +262,7 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
 
     mock_get.return_value = mock_rsp
 
-    available_repositories = ["repo_a", "repo_b"]
+    available_repositories = ["org1/repo_a", "org2/repo_b"]
     base_pr_bundle_name = "first"
     operatorcert.verify_pr_uniqueness(
         available_repositories, base_pr_url, base_pr_bundle_name
@@ -273,6 +273,11 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
         {"title": "operator first (1.2.4)", "html_url": base_pr_url.replace("1", "5")}
     )
     mock_rsp.json.side_effect = pr_rsp
+
+    assert mock_get.call_args_list == [
+        call("https://api.github.com/repos/org1/repo_a/pulls"),
+        call("https://api.github.com/repos/org2/repo_b/pulls"),
+    ]
 
     with pytest.raises(RuntimeError):
         operatorcert.verify_pr_uniqueness(

@@ -13,6 +13,7 @@ def setup_argparser() -> argparse.ArgumentParser:
         "--available-repositories",
         help="List of repository names (coma separated),"
         "with potentially duplicate PRs",
+        default="redhat-openshift-ecosystem/operator-pipelines-test",
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 

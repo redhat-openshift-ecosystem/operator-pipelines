@@ -259,7 +259,7 @@ def parse_pr_title(pr_title: str) -> (str, str):
 
     if not regex_pattern.match(pr_title):
         raise ValueError(
-            f"PR title {pr_title} does not follow the regex 'operator <operator_name> (<semver>)"
+            f"Pull request title {pr_title} does not follow the regex 'operator <operator_name> (<semver>)"
         )
 
     matching = regex_pattern.search(pr_title)
@@ -276,7 +276,8 @@ def verify_pr_uniqueness(
     List the active Pull Requests in given GitHub repositories.
     Find Pull Requests for the same Operator Bundle, and error if they exists.
     """
-    base_url = "https://api.github.com/repos/redhat-openshift-ecosystem/"
+
+    base_url = f"https://api.github.com/repos/"
 
     # complex regex of semver is replaced with regex valid for any string without whistespaces
     # - no need to validate semver anymore
@@ -305,8 +306,8 @@ def verify_pr_uniqueness(
         # Log duplicates and exit with error
         if duplicate_prs:
             logging.error(
-                f"There is more than one PR for the Operator Bundle {base_pr_bundle_name}"
+                f"There is more than one pull request for the Operator Bundle {base_pr_bundle_name}"
             )
             for duplicate in duplicate_prs:
                 logging.error(f"DUPLICATE: {duplicate}")
-            raise RuntimeError("Multiple PRs for one Operator Bundle")
+            raise RuntimeError("Multiple pull requests for one Operator Bundle")
