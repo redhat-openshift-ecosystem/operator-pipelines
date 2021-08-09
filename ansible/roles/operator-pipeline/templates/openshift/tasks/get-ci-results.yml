@@ -11,6 +11,14 @@ spec:
     - name: cert_project_id
     - name: bundle_version
     - name: operator_name
+    # results from get-ci-results-attempt.
+    # They are kept if they have value, or
+    # they are replaced.
+    - name: test_result_id
+    - name: test_logs_id
+  results:
+    - name: test_result_id
+    - name: test_logs_id
   workspaces:
     - name: results
   steps:
@@ -19,8 +27,13 @@ spec:
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
+
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           echo "Preflight results already exists- skipping"
+
+          echo $(params.test_result_id) | tee $(results.test_result_id.path)
+          echo $(params.test_logs_id) | tee $(results.test_logs_id.path)
+
           exit 0
         fi
     - name: get-results
@@ -44,6 +57,9 @@ spec:
           --cert-path /cert/tls.crt \
           --key-path /cert/tls.key \
           --verbose
+
+        cat test_result_id | tee $(results.test_result_id.path)
+        cat test_logs_id | tee $(results.test_logs_id.path)
 
       volumeMounts:
         - mountPath: /cert
