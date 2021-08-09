@@ -57,4 +57,3 @@ spec:
     - name: cert
       secret:
         secretName: pyxis-auth-cert
-

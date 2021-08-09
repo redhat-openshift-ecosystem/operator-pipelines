@@ -161,11 +161,10 @@ metadata:
   name: pyxis-auth-cert 
 type: kubernetes.io/tls
 data:
-  # the data is abbreviated in this example
   tls.crt: |
-        MIIC2DCCAcCgAwIBAgIBATANBgkqh ...
+        < BASE64 ENCODED CERT  >
   tls.key: |
-        MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...
+        < BASE64 ENCODED PRIV KEY >
 EOF
 oc create -f pyxis-auth-cert-secret.yml
 ```
