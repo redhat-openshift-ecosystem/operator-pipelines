@@ -12,6 +12,8 @@ spec:
     - name: operator_name
   results:
     - name: preflight_results_exists
+    - name: test_result_id
+    - name: test_logs_id
   workspaces:
     - name: results
   steps:
@@ -35,6 +37,12 @@ spec:
           --cert-path /cert/tls.crt \
           --key-path /cert/tls.key \
           --verbose
+
+        # IDs are passed to "get-ci-results" task.
+        # There they are replaced if they are none, or kept if
+        # they contain value.
+        cat test_result_id | tee $(results.test_result_id.path)
+        cat test_logs_id | tee $(results.test_logs_id.path)
       volumeMounts:
         - mountPath: /cert
           name: cert

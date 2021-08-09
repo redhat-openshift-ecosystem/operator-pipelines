@@ -191,7 +191,7 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_username=test_user \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
   --param bundle_path=operators/kogito-operator/1.6.1-ok \
-  --param pyxis_url=https://catalog.redhat.com/api/containers/ \
+  --param pyxis_url=https://pyxis.engineering.redhat.com/ \
   --param preflight_min_version=1.0.0 \
   --param ci_min_version=1.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \

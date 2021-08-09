@@ -379,6 +379,10 @@ spec:
       params:
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
+        - name: test_result_id
+          value: "$(tasks.get-ci-results-attempt.results.test_result_id)"
+        - name: test_logs_id
+          value: "$(tasks.get-ci-results-attempt.results.test_logs_id)"
         - name: pyxis_url
           value: "$(params.pyxis_url)"
         - name: md5sum
