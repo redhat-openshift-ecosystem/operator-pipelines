@@ -271,13 +271,15 @@ spec:
         name: get-ci-results-attempt
       params:
         - name: pyxis_url
-          value: $(params.pyxis_url)
+          value: "$(params.pyxis_url)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
           value: "$(tasks.submission-validation.results.bundle_version)"
+        - name: operator_name
+          value: "$(tasks.submission-validation.results.operator_name)"
       workspaces:
         - name: results
           workspace: results
@@ -378,13 +380,15 @@ spec:
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
         - name: pyxis_url
-          value: $(params.pyxis_url)
+          value: "$(params.pyxis_url)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
           value: "$(tasks.submission-validation.results.bundle_version)"
+        - name: operator_name
+          value: "$(tasks.operator-validation.results.package_name)"
       workspaces:
         - name: results
           workspace: results
