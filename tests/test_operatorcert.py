@@ -334,7 +334,9 @@ def test_download_artifacts(mock_get: MagicMock):
     mock_open.assert_called_with("artifact.txt", "w")
 
     # Happy path- there are resources (test results)
-    mock_rsp.json.return_value = {"data": [{"_id": "1234", "results": {"a": "ok"}, "passed": True}]}
+    mock_rsp.json.return_value = {
+        "data": [{"_id": "1234", "results": {"a": "ok"}, "passed": True}]
+    }
     mock_get.return_value = mock_rsp
     # Act
     with mock.patch("builtins.open", mock_open):
