@@ -1,7 +1,14 @@
 # Operator pipelines
 
+## Prerequisites
+
+**To run any of the pipelines for the first time, multiple cluster resources has to be created.**
+
+See [first-time-run.md](docs/first-time-run.md)
+
 ## Local setup
 To create local cluster for sake of testing the pipelines, see [local-dev.md](docs/local-dev.md)
+
 
 ## Operator CI pipeline
 
@@ -10,93 +17,6 @@ infrastructure. The pipeline does basic check of new operator, build it and inst
 it in ocp environment. After an operator is installed a pre-flight tests are executed
 that validates that operator meets minimum requirements for Red Hat OpenShift Certification.
 If tests pass a CI pipeline submits a PR for full operator certification workflow.
-
-### Prerequisites
-
-#### Git SSH Secret
-The CI pipeline requires git SSH credentials with write access to the repository if automatic
-digest pinning is enabled using the `pin_digests` param. This is disabled by default. Before
-executing the pipeline the user must create a secret in the same namespace as the pipeline.
-
-To create the secret run the following commands (substituting your key):
-```bash
-cat << EOF > ssh-secret.yml
-kind: Secret
-apiVersion: v1
-metadata:
-  name: my-ssh-credentials
-data:
-  id_rsa: |
-    < PRIVATE SSH KEY >
-EOF
-
-oc create -f ssh-secret.yml
-```
-
-#### Registry Credentials
-The CI pipeline can optionally be configured to push images to a remote private
-registry. The user must create an auth secret containing the docker config. This
-secret can then be passed as a workspace named `registry-credentials` when invoking
-the pipeline.
-
-```bash
-cat << EOF > registry-secret.yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: my-registry-secret
-data:
-  .dockerconfigjson: < BASE64 ENCODED DOCKER CONFIG >
-type: kubernetes.io/dockerconfigjson
-EOF
-
-oc create -f registry-secret.yml
-```
-
-#### Red Hat Catalog Imagestreams
-
-The pipelines must pull the parent index images through the internal OpenShift
-registry to take advantage of the built-in credentials for Red Hat's terms-based
-registry (registry.redhat.io). This saves the user from needing to provide such
-credentials. The index generation task will always pull published index images
-through imagestreams of the same name in the current namespace. As a result,
-there is a one time configuration for each desired distribution catalog.
-
-```bash
-# Must be run once before certifying against the certified catalog.
-oc import-image certified-operator-index \
-  --from=registry.redhat.io/redhat/certified-operator-index \
-  --reference-policy local \
-  --scheduled \
-  --confirm \
-  --all
-
-# Must be run once before certifying against the Red Hat Martketplace catalog.
-oc import-image redhat-marketplace-index \
-  --from=registry.redhat.io/redhat/redhat-marketplace-index \
-  --reference-policy local \
-  --scheduled \
-  --confirm \
-  --all
-```
-
-#### Container API access
-CI pipelines automatically upload a test results, logs and artifacts using Red Hat
-container API. This requires a partner's API key and the key needs to be created
-as a secret in openshift cluster before running a Tekton pipeline.
-
-```bash
-oc create secret generic pyxis-api-secret --from-literal pyxis_api_key.txt=< API KEY >
-```
-
-The hosted pipeline communicates with internal Container API that requires cert + key.
-The corresponding secret needs to be created before running the pipeline.
-
-```bash
-oc create secret generic operator-pipeline-api-certs \
-  --from-file operator-pipeline.pem \
-  --from-file operator-pipeline.key
-```
 
 ### Installation
 ```bash
@@ -145,28 +65,6 @@ To enable digest pinning, pass the following arguments:
 The Hosted Operator Certification Pipeline is used as a validation of the operator
 bundles. It’s an additional (to CI pipeline) layer of validation that has to run within
 the Red Hat infrastructure. It contains multiple steps from the CI pipeline.
-
-### Prerequisites
-1. See the [Red Hat Catalog Imagestreams](#red-hat-catalog-imagestreams) section.
-
-2. Hosted pipeline uses certificates to authenticate to Pyxis. To supply the certificates,
-create a secret with following content:
-   
-```bash
-cat << EOF > pyxis-auth-cert-secret.yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: pyxis-auth-cert 
-type: kubernetes.io/tls
-data:
-  tls.crt: |
-        < BASE64 ENCODED CERT  >
-  tls.key: |
-        < BASE64 ENCODED PRIV KEY >
-EOF
-oc create -f pyxis-auth-cert-secret.yml
-```
 
 ### Installation
 ```bash
