@@ -311,13 +311,16 @@ def test_download_artifacts(mock_get: MagicMock):
     mock_open = mock.mock_open()
 
     # wrong resource to get
+    # Act & Assert
     with pytest.raises(ValueError):
         operatorcert.download_artifacts(args, "nonexisting")
 
     # No resource got
     mock_rsp.json.return_value = {"data": []}
     mock_get.return_value = mock_rsp
+    # Act
     result_id = operatorcert.download_artifacts(args, "artifacts")
+    # Assert
     assert result_id is None
 
     # Happy path- there are resources (artifacts)

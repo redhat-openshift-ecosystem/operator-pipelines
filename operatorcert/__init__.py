@@ -353,7 +353,7 @@ def download_artifacts(args, resource: str) -> Optional[str]:
     # artifacts
     if resource == "artifacts":
         result = base64.b64decode(query_results[0]["content"]).decode("utf-8")
-        file_path = f"artifact.txt"
+        file_path = "artifact.txt"
     # test results
     else:
         result = json.dumps(
