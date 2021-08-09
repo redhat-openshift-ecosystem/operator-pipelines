@@ -4,7 +4,7 @@ import logging
 import pathlib
 import re
 from urllib.parse import urljoin, urlparse
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import requests
 import yaml
@@ -317,7 +317,7 @@ def verify_pr_uniqueness(
             raise RuntimeError("Multiple pull requests for one Operator Bundle")
 
 
-def download_artifacts(args, resource: str) -> bool:
+def download_artifacts(args, resource: str) -> Optional[str]:
     """
     Try to get the test-results or artifacts for given parameters from the Pyxis.
     On success, store the results in files and return True, on failure- return False.
@@ -346,9 +346,8 @@ def download_artifacts(args, resource: str) -> bool:
     query_results = rsp.json()["data"]
 
     if len(query_results) == 0:
-        success = False
         logging.error(f"There is no {resource} for given parameters")
-        return success
+        return None
 
     # Get needed data from the query result
     # artifacts
@@ -370,6 +369,5 @@ def download_artifacts(args, resource: str) -> bool:
     with open(file_path, "w") as file:
         file.write(result)
 
-    success = True
     logging.info(f"The {resource} retrieved successfully for given parameters")
-    return success
+    return query_results[0]["_id"]

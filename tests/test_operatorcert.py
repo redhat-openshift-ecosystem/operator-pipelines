@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest import mock
 from unittest.mock import patch, MagicMock, call
 from typing import Dict
 
@@ -287,3 +288,62 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
         operatorcert.verify_pr_uniqueness(
             available_repositories, base_pr_url, base_pr_bundle_name
         )
+
+
+@patch("requests.get")
+def test_download_artifacts(mock_get: MagicMock):
+    # Arrange
+    args = MagicMock()
+    args.pyxis_url = "https://pyxis.engineering.redhat.com"
+    args.cert_project_id = "123456"
+    args.certification_hash = "123456abc"
+    args.operator_name = "foo"
+    args.operator_package_version = "12345"
+    args.cert_path = "/non/existing/path.crt"
+    args.key_path = "/non/existing/path.key"
+    test_results_url = (
+        "https://pyxis.engineering.redhat.com/v1/projects/certification/id/123456/artifacts?filter"
+        "=certification_hash=='123456abc';version=='12345';operator_package_name=='foo'&sort_by"
+        "=creation_date[desc]&page_size=1"
+    )
+
+    mock_rsp = MagicMock()
+    mock_open = mock.mock_open()
+
+    # wrong resource to get
+    with pytest.raises(ValueError):
+        operatorcert.download_artifacts(args, "nonexisting")
+
+    # No resource got
+    mock_rsp.json.return_value = {"data": []}
+    mock_get.return_value = mock_rsp
+    result_id = operatorcert.download_artifacts(args, "artifacts")
+    assert result_id is None
+
+    # Happy path- there are resources (artifacts)
+    mock_rsp.json.return_value = {"data": [{"_id": "1234", "content": "dGVzdAo="}]}
+    mock_get.return_value = mock_rsp
+    # Act
+    with mock.patch("builtins.open", mock_open):
+        result_id = operatorcert.download_artifacts(args, "artifacts")
+    # Assert
+    assert result_id == "1234"
+    mock_get.assert_called_with(
+        test_results_url, cert=(args.cert_path, args.key_path), verify=False
+    )
+    mock_open.assert_called_with("artifact.txt", "w")
+
+    # Happy path- there are resources (test results)
+    mock_rsp.json.return_value = {"data": [{"_id": "1234", "results": {"a": "ok"}, "passed": True}]}
+    mock_get.return_value = mock_rsp
+    # Act
+    with mock.patch("builtins.open", mock_open):
+        result_id = operatorcert.download_artifacts(args, "test-results")
+    # Assert
+    assert result_id == "1234"
+    mock_get.assert_called_with(
+        test_results_url.replace("artifacts", "test-results"),
+        cert=(args.cert_path, args.key_path),
+        verify=False,
+    )
+    mock_open.assert_called_with("test_results.json", "w")

@@ -47,14 +47,24 @@ def main() -> None:
     logging.basicConfig(level=log_level)
 
     # Logic
+    resource_ids = {}
     # "artifacts" resource is logs
     for resource in ["test-results", "artifacts"]:
-        success = download_artifacts(args, resource)
-        if not success:
+        resource_ids[resource] = download_artifacts(args, resource)
+        if not resource_ids[resource]:
+            # resource not found
             break
 
     # Store results
-    store_results({"results_exists": str(success)})
+    store_results(
+        {
+            "results_exists": str(
+                None not in resource_ids.values()
+            ),  # 'False' if at least one id is set to None
+            "test_result_id": resource_ids.get("test-results"),
+            "test_logs_id": resource_ids.get("artifacts"),
+        }
+    )
 
 
 if __name__ == "__main__":
