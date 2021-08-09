@@ -1,12 +1,14 @@
 import argparse
 import logging
 
-from operatorcert import get_preflight_result
+from operatorcert import download_artifacts
 from operatorcert.utils import store_results
 
 
 def setup_argparser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Get the test results and logs from the CI pipeline")
+    parser = argparse.ArgumentParser(
+        description="Get the test results and logs from the CI pipeline"
+    )
     parser.add_argument(
         "--pyxis-url",
         default="https://pyxis.engineering.redhat.com",
@@ -18,9 +20,7 @@ def setup_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--certification-hash", help="Certification bundle hash", required=True
     )
-    parser.add_argument(
-        "--operator-package-name", help="Operator package name", required=True
-    )
+    parser.add_argument("--operator-name", help="Operator name", required=True)
     parser.add_argument(
         "--operator-package-version", help="Operator package version", required=True
     )
@@ -47,8 +47,9 @@ def main() -> None:
     logging.basicConfig(level=log_level)
 
     # Logic
+    # "artifacts" resource is logs
     for resource in ["test-results", "artifacts"]:
-        success = get_preflight_result(args, resource)
+        success = download_artifacts(args, resource)
         if not success:
             break
 
