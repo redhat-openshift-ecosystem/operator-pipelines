@@ -10,12 +10,12 @@ spec:
     - name: pyxis_url
     - name: cert_project_id
     - name: bundle_version
+    - name: operator_name
   workspaces:
     - name: results
   steps:
-    - name: get-ci-results
+    - name: check-if-results-exists
       image: registry.access.redhat.com/ubi8-minimal
-      workingDir: $(workspaces.results.path)
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
@@ -23,5 +23,32 @@ spec:
           echo "Preflight results already exists- skipping"
           exit 0
         fi
-        # Curl Pyxis results endpoint
-        # If results exists, store them in the workspace, if not- fail
+    - name: get-results
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      workingDir: $(workspaces.results.path)
+      script: |
+        #! /usr/bin/env bash
+
+        # Send request to Pyxis to get the logs and test results.
+        # If they exists, store them in the workspace
+
+        echo "Downloading the artifacts"
+
+        download-artifacts \
+          --pyxis-url "$(params.pyxis_url)" \
+          --pyxis-url https://pyxis.stage.engineering.redhat.com
+          --cert-project-id "$(params.cert_project_id)" \
+          --certification-hash "$(params.md5sum)" \
+          --operator-package-version "$(params.bundle_version)" \
+          --operator-name "$(params.operator_name)" \
+          --cert-path /cert/tls.crt \
+          --key-path /cert/tls.key \
+          --verbose
+
+      volumeMounts:
+        - mountPath: /cert
+          name: cert
+  volumes:
+    - name: cert
+      secret:
+        secretName: pyxis-auth-cert

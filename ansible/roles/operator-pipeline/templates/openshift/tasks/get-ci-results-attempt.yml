@@ -9,16 +9,52 @@ spec:
     - name: pyxis_url
     - name: cert_project_id
     - name: bundle_version
+    - name: operator_name
   results:
     - name: preflight_results_exists
   workspaces:
     - name: results
   steps:
-    - name: get-ci-results
+    - name: get-results
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      workingDir: $(workspaces.results.path)
+      script: |
+        #! /usr/bin/env bash
+
+        # Send request to Pyxis to get the logs and test results.
+        # If they exists, store them in the workspace
+
+        echo "Downloading the artifacts"
+
+        download-artifacts \
+          --pyxis-url "$(params.pyxis_url)" \
+          --cert-project-id "$(params.cert_project_id)" \
+          --certification-hash "$(params.md5sum)" \
+          --operator-package-version "$(params.bundle_version)" \
+          --operator-name "$(params.operator_name)" \
+          --cert-path /cert/tls.crt \
+          --key-path /cert/tls.key \
+          --verbose
+      volumeMounts:
+        - mountPath: /cert
+          name: cert
+
+    - name: indicate-if-results-exists
       image: registry.access.redhat.com/ubi8-minimal
       workingDir: $(workspaces.results.path)
       script: |
         #! /usr/bin/env bash
-        # Curl Pyxis results endpoint
-        # If results exists, store them in the workspace
-        echo -n "true" | tee $(results.preflight_results_exists.path)
+
+        if [ -f "artifact.txt" -a -f "test_results.json" ]; then
+          echo "Results exists"
+          echo -n "true" | tee $(results.preflight_results_exists.path)
+        else
+          echo "Results doesn't exists"
+          echo -n "false" | tee $(results.preflight_results_exists.path)
+        fi
+
+  volumes:
+    - name: cert
+      secret:
+        secretName: pyxis-auth-cert
+

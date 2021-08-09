@@ -148,7 +148,27 @@ the Red Hat infrastructure. It contains multiple steps from the CI pipeline, mak
 It is triggered by creating the submission pull request, and successfully completes with merging it.
 
 ### Prerequisites
-See the [Red Hat Catalog Imagestreams](#red-hat-catalog-imagestreams) section.
+1. See the [Red Hat Catalog Imagestreams](#red-hat-catalog-imagestreams) section.
+
+2. Hosted pipeline uses certificates to authenticate to Pyxis. To supply the certificates,
+create a secret with following content:
+   
+```bash
+cat << EOF > pyxis-auth-cert-secret.yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pyxis-auth-cert 
+type: kubernetes.io/tls
+data:
+  # the data is abbreviated in this example
+  tls.crt: |
+        MIIC2DCCAcCgAwIBAgIBATANBgkqh ...
+  tls.key: |
+        MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...
+EOF
+oc create -f pyxis-auth-cert-secret.yml
+```
 
 ### Installation
 ```bash
