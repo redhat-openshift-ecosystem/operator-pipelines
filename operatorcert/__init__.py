@@ -1,14 +1,17 @@
+import base64
 import json
 import logging
+import os
 import pathlib
 import re
+from datetime import datetime
 from urllib.parse import urljoin, urlparse
 from typing import Dict, List
 
 import requests
 import yaml
 
-from operatorcert.utils import find_file
+from operatorcert.utils import find_file, store_results
 
 # Bundle annotations
 OCP_VERSIONS_ANNOTATION = "com.redhat.openshift.versions"
@@ -67,7 +70,7 @@ def get_csv_annotations(bundle_path: pathlib.Path, package: str) -> Dict:
 
 
 def get_supported_indices(
-    pyxis_url: str, ocp_versions_range: str, max_ocp_version: str = None
+        pyxis_url: str, ocp_versions_range: str, max_ocp_version: str = None
 ) -> List[str]:
     """
     Gets all the known supported OCP indices for this bundle.
@@ -176,7 +179,7 @@ def get_repo_and_org_from_github_url(git_repo_url: str) -> (str, str):
 
 
 def get_files_added_in_pr(
-    organization: str, repository: str, base_branch: str, pr_head_label: str
+        organization: str, repository: str, base_branch: str, pr_head_label: str
 ) -> List[str]:
     """
     Get the list of files added in the PR.
@@ -210,7 +213,7 @@ def get_files_added_in_pr(
 
 
 def verify_changed_files_location(
-    changed_files: List[str], operator_name: str, bundle_version: str
+        changed_files: List[str], operator_name: str, bundle_version: str
 ) -> None:
     """
     Find the allowed locations in directory tree for changes
@@ -270,7 +273,7 @@ def parse_pr_title(pr_title: str) -> (str, str):
 
 
 def verify_pr_uniqueness(
-    available_repositories: List[str], base_pr_url: str, base_pr_bundle_name: str
+        available_repositories: List[str], base_pr_url: str, base_pr_bundle_name: str
 ) -> None:
     """
     List the active Pull Requests in given GitHub repositories.
@@ -314,3 +317,53 @@ def verify_pr_uniqueness(
             for duplicate in duplicate_prs:
                 logging.error(f"DUPLICATE: {duplicate}")
             raise RuntimeError("Multiple pull requests for one Operator Bundle")
+
+
+def get_preflight_result(args, resource: str) -> bool:
+    """
+    Try to get the test-results or artifacts for given parameters from the Pyxis.
+    On success, store the results in files and return True, on failure- return False.
+    """
+
+    if resource not in ['test-results', 'artifacts']:
+        raise ValueError(f'Preflight results are either test-results or artifacts. Got {resource} instead')
+
+    # If there are multiple results, we only want the most recent one- we enforce it by sorting by creation_date
+    # and getting only the first result.
+    test_results_url = urljoin(
+        args.pyxis_url, f"v1/projects/certification/id/{args.cert_project_id}/{resource}?"
+                        f"filter=certification_hash=='{args.certification_hash}';"
+                        f"version=='{args.operator_package_version}';"
+                        f"operator_package_name=='{args.operator_package_name}'"
+                        f"&sort_by=creation_date[desc]&page_size=1"
+    )
+
+    rsp = requests.get(test_results_url, cert=(args.cert_path, args.key_path), verify=False)
+    rsp.raise_for_status()
+    query_results = rsp.json()["data"]
+
+    if len(query_results) == 0:
+        success = False
+        logging.error(f"There is no {resource} for given parameters")
+        return success
+
+    # Get needed data from the query result
+    # artifacts
+    if resource == "artifacts":
+        result = base64.b64decode(query_results[0]["content"]).decode('utf-8')
+        file_path = f"artifact.txt"
+    # test results
+    else:
+        result = json.dumps({
+            "passed": query_results[0]["passed"],
+            "results": query_results[0]["results"]
+        }, indent=4)
+        file_path = "test_results.json"
+
+    # Save needed data
+    with open(file_path, "w") as file:
+        file.write(result)
+
+    success = True
+    logging.info(f"The {resource} retrieved successfully for given parameters")
+    return success
