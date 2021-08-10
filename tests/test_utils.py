@@ -30,7 +30,11 @@ def test_find_file(tmp_path: Path) -> None:
 
 
 def test_store_results() -> None:
-    results = {"example_name": "example_value", "other_name": "other_value", "none": None}
+    results = {
+        "example_name": "example_value",
+        "other_name": "other_value",
+        "none": None,
+    }
     mock_open = mock.mock_open()
     with mock.patch("builtins.open", mock_open):
         store_results(results)
