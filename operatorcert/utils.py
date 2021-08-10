@@ -33,6 +33,9 @@ def store_results(results: Dict[str, str]):
         and value is result value (to be stored in file).
     """
     for result_name, result_value in results.items():
+        if result_value is None:
+            result_value = ""
+            logging.error(f"Result {result_name} is empty")
         logging.debug(f"Storing {result_name}")
         with open(result_name, "w") as result_file:
             result_file.write(result_value)

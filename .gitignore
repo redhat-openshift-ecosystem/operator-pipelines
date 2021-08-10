@@ -1,6 +1,11 @@
 # results 
 test_results.json 
 artifact.txt 
+results_exists
+test_logs_id
+test_result_id
+bundle_name
+bundle_version
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
