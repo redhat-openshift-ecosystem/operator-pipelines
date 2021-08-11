@@ -7,11 +7,22 @@ spec:
   params:
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+    - name: pyxis_url
+      default: https://pyxis.engineering.redhat.com
   results:
     - name: certification_project_id
       description: Identifier of certification project from Red Hat Connect
+    - name: isv_pid
+      description: isv_pid of the certification project from Red Hat Connect
   workspaces:
     - name: source
+    - name: pyxis-ssl-credentials
+      optional: false
   steps:
     - name: certification-project-check
       image: quay.io/redhat-isv/operator-pipelines-images:latest
@@ -31,4 +42,16 @@ spec:
           exit 1
         fi
 
+        PROJECT_URL="$(params.pyxis_url)/v1/projects/certification/id/$CERT_PROJECT_ID"
+        # TODO refactor to use Python script
+        PROJECT=$(curl -k -X GET $PROJECT_URL -H  "accept: application/json" --cert $(params.pyxis_cert_path) --key $(params.pyxis_key_path))
+
+        ISV_PID=$(echo $PROJECT | jq -r '.container.isv_pid')
+
+        if [ -z $ISV_PID ]; then
+          echo "Certification project isv_pid not found."
+          exit 1
+        fi
+
         echo -n $CERT_PROJECT_ID | tee $(results.certification_project_id.path)
+        echo -n $ISV_PID | tee $(results.isv_pid.path)
