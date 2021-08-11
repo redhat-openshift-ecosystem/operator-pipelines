@@ -66,6 +66,7 @@ spec:
           workspace: repository
           subPath: src
 
+    # Get cert project id
     - name: certification-project-check
       runAfter:
         - checkout

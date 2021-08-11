@@ -13,10 +13,6 @@ spec:
       description: Operator package name
     - name: bundle_version
       description: Operator bundle version
-    - name: max_supported_ocp_version
-      description: Maximum version of OpenShift supported by this Operator
-    - name: max_supported_index
-      description: Pull spec for the index corresponding to the max OCP version
   workspaces:
     - name: source
   steps:
@@ -26,24 +22,6 @@ spec:
       script: |
         #! /usr/bin/env bash
         operator-sdk bundle validate $(params.bundle_path)
-    - name: supported-version-check
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
-      workingDir: $(workspaces.source.path)
-      script: |
-        #! /usr/bin/env bash
-        set -xe
-
-        VERSION_INFO=$(ocp-version-info $(params.bundle_path))
-        echo $VERSION_INFO | jq
-        echo $VERSION_INFO \
-          | jq -r '.max_version_index.ocp_version' \
-          | tr -d '\n\r' \
-          | tee $(results.max_supported_ocp_version.path)
-        echo $VERSION_INFO \
-          | jq -r '.max_version_index.path' \
-          | tr -d '\n\r' \
-          | tee $(results.max_supported_index.path)
-
     - name: bundle-parse
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)

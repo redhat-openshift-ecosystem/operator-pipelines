@@ -1,0 +1,133 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: operator-release-pipeline
+spec:
+  params:
+    - name: git_repo_url
+    - name: git_revision
+      default: "main"
+    - name: container_digest
+    - name: imagestream
+    - name: tag
+    - name: bundle_path
+    - name: dist_method
+    - name: is_latest
+  workspaces:
+    - name: repository
+    - name: ssh-dir
+  tasks:
+    # Git clone
+    - name: checkout
+      taskRef:
+        name: git-clone
+        kind: Task
+      params:
+        - name: url
+          value: $(params.git_repo_url)
+        - name: revision
+          value: $(params.git_revision)
+      workspaces:
+        - name: output
+          workspace: repository
+          subPath: src
+        - name: ssh-directory
+          workspace: ssh-dir
+
+    # Get cert project id
+    - name: certification-project-check
+      runAfter:
+        - checkout
+      taskRef:
+        name: certification-project-check
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+
+    # Get additional data necessary for certification
+    - name: get-bundle-related-data
+      runAfter:
+        - certification-project-check
+      taskRef:
+        name: get-bundle-related-data
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+
+    # Publish image to OCP registry
+    - name: imagestream-manipulation
+      runAfter:
+        - get-bundle-related-data
+      taskRef:
+        name: imagestream-manipulation
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: registry
+          value: "$(tasks.get-bundle-related-data.results.registry)"
+        - name: vendor_label
+          value: "$(tasks.get-bundle-related-data.results.vendor_label)"
+        - name: repository_name
+          value: "$(tasks.get-bundle-related-data.results.repository_name)"
+        - name: isv_pid
+          value: "$(tasks.get-bundle-related-data.results.isv_pid)"
+        - name: container_digest
+          value: $(params.container_digest)
+        - name: imagestream
+          value: $(params.imagestream)
+        - name: tag
+          value: $(params.tag)
+        - name: dist_method
+          value: $(params.dist_method)
+
+    # Publish Vendor, Repository
+    - name: publish-resources
+      runAfter:
+        - imagestream-manipulation
+      taskRef:
+        name: publish-resources
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+
+    # create or update container image
+    - name: update-container-image
+      runAfter:
+        - publish-resources
+      taskRef:
+        name: update-container-image
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: registry
+          value: "$(tasks.get-bundle-related-data.results.registry)"
+        - name: vendor_label
+          value: "$(tasks.get-bundle-related-data.results.vendor_label)"
+        - name: repository_name
+          value: "$(tasks.get-bundle-related-data.results.repository_name)"
+        - name: container_digest
+          value: $(params.container_digest)
+        - name: imagestream
+          value: $(params.imagestream)
+        - name: tag
+          value: $(params.tag)
+        - name: is_latest
+          value: $(params.is_latest)
+
+    # call IIB to publish the bundle
+    - name: publish-bundle
+      runAfter:
+        - update-container-image
+      taskRef:
+        name: publish-bundle
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: container_digest
+          value: $(params.container_digest)
