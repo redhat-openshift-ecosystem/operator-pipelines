@@ -49,6 +49,19 @@ spec:
           workspace: repository
           subPath: src
 
+    # Get the bundle versions to build index
+    - name: get-supported-versions
+      runAfter:
+        - checkout
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: bundle_path
+          value: $(params.bundle_path)
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
 
     # Get additional data necessary for certification
     - name: get-bundle-related-data
@@ -129,5 +142,7 @@ spec:
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: bundle_versions
+          value: "$(tasks.get-supported-versions.results.indices)"
         - name: container_digest
           value: $(params.container_digest)
