@@ -58,7 +58,7 @@
   with_fileglob:
     - ../templates/openshift/tasks/*
 
-- name: Deploy pipeline
+- name: Deploy hosted pipeline
   k8s:
     state: present
     apply: yes
@@ -66,3 +66,12 @@
     definition: "{{ lookup('template', '{{ item }}') }}"
   with_items:
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
+
+- name: Deploy release pipeline
+  k8s:
+    state: present
+    apply: yes
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipelines/operator-release-pipeline.yml
