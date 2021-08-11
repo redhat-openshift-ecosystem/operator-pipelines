@@ -7,6 +7,7 @@ spec:
   params:
     - name: cert_project_id
     - name: container_digest
+    - name: bundle_versions
   steps:
     - name: publish-bundle
       image: registry.access.redhat.com/ubi8-minimal
