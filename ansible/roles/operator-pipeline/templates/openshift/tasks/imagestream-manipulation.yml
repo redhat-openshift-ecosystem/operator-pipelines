@@ -1,0 +1,24 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: imagestream-manipulation
+spec:
+  params:
+    - name: cert_project_id
+    - name: registry
+    - name: vendor_label
+    - name: repository_name
+    - name: isv_pid
+    - name: container_digest
+    - name: imagestream
+    - name: tag
+    - name: dist_method
+  steps:
+    - name: imagestream-manipulation
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        echo "Creating or updating Imagestream"
+
+        echo "ok"

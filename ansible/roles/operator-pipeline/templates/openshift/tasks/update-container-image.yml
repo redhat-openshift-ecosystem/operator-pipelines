@@ -1,0 +1,23 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-container-image
+spec:
+  params:
+    - name: cert_project_id
+    - name: registry
+    - name: vendor_label
+    - name: repository_name
+    - name: container_digest
+    - name: imagestream
+    - name: tag
+    - name: is_latest
+  steps:
+    - name: update-container-image
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        echo "Updating container image"
+
+        echo "ok"

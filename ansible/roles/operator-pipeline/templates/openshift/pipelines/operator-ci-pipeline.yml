@@ -98,6 +98,19 @@ spec:
           workspace: pipeline
           subPath: src
 
+    - name: get-supported-versions
+      runAfter:
+        - commit-pinned-digest
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
     - name: certification-project-check
       runAfter:
         - commit-pinned-digest
@@ -175,7 +188,7 @@ spec:
         - name: bundle_image
           value: *bundleImage
         - name: from_index
-          value: "$(tasks.operator-validation.results.max_supported_index)"
+          value: "$(tasks.get-supported-versions.results.max_supported_index)"
       workspaces:
         - name: output
           workspace: pipeline

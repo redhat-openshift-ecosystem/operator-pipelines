@@ -90,8 +90,8 @@ oc create secret generic pyxis-api-secret --from-literal PYXIS_API_KEY=< API KEY
 ```
 ### Installation
 ```bash
-oc apply -R -f pipelines/operator-ci-pipeline.yml
-oc apply -R -f tasks
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-ci-pipeline.yml
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
 
 # Install external dependencies
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
@@ -128,15 +128,16 @@ tkn pipeline start operator-ci-pipeline \
 ## Operator Hosted pipeline
 The Hosted Operator Certification Pipeline is used as a validation of the operator
 bundles. It’s an additional (to CI pipeline) layer of validation that has to run within
-the Red Hat infrastructure. It contains multiple steps from the CI pipeline.
+the Red Hat infrastructure. It contains multiple steps from the CI pipeline, making the CI pipeline optional.
+It is triggered by creating the submission pull request, and successfully completes with merging it.
 
 ### Prerequisites
 See the [Red Hat Catalog Imagestreams](#red-hat-catalog-imagestreams) section.
 
 ### Installation
 ```bash
-oc apply -R -f pipelines/operator-hosted-pipeline.yml
-oc apply -R -f tasks
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-hosted-pipeline.yml
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
 
 # Install external dependencies
 curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
@@ -165,3 +166,38 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=registry-credentials,secret=my-registry-secret \
   --showlog
 ```
+
+
+## Operator Release pipeline
+The Release pipeline runs after the layers of validation (CI (optionally) and Hosted pipeline).
+It is used to certify and publish submitted bundle version.
+It is triggered by merging the submission pull request and sucessfully completes with updating the GitHub
+indicating published versions.
+
+### Installation
+
+```bash
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-release-pipeline.yml
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
+
+# Install external dependencies
+curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml | oc apply -f -
+```
+
+### Execution
+The release pipeline can be triggered using the tkn CLI like so:
+
+
+tkn pipeline start operator-release-pipeline \
+  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+  --param git_revision=main \
+  --param bundle_path=operators/kogito-operator/1.6.0-ok \
+  --param container_digest=sha256:22e172e14b1300ce473ca15a80c273676305ad6c7a57f0f8cb25816bfce8d196 \
+  --param imagestream=operator-pipelines \
+  --param tag=1.6.0-ok \
+  --param dist_method=marketplace \
+  --param is_latest=true \
+  --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=ssh-dir,secret=my-ssh-credentials \
+  --showlog
+ 
