@@ -69,6 +69,8 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
+        - name: ssh-directory
+          workspace: ssh-dir
 
     - name: yaml-lint
       runAfter:
