@@ -29,7 +29,7 @@
   tags:
     - init
 
-- name: Create Operator pipeline's secrets
+- name: Create Operator pipeline cert secret
   no_log: yes
   k8s:
     state: present
@@ -40,7 +40,7 @@
       kind: Secret
       type: Opaque
       metadata:
-        name: operator-pipeline-secrets-{{ suffix }}
+        name: operator-pipeline-certs-{{ suffix }}
         labels:
           app: operator-pipeline
           suffix: "{{ suffix }}"
@@ -48,6 +48,25 @@
       data:
         operator-pipeline.key: "{{ lookup('file', operator_pipeline_private_key_local_path, rstrip=False) | b64encode }}"
         operator-pipeline.pem: "{{ lookup('file', operator_pipeline_private_cert_local_path, rstrip=False) | b64encode }}"
+
+- name: Create Operator pipeline quay token secret
+  no_log: yes
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: kubernetes.io/dockerconfigjson
+      metadata:
+        name: operator-pipeline-registry-token-{{ suffix }}
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        .dockerconfigjson: "{{ lookup('file', operator_pipeline_quay_token, rstrip=False) }}"
 
 - name: Deploy pipeline tasks
   k8s:
