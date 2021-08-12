@@ -6,3 +6,5 @@ suffix: "{{ env }}"
 
 operator_pipeline_private_key_local_path: ../../vaults/{{ env }}/operator-pipeline.key
 operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipeline.pem
+
+operator_pipeline_quay_token: ../../vaults/common/dockerconfig.json
