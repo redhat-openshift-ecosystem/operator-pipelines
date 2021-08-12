@@ -66,7 +66,7 @@
           suffix: "{{ suffix }}"
           env: "{{ env }}"
       data:
-        .dockerconfigjson: "{{ lookup('file', operator_pipeline_quay_token, rstrip=False) }}"
+        .dockerconfigjson: "{{ lookup('file', operator_pipeline_quay_token, rstrip=False) | b64encode }}"
 
 - name: Deploy pipeline tasks
   k8s:
