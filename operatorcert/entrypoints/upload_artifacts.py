@@ -37,18 +37,17 @@ def setup_argparser() -> Any:
         "--operator-package-name", help="Operator package name", required=True
     )
     parser.add_argument("--operator-version", help="Operator version", required=True)
+    parser.add_argument("--path", help="Path to artifact", required=True)
     parser.add_argument(
-        "--log-file", default="preflight.log", help="Location of preflight log file"
-    )
-    parser.add_argument(
-        "--result-file",
-        default="results.json",
-        help="Location of preflight result file",
-    )
-    parser.add_argument(
-        "--artifacts-dir",
-        default="artifacts",
-        help="Location of preflight artifacts directory",
+        "--type",
+        choices=[
+            "preflight-logs",
+            "preflight-artifacts",
+            "preflight-results",
+            "pipeline-logs",
+        ],
+        help="Type of artifact",
+        required=True,
     )
     parser.add_argument(
         "--output",
@@ -122,29 +121,15 @@ def upload_artifacts(args: Any) -> List[Dict[str, Any]]:
     Returns:
         List[Dict[str, Any]]: List of Pyxis responses
     """
-    artifacts = get_artifacts(args.artifacts_dir)
+    artifacts = get_artifacts(args.path)
     responses = []
     for artifact_path in artifacts:
         LOGGER.info(f"Uploading artifact: {artifact_path}")
-        full_path = os.path.join(args.artifacts_dir, artifact_path)
+        full_path = os.path.join(args.path, artifact_path)
 
         response = upload_artifact(args, full_path)
         responses.append(response)
     return responses
-
-
-def upload_logs(args: Any) -> Dict[str, Any]:
-    """
-    Upload test logs
-
-    Args:
-        args (Any): CLI arguments
-
-    Returns:
-        Dict[str, Any]: Pyxis artifacts upload response
-    """
-    LOGGER.info(f"Uploading logs: {args.log_file}")
-    return upload_artifact(args, args.log_file)
 
 
 def upload_test_results(args: Any) -> Dict[str, Any]:
@@ -157,7 +142,7 @@ def upload_test_results(args: Any) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Pyxis test results response
     """
-    with open(args.result_file, "r") as result_file:
+    with open(args.path, "r") as result_file:
         results = json.load(result_file)
 
     upload_url = urljoin(
@@ -183,15 +168,14 @@ def upload_results_and_artifacts(args: Any) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]]: Artifacts respones
     """
-    artifact_responses = upload_artifacts(args)
-    log_response = upload_logs(args)
-    test_results = upload_test_results(args)
+    if args.type in ["preflight-logs", "pipeline-logs"]:
+        response = upload_artifact(args, args.path)
+    elif args.type == "preflight-artifacts":
+        response = upload_artifacts(args)
+    elif args.type == "preflight-results":
+        response = upload_test_results(args)
 
-    return {
-        "logs": log_response,
-        "artifacts": artifact_responses,
-        "test_results": test_results,
-    }
+    return response
 
 
 def main():
@@ -204,9 +188,9 @@ def main():
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(log_level)
 
-    responses = upload_results_and_artifacts(args)
+    response = upload_results_and_artifacts(args)
     with open(args.output, "w") as output:
-        json.dump(responses, output)
+        json.dump(response, output)
     LOGGER.info(f"Output stored in: {args.output}")
 
 
