@@ -1,0 +1,11 @@
+# This pod template is ONLY required when running with CodeReady Containers.
+# The pre-provisioned PersistentVolumes use hostPath which will only grant
+# read/write access to the root user. The only other workaround is to chown
+# the workspace directory which is more complicated and unecessary if using
+# a different type of cluster.
+# Related issues:
+#   - https://github.com/code-ready/crc/issues/728
+#   - https://github.com/code-ready/crc/issues/1203
+securityContext:
+  runAsUser: 0
+  fsGroup: 0
