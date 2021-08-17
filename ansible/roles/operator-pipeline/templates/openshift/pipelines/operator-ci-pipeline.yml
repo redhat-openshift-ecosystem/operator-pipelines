@@ -201,24 +201,9 @@ spec:
         - name: credentials
           workspace: registry-credentials
 
-    - name: ocp-environment-preparation
-      runAfter:
-        - build-index
-      taskRef:
-        name: ocp-environment-preparation
-      params:
-        - name: index_image
-          value: *bundleIndexImage
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
-
     - name: preflight
       runAfter:
-        - ocp-environment-preparation
+        - build-index
       taskRef:
         name: preflight
       workspaces:
@@ -254,25 +239,9 @@ spec:
           workspace: pipeline
           subPath: src
 
-    - name: ocp-environment-cleanup
-      runAfter:
-        - preflight
-      taskRef:
-        name: ocp-environment-cleanup
-      params:
-        - name: index_image
-          value: *bundleIndexImage
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
-
     - name: open-pr
       runAfter:
         - upload-artifacts
-        - ocp-environment-cleanup
       taskRef:
         name: open-pull-request
       params:
