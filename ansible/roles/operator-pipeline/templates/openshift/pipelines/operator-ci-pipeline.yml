@@ -267,3 +267,21 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
+
+  finally:
+    - name: upload-pipeline-logs
+      taskRef:
+        name: upload-pipeline-logs
+      params:
+        - name: md5sum
+          value: "$(tasks.content-hash.results.md5sum)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: pyxis_url
+          value: "$(params.pyxis_url)"
+        - name: pipeline_name
+          value: "$(context.pipelineRun.name)"
