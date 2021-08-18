@@ -7,6 +7,16 @@ ARG USER_UID=1000
 
 USER root
 
+# setup certificates
+COPY certs/* /etc/pki/ca-trust/source/anchors/
+RUN /usr/bin/update-ca-trust
+
+# This is just a temporary workaround until we figure out how to
+# override CA bundle in OCP
+RUN cp /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/custom-ca-bundle.crt
+
+ENV REQUESTS_CA_BUNDLE="/etc/pki/tls/certs/custom-ca-bundle.crt"
+
 RUN dnf update -y && \
     dnf install -y \
     findutils \

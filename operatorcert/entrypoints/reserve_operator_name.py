@@ -3,7 +3,7 @@ import logging
 import sys
 from urllib.parse import urljoin
 
-from operatorcert.pyxis import post_with_cert, get_with_cert
+from operatorcert import pyxis
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -26,21 +26,17 @@ def setup_argparser() -> argparse.ArgumentParser:
         default="https://pyxis.engineering.redhat.com/",
         help="Base URL for Pyxis container metadata API",
     )
-    parser.add_argument("--cert-path", help="Path to Pyxis auth cert")
-    parser.add_argument("--key-path", help="Path to Pyxis auth key")
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     return parser
 
 
 def check_operator_name(args) -> None:
-    rsp = get_with_cert(
+    rsp = pyxis.get(
         urljoin(
             args.pyxis_url,
             f"v1/operators/packages?filter=package_name=={args.operator_name}",
-        ),
-        args.cert_path,
-        args.key_path,
+        )
     )
 
     rsp.raise_for_status()
@@ -72,11 +68,9 @@ def reserve_operator_name(args) -> None:
         "package_name": args.operator_name,
         "source": args.source,
     }
-    post_with_cert(
+    pyxis.post(
         urljoin(args.pyxis_url, "v1/operators/packages"),
         post_data,
-        args.cert_path,
-        args.key_path,
     )
 
     LOGGER.info(

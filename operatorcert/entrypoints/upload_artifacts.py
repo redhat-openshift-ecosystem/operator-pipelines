@@ -7,8 +7,8 @@ from typing import Any, Dict, List
 from urllib.parse import urljoin
 
 import magic
+from operatorcert import pyxis
 from operatorcert.logger import setup_logger
-from operatorcert.pyxis import post_with_api_key
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -80,13 +80,14 @@ def get_artifacts(artifacts_dir: str) -> List[str]:
     return artifact_paths
 
 
-def upload_artifact(args: Any, file_path: str) -> Dict[str, Any]:
+def upload_artifact(args: Any, file_path: str, org_id: Any = None) -> Dict[str, Any]:
     """
     Upload artifact using Pyxis API
 
     Args:
         args (Any): CLI arguments
         file_path (str): Path to a artifact file
+        org_id (Any): organization ID - optional
 
     Returns:
         Dict[str, Any]: Pyxis response
@@ -108,15 +109,18 @@ def upload_artifact(args: Any, file_path: str) -> Dict[str, Any]:
         "operator_package_name": args.operator_package_name,
         "version": args.operator_version,
     }
-    return post_with_api_key(upload_url, artifact_payload)
+    if org_id:
+        artifact_payload["org_id"] = org_id
+    return pyxis.post(upload_url, artifact_payload)
 
 
-def upload_artifacts(args: Any) -> List[Dict[str, Any]]:
+def upload_artifacts(args: Any, org_id: Any = None) -> List[Dict[str, Any]]:
     """
     Upload all test artifacts using Pyxis API
 
     Args:
         args (Any): CLI arguments
+        org_id (Any): organization ID - optional
 
     Returns:
         List[Dict[str, Any]]: List of Pyxis responses
@@ -127,17 +131,18 @@ def upload_artifacts(args: Any) -> List[Dict[str, Any]]:
         LOGGER.info(f"Uploading artifact: {artifact_path}")
         full_path = os.path.join(args.path, artifact_path)
 
-        response = upload_artifact(args, full_path)
+        response = upload_artifact(args, full_path, org_id)
         responses.append(response)
     return responses
 
 
-def upload_test_results(args: Any) -> Dict[str, Any]:
+def upload_test_results(args: Any, org_id: Any = None) -> Dict[str, Any]:
     """
     Upload test results using Pyxis API
 
     Args:
         args (Any): CLI tool arguments
+        org_id (Any): organization ID - optional
 
     Returns:
         Dict[str, Any]: Pyxis test results response
@@ -155,7 +160,9 @@ def upload_test_results(args: Any) -> Dict[str, Any]:
         "operator_package_name": args.operator_package_name,
         "version": args.operator_version,
     }
-    return post_with_api_key(upload_url, results)
+    if org_id:
+        results["org_id"] = org_id
+    return pyxis.post(upload_url, results)
 
 
 def upload_results_and_artifacts(args: Any) -> Dict[str, Any]:
@@ -168,12 +175,19 @@ def upload_results_and_artifacts(args: Any) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]]: Artifacts respones
     """
+    org_id = None
+    if pyxis.is_internal():
+        # External Pyxis gets org_id directly from API key - internally we
+        # have to get it from project
+        project = pyxis.get_project(args.pyxis_url, args.cert_project_id)
+        org_id = project.get("org_id")
+
     if args.type in ["preflight-logs", "pipeline-logs"]:
-        response = upload_artifact(args, args.path)
+        response = upload_artifact(args, args.path, org_id=org_id)
     elif args.type == "preflight-artifacts":
-        response = upload_artifacts(args)
+        response = upload_artifacts(args, org_id=org_id)
     elif args.type == "preflight-results":
-        response = upload_test_results(args)
+        response = upload_test_results(args, org_id=org_id)
 
     return response
 

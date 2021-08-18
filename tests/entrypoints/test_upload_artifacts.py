@@ -14,7 +14,7 @@ def test_main(
 
 
 @patch("operatorcert.entrypoints.upload_artifacts.base64.b64encode")
-@patch("operatorcert.entrypoints.upload_artifacts.post_with_api_key")
+@patch("operatorcert.entrypoints.upload_artifacts.pyxis.post")
 def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
     args = MagicMock()
     args.pyxis_url = "http://foo.com/"
@@ -25,7 +25,7 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
 
     mock_b64.return_value = b"a"
 
-    upload_artifacts.upload_artifact(args, "tests/data/preflight.log")
+    upload_artifacts.upload_artifact(args, "tests/data/preflight.log", 1)
 
     mock_post.assert_called_once_with(
         "http://foo.com/v1/projects/certification/id/123123/artifacts",
@@ -36,12 +36,13 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
             "filename": "preflight.log",
             "operator_package_name": args.operator_package_name,
             "version": args.operator_version,
+            "org_id": 1,
         },
     )
 
 
 @patch("operatorcert.entrypoints.upload_artifacts.json.load")
-@patch("operatorcert.entrypoints.upload_artifacts.post_with_api_key")
+@patch("operatorcert.entrypoints.upload_artifacts.pyxis.post")
 def test_upload_test_results(mock_post: MagicMock, mock_load: MagicMock) -> None:
     mock_load.return_value = {}
 
@@ -52,7 +53,7 @@ def test_upload_test_results(mock_post: MagicMock, mock_load: MagicMock) -> None
     args.operator_version = "1.0"
     args.cert_project_id = "123123"
 
-    upload_artifacts.upload_test_results(args)
+    upload_artifacts.upload_test_results(args, 1)
 
     mock_post.assert_called_once_with(
         "http://foo.com/v1/projects/certification/id/123123/test-results",
@@ -60,5 +61,6 @@ def test_upload_test_results(mock_post: MagicMock, mock_load: MagicMock) -> None
             "certification_hash": args.certification_hash,
             "operator_package_name": args.operator_package_name,
             "version": args.operator_version,
+            "org_id": 1,
         },
     )

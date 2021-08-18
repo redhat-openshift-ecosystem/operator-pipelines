@@ -16,11 +16,10 @@ def test_main(
 
 
 @patch("sys.exit")
-@patch("operatorcert.entrypoints.reserve_operator_name.get_with_cert")
+@patch("operatorcert.entrypoints.reserve_operator_name.pyxis.get")
 def test_check_operator_name_taken(mock_get: MagicMock, mock_exit: MagicMock) -> None:
     args = MagicMock()
     args.pyxis_url = "http://foo.com/"
-    args.cert_path = "cert.path"
     args.key_path = "key.path"
     args.association = "ospid-123"
     args.package_name = "operator-taken"
@@ -40,13 +39,12 @@ def test_check_operator_name_taken(mock_get: MagicMock, mock_exit: MagicMock) ->
 
 
 @patch("sys.exit")
-@patch("operatorcert.entrypoints.reserve_operator_name.get_with_cert")
+@patch("operatorcert.entrypoints.reserve_operator_name.pyxis.get")
 def test_check_operator_name_taken_by_same_assocation(
     mock_get: MagicMock, mock_exit: MagicMock
 ) -> None:
     args = MagicMock()
     args.pyxis_url = "http://foo.com/"
-    args.cert_path = "cert.path"
     args.key_path = "key.path"
     args.association = "ospid-123"
     args.package_name = "operator-taken"
@@ -66,13 +64,12 @@ def test_check_operator_name_taken_by_same_assocation(
 
 
 @patch("sys.exit")
-@patch("operatorcert.entrypoints.reserve_operator_name.get_with_cert")
+@patch("operatorcert.entrypoints.reserve_operator_name.pyxis.get")
 def test_check_operator_name_available(
     mock_get: MagicMock, mock_exit: MagicMock
 ) -> None:
     args = MagicMock()
     args.pyxis_url = "http://foo.com/"
-    args.cert_path = "cert.path"
     args.key_path = "key.path"
     args.association = "ospid-123"
     args.package_name = "operator-available"
@@ -84,11 +81,10 @@ def test_check_operator_name_available(
     mock_exit.assert_not_called()
 
 
-@patch("operatorcert.entrypoints.reserve_operator_name.post_with_cert")
+@patch("operatorcert.entrypoints.reserve_operator_name.pyxis.post")
 def test_reserve_operator_name(mock_post) -> None:
     args = MagicMock()
     args.pyxis_url = "http://foo.com/"
-    args.cert_path = "cert.path"
     args.key_path = "key.path"
     args.association = "ospid-123"
     args.package_name = "operator-new"
