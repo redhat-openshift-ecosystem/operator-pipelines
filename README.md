@@ -86,8 +86,18 @@ container API. This requires a partner's API key and the key needs to be created
 as a secret in openshift cluster before running a Tekton pipeline.
 
 ```bash
-oc create secret generic pyxis-api-secret --from-literal PYXIS_API_KEY=< API KEY >
+oc create secret generic pyxis-api-secret --from-literal pyxis_api_key.txt=< API KEY >
 ```
+
+The hosted pipeline communicates with internal Container API that requires cert + key.
+The corresponding secret needs to be created before running the pipeline.
+
+```bash
+oc create secret generic operator-pipeline-api-certs \
+  --from-file operator-pipeline.pem \
+  --from-file operator-pipeline.key
+```
+
 ### Installation
 ```bash
 oc apply -R -f pipelines/operator-ci-pipeline.yml
@@ -122,6 +132,7 @@ tkn pipeline start operator-ci-pipeline \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=ssh-dir,secret=my-ssh-credentials \
   --workspace name=registry-credentials,secret=my-registry-secret \
+  --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
 ```
 
@@ -163,5 +174,6 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=ssh-dir,secret=my-ssh-credentials \
   --workspace name=registry-credentials,secret=my-registry-secret \
+  --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --showlog
 ```

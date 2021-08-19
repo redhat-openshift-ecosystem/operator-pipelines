@@ -27,6 +27,7 @@ spec:
     - name: results
     - name: ssh-dir
     - name: registry-credentials
+    - name: pyxis-ssl-credentials
   tasks:
     # Git clone
     - name: checkout
@@ -204,7 +205,7 @@ spec:
         - dockerfile-creation
       taskRef:
         name: buildah
-        kind: ClusterTask
+        kind: Task
       params:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
@@ -241,7 +242,7 @@ spec:
         - generate-index
       taskRef:
         name: buildah
-        kind: ClusterTask
+        kind: Task
       params:
         - name: IMAGE
           value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
@@ -333,17 +334,23 @@ spec:
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
-          value: "$(tasks.operator-validation.results.certification_project_id)"
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
         - name: package_name
           value: "$(tasks.operator-validation.results.package_name)"
         - name: pyxis_url
           value: "$(params.pyxis_url)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
       workspaces:
         - name: source
           workspace: repository
           subPath: src
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
 
     - name: ocp-environment-cleanup
       runAfter:
@@ -418,3 +425,26 @@ spec:
     - name: cleanup
       taskRef:
         name: cleanup
+    - name: upload-pipeline-logs
+      taskRef:
+        name: upload-pipeline-logs
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
+      params:
+        - name: md5sum
+          value: "$(tasks.content-hash.results.md5sum)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: pyxis_url
+          value: "$(params.pyxis_url)"
+        - name: pipeline_name
+          value: "$(context.pipelineRun.name)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key

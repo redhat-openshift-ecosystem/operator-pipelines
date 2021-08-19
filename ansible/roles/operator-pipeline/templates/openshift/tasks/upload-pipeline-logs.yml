@@ -7,7 +7,12 @@ spec:
   params:
     - name: pyxis_api_key_secret
       default: pyxis-api-secret
-      description: Secret name that contains container API key
+      description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers/
       description: Red Hat's container API URL
@@ -23,6 +28,11 @@ spec:
       description: Tekton pipeline run name where logs will be gathered from
   results:
     - name: pipeline_log_url
+  workspaces:
+    - name: pyxis-ssl-credentials
+      optional: true
+    - name: pyxis-api-key
+      optional: true
   steps:
     - name: get-pipeline-logs
       image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8:0.19.0-2
@@ -37,15 +47,19 @@ spec:
     - name: upload-pipeline-logs
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       env:
-        - name: PYXIS_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: $(params.pyxis_api_key_secret)
-              key: PYXIS_API_KEY
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
       script: |
         #! /usr/bin/env bash
         echo "Uploading pipeline logs"
         set -xe
+
+        if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          export PYXIS_API_KEY=$(cat $API_KEY_PATH)
+        fi
 
         upload-artifacts \
           --cert-project-id "$(params.cert_project_id)" \
