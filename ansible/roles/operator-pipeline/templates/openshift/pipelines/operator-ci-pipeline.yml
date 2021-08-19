@@ -28,6 +28,7 @@ spec:
     - name: ssh-dir
     - name: registry-credentials
       optional: true
+    - name: pyxis-api-key
   tasks:
     - name: checkout
       taskRef:
@@ -246,6 +247,8 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
+        - name: pyxis-api-key
+          workspace: pyxis-api-key
 
     - name: open-pr
       runAfter:
@@ -272,6 +275,9 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
+      workspaces:
+        - name: pyxis-api-key
+          workspace: pyxis-api-key
       params:
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"

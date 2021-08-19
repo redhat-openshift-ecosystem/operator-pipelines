@@ -7,6 +7,13 @@ spec:
   params:
     - name: pyxis_api_key_secret
       default: pyxis-api-secret
+      description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+      description: Path to Pyxis key. Valid only when internal Pyxis is used.
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers/
     - name: log_file
@@ -23,16 +30,20 @@ spec:
     - name: result_url
   workspaces:
     - name: source
+    - name: pyxis-ssl-credentials
+      optional: true
+    - name: pyxis-api-key
+      optional: true
   steps:
     - name: upload-test-logs
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
       env:
-        - name: PYXIS_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: $(params.pyxis_api_key_secret)
-              key: PYXIS_API_KEY
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
+
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
@@ -40,6 +51,11 @@ spec:
           echo "Preflight logs already exists - skipping"
           echo "none" | tee $(results.log_url.path)
           exit 0
+        fi
+
+        if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
         echo "Uploading test log"
@@ -65,11 +81,10 @@ spec:
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
       env:
-        - name: PYXIS_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: $(params.pyxis_api_key_secret)
-              key: PYXIS_API_KEY
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
@@ -77,6 +92,11 @@ spec:
           echo "Preflight results already exists - skipping"
           echo "none" | tee $(results.result_url.path)
           exit 0
+        fi
+
+        if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
         echo "Uploading test results"
@@ -102,16 +122,20 @@ spec:
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
       env:
-        - name: PYXIS_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: $(params.pyxis_api_key_secret)
-              key: PYXIS_API_KEY
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           exit 0
+        fi
+
+        if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
         echo "Uploading test artifacts"
