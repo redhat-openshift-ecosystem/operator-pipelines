@@ -20,6 +20,9 @@ spec:
         faster for rapid operator development. The flag needs to be set to false
         for a full CI pipeline run and certification pull-request submission.
       default: "false"
+    - name: submit
+      description: Set to "true" to submit results and open a pull request.
+      default: "false"
   workspaces:
     - name: pipeline
     - name: ssh-dir
@@ -215,6 +218,11 @@ spec:
       runAfter:
         - content-hash
         - preflight
+      when:
+        - input: $(params.submit)
+          operator: in
+          values:
+            - "true"
       taskRef:
         name: upload-artifacts
       params:
