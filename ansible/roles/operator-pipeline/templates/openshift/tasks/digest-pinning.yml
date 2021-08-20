@@ -6,8 +6,8 @@ metadata:
 spec:
   params:
     - name: bundle_path
-    - name: skip
-      default: "false"
+    - name: enabled
+      default: "true"
   results:
     - name: dirty_flag
   workspaces:
@@ -20,8 +20,8 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        if [ "$(params.skip)" == "true" ]; then
-          echo "Skip flag is set. Skipping digest pinning..."
+        if [ "$(params.enabled)" != "true" ]; then
+          echo "Digest pinning is not enabled"
           echo -n "false" | tee $(results.dirty_flag.path)
           exit 0
         fi
