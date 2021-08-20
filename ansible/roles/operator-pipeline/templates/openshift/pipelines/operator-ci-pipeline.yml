@@ -15,10 +15,10 @@ spec:
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
-    - name: test_mode
-      description: The test mode flag skips certain steps to make a pipeline
-        faster for rapid operator development. The flag needs to be set to false
-        for a full CI pipeline run and certification pull-request submission.
+    - name: pin_digests
+      description: Set to "true" to automatically generate the relatedImages
+        section of the ClusterServiceVersion for you. If changes are made, the
+        result will be committed to GitHub.
       default: "false"
     - name: submit
       description: Set to "true" to submit results and open a pull request.
@@ -26,6 +26,7 @@ spec:
   workspaces:
     - name: pipeline
     - name: ssh-dir
+      optional: true
     - name: registry-credentials
       optional: true
     - name: pyxis-api-key
@@ -54,8 +55,8 @@ spec:
       params:
         - name: bundle_path
           value: "$(params.bundle_path)"
-        - name: skip
-          value: "$(params.test_mode)"
+        - name: enabled
+          value: "$(params.pin_digests)"
       workspaces:
         - name: source
           workspace: pipeline

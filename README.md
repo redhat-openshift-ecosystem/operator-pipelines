@@ -14,11 +14,11 @@ If tests pass a CI pipeline submits a PR for full operator certification workflo
 ### Prerequisites
 
 #### Git SSH Secret
-Since CI pipeline needs to make some changes in git repository (for example digest pinning)
-the pipeline requires a write access to provided git repository. Before running a pipeline
-user needs to upload ssh secret key to a cluster where the pipeline will run.
+The CI pipeline requires git SSH credentials with write access to the repository if automatic
+digest pinning is enabled using the `pin_digests` param. This is disabled by default. Before
+executing the pipeline the user must create a secret in the same namespace as the pipeline.
 
-To create a required secret run following command:
+To create the secret run the following commands (substituting your key):
 ```bash
 cat << EOF > ssh-secret.yml
 kind: Secret
@@ -117,7 +117,6 @@ tkn pipeline start operator-ci-pipeline \
   --param git_revision=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=ssh-dir,secret=my-ssh-credentials \
   --showlog
 ```
 If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:
@@ -130,10 +129,16 @@ tkn pipeline start operator-ci-pipeline \
   --param registry=quay.io \
   --param image_namespace=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=ssh-dir,secret=my-ssh-credentials \
   --workspace name=registry-credentials,secret=my-registry-secret \
   --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
+```
+
+To enable digest pinning, pass the following arguments:
+
+```bash
+  --param pin_digests=true \
+  --workspace name=ssh-dir,secret=my-ssh-credentials
 ```
 
 ## Operator Hosted pipeline
