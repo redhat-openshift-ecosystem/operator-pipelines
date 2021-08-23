@@ -8,7 +8,6 @@ spec:
     - name: git_repo_url
     - name: git_revision
       default: "main"
-    - name: container_digest
     - name: imagestream
     - name: tag
     - name: bundle_path
@@ -90,8 +89,6 @@ spec:
           value: "$(tasks.get-bundle-related-data.results.repository_name)"
         - name: isv_pid
           value: "$(tasks.get-bundle-related-data.results.isv_pid)"
-        - name: container_digest
-          value: $(params.container_digest)
         - name: imagestream
           value: $(params.imagestream)
         - name: tag
@@ -125,7 +122,7 @@ spec:
         - name: repository_name
           value: "$(tasks.get-bundle-related-data.results.repository_name)"
         - name: container_digest
-          value: $(params.container_digest)
+          value: "$(tasks.imagestream-manipulation.results.container_digest)"
         - name: imagestream
           value: $(params.imagestream)
         - name: tag
@@ -145,4 +142,4 @@ spec:
         - name: bundle_versions
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: container_digest
-          value: $(params.container_digest)
+          value: "$(tasks.imagestream-manipulation.results.container_digest)"

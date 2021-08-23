@@ -192,7 +192,6 @@ tkn pipeline start operator-release-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_revision=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
-  --param container_digest=sha256:22e172e14b1300ce473ca15a80c273676305ad6c7a57f0f8cb25816bfce8d196 \
   --param imagestream=operator-pipelines \
   --param tag=1.6.0-ok \
   --param dist_method=marketplace \

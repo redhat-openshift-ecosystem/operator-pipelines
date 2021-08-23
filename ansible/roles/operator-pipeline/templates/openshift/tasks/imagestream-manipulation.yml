@@ -10,15 +10,18 @@ spec:
     - name: vendor_label
     - name: repository_name
     - name: isv_pid
-    - name: container_digest
     - name: imagestream
     - name: tag
     - name: dist_method
+  results:
+    - name: container_digest
   steps:
     - name: imagestream-manipulation
       image: registry.access.redhat.com/ubi8-minimal
       script: |
         #! /usr/bin/env bash
         echo "Creating or updating Imagestream"
+
+        echo -n "digest" | tee $(results.container_digest.path)
 
         echo "ok"
