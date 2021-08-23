@@ -212,6 +212,7 @@ tkn pipeline start operator-release-pipeline \
   --param imagestream=operator-pipelines \
   --param tag=1.6.0-ok \
   --param dist_method=marketplace \
+  --param pyxis_url=https://catalog.redhat.com/api/containers/ \
   --param is_latest=true \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=ssh-dir,secret=my-ssh-credentials \

@@ -7,7 +7,6 @@ spec:
   params:
     - name: cert_project_id
   results:
-    - name: registry
     - name: vendor_label
     - name: repository_name
     - name: isv_pid
@@ -18,7 +17,6 @@ spec:
         #! /usr/bin/env bash
         echo "Retrieving the data related to bundle"
 
-        echo -n "registry" | tee $(results.registry.path)
         echo -n "vendor_label" | tee $(results.vendor_label.path)
         echo -n "repository_name" | tee $(results.repository_name.path)
         echo -n "isv_pid" | tee $(results.isv_pid.path)
