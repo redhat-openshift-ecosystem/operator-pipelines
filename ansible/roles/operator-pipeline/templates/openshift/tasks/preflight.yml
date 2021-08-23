@@ -7,27 +7,49 @@ spec:
   params:
     - name: preflight_results_exists
       default: "false"
+    - name: BASE_IMAGE
+      default: quay.io/opdev/preflight:0.0.0
+      type: string
+    - name: package_name
+    - name: bundle_version
+    - name: bundle_index_image
   results:
     - name: log_output_file
     - name: result_output_file
     - name: artifacts_output_dir
+    - name: response
   workspaces:
     - name: source
+    - name: credentials
+      description: Docker config for retrieving the bundle image
+      optional: true
   steps:
     - name: preflight-tests
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: $(params.BASE_IMAGE)
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
+        set -xe
+
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           echo "Preflight results already exists- skipping"
           echo -n "none" | tee $(results.log_output_file.path)
           echo -n "none" | tee $(results.result_output_file.path)
+          echo -n "none" | tee $(results.reponse.path)
           exit 0
         fi
 
         echo "Testing"
+
+        if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
+          export KUBE_CONFIG = $(workspaces.credentials.path)
+        
+        podman pull "$(params.BASE_IMAGE)"
+        podman run -it --rm -v $KUBECONFIG:/tmp/kubeconfig \
+         -e KUBECONFIG=/tmp/kubeconfig "$(params.BASE_IMAGE)" \
+         check operator "$(params.bundle_index_image)" \
+         | tee $(results.reponse.path)
 
         # Temporary test data
         ls -l

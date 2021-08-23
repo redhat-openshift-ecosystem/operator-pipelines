@@ -206,10 +206,19 @@ spec:
         - build-index
       taskRef:
         name: preflight
+      params:
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: bundle_index_image
+          value: *bundleIndexImage
       workspaces:
         - name: source
           workspace: pipeline
           subPath: src
+        - name: credentials
+          workspace: registry-credentials
 
     - name: upload-artifacts
       runAfter:
