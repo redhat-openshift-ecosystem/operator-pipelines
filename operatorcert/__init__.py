@@ -303,6 +303,9 @@ def verify_pr_uniqueness(
             if matching is None:
                 continue
             bundle_name = matching.group(1)
+            # there is a PR with name that doesn't conform to regex
+            if matching is None:
+                continue
             if bundle_name == base_pr_bundle_name:
                 duplicate_prs.append(f"{pr_title}: {pr_url}")
 
