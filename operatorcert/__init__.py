@@ -82,7 +82,7 @@ def get_supported_indices(
     """
     url = urljoin(pyxis_url, "v1/operators/indices")
 
-    filter_ = f"organization==certified-operators"
+    filter_ = "organization==certified-operators"
     if max_ocp_version:
         filter_ += f";ocp_version=le={max_ocp_version}"
 
@@ -277,11 +277,11 @@ def verify_pr_uniqueness(
     Find Pull Requests for the same Operator Bundle, and error if they exists.
     """
 
-    base_url = f"https://api.github.com/repos/"
+    base_url = "https://api.github.com/repos/"
 
     # complex regex of semver is replaced with regex valid for any string without whistespaces
     # - no need to validate semver anymore
-    regex = f"^operator ([a-zA-Z0-9-]+) [^\s]+$"
+    regex = r"^operator ([a-zA-Z0-9-]+) [^\s]+$"
     regex_pattern = re.compile(regex)
 
     for repo in available_repositories:
@@ -299,6 +299,9 @@ def verify_pr_uniqueness(
                 # We found the base PR
                 continue
             matching = regex_pattern.search(pr_title)
+            # there is a PR with name that doesn't conform to regex
+            if matching is None:
+                continue
             bundle_name = matching.group(1)
             if bundle_name == base_pr_bundle_name:
                 duplicate_prs.append(f"{pr_title}: {pr_url}")
