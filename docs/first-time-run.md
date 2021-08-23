@@ -89,6 +89,15 @@ as a secret in openshift cluster before running a Tekton pipeline.
 oc create secret generic pyxis-api-secret --from-literal PYXIS_API_KEY=< API KEY >
 ```
 
+#### Kubeconfig
+
+The CI pipeline requires a kubeconfig with admin credentials. This can be created
+by logging into said cluster as an admin user.
+
+```bash
+KUBECONFIG=my-kubeconfig oc login -u <username> -p <password>
+oc create secret generic my-kubeconfig --from-file=kubeconfig=my-kubeconfig
+```
 
 ### Only Hosted pipeline:
 #### Container API access

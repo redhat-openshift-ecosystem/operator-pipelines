@@ -7,33 +7,44 @@ spec:
   params:
     - name: preflight_results_exists
       default: "false"
+      description: Skips preflight execution if set to "true"
+    - name: base_image
+      default: quay.io/opdev/preflight:0.0.0
+      description: Preflight image used
+    - name: package_name
+      description: Package name for the Operator under test
+    - name: bundle_version
+      description: Version of the bundle under test
+    - name: bundle_index_image
+      description: The Operator index image which includes the bundle
+    - name: bundle_image
+      description: The Operator bundle image under test
   results:
     - name: log_output_file
     - name: result_output_file
     - name: artifacts_output_dir
   workspaces:
-    - name: source
+    - name: kubeconfig
+      description: A kubernetes config for the cluster used in preflight testing
   steps:
-    - name: preflight-tests
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
-      workingDir: $(workspaces.source.path)
+    - name: check-operator
+      image: $(params.base_image)
       script: |
         #! /usr/bin/env bash
+        set -xe
+
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           echo "Preflight results already exists- skipping"
           echo -n "none" | tee $(results.log_output_file.path)
           echo -n "none" | tee $(results.result_output_file.path)
+          echo -n "none" | tee $(results.artifacts_output_dir.path)
           exit 0
         fi
 
-        echo "Testing"
+        export KUBECONFIG=$(workspaces.kubeconfig.path)/kubeconfig
 
-        # Temporary test data
-        ls -l
-        cp -r /home/user/tests/data/* .
-        ls -l
-
+        preflight check operator $(params.bundle_image)
 
         echo -n preflight.log | tee $(results.log_output_file.path)
         echo -n results.json | tee $(results.result_output_file.path)
