@@ -328,6 +328,7 @@ spec:
           workspace: repository
           subPath: src
 
+    # TODO pass a kubeconfig workspace (awaiting EET-1918)
     - name: preflight
       runAfter:
         - ocp-environment-preparation
@@ -336,10 +337,6 @@ spec:
       params:
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
 
     - name: upload-artifacts
       runAfter:
