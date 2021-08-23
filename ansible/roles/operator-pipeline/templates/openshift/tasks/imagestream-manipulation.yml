@@ -13,6 +13,10 @@ spec:
     - name: imagestream
     - name: tag
     - name: dist_method
+    - name: registry
+    - name: image_namespace
+    - name: package_name
+    - name: bundle_version
   results:
     - name: container_digest
   steps:

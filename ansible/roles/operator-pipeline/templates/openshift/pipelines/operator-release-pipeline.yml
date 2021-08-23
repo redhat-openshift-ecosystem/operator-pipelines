@@ -13,6 +13,12 @@ spec:
     - name: bundle_path
     - name: dist_method
     - name: is_latest
+    - name: registry
+      default: quay.io
+    - name: image_namespace
+      default: $(context.pipelineRun.namespace)
+      description: The namespace/organization all built images will be pushed to.
+    - name: pyxis_url
   workspaces:
     - name: repository
     - name: ssh-dir
@@ -62,6 +68,24 @@ spec:
           workspace: repository
           subPath: src
 
+    # This task is needed only because of it's second step, which
+    # parses the bundle path and returns the package_name and bundle_version.
+    # TODO: split this task
+    - name: operator-validation
+      runAfter:
+        - checkout
+      taskRef:
+        name: operator-validation
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+        - name: pyxis_url
+          value: "$(params.pyxis_url)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Get additional data necessary for certification
     - name: get-bundle-related-data
       runAfter:
@@ -76,13 +100,12 @@ spec:
     - name: imagestream-manipulation
       runAfter:
         - get-bundle-related-data
+        - operator-validation
       taskRef:
         name: imagestream-manipulation
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: registry
-          value: "$(tasks.get-bundle-related-data.results.registry)"
         - name: vendor_label
           value: "$(tasks.get-bundle-related-data.results.vendor_label)"
         - name: repository_name
@@ -95,6 +118,15 @@ spec:
           value: $(params.tag)
         - name: dist_method
           value: $(params.dist_method)
+        # params necessary to pull the image
+        - name: registry
+          value: "$(params.registry)"
+        - name: image_namespace
+          value: "$(params.image_namespace)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
 
     # Publish Vendor, Repository
     - name: publish-resources
@@ -116,7 +148,7 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: registry
-          value: "$(tasks.get-bundle-related-data.results.registry)"
+          value: "$(params.registry)"
         - name: vendor_label
           value: "$(tasks.get-bundle-related-data.results.vendor_label)"
         - name: repository_name
@@ -134,6 +166,7 @@ spec:
     - name: publish-bundle
       runAfter:
         - update-container-image
+        - get-supported-versions
       taskRef:
         name: publish-bundle
       params:
