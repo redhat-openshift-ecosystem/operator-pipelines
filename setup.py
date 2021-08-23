@@ -26,7 +26,7 @@ setup(
             "verify-changed-dirs=operatorcert.entrypoints.verify_changed_dirs:main",
             "verify-submission=operatorcert.entrypoints.verify_submission:main",
             "upload-artifacts=operatorcert.entrypoints.upload_artifacts:main",
-            "download-artifacts=operatorcert.entrypoints.download_artifacts:main",
+            "download-test-results=operatorcert.entrypoints.download_test_results:main",
             "reserve-operator-name=operatorcert.entrypoints.reserve_operator_name:main",
         ],
     },

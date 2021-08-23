@@ -317,22 +317,17 @@ def verify_pr_uniqueness(
             raise RuntimeError("Multiple pull requests for one Operator Bundle")
 
 
-def download_artifacts(args, resource: str) -> Optional[str]:
+def download_test_results(args) -> Optional[str]:
     """
-    Try to get the test-results or artifacts for given parameters from the Pyxis.
-    On success, store the results in files and return True, on failure- return False.
+    Try to get the test-results for given parameters from the Pyxis.
+    On success, store the results in file and return it's id, on failure- return None.
     """
-
-    if resource not in ["test-results", "artifacts"]:
-        raise ValueError(
-            f"Preflight results are either test-results or artifacts. Got {resource} instead"
-        )
 
     # If there are multiple results, we only want the most recent one- we enforce it by sorting by creation_date
     # and getting only the first result.
     test_results_url = urljoin(
         args.pyxis_url,
-        f"v1/projects/certification/id/{args.cert_project_id}/{resource}?"
+        f"v1/projects/certification/id/{args.cert_project_id}/test-results?"
         f"filter=certification_hash=='{args.certification_hash}';"
         f"version=='{args.operator_package_version}';"
         f"operator_package_name=='{args.operator_name}'"
@@ -346,28 +341,23 @@ def download_artifacts(args, resource: str) -> Optional[str]:
     query_results = rsp.json()["data"]
 
     if len(query_results) == 0:
-        logging.error(f"There is no {resource} for given parameters")
+        logging.error(f"There is no test results for given parameters")
         return None
 
     # Get needed data from the query result
-    # artifacts
-    if resource == "artifacts":
-        result = base64.b64decode(query_results[0]["content"]).decode("utf-8")
-        file_path = "artifact.txt"
     # test results
-    else:
-        result = json.dumps(
-            {
-                "passed": query_results[0]["passed"],
-                "results": query_results[0]["results"],
-            },
-            indent=4,
-        )
-        file_path = "test_results.json"
+    result = json.dumps(
+        {
+            "passed": query_results[0]["passed"],
+            "results": query_results[0]["results"],
+        },
+        indent=4,
+    )
+    file_path = "test_results.json"
 
     # Save needed data
     with open(file_path, "w") as file:
         file.write(result)
 
-    logging.info(f"The {resource} retrieved successfully for given parameters")
+    logging.info(f"Test results retrieved successfully for given parameters")
     return query_results[0]["_id"]

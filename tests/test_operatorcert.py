@@ -291,7 +291,7 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
 
 
 @patch("requests.get")
-def test_download_artifacts(mock_get: MagicMock):
+def test_download_test_results(mock_get: MagicMock):
     # Arrange
     args = MagicMock()
     args.pyxis_url = "https://pyxis.engineering.redhat.com"
@@ -302,7 +302,7 @@ def test_download_artifacts(mock_get: MagicMock):
     args.cert_path = "/non/existing/path.crt"
     args.key_path = "/non/existing/path.key"
     test_results_url = (
-        "https://pyxis.engineering.redhat.com/v1/projects/certification/id/123456/artifacts?filter"
+        "https://pyxis.engineering.redhat.com/v1/projects/certification/id/123456/test-results?filter"
         "=certification_hash=='123456abc';version=='12345';operator_package_name=='foo'&sort_by"
         "=creation_date[desc]&page_size=1"
     )
@@ -310,31 +310,13 @@ def test_download_artifacts(mock_get: MagicMock):
     mock_rsp = MagicMock()
     mock_open = mock.mock_open()
 
-    # wrong resource to get
-    # Act & Assert
-    with pytest.raises(ValueError):
-        operatorcert.download_artifacts(args, "nonexisting")
-
     # No resource got
     mock_rsp.json.return_value = {"data": []}
     mock_get.return_value = mock_rsp
     # Act
-    result_id = operatorcert.download_artifacts(args, "artifacts")
+    result_id = operatorcert.download_test_results(args)
     # Assert
     assert result_id is None
-
-    # Happy path- there are resources (artifacts)
-    mock_rsp.json.return_value = {"data": [{"_id": "1234", "content": "dGVzdAo="}]}
-    mock_get.return_value = mock_rsp
-    # Act
-    with mock.patch("builtins.open", mock_open):
-        result_id = operatorcert.download_artifacts(args, "artifacts")
-    # Assert
-    assert result_id == "1234"
-    mock_get.assert_called_with(
-        test_results_url, cert=(args.cert_path, args.key_path), verify=False
-    )
-    mock_open.assert_called_with("artifact.txt", "w")
 
     # Happy path- there are resources (test results)
     mock_rsp.json.return_value = {
@@ -343,11 +325,11 @@ def test_download_artifacts(mock_get: MagicMock):
     mock_get.return_value = mock_rsp
     # Act
     with mock.patch("builtins.open", mock_open):
-        result_id = operatorcert.download_artifacts(args, "test-results")
+        result_id = operatorcert.download_test_results(args)
     # Assert
     assert result_id == "1234"
     mock_get.assert_called_with(
-        test_results_url.replace("artifacts", "test-results"),
+        test_results_url,
         cert=(args.cert_path, args.key_path),
         verify=False,
     )
