@@ -250,7 +250,7 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
             {
                 "title": "title not conforming regex- should not throw error",
                 "html_url": base_pr_url.replace("1", "4"),
-            }
+            },
         ],
         # At second call return:
         [
