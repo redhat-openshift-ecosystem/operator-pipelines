@@ -247,12 +247,16 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
                 "title": "operator third (1.2.3)",
                 "html_url": base_pr_url.replace("1", "3"),
             },
+            {
+                "title": "title not conforming regex- should not throw error",
+                "html_url": base_pr_url.replace("1", "4"),
+            }
         ],
         # At second call return:
         [
             {
                 "title": "operator fourth (1.2.3)",
-                "html_url": base_pr_url.replace("1", "4"),
+                "html_url": base_pr_url.replace("1", "5"),
             }
         ],
     ]
