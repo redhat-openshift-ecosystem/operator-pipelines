@@ -44,7 +44,7 @@ spec:
 
         if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
           export KUBE_CONFIG = $(workspaces.credentials.path)
-        
+
         podman pull "$(params.BASE_IMAGE)"
         podman run -it --rm -v $KUBECONFIG:/tmp/kubeconfig \
          -e KUBECONFIG=/tmp/kubeconfig "$(params.BASE_IMAGE)" \
