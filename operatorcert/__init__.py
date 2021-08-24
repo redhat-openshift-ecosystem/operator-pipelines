@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 import requests
 import yaml
 
+from operatorcert import pyxis
 from operatorcert.utils import find_file, store_results
 
 # Bundle annotations
@@ -319,7 +320,7 @@ def verify_pr_uniqueness(
 
 def download_test_results(args) -> Optional[str]:
     """
-    Try to get the test-results for given parameters from the Pyxis.
+    Try to get the test results for given parameters from the Pyxis.
     On success, store the results in file and return it's id, on failure- return None.
     """
 
@@ -334,9 +335,8 @@ def download_test_results(args) -> Optional[str]:
         f"&sort_by=creation_date[desc]&page_size=1",
     )
 
-    rsp = requests.get(
-        test_results_url, cert=(args.cert_path, args.key_path), verify=False
-    )
+    rsp = pyxis.get(test_results_url)
+
     rsp.raise_for_status()
     query_results = rsp.json()["data"]
 

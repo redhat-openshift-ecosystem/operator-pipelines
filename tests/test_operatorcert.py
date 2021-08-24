@@ -5,7 +5,6 @@ from typing import Dict
 
 import pytest
 import yaml
-
 import operatorcert
 
 Bundle = Dict[str, Path]
@@ -290,7 +289,7 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
         )
 
 
-@patch("requests.get")
+@patch("operatorcert.pyxis.get")
 def test_download_test_results(mock_get: MagicMock):
     # Arrange
     args = MagicMock()
@@ -328,9 +327,5 @@ def test_download_test_results(mock_get: MagicMock):
         result_id = operatorcert.download_test_results(args)
     # Assert
     assert result_id == "1234"
-    mock_get.assert_called_with(
-        test_results_url,
-        cert=(args.cert_path, args.key_path),
-        verify=False,
-    )
+    mock_get.assert_called_with(test_results_url)
     mock_open.assert_called_with("test_results.json", "w")

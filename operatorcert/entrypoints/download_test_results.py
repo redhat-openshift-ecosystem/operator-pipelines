@@ -41,15 +41,10 @@ def main() -> None:
     logging.basicConfig(level=log_level)
 
     # Logic
-    # "artifacts" resource is logs
     test_results_id = download_test_results(args)
 
     # Store results
-    store_results(
-        {
-            "test_result_id": test_results_id
-        }
-    )
+    store_results({"test_result_id": test_results_id})
 
 
 if __name__ == "__main__":
