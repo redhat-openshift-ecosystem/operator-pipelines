@@ -7,7 +7,7 @@ from operatorcert.utils import store_results
 
 def setup_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Get the test results and logs from the CI pipeline"
+        description="Get the test results and logs from the CI pipeline. Test results can be found in the file test_results.json"
     )
     parser.add_argument(
         "--pyxis-url",
