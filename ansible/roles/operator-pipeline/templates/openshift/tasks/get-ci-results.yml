@@ -27,11 +27,6 @@ spec:
     - name: results
     - name: pyxis-ssl-credentials
       optional: true
-  env:
-    - name: PYXIS_CERT_PATH
-      value: $(params.pyxis_cert_path)
-    - name: PYXIS_KEY_PATH
-      value: $(params.pyxis_key_path)
   steps:
     - name: check-if-results-exists
       image: registry.access.redhat.com/ubi8-minimal
@@ -50,8 +45,14 @@ spec:
     - name: get-results
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.results.path)
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
       script: |
         #! /usr/bin/env bash
+        set -xe
 
         # Send request to Pyxis to get the test results.
         # If they exists, store them in the workspace
@@ -60,7 +61,6 @@ spec:
 
         download-test-results \
           --pyxis-url "$(params.pyxis_url)" \
-          --pyxis-url https://pyxis.stage.engineering.redhat.com
           --cert-project-id "$(params.cert_project_id)" \
           --certification-hash "$(params.md5sum)" \
           --operator-package-version "$(params.bundle_version)" \

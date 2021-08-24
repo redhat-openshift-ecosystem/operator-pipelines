@@ -1,7 +1,6 @@
 # secrets
 ssh-secret.yml
 registry-secret.yml
-pyxis-auth-cert-secret.yml
 
 # VSCode project settings
 .vscode/
