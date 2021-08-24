@@ -10,11 +10,6 @@ spec:
     - name: git_revision
       description: git revision used to check out project
       default: "main"
-    - name: imagestream
-      description: |
-        name of the imagestream in the project. Since the project name uniquely reflects
-        Certification Project, imagestream can be constant.
-      default: operator-pipelines
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
     - name: is_latest
@@ -121,8 +116,6 @@ spec:
           value: "$(tasks.get-project-related-data.results.repository_name)"
         - name: isv_pid
           value: "$(tasks.get-project-related-data.results.isv_pid)"
-        - name: imagestream
-          value: $(params.imagestream)
         - name: dist_method
           value: "$(tasks.get-project-related-data.results.dist_method)"
         # params necessary to pull the image
@@ -154,8 +147,6 @@ spec:
           value: "$(tasks.imagestream-manipulation.results.container_digest)"
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
-        - name: imagestream
-          value: $(params.imagestream)
         - name: is_latest
           value: $(params.is_latest)
 
