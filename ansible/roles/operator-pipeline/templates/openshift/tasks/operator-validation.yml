@@ -6,7 +6,9 @@ metadata:
 spec:
   params:
     - name: bundle_path
+      description: path indicating the location of the certified bundle within the repository
     - name: pyxis_url
+      description: URL of the Pyxis- API for accessing container metadata.
       default: https://catalog.redhat.com/api/containers/
   results:
     - name: package_name

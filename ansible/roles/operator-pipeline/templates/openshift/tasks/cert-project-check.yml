@@ -6,6 +6,7 @@ metadata:
 spec:
   params:
     - name: bundle_path
+      description: path indicating the location of the certified bundle within the repository
   results:
     - name: certification_project_id
       description: Identifier of certification project from Red Hat Connect
