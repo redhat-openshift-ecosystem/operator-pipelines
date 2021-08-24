@@ -47,8 +47,7 @@ def main() -> None:
     # Store results
     store_results(
         {
-            "results_exists": str(test_results_id is not None),
-            "test_result_id": test_results_id,
+            "test_result_id": test_results_id
         }
     )
 
