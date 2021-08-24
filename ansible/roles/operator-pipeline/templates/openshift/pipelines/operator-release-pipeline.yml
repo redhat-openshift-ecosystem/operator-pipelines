@@ -26,6 +26,7 @@ spec:
   workspaces:
     - name: repository
     - name: ssh-dir
+      optional: true
   tasks:
     # Git clone
     - name: checkout
