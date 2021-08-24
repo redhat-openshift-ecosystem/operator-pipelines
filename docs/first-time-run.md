@@ -91,22 +91,15 @@ oc create secret generic pyxis-api-secret --from-literal PYXIS_API_KEY=< API KEY
 
 
 ### Only Hosted pipeline:
-Hosted pipeline uses certificates to authenticate to Pyxis. To supply the certificates,
-create a secret with following content:
-   
+#### Container API access
+The hosted pipeline communicates with internal Container API that requires cert + key.
+The corresponding secret needs to be created before running the pipeline.
+
 ```bash
-cat << EOF > pyxis-auth-cert-secret.yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: pyxis-auth-cert 
-type: kubernetes.io/tls
-data:
-  tls.crt: |
-        < BASE64 ENCODED CERT  >
-  tls.key: |
-        < BASE64 ENCODED PRIV KEY >
-EOF
-oc create -f pyxis-auth-cert-secret.yml
+oc create secret generic operator-pipeline-api-certs \
+  --from-file operator-pipeline.pem \
+  --from-file operator-pipeline.key
 ```
+
+
 

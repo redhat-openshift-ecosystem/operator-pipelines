@@ -23,24 +23,26 @@ spec:
     - name: results
     - name: pyxis-ssl-credentials
       optional: true
-  env:
-    - name: PYXIS_CERT_PATH
-      value: $(params.pyxis_cert_path)
-    - name: PYXIS_KEY_PATH
-      value: $(params.pyxis_key_path)
   steps:
     - name: get-results
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.results.path)
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
       script: |
         #! /usr/bin/env bash
+
+        set -xe
 
         # Send request to Pyxis to get the logs and test results.
         # If they exists, store them in the workspace
 
         echo "Downloading the artifacts"
 
-        download-artifacts \
+        download-test-results \
           --pyxis-url "$(params.pyxis_url)" \
           --cert-project-id "$(params.cert_project_id)" \
           --certification-hash "$(params.md5sum)" \
@@ -48,9 +50,9 @@ spec:
           --operator-name "$(params.operator_name)" \
           --verbose
 
-        # IDs are passed to "get-ci-results" task.
-        # There they are replaced if they are none, or kept if
-        # they contain value.
+        # ID is passed to "get-ci-results" task.
+        # There it is replaced if they are none, or kept if
+        # it contain value.
         cat test_result_id | tee $(results.test_result_id.path)
 
     - name: indicate-if-results-exists
@@ -66,4 +68,3 @@ spec:
           echo "Results doesn't exists"
           echo -n "false" | tee $(results.preflight_results_exists.path)
         fi
-
