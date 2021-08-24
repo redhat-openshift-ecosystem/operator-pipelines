@@ -80,6 +80,32 @@ def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
     return resp.json()
 
 
+def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    PATCH pyxis API request to given URL with given payload
+
+    Args:
+        url (str): Pyxis API URL
+        body (Dict[str, Any]): Request payload
+
+    Returns:
+        Dict[str, Any]: Pyxis response
+    """
+    session = _get_session()
+
+    LOGGER.debug(f"PATCH Pyxis request: {url}")
+    resp = session.patch(url, json=body)
+
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError:
+        LOGGER.exception(
+            f"Pyxis PATCH query failed with {url} - {resp.status_code} - {resp.text}"
+        )
+        raise
+    return resp.json()
+
+
 def get(url: str) -> Any:
     """
     Pyxis GET request
