@@ -14,10 +14,6 @@ spec:
     - name: repository_name
     - name: container_digest
       description: imagestream container_digest
-    - name: imagestream
-      description: |
-        name of the imagestream in the project. Since the project name uniquely reflects
-        Certification Project, imagestream can be constant.
     - name: bundle_version
       description: operator bundle version
     - name: is_latest

@@ -13,10 +13,6 @@ spec:
       description: name of the vendor
     - name: repository_name
     - name: isv_pid
-    - name: imagestream
-      description: |
-        name of the imagestream in the project. Since the project name uniquely reflects
-        Certification Project, imagestream can be constant.
     - name: dist_method
       description: distribution method- either marketplace or certified
     - name: image_namespace
