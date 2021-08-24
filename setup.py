@@ -28,6 +28,7 @@ setup(
             "upload-artifacts=operatorcert.entrypoints.upload_artifacts:main",
             "download-test-results=operatorcert.entrypoints.download_test_results:main",
             "reserve-operator-name=operatorcert.entrypoints.reserve_operator_name:main",
+            "set-github-status=operatorcert.entrypoints.set_github_status:main",
         ],
     },
 )
