@@ -6,17 +6,25 @@ metadata:
 spec:
   params:
     - name: cert_project_id
+      description: ID of the bundle Certification Project (as in bundle ci.yaml)
     - name: registry
+      description: registry to pull the image from.
     - name: vendor_label
+      description: name of the vendor
     - name: repository_name
     - name: isv_pid
     - name: imagestream
-    - name: tag
+      description: |
+        name of the imagestream in the project. Since the project name uniquely reflects
+        Certification Project, imagestream can be constant.
     - name: dist_method
-    - name: registry
+      description: distribution method- either marketplace or certified
     - name: image_namespace
+      description: The namespace/organization where images from Hosted pipeline are stored.
     - name: package_name
+      description: operator bundle name
     - name: bundle_version
+      description: operator bundle version
   results:
     - name: container_digest
   steps:

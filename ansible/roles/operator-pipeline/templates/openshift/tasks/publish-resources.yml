@@ -6,6 +6,7 @@ metadata:
 spec:
   params:
     - name: cert_project_id
+      description: ID of the bundle Certification Project (as in bundle ci.yaml)
   steps:
     - name: publish-resources
       image: registry.access.redhat.com/ubi8-minimal

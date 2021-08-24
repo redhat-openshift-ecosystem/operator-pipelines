@@ -6,19 +6,28 @@ metadata:
 spec:
   params:
     - name: git_repo_url
+      description: ssh address of GitHub repository
     - name: git_revision
+      description: git revision used to check out project
       default: "main"
     - name: imagestream
-    - name: tag
+      description: |
+        name of the imagestream in the project. Since the project name uniquely reflects
+        Certification Project, imagestream can be constant.
+      default: operator-pipelines
     - name: bundle_path
-    - name: dist_method
+      description: path indicating the location of the certified bundle within the repository
     - name: is_latest
+      description: boolean- should this operator version be tagged as latest?
     - name: registry
+      description: temporary registry used by Hosted pipeline to pass the image to Release pipeline.
       default: quay.io
     - name: image_namespace
+      description: The namespace/organization where images from Hosted pipeline are stored.
       default: $(context.pipelineRun.namespace)
-      description: The namespace/organization all built images will be pushed to.
     - name: pyxis_url
+      description: URL of the Pyxis- API for accessing container metadata.
+      default: pyxis.engineering.redhat.com
   workspaces:
     - name: repository
     - name: ssh-dir
@@ -87,11 +96,11 @@ spec:
           subPath: src
 
     # Get additional data necessary for certification
-    - name: get-bundle-related-data
+    - name: get-project-related-data
       runAfter:
         - certification-project-check
       taskRef:
-        name: get-bundle-related-data
+        name: get-project-related-data
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
@@ -99,7 +108,7 @@ spec:
     # Publish image to OCP registry
     - name: imagestream-manipulation
       runAfter:
-        - get-bundle-related-data
+        - get-project-related-data
         - operator-validation
       taskRef:
         name: imagestream-manipulation
@@ -107,17 +116,15 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: vendor_label
-          value: "$(tasks.get-bundle-related-data.results.vendor_label)"
+          value: "$(tasks.get-project-related-data.results.vendor_label)"
         - name: repository_name
-          value: "$(tasks.get-bundle-related-data.results.repository_name)"
+          value: "$(tasks.get-project-related-data.results.repository_name)"
         - name: isv_pid
-          value: "$(tasks.get-bundle-related-data.results.isv_pid)"
+          value: "$(tasks.get-project-related-data.results.isv_pid)"
         - name: imagestream
           value: $(params.imagestream)
-        - name: tag
-          value: $(params.tag)
         - name: dist_method
-          value: $(params.dist_method)
+          value: "$(tasks.get-project-related-data.results.dist_method)"
         # params necessary to pull the image
         - name: registry
           value: "$(params.registry)"
@@ -128,44 +135,44 @@ spec:
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
 
-    # Publish Vendor, Repository
-    - name: publish-resources
-      runAfter:
-        - imagestream-manipulation
-      taskRef:
-        name: publish-resources
-      params:
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
-
     # create or update container image
     - name: update-container-image
       runAfter:
-        - publish-resources
+        - imagestream-manipulation
       taskRef:
         name: update-container-image
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: registry
-          value: "$(params.registry)"
+          value: "$(tasks.get-project-related-data.results.registry)"
         - name: vendor_label
-          value: "$(tasks.get-bundle-related-data.results.vendor_label)"
+          value: "$(tasks.get-project-related-data.results.vendor_label)"
         - name: repository_name
-          value: "$(tasks.get-bundle-related-data.results.repository_name)"
+          value: "$(tasks.get-project-related-data.results.repository_name)"
         - name: container_digest
           value: "$(tasks.imagestream-manipulation.results.container_digest)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
         - name: imagestream
           value: $(params.imagestream)
-        - name: tag
-          value: $(params.tag)
         - name: is_latest
           value: $(params.is_latest)
+
+    # Publish Vendor, Repository
+    - name: publish-resources
+      runAfter:
+        - update-container-image
+      taskRef:
+        name: publish-resources
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
 
     # call IIB to publish the bundle
     - name: publish-bundle
       runAfter:
-        - update-container-image
+        - publish-resources
         - get-supported-versions
       taskRef:
         name: publish-bundle

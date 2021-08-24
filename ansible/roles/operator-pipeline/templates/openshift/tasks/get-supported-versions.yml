@@ -6,7 +6,7 @@ metadata:
 spec:
   params:
     - name: bundle_path
-      default: https://catalog.redhat.com/api/containers/
+      description: path indicating the location of the certified bundle within the repository
   results:
     - name: max_supported_ocp_version
       description: Maximum version of OpenShift supported by this Operator
