@@ -8,10 +8,35 @@ spec:
     - name: git_pr_url
   workspaces:
     - name: source
+    - name: ssh-directory
   steps:
     - name: merge-pr
       image: registry.access.redhat.com/ubi8-minimal
+      env:
+        - name: WORKSPACE_SSH_DIRECTORY_PATH
+          value: $(workspaces.ssh-directory.path)
       script: |
         #! /usr/bin/env bash
-        # Curl to github API
+
+        ## ensure auth via ssh
+        mkdir -p /root/.ssh
+        cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" /root/.ssh
+        chmod 700 /root/.ssh
+        chmod -R 400 /root/.ssh/*
+
+        # get the PR number and the repository name from the original PR url-
+        # it will be used for the api.github url
+        PR_NUMBER=$(basename "$(params.git_pr_url)")
+        REPO_NAME=$(echo "$(params.git_pr_url)" | sed -e "s|^https://github.com/||" -e "s|/pull/.*$||")
+
+        API_URL=https://api.github.com/repos/${REPO_NAME}/pulls/${PR_NUMBER}/merge
+        echo $API_URL
+
+        # curl to GitHub API
+        curl -X PUT $API_URL
+
+        #git checkout develop
+        #git merge --no-ff my-feature-123
+        #git push
+
         echo "200"
