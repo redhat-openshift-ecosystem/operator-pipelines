@@ -280,10 +280,16 @@ spec:
           value: "$(tasks.submission-validation.results.bundle_version)"
         - name: operator_name
           value: "$(tasks.submission-validation.results.operator_name)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
       workspaces:
         - name: results
           workspace: results
           subPath: results
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
 
     # If we didn't got the CI pipeline preflight test results
     # run preflight here
@@ -381,8 +387,6 @@ spec:
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
         - name: test_result_id
           value: "$(tasks.get-ci-results-attempt.results.test_result_id)"
-        - name: test_logs_id
-          value: "$(tasks.get-ci-results-attempt.results.test_logs_id)"
         - name: pyxis_url
           value: "$(params.pyxis_url)"
         - name: md5sum
@@ -393,10 +397,16 @@ spec:
           value: "$(tasks.submission-validation.results.bundle_version)"
         - name: operator_name
           value: "$(tasks.operator-validation.results.package_name)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
       workspaces:
         - name: results
           workspace: results
           subPath: results
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
 
     # Verify the CI results
     - name: verify-ci-results

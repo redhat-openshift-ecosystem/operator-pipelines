@@ -5,6 +5,12 @@ metadata:
   name: get-ci-results-attempt
 spec:
   params:
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+      description: Path to Pyxis key. Valid only when internal Pyxis is used.
     - name: md5sum
     - name: pyxis_url
     - name: cert_project_id
@@ -13,9 +19,15 @@ spec:
   results:
     - name: preflight_results_exists
     - name: test_result_id
-    - name: test_logs_id
   workspaces:
     - name: results
+    - name: pyxis-ssl-credentials
+      optional: true
+  env:
+    - name: PYXIS_CERT_PATH
+      value: $(params.pyxis_cert_path)
+    - name: PYXIS_KEY_PATH
+      value: $(params.pyxis_key_path)
   steps:
     - name: get-results
       image: quay.io/redhat-isv/operator-pipelines-images:latest
@@ -34,18 +46,12 @@ spec:
           --certification-hash "$(params.md5sum)" \
           --operator-package-version "$(params.bundle_version)" \
           --operator-name "$(params.operator_name)" \
-          --cert-path /cert/tls.crt \
-          --key-path /cert/tls.key \
           --verbose
 
         # IDs are passed to "get-ci-results" task.
         # There they are replaced if they are none, or kept if
         # they contain value.
         cat test_result_id | tee $(results.test_result_id.path)
-        cat test_logs_id | tee $(results.test_logs_id.path)
-      volumeMounts:
-        - mountPath: /cert
-          name: cert
 
     - name: indicate-if-results-exists
       image: registry.access.redhat.com/ubi8-minimal
@@ -53,7 +59,7 @@ spec:
       script: |
         #! /usr/bin/env bash
 
-        if [ -f "artifact.txt" -a -f "test_results.json" ]; then
+        if [ -f "test_results.json" ]; then
           echo "Results exists"
           echo -n "true" | tee $(results.preflight_results_exists.path)
         else
@@ -61,7 +67,3 @@ spec:
           echo -n "false" | tee $(results.preflight_results_exists.path)
         fi
 
-  volumes:
-    - name: cert
-      secret:
-        secretName: pyxis-auth-cert

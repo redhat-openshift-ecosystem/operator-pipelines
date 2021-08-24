@@ -5,7 +5,12 @@ metadata:
   name: get-ci-results
 spec:
   params:
-    - name: preflight_results_exists
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+      description: Path to Pyxis key. Valid only when internal Pyxis is used.
     - name: md5sum
     - name: pyxis_url
     - name: cert_project_id
@@ -14,25 +19,31 @@ spec:
     # results from get-ci-results-attempt.
     # They are kept if they have value, or
     # they are replaced.
+    - name: preflight_results_exists
     - name: test_result_id
-    - name: test_logs_id
   results:
     - name: test_result_id
-    - name: test_logs_id
   workspaces:
     - name: results
+    - name: pyxis-ssl-credentials
+      optional: true
+  env:
+    - name: PYXIS_CERT_PATH
+      value: $(params.pyxis_cert_path)
+    - name: PYXIS_KEY_PATH
+      value: $(params.pyxis_key_path)
   steps:
     - name: check-if-results-exists
       image: registry.access.redhat.com/ubi8-minimal
       script: |
         #! /usr/bin/env bash
+
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
 
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           echo "Preflight results already exists- skipping"
 
           echo $(params.test_result_id) | tee $(results.test_result_id.path)
-          echo $(params.test_logs_id) | tee $(results.test_logs_id.path)
 
           exit 0
         fi
@@ -42,29 +53,18 @@ spec:
       script: |
         #! /usr/bin/env bash
 
-        # Send request to Pyxis to get the logs and test results.
+        # Send request to Pyxis to get the test results.
         # If they exists, store them in the workspace
 
-        echo "Downloading the artifacts"
+        echo "Downloading the test results"
 
-        download-artifacts \
+        download-test-results \
           --pyxis-url "$(params.pyxis_url)" \
           --pyxis-url https://pyxis.stage.engineering.redhat.com
           --cert-project-id "$(params.cert_project_id)" \
           --certification-hash "$(params.md5sum)" \
           --operator-package-version "$(params.bundle_version)" \
           --operator-name "$(params.operator_name)" \
-          --cert-path /cert/tls.crt \
-          --key-path /cert/tls.key \
           --verbose
 
         cat test_result_id | tee $(results.test_result_id.path)
-        cat test_logs_id | tee $(results.test_logs_id.path)
-
-      volumeMounts:
-        - mountPath: /cert
-          name: cert
-  volumes:
-    - name: cert
-      secret:
-        secretName: pyxis-auth-cert
