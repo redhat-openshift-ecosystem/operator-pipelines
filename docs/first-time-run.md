@@ -101,5 +101,10 @@ oc create secret generic operator-pipeline-api-certs \
   --from-file operator-pipeline.key
 ```
 
+#### GitHub Bot token
+To automatically merge the PR, Hosted pipeline uses GitHub API. To authenticate
+when using this method, secret containing bot token should be created.
 
-
+```bash
+oc create secret generic github-bot-token --from-literal github_bot_token.txt=< BOT TOKEN >
+```
