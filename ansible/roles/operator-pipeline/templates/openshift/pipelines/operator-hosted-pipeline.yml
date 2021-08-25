@@ -108,6 +108,19 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: get-supported-versions
+      runAfter:
+        - reserve-operator-name
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     - name: yaml-lint
       runAfter:
         - reserve-operator-name
@@ -184,6 +197,7 @@ spec:
     - name: dockerfile-creation
       runAfter:
         - operator-validation
+        - get-supported-versions
         - yaml-lint
         - verify-pinned-digest
         - content-hash
@@ -231,7 +245,7 @@ spec:
         - name: bundle_image
           value: *bundleImage
         - name: from_index
-          value: "$(tasks.operator-validation.results.max_supported_index)"
+          value: "$(tasks.get-supported-versions.results.max_supported_index)"
       workspaces:
         - name: output
           workspace: repository
@@ -435,9 +449,14 @@ spec:
       params:
         - name: git_pr_url
           value: $(params.git_pr_url)
+        - name: bundle_path
+          value: "$(params.bundle_path)"
       workspaces:
         - name: github-bot-token
           workspace: github-bot-token
+        - name: source
+          workspace: repository
+          subPath: src
 
   # Finally- clean up
   finally:

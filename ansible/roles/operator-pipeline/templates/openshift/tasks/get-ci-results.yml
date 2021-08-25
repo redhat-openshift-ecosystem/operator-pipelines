@@ -28,20 +28,6 @@ spec:
     - name: pyxis-ssl-credentials
       optional: true
   steps:
-    - name: check-if-results-exists
-      image: registry.access.redhat.com/ubi8-minimal
-      script: |
-        #! /usr/bin/env bash
-
-        PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
-
-        if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
-          echo "Preflight results already exists- skipping"
-
-          echo $(params.test_result_id) | tee $(results.test_result_id.path)
-
-          exit 0
-        fi
     - name: get-results
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.results.path)
@@ -53,6 +39,15 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
+
+        PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
+        if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
+          echo "Preflight results already exists- skipping"
+
+          echo $(params.test_result_id) | tee $(results.test_result_id.path)
+
+          exit 0
+        fi
 
         # Send request to Pyxis to get the test results.
         # If they exists, store them in the workspace

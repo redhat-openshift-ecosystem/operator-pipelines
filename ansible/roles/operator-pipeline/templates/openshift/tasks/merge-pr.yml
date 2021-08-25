@@ -6,14 +6,35 @@ metadata:
 spec:
   params:
     - name: git_pr_url
+    - name: bundle_path
   workspaces:
     - name: github-bot-token
+    - name: source
+  results:
+    - name: bool_merge
   steps:
+    - name: check-if-merge
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
+        CI_FILE_PATH="$PKG_PATH/ci.yaml"
+        BOOL_MERGE=$(cat $CI_FILE_PATH | yq -r '.merge')
+
+        echo -n "$BOOL_MERGE" | tee $(results.bool_merge.path)
+
     - name: merge-pr
       image: registry.access.redhat.com/ubi8-minimal
       script: |
         #! /usr/bin/env bash
         set -xe
+
+        BOOL_MERGE=$(cat $(results.bool_merge.path))
+
+        if [ "$BOOL_MERGE" = "false" ]; then
+          echo "merge explicitly set to false- not merging the Pull Request"
+          exit 0
+        fi
 
         GITHUB_BOT_TOKEN_PATH=$(workspaces.github-bot-token.path)/github_bot_token.txt
         export GITHUB_BOT_TOKEN=$(cat $GITHUB_BOT_TOKEN_PATH)
@@ -27,7 +48,7 @@ spec:
         echo $API_URL
 
         # curl to GitHub API
-        curl -X PUT \
+        curl --fail -X PUT \
           -H "Accept: application/vnd.github.v3+json" \
           -H "Authorization: bearer ${GITHUB_BOT_TOKEN}" \
           $API_URL
