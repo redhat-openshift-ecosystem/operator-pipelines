@@ -98,6 +98,7 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=ssh-dir,secret=my-ssh-credentials \
   --workspace name=registry-credentials,secret=my-registry-secret \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
+  --workspace name=github-bot-token,secret=github-bot-token \
   --showlog
 ```
 
@@ -131,4 +132,3 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=ssh-dir,secret=my-ssh-credentials \
   --showlog
- 

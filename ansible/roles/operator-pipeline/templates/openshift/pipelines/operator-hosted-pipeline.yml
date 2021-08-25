@@ -28,6 +28,7 @@ spec:
     - name: ssh-dir
     - name: registry-credentials
     - name: pyxis-ssl-credentials
+    - name: github-bot-token
   tasks:
     # Git clone
     - name: checkout
@@ -435,9 +436,8 @@ spec:
         - name: git_pr_url
           value: $(params.git_pr_url)
       workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
+        - name: github-bot-token
+          workspace: github-bot-token
 
   # Finally- clean up
   finally:
