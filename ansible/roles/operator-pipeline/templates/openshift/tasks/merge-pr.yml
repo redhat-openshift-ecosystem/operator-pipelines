@@ -52,4 +52,3 @@ spec:
           -H "Accept: application/vnd.github.v3+json" \
           -H "Authorization: bearer ${GITHUB_BOT_TOKEN}" \
           $API_URL
-
