@@ -7,6 +7,9 @@ spec:
   params:
     - name: preflight_min_version
     - name: ci_min_version
+  results:
+    - name: test_result
+      description: Result from the preflight test.
   workspaces:
     - name: results
   steps:
@@ -19,3 +22,6 @@ spec:
         # did preflight/ CI have the latest version?
         # If results exists, store them in the workspace
         # In case of failure- comment on the PR with tailored support link
+
+        # TODO replace with real value
+        echo "success" | tee $(results.test_result.path)
