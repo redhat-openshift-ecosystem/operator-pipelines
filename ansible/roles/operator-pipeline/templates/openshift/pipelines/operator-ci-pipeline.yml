@@ -6,11 +6,14 @@ metadata:
 spec:
   params:
     - name: git_repo_url
-    - name: git_revision
+    - name: git_branch
+      description: git branch name
     - name: git_username
       default: "digestPinning"
     - name: git_email
       default: "no-reply@redhat.com"
+    - name: upstream_repo_name
+      description: Upstream repository name where the pull request will be open
     - name: bundle_path
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
@@ -45,7 +48,7 @@ spec:
         - name: url
           value: $(params.git_repo_url)
         - name: revision
-          value: $(params.git_revision)
+          value: $(params.git_branch)
       workspaces:
         - name: output
           workspace: pipeline
@@ -290,9 +293,17 @@ spec:
       taskRef:
         name: open-pull-request
       params:
-        - name: log_url
+        - name: git_repo_url
+          value: "$(params.git_repo_url)"
+        - name: repository_name
+          value: "$(params.upstream_repo_name)"
+        - name: repository_branch
+          value: "$(params.git_branch)"
+        - name: digest_pinned_branch
+          value: "$(tasks.commit-pinned-digest.results.branch)"
+        - name: test_logs_url
           value: "$(tasks.upload-artifacts.results.log_url)"
-        - name: result_url
+        - name: test_result_url
           value: "$(tasks.upload-artifacts.results.result_url)"
         - name: package_name
           value: "$(tasks.operator-validation.results.package_name)"
