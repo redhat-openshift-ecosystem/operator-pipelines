@@ -28,6 +28,10 @@ metadata:
 data:
   id_rsa: |
     < PRIVATE SSH KEY >
+  known_hosts: |
+    < BASE64 ENCODED KNOWN_HOSTS FILE >
+  config: |
+    < BASE64 ENCODED SSH CONFIG FILE >
 EOF
 
 oc create -f ssh-secret.yml
