@@ -8,3 +8,4 @@ operator_pipeline_private_key_local_path: ../../vaults/{{ env }}/operator-pipeli
 operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipeline.pem
 
 operator_pipeline_quay_token: ../../vaults/common/dockerconfig.json
+operator_pipeline_github_bot_token:  ../../vaults/common/github-bot-token.txt
