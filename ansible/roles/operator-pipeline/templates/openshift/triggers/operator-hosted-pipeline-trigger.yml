@@ -1,0 +1,139 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: operator-hosted-pipeline-github-listener
+spec:
+  serviceAccountName: operator-pipeline-admin
+  triggers:
+    - name: github-listener
+      interceptors:
+        - cel:
+            filter: >-
+              (
+                header.match("X-GitHub-Event", "pull_request")
+                && body.action in ["opened", "reopened", "synchronize"]
+                && body.pull_request.base.ref == "main"
+              )
+      bindings:
+        - ref: operator-hosted-pipeline-trigger-binding
+      template:
+        name: operator-hosted-pipeline-trigger-template
+
+---
+# PR webhook payload: https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: operator-hosted-pipeline-trigger-binding
+spec:
+  params:
+    - name: git_pr_branch
+      value: $(body.pull_request.head.ref)
+    - name: git_pr_title
+      value: $(body.pull_request.title)
+    - name: git_pr_url
+      value: $(body.pull_request.html_url)
+    - name: git_fork_url
+      value: $(body.pull_request.head.html_url)
+    - name: git_repo_url
+      value: $(body.base.head.html_url)
+    - name: git_username
+      value: $(body.pull_request.user.login)
+    - name: pr_head_label
+      value: $(body.pull_request.head.label)
+    - name: bundle_path
+      value: "todo"
+    - name: pyxis_url
+      value: https://pyxis.engineering.redhat.com/
+    - name: preflight_min_version
+      value: "1.0"
+    - name: ci_min_version
+      value: "1.0"
+
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: operator-hosted-pipeline-trigger-template
+spec:
+  params:
+    - name: git_pr_branch
+    - name: git_pr_title
+    - name: git_pr_url
+    - name: git_fork_url
+    - name: git_repo_url
+    - name: git_username
+    - name: pr_head_label
+    - name: bundle_path
+    - name: pyxis_url
+    - name: preflight_min_version
+    - name: ci_min_version
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: operator-hosted-pipeline-run-
+      spec:
+        pipelineRef:
+          name: operator-hosted-pipeline
+        params:
+          - name: git_pr_branch
+            value: $(tt.params.git_pr_branch)
+          - name: git_pr_title
+            value: $(tt.params.git_pr_title)
+          - name: git_pr_url
+            value: $(tt.params.git_pr_url)
+          - name: git_fork_url
+            value: $(tt.params.git_fork_url)
+          - name: git_repo_url
+            value: $(tt.params.git_repo_url)
+          - name: git_username
+            value: $(tt.params.git_username)
+          - name: pr_head_label
+            value: $(tt.params.pr_head_label)
+          - name: bundle_path
+            value: $(tt.params.bundle_path)
+          - name: pyxis_url
+            value: $(tt.params.pyxis_url)
+          - name: preflight_min_version
+            value: $(tt.params.preflight_min_version)
+          - name: ci_min_version
+            value: $(tt.params.ci_min_version)
+        workspaces:
+          - name: repository
+            volumeClaimTemplate: &volumeClaimTemplate5Gi
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 5Gi
+          - name: results
+            volumeClaimTemplate: *volumeClaimTemplate5Gi
+          - name: ssh-dir
+            volumeClaimTemplate: &volumeClaimTemplate100Mi
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 100Mi
+          - name: registry
+            volumeClaimTemplate: *volumeClaimTemplate100Mi
+          - name: pyxis-ssl-credentials
+            volumeClaimTemplate: *volumeClaimTemplate100Mi
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    eventlistener:  operator-hosted-pipeline-github-listener
+  name: operator-hosted-pipeline
+spec:
+  port:
+    targetPort: http-listener
+  to:
+    kind: Service
+    # el- prefix means, that the service was created by EventListener.
+    name: el-operator-hosted-pipeline-github-listener
