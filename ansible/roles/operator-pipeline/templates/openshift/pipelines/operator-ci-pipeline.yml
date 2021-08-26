@@ -30,6 +30,7 @@ spec:
     - name: registry-credentials
       optional: true
     - name: pyxis-api-key
+      optional: true
   tasks:
     - name: checkout
       taskRef:
@@ -289,6 +290,11 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
+      when:
+        - input: $(params.submit)
+          operator: in
+          values:
+            - "true"
       workspaces:
         - name: pyxis-api-key
           workspace: pyxis-api-key
