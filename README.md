@@ -34,7 +34,7 @@ If using the default internal registry, the CI pipeline can be triggered using t
 ```bash
 tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
-  --param git_revision=main \
+  --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=kubeconfig,secret=my-kubeconfig \
@@ -45,7 +45,7 @@ If using an external registry, the CI pipeline can be triggered using the tkn CL
 ```bash
 tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
-  --param git_revision=main \
+  --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param registry=quay.io \
   --param image_namespace=redhat-isv \

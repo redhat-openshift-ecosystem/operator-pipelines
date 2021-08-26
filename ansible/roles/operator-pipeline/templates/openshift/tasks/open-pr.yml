@@ -5,26 +5,69 @@ metadata:
   name: open-pull-request
 spec:
   params:
-    - name: log_url
-    - name: result_url
+    - name: git_repo_url
+      description: Source git repository URL.
+    - name: repository_branch
+      description: Source git repository branch name.
+    - name: repository_name
+      description: Upstream repository name - namespace/name.
+    - name: target_branch
+      default: main
+      description: A target branch in upstream repository where the PR will be one.
+    - name: digest_pinned_branch
+      default: ""
+      description: Name of new branch that is created by commit step.
+        This is only used when user didn't pin a digest.
     - name: package_name
+      description: Operator bundle name.
     - name: bundle_version
+      description: Operator bundle version.
     - name: certification_project_id
+      description: Certification project identifier.
+    - name: test_result_url
+      description: URL to preflight test results.
+    - name: test_logs_url
+      description: URL to preflight test logs.
+    - name: github_api_secret_name
+      description: Github API token that is used to open a new pull request.
+      default: github-api-token
   results:
     - name: pr_url
   workspaces:
     - name: source
   steps:
     - name: open-pull-request
-      image: registry.access.redhat.com/ubi8-minimal
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.source.path)
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_api_secret_name)
+              key: GITHUB_TOKEN
       script: |
         #! /usr/bin/env bash
-        echo "Creating a new pull request"
-        echo "Subject: New operator bundle - $(params.package_name):$(params.bundle_version)"
-        echo "Text:"
-        echo "  Test results URL: $(params.result_url)"
-        echo "  Test log URL: $(params.log_url)"
-        echo "  Certification project ID: $(params.certification_project_id)"
+        set -xe
 
-        echo https://github.com/foo/pulls/123 | tee $(results.pr_url.path)
+        TITLE="operator $(params.package_name) ($(params.bundle_version))"
+
+        SOURCE_BRANCH="$(params.repository_branch)"
+
+        if [ "$(params.digest_pinned_branch)" != "" ]; then
+          SOURCE_BRANCH="$(params.digest_pinned_branch)"
+        fi
+
+        open-pull-request \
+          --git-repo-url "$(params.git_repo_url)" \
+          --git-upstream-repo-name "$(params.repository_name)" \
+          --target-branch "$(params.target_branch)" \
+          --source-branch $SOURCE_BRANCH \
+          --title "$TITLE" \
+          --cert-project-id "$(params.certification_project_id)" \
+          --test-result-url  "$(params.test_result_url)" \
+          --test-logs-url  "$(params.test_logs_url)" \
+          --verbose 2>&1 | tee pull-request.logs
+
+        PR_URL=$(cat pull-request.logs | grep "Pull request URL" | sed 's/.*URL: //')
+
+        echo $PR_URL | tee $(results.pr_url.path)
