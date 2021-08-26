@@ -1,0 +1,47 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: set-github-status
+spec:
+  params:
+    - name: git_repo_url
+    - name: commit_sha
+      description: SHA of the commit to set the status for.
+    - name: description
+      description: Description attached to the github status.
+    - name: state
+      description: The github status to set for the given commit.
+    - name: context
+      description: Context attached to the github status.
+    - name: skip
+      default: "false"
+      description: Flag to skip the setting of github status.
+  workspaces:
+    - name: github-bot-token
+  steps:
+    - name: set-github-status
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: GITHUB_BOT_TOKEN_PATH
+          value: $(workspaces.github-bot-token.path)/github_bot_token.txt
+      script: |
+        #! /usr/bin/env bash
+        # Don't use set -x to avoid exposing github token
+        set -e
+
+        if [ $(params.skip) == "true" ]; then
+          echo "Skipping setting github status"
+          exit 0
+        fi
+
+        echo "Setting github status of commit $(params.commit_sha) to $(params.state)"
+
+        export GITHUB_TOKEN=$(cat $GITHUB_BOT_TOKEN_PATH)
+
+        set-github-status \
+          --git-repo-url "$(params.git_repo_url)" \
+          --commit-sha "$(params.commit_sha)" \
+          --status "$(params.state)" \
+          --context "$(params.context)" \
+          --description "$(params.description)"

@@ -43,7 +43,6 @@ spec:
           value: $(params.pyxis_cert_path)
         - name: PYXIS_KEY_PATH
           value: $(params.pyxis_key_path)
-
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
