@@ -49,7 +49,7 @@ def check_operator_name(args) -> None:
         if package["association"] != args.association:
             LOGGER.error(
                 f"Operator name {args.operator_name} is already taken by another "
-                f"association."
+                f"association ({package['association']})."
             )
             sys.exit(1)
         else:
