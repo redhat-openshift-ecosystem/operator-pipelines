@@ -77,9 +77,8 @@ spec:
           git config --global user.email "$(params.GIT_USER_EMAIL)"
           git config --global user.name "$(params.GIT_USER_NAME)"
 
-          CURRENT_VERSION=$(git branch | grep pinned-operator-manifest- | sed -e "s/pinned-operator-manifest-//g" | sed -e "s/\*//g" | sort -g | tail -n 1)
-          NEW_VERSION=$(echo ${CURRENT_VERSION:-0} + 1 | bc)
-          TEMP_BRANCH="pinned-operator-manifest-${NEW_VERSION}"
+          RANDOM_STRING=$(cat /dev/urandom | tr -dc 'a-z0-9'| fold -w 3 | head -n 1)
+          TEMP_BRANCH="pinned-operator-manifest-${RANDOM_STRING}"
           git branch "${TEMP_BRANCH}"
           git add -u
           git commit -m "Pin the operator manifests"
