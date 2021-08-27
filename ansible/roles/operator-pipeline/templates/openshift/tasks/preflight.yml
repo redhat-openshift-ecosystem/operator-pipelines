@@ -24,6 +24,7 @@ spec:
           echo "Preflight results already exists- skipping"
           echo -n "none" | tee $(results.log_output_file.path)
           echo -n "none" | tee $(results.result_output_file.path)
+          echo -n "none" | tee $(results.artifacts_output_dir.path)
           exit 0
         fi
 
