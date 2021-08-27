@@ -5,23 +5,61 @@ metadata:
   name: get-ci-results
 spec:
   params:
-    - name: preflight_results_exists
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+      description: Path to Pyxis key. Valid only when internal Pyxis is used.
     - name: md5sum
     - name: pyxis_url
     - name: cert_project_id
     - name: bundle_version
+    - name: operator_name
+    # results from get-ci-results-attempt.
+    # They are kept if they have value, or
+    # they are replaced.
+    - name: preflight_results_exists
+    - name: test_result_id
+  results:
+    - name: test_result_id
   workspaces:
     - name: results
+    - name: pyxis-ssl-credentials
+      optional: true
   steps:
-    - name: get-ci-results
-      image: registry.access.redhat.com/ubi8-minimal
+    - name: get-results
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.results.path)
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
       script: |
         #! /usr/bin/env bash
+        set -xe
+
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           echo "Preflight results already exists- skipping"
+
+          echo $(params.test_result_id) | tee $(results.test_result_id.path)
+
           exit 0
         fi
-        # Curl Pyxis results endpoint
-        # If results exists, store them in the workspace, if not- fail
+
+        # Send request to Pyxis to get the test results.
+        # If they exists, store them in the workspace
+
+        echo "Downloading the test results"
+
+        download-test-results \
+          --pyxis-url "$(params.pyxis_url)" \
+          --cert-project-id "$(params.cert_project_id)" \
+          --certification-hash "$(params.md5sum)" \
+          --operator-package-version "$(params.bundle_version)" \
+          --operator-name "$(params.operator_name)" \
+          --verbose
+
+        cat test_result_id | tee $(results.test_result_id.path)

@@ -1,0 +1,24 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: publish-bundle
+spec:
+  params:
+    - name: cert_project_id
+      description: ID of the bundle Certification Project (as in bundle ci.yaml)
+    - name: container_digest
+      description: imagestream container_digest
+    - name: bundle_versions
+      description: All known supported OCP indices
+  steps:
+    - name: publish-bundle
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        echo "Starting bundle publish process"
+        echo "updating GitHub status to pending"
+        echo "Calling the IIB"
+        echo "Got result- updating GitHub status"
+
+        echo "ok"

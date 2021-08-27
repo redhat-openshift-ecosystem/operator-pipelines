@@ -19,15 +19,21 @@ spec:
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
-    - name: test_mode
-      description: The test mode flag skips certain steps to make a pipeline
-        faster for rapid operator development. The flag needs to be set to false
-        for a full CI pipeline run and certification pull-request submission.
+    - name: pin_digests
+      description: Set to "true" to automatically generate the relatedImages
+        section of the ClusterServiceVersion for you. If changes are made, the
+        result will be committed to GitHub.
+      default: "false"
+    - name: submit
+      description: Set to "true" to submit results and open a pull request.
       default: "false"
   workspaces:
     - name: pipeline
     - name: ssh-dir
+      optional: true
     - name: registry-credentials
+      optional: true
+    - name: pyxis-api-key
       optional: true
   tasks:
     - name: checkout
@@ -54,8 +60,8 @@ spec:
       params:
         - name: bundle_path
           value: "$(params.bundle_path)"
-        - name: skip
-          value: "$(params.test_mode)"
+        - name: enabled
+          value: "$(params.pin_digests)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -103,6 +109,19 @@ spec:
           value: "$(params.bundle_path)"
         - name: pyxis_url
           value: "$(params.pyxis_url)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: get-supported-versions
+      runAfter:
+        - commit-pinned-digest
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -185,7 +204,7 @@ spec:
         - name: bundle_image
           value: *bundleImage
         - name: from_index
-          value: "$(tasks.operator-validation.results.max_supported_index)"
+          value: "$(tasks.get-supported-versions.results.max_supported_index)"
       workspaces:
         - name: output
           workspace: pipeline
@@ -211,24 +230,9 @@ spec:
         - name: credentials
           workspace: registry-credentials
 
-    - name: ocp-environment-preparation
-      runAfter:
-        - build-index
-      taskRef:
-        name: ocp-environment-preparation
-      params:
-        - name: index_image
-          value: *bundleIndexImage
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
-
     - name: preflight
       runAfter:
-        - ocp-environment-preparation
+        - build-index
       taskRef:
         name: preflight
       workspaces:
@@ -240,6 +244,11 @@ spec:
       runAfter:
         - content-hash
         - preflight
+      when:
+        - input: $(params.submit)
+          operator: in
+          values:
+            - "true"
       taskRef:
         name: upload-artifacts
       params:
@@ -263,26 +272,12 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
-
-    - name: ocp-environment-cleanup
-      runAfter:
-        - preflight
-      taskRef:
-        name: ocp-environment-cleanup
-      params:
-        - name: index_image
-          value: *bundleIndexImage
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
+        - name: pyxis-api-key
+          workspace: pyxis-api-key
 
     - name: open-pr
       runAfter:
         - upload-artifacts
-        - ocp-environment-cleanup
       taskRef:
         name: open-pull-request
       params:
@@ -300,3 +295,29 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
+
+  finally:
+    - name: upload-pipeline-logs
+      taskRef:
+        name: upload-pipeline-logs
+      when:
+        - input: $(params.submit)
+          operator: in
+          values:
+            - "true"
+      workspaces:
+        - name: pyxis-api-key
+          workspace: pyxis-api-key
+      params:
+        - name: md5sum
+          value: "$(tasks.content-hash.results.md5sum)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: pyxis_url
+          value: "$(params.pyxis_url)"
+        - name: pipeline_name
+          value: "$(context.pipelineRun.name)"

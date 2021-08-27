@@ -1,0 +1,35 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: imagestream-manipulation
+spec:
+  params:
+    - name: cert_project_id
+      description: ID of the bundle Certification Project (as in bundle ci.yaml)
+    - name: registry
+      description: registry to pull the image from.
+    - name: vendor_label
+      description: name of the vendor
+    - name: repository_name
+    - name: isv_pid
+    - name: dist_method
+      description: distribution method- either marketplace or certified
+    - name: image_namespace
+      description: The namespace/organization where images from Hosted pipeline are stored.
+    - name: package_name
+      description: operator bundle name
+    - name: bundle_version
+      description: operator bundle version
+  results:
+    - name: container_digest
+  steps:
+    - name: imagestream-manipulation
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        echo "Creating or updating Imagestream"
+
+        echo -n "digest" | tee $(results.container_digest.path)
+
+        echo "ok"

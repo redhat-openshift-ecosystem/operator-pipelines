@@ -1,0 +1,17 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: publish-resources
+spec:
+  params:
+    - name: cert_project_id
+      description: ID of the bundle Certification Project (as in bundle ci.yaml)
+  steps:
+    - name: publish-resources
+      image: registry.access.redhat.com/ubi8-minimal
+      script: |
+        #! /usr/bin/env bash
+        echo "Publishing the Vendor and Repository"
+
+        echo "ok"

@@ -1,7 +1,14 @@
 # Operator pipelines
 
+## Prerequisites
+
+**To run any of the pipelines for the first time, multiple cluster resources has to be created.**
+
+See [first-time-run.md](docs/first-time-run.md)
+
 ## Local setup
 To create local cluster for sake of testing the pipelines, see [local-dev.md](docs/local-dev.md)
+
 
 ## Operator CI pipeline
 
@@ -11,91 +18,14 @@ it in ocp environment. After an operator is installed a pre-flight tests are exe
 that validates that operator meets minimum requirements for Red Hat OpenShift Certification.
 If tests pass a CI pipeline submits a PR for full operator certification workflow.
 
-### Prerequisites
-
-#### Git SSH Secret
-Since CI pipeline needs to make some changes in git repository (for example digest pinning)
-the pipeline requires a write access to provided git repository. Before running a pipeline
-user needs to upload ssh secret key to a cluster where the pipeline will run.
-
-To create a required secret run following command:
-```bash
-cat << EOF > ssh-secret.yml
-kind: Secret
-apiVersion: v1
-metadata:
-  name: my-ssh-credentials
-data:
-  id_rsa: |
-    < PRIVATE SSH KEY >
-EOF
-
-oc create -f ssh-secret.yml
-```
-
-#### Registry Credentials
-The CI pipeline can optionally be configured to push images to a remote private
-registry. The user must create an auth secret containing the docker config. This
-secret can then be passed as a workspace named `registry-credentials` when invoking
-the pipeline.
-
-```bash
-cat << EOF > registry-secret.yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: my-registry-secret
-data:
-  .dockerconfigjson: < BASE64 ENCODED DOCKER CONFIG >
-type: kubernetes.io/dockerconfigjson
-EOF
-
-oc create -f registry-secret.yml
-```
-
-#### Red Hat Catalog Imagestreams
-
-The pipelines must pull the parent index images through the internal OpenShift
-registry to take advantage of the built-in credentials for Red Hat's terms-based
-registry (registry.redhat.io). This saves the user from needing to provide such
-credentials. The index generation task will always pull published index images
-through imagestreams of the same name in the current namespace. As a result,
-there is a one time configuration for each desired distribution catalog.
-
-```bash
-# Must be run once before certifying against the certified catalog.
-oc import-image certified-operator-index \
-  --from=registry.redhat.io/redhat/certified-operator-index \
-  --reference-policy local \
-  --scheduled \
-  --confirm \
-  --all
-
-# Must be run once before certifying against the Red Hat Martketplace catalog.
-oc import-image redhat-marketplace-index \
-  --from=registry.redhat.io/redhat/redhat-marketplace-index \
-  --reference-policy local \
-  --scheduled \
-  --confirm \
-  --all
-```
-
-#### Container API access
-CI pipelines automatically upload a test results, logs and artifacts using Red Hat
-container API. This requires a partner's API key and the key needs to be created
-as a secret in openshift cluster before running a Tekton pipeline.
-
-```bash
-oc create secret generic pyxis-api-secret --from-literal PYXIS_API_KEY=< API KEY >
-```
 ### Installation
 ```bash
-oc apply -R -f pipelines/operator-ci-pipeline.yml
-oc apply -R -f tasks
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-ci-pipeline.yml
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
 
 # Install external dependencies
-curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
-curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml | oc apply -f -
+oc apply -f  https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml
+oc apply -f  https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
 ```
 
 ### Execution
@@ -109,7 +39,6 @@ tkn pipeline start operator-ci-pipeline \
   --param git_email=<github_email>\
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=ssh-dir,secret=my-ssh-credentials \
   --showlog
 ```
 If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:
@@ -124,27 +53,32 @@ tkn pipeline start operator-ci-pipeline \
   --param registry=quay.io \
   --param image_namespace=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=ssh-dir,secret=my-ssh-credentials \
   --workspace name=registry-credentials,secret=my-registry-secret \
+  --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
+```
+
+To enable digest pinning, pass the following arguments:
+
+```bash
+  --param pin_digests=true \
+  --workspace name=ssh-dir,secret=my-ssh-credentials
 ```
 
 ## Operator Hosted pipeline
 The Hosted Operator Certification Pipeline is used as a validation of the operator
 bundles. It’s an additional (to CI pipeline) layer of validation that has to run within
-the Red Hat infrastructure. It contains multiple steps from the CI pipeline.
-
-### Prerequisites
-See the [Red Hat Catalog Imagestreams](#red-hat-catalog-imagestreams) section.
+the Red Hat infrastructure. It contains multiple steps from the CI pipeline, making the CI pipeline optional.
+It is triggered by creating the submission pull request, and successfully completes with merging it.
 
 ### Installation
 ```bash
-oc apply -R -f pipelines/operator-hosted-pipeline.yml
-oc apply -R -f tasks
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-hosted-pipeline.yml
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
 
 # Install external dependencies
-curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml | oc apply -f -
-curl https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml | oc apply -f -
+oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml
+oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
 ```
 
 ### Execution
@@ -160,12 +94,45 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_username=test_user \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
   --param bundle_path=operators/kogito-operator/1.6.1-ok \
-  --param pyxis_url=https://catalog.redhat.com/api/containers/ \
+  --param pyxis_url=https://pyxis.engineering.redhat.com/ \
   --param preflight_min_version=1.0.0 \
   --param ci_min_version=1.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=ssh-dir,secret=my-ssh-credentials \
   --workspace name=registry-credentials,secret=my-registry-secret \
+  --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
+  --workspace name=github-bot-token,secret=github-bot-token \
   --showlog
 ```
+
+
+## Operator Release pipeline
+The Release pipeline runs after the layers of validation (CI (optionally) and Hosted pipeline).
+It is used to certify and publish submitted bundle version.
+It is triggered by a merged pull request and successfully completes
+once the bundle has been distributed to all relevant Operator catalogs and appears in the Red Hat Ecosystem Catalog.
+
+
+
+### Installation
+
+```bash
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-release-pipeline.yml
+oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
+
+# Install external dependencies
+oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
+```
+
+### Execution
+The release pipeline can be triggered using the tkn CLI like so:
+
+
+tkn pipeline start operator-release-pipeline \
+  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+  --param bundle_path=operators/kogito-operator/1.6.0-ok \
+  --param is_latest=true \
+  --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=ssh-dir,secret=my-ssh-credentials \
+  --showlog

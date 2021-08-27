@@ -26,3 +26,9 @@ oc new-project playground
 ```
 
 3. Create pipelines and tasks as specified in the [README](../README.md)
+
+> :warning: It may be necessary to pass the following `tkn` CLI arg to avoid permission issues with the default CRC PersistentVolumes.
+
+```bash
+--pod-template templates/crc-pod-template.yml
+```

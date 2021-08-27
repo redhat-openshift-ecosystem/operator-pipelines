@@ -1,0 +1,177 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: operator-release-pipeline
+spec:
+  params:
+    - name: git_repo_url
+      description: ssh address of GitHub repository
+    - name: git_revision
+      description: git revision used to check out project
+      default: "main"
+    - name: bundle_path
+      description: path indicating the location of the certified bundle within the repository
+    - name: is_latest
+      description: boolean- should this operator version be tagged as latest?
+    - name: registry
+      description: temporary registry used by Hosted pipeline to pass the image to Release pipeline.
+      default: quay.io
+    - name: image_namespace
+      description: The namespace/organization where images from Hosted pipeline are stored.
+      default: $(context.pipelineRun.namespace)
+    - name: pyxis_url
+      description: URL of the Pyxis- API for accessing container metadata.
+      default: pyxis.engineering.redhat.com
+  workspaces:
+    - name: repository
+    - name: ssh-dir
+      optional: true
+  tasks:
+    # Git clone
+    - name: checkout
+      taskRef:
+        name: git-clone
+        kind: Task
+      params:
+        - name: url
+          value: $(params.git_repo_url)
+        - name: revision
+          value: $(params.git_revision)
+      workspaces:
+        - name: output
+          workspace: repository
+          subPath: src
+        - name: ssh-directory
+          workspace: ssh-dir
+
+    # Get cert project id
+    - name: certification-project-check
+      runAfter:
+        - checkout
+      taskRef:
+        name: certification-project-check
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # Get the bundle versions to build index
+    - name: get-supported-versions
+      runAfter:
+        - checkout
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: bundle_path
+          value: $(params.bundle_path)
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # This task is needed only because of it's second step, which
+    # parses the bundle path and returns the package_name and bundle_version.
+    # TODO: split this task
+    - name: operator-validation
+      runAfter:
+        - checkout
+      taskRef:
+        name: operator-validation
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+        - name: pyxis_url
+          value: "$(params.pyxis_url)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # Get additional data necessary for certification
+    - name: get-project-related-data
+      runAfter:
+        - certification-project-check
+      taskRef:
+        name: get-project-related-data
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+
+    # Publish image to OCP registry
+    - name: imagestream-manipulation
+      runAfter:
+        - get-project-related-data
+        - operator-validation
+      taskRef:
+        name: imagestream-manipulation
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: vendor_label
+          value: "$(tasks.get-project-related-data.results.vendor_label)"
+        - name: repository_name
+          value: "$(tasks.get-project-related-data.results.repository_name)"
+        - name: isv_pid
+          value: "$(tasks.get-project-related-data.results.isv_pid)"
+        - name: dist_method
+          value: "$(tasks.get-project-related-data.results.dist_method)"
+        # params necessary to pull the image
+        - name: registry
+          value: "$(params.registry)"
+        - name: image_namespace
+          value: "$(params.image_namespace)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+
+    # create or update container image
+    - name: update-container-image
+      runAfter:
+        - imagestream-manipulation
+      taskRef:
+        name: update-container-image
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: registry
+          value: "$(tasks.get-project-related-data.results.registry)"
+        - name: vendor_label
+          value: "$(tasks.get-project-related-data.results.vendor_label)"
+        - name: repository_name
+          value: "$(tasks.get-project-related-data.results.repository_name)"
+        - name: container_digest
+          value: "$(tasks.imagestream-manipulation.results.container_digest)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: is_latest
+          value: $(params.is_latest)
+
+    # Publish Vendor, Repository
+    - name: publish-resources
+      runAfter:
+        - update-container-image
+      taskRef:
+        name: publish-resources
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+
+    # call IIB to publish the bundle
+    - name: publish-bundle
+      runAfter:
+        - publish-resources
+        - get-supported-versions
+      taskRef:
+        name: publish-bundle
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: bundle_versions
+          value: "$(tasks.get-supported-versions.results.indices)"
+        - name: container_digest
+          value: "$(tasks.imagestream-manipulation.results.container_digest)"

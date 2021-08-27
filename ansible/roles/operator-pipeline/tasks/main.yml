@@ -40,7 +40,7 @@
       kind: Secret
       type: Opaque
       metadata:
-        name: operator-pipeline-certs-{{ suffix }}
+        name: operator-pipeline-api-certs
         labels:
           app: operator-pipeline
           suffix: "{{ suffix }}"
@@ -48,6 +48,7 @@
       data:
         operator-pipeline.key: "{{ lookup('file', operator_pipeline_private_key_local_path, rstrip=False) | b64encode }}"
         operator-pipeline.pem: "{{ lookup('file', operator_pipeline_private_cert_local_path, rstrip=False) | b64encode }}"
+
 
 - name: Create Operator pipeline quay token secret
   no_log: yes
@@ -68,6 +69,25 @@
       data:
         .dockerconfigjson: "{{ lookup('file', operator_pipeline_quay_token, rstrip=False) | b64encode }}"
 
+- name: Create Operator pipeline github bot token secret
+  no_log: yes
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: github-bot-token
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        github_bot_token.txt: "{{ lookup('file', operator_pipeline_github_bot_token, rstrip=False) | b64encode }}"
+
 - name: Deploy pipeline tasks
   k8s:
     state: present
@@ -77,7 +97,7 @@
   with_fileglob:
     - ../templates/openshift/tasks/*
 
-- name: Deploy pipeline
+- name: Deploy pipelines
   k8s:
     state: present
     apply: yes
@@ -85,3 +105,4 @@
     definition: "{{ lookup('template', '{{ item }}') }}"
   with_items:
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
+    - ../templates/openshift/pipelines/operator-release-pipeline.yml

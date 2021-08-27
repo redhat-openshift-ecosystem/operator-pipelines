@@ -1,0 +1,80 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: upload-pipeline-logs
+spec:
+  params:
+    - name: pyxis_api_key_secret
+      default: pyxis-api-secret
+      description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+    - name: pyxis_url
+      default: https://catalog.redhat.com/api/containers/
+      description: Red Hat's container API URL
+    - name: md5sum
+      description: Operator content md5 hash
+    - name: cert_project_id
+      description: Certification project identifier
+    - name: bundle_version
+      description: Operator bundle version
+    - name: package_name
+      description: Operator package name
+    - name: pipeline_name
+      description: Tekton pipeline run name where logs will be gathered from
+  results:
+    - name: pipeline_log_url
+  workspaces:
+    - name: pyxis-ssl-credentials
+      optional: true
+    - name: pyxis-api-key
+      optional: true
+  steps:
+    - name: get-pipeline-logs
+      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8:0.19.0-2
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        echo "Getting pipeline logs"
+
+        tkn pipelinerun logs "$(params.pipeline_name)" > pipeline.logs
+
+    - name: upload-pipeline-logs
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
+      script: |
+        #! /usr/bin/env bash
+        echo "Uploading pipeline logs"
+        set -xe
+
+        if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          export PYXIS_API_KEY=$(cat $API_KEY_PATH)
+        fi
+
+        upload-artifacts \
+          --cert-project-id "$(params.cert_project_id)" \
+          --operator-version "$(params.bundle_version)" \
+          --operator-package-name "$(params.package_name)" \
+          --certification-hash "$(params.md5sum)" \
+          --pyxis-url "$(params.pyxis_url)" \
+          --path pipeline.logs \
+          --type pipeline-logs \
+          --output pipeline-logs-artifact.json \
+          --verbose
+
+        LOG_ID=$(cat pipeline-logs-artifact.json | jq -r "._id")
+
+        LOG_URL="$(params.pyxis_url)v1/projects/certification/artifacts/id/$LOG_ID"
+
+        echo "Pipeline logs URL: "
+        echo -n $LOG_URL | tee $(results.pipeline_log_url.path)
