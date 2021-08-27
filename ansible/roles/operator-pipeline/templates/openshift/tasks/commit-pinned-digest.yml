@@ -4,7 +4,7 @@ kind: Task
 metadata:
   name: commit-pinned-digest
   labels:
-    app.kubernetes.io/version: "0.4"
+    app.kubernetes.io/version: "0.1"
   annotations:
     tekton.dev/pipelines.minVersion: "0.21.0"
     tekton.dev/categories: Git
@@ -23,31 +23,31 @@ spec:
         Workspace is strongly recommended over other volume types.
   params:
     - name: dirty_flag
-    - name: VERBOSE
+    - name: verbose
       description: Log the commands that are executed during `commit-pinned-digest`'s operation.
       type: string
       default: "true"
-    - name: GIT_USER_NAME
+    - name: git_user_name
       type: string
       description: |
         Git user name for performing git operation.
       default: "digestPinning"
-    - name: GIT_USER_EMAIL
+    - name: git_user_email
       type: string
       description: |
         Git user email for performing git operation.
-      default: "no.reply@redhat.com"
+      default: "no-reply@redhat.com"
   results:
     - name: commit
       description: The precise commit SHA that was fetched by this Task.
     - name: branch
   steps:
-    - name: git
+    - name: commit-changes
       image: docker.io/alpine/git:v2.26.2@sha256:23618034b0be9205d9cc0846eb711b12ba4c9b468efdd8a59aac1d7b1a23363f #tag: v2.26.2
       workingDir: $(workspaces.source.path)
       env:
         - name: PARAM_VERBOSE
-          value: $(params.VERBOSE)
+          value: $(params.verbose)
         - name: WORKSPACE_SSH_DIRECTORY_BOUND
           value: $(workspaces.ssh-directory.bound)
         - name: WORKSPACE_SSH_DIRECTORY_PATH
@@ -74,8 +74,8 @@ spec:
           fi
 
           # Setting up the config for the git.
-          git config --global user.email "$(params.GIT_USER_EMAIL)"
-          git config --global user.name "$(params.GIT_USER_NAME)"
+          git config --global user.email "$(params.git_user_email)"
+          git config --global user.name "$(params.git_user_name)"
 
           RANDOM_STRING=$(cat /dev/urandom | tr -dc 'a-z0-9'| fold -w 3 | head -n 1)
           TEMP_BRANCH="pinned-operator-manifest-${RANDOM_STRING}"
@@ -85,10 +85,6 @@ spec:
           git push origin "${TEMP_BRANCH}"
 
           RESULT_SHA="$(git rev-parse HEAD | tr -d '\n')"
-          EXIT_CODE="$?"
-          if [ "$EXIT_CODE" != 0 ]; then
-            exit $EXIT_CODE
-          fi
           # Make sure we don't add a trailing newline to the result!
           echo -n "$RESULT_SHA" > $(results.commit.path)
           echo -n "$TEMP_BRANCH" > $(results.branch.path)

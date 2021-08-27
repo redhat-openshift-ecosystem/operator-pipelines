@@ -35,8 +35,6 @@ If using the default internal registry, the CI pipeline can be triggered using t
 tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_revision=main \
-  --param git_username=<github_user_name>\
-  --param git_email=<github_email>\
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --showlog
@@ -47,8 +45,6 @@ If using an external registry, the CI pipeline can be triggered using the tkn CL
 tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_revision=main \
-  --param git_username=<github_user_name>\
-  --param git_email=<github_email>\
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param registry=quay.io \
   --param image_namespace=redhat-isv \
@@ -62,6 +58,8 @@ To enable digest pinning, pass the following arguments:
 
 ```bash
   --param pin_digests=true \
+  --param git_username=<github_user_name> \
+  --param git_email=<github_email> \
   --workspace name=ssh-dir,secret=my-ssh-credentials
 ```
 

@@ -10,7 +10,7 @@ spec:
     - name: git_username
       default: "digestPinning"
     - name: git_email
-      default: "no.reply@redhat.com"
+      default: "no-reply@redhat.com"
     - name: bundle_path
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
@@ -73,9 +73,9 @@ spec:
       taskRef:
         name: commit-pinned-digest
       params:
-        - name: GIT_USER_NAME
+        - name: git_user_name
           value: "$(params.git_username)"
-        - name: GIT_USER_EMAIL
+        - name: git_user_email
           value: "$(params.git_email)"
         - name: dirty_flag
           value: "$(tasks.digest-pinning.results.dirty_flag)"
