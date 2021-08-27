@@ -69,15 +69,18 @@ spec:
             cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" $HOME/.ssh
             chmod 700 $HOME/.ssh
             chmod -R 400 $HOME/.ssh/*
+            eval `ssh-agent -s`
+            ssh-add $HOME/.ssh/id_rsa
           fi
 
           # Setting up the config for the git.
           git config --global user.email "$(params.GIT_USER_EMAIL)"
           git config --global user.name "$(params.GIT_USER_NAME)"
 
-          RANDOM_STRING=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9'| fold -w 3 | head -n 1)
-          TEMP_BRANCH="pinned-operator-manifest-${RANDOM_STRING}"
-          git checkout -b "${TEMP_BRANCH}"
+          CURRENT_VERSION=$(git branch | grep pinned-operator-manifest- | sed -e "s/pinned-operator-manifest-//g" | sed -e "s/\*//g" | sort -g | tail -n 1)
+          NEW_VERSION=$(echo ${CURRENT_VERSION:-0} + 1 | bc)
+          TEMP_BRANCH="pinned-operator-manifest-${NEW_VERSION}"
+          git branch "${TEMP_BRANCH}"
           git add -u
           git commit -m "Pin the operator manifests"
           git push origin "${TEMP_BRANCH}"

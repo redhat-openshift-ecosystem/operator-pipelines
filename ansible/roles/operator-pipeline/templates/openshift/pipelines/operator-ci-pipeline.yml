@@ -69,7 +69,7 @@ spec:
       params:
         - name: GIT_USER_NAME
           value: "$(params.git_username)"
-        - name: GIT_EMAIL
+        - name: GIT_USER_EMAIL
           value: "$(params.git_email)"
         - name: dirty_flag
           value: "$(tasks.digest-pinning.results.dirty_flag)"
