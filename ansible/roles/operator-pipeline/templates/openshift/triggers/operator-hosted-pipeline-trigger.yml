@@ -4,7 +4,7 @@ kind: EventListener
 metadata:
   name: operator-hosted-pipeline-github-listener
 spec:
-  serviceAccountName: operator-pipeline-admin
+  serviceAccountName: pipeline
   triggers:
     - name: github-listener
       interceptors:
@@ -35,11 +35,11 @@ spec:
     - name: git_pr_url
       value: $(body.pull_request.html_url)
     - name: git_fork_url
-      value: $(body.pull_request.head.html_url)
+      value: $(body.pull_request.head.repo.html_url)
     - name: git_repo_url
-      value: $(body.base.head.html_url)
+      value: $(body.pull_request.base.repo.html_url)
     - name: git_username
-      value: $(body.pull_request.user.login)
+      value: $(body.pull_request.head.user.login)
     - name: pr_head_label
       value: $(body.pull_request.head.label)
     - name: bundle_path
@@ -112,17 +112,17 @@ spec:
           - name: results
             volumeClaimTemplate: *volumeClaimTemplate5Gi
           - name: ssh-dir
-            volumeClaimTemplate: &volumeClaimTemplate100Mi
-              spec:
-                accessModes:
-                  - ReadWriteOnce
-                resources:
-                  requests:
-                    storage: 100Mi
-          - name: registry
-            volumeClaimTemplate: *volumeClaimTemplate100Mi
+            secret:
+              secretName: "my-ssh-credentials"
+          - name: registry-credentials
+            secret:
+              secretName: "my-registry-credentials"
           - name: pyxis-ssl-credentials
-            volumeClaimTemplate: *volumeClaimTemplate100Mi
+            secret:
+              secretName: "operator-pipeline-api-certs"
+          - name: github-bot-token
+            secret:
+              secretName: "github-bot-token"
 ---
 apiVersion: route.openshift.io/v1
 kind: Route
