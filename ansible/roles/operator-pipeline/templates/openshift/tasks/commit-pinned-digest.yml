@@ -85,15 +85,13 @@ spec:
           git commit -m "Pin the operator manifests"
           git push origin "${TEMP_BRANCH}"
 
-          RESULT_SHA="$(git rev-parse HEAD | tr -d '\n')"
-          # Make sure we don't add a trailing newline to the result!
-          echo -n "$RESULT_SHA" > $(results.commit.path)
           echo -n "$TEMP_BRANCH" > $(results.branch.path)
 
         else
           echo "Skipping commit"
-          RESULT_SHA="$(git rev-parse HEAD | tr -d '\n')"
-          # Make sure we don't add a trailing newline to the result!
-          echo -n "$RESULT_SHA" > $(results.commit.path)
           echo -n "" > $(results.branch.path)
         fi
+
+        RESULT_SHA="$(git rev-parse HEAD | tr -d '\n')"
+        # Make sure we don't add a trailing newline to the result!
+        echo -n "$RESULT_SHA" > $(results.commit.path)
