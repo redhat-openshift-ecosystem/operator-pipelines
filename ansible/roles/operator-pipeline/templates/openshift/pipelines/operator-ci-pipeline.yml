@@ -29,6 +29,7 @@ spec:
       default: "false"
   workspaces:
     - name: pipeline
+    - name: kubeconfig
     - name: ssh-dir
       optional: true
     - name: registry-credentials
@@ -235,10 +236,18 @@ spec:
         - build-index
       taskRef:
         name: preflight
+      params:
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: bundle_index_image
+          value: *bundleIndexImage
+        - name: bundle_image
+          value: *bundleImage
       workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
+        - name: kubeconfig
+          workspace: kubeconfig
 
     - name: upload-artifacts
       runAfter:

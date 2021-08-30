@@ -346,6 +346,7 @@ spec:
           workspace: repository
           subPath: src
 
+    # TODO pass a kubeconfig workspace (awaiting EET-1918)
     - name: preflight
       runAfter:
         - ocp-environment-preparation
@@ -354,10 +355,6 @@ spec:
       params:
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
 
     - name: upload-artifacts
       runAfter:
@@ -457,6 +454,29 @@ spec:
         - name: results
           workspace: results
           subPath: results
+
+    # link pull request details to test results
+    - name: link-pull-request
+      runAfter:
+        - get-ci-results
+      taskRef:
+        name: link-pull-request
+      params:
+        - name: test_result_id
+          value: "$(tasks.get-ci-results.results.test_result_id)"
+        - name: pyxis_url
+          value: "$(params.pyxis_url)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+        - name: pull_request_url
+          value: "$(params.git_pr_url)"
+        - name: pull_request_status
+          value: "open"
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
 
     # merge PR
     - name: merge-pr

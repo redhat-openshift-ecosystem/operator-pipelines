@@ -1,0 +1,44 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: link-pull-request
+spec:
+  params:
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+      description: Path to Pyxis key. Valid only when internal Pyxis is used.
+    - name: test_result_id
+      description: Identifier of preflight certification uploaded in Pyxis API.
+    - name: pyxis_url
+      description: Base URL of Pyxis container API.
+    - name: pull_request_url
+      description: URL to Github pull request with a new bundle submission.
+    - name: pull_request_status
+      description: Status of Github pull request.
+  workspaces:
+    - name: pyxis-ssl-credentials
+      optional: true
+  steps:
+    - name: link-pull-request-details-to-test-results
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        echo "Setting pull request details"
+
+        link-pull-request \
+          --pyxis-url "$(params.pyxis_url)" \
+          --test-result-id "$(params.test_result_id)" \
+          --pull-request-url "$(params.pull_request_url)" \
+          --pull-request-status "$(params.pull_request_status)" \
+          --verbose

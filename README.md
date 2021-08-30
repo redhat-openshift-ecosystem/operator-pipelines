@@ -37,6 +37,7 @@ tkn pipeline start operator-ci-pipeline \
   --param git_revision=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=kubeconfig,secret=my-kubeconfig \
   --showlog
 ```
 If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:
@@ -49,6 +50,7 @@ tkn pipeline start operator-ci-pipeline \
   --param registry=quay.io \
   --param image_namespace=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=kubeconfig,secret=my-kubeconfig \
   --workspace name=registry-credentials,secret=my-registry-secret \
   --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
