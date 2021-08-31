@@ -82,15 +82,25 @@ spec:
           workspace: repository
           subPath: src
 
+    # Get the bundle path
+    - name: get-bundle-path
+      runAfter:
+        - submission-validation
+      taskRef:
+        name: get-bundle-path
+      params:
+        - name: git_pr_title
+          value: $(params.git_pr_title)
+
     # Get cert project id
     - name: certification-project-check
       runAfter:
-        - checkout
+        - get-bundle-path
       taskRef:
         name: certification-project-check
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -143,7 +153,7 @@ spec:
         name: operator-validation
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:
@@ -158,7 +168,7 @@ spec:
         name: get-supported-versions
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -171,7 +181,7 @@ spec:
         name: yaml-lint
       params:
         - name: args
-          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(params.bundle_path)"]
+          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(tasks.get-bundle-path.results.bundle_path)"]
       workspaces:
         - name: shared-workspace
           workspace: repository
@@ -184,7 +194,7 @@ spec:
         name: digest-pinning
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -206,7 +216,7 @@ spec:
         name: content-hash
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -250,7 +260,7 @@ spec:
         name: dockerfile-creation
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -269,7 +279,7 @@ spec:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -306,7 +316,7 @@ spec:
         - name: IMAGE
           value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
         # - name: DOCKERFILE
         #   value: "Dockerfile.index"
       workspaces:
@@ -522,7 +532,7 @@ spec:
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: github-bot-token
           workspace: github-bot-token

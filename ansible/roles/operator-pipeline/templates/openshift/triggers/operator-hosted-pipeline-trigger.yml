@@ -21,7 +21,8 @@ spec:
         name: operator-hosted-pipeline-trigger-template
 
 ---
-# PR webhook payload: https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
+# To see the PR webhook payload, set the logLevel to debug in configmap config-logging-triggers
+# Other GitHub PR webhook payload example: https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
@@ -42,8 +43,6 @@ spec:
       value: $(body.pull_request.head.user.login)
     - name: pr_head_label
       value: $(body.pull_request.head.label)
-    - name: bundle_path
-      value: "todo"
     - name: pyxis_url
       value: https://pyxis.engineering.redhat.com/
     - name: preflight_min_version

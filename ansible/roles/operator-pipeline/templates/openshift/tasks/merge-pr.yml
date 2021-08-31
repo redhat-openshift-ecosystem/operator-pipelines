@@ -27,7 +27,7 @@ spec:
       image: registry.access.redhat.com/ubi8-minimal
       script: |
         #! /usr/bin/env bash
-        set -xe
+        set -x
 
         BOOL_MERGE=$(cat $(results.bool_merge.path))
 
