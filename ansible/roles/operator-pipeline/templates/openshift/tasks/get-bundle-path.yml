@@ -1,0 +1,29 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-bundle-path
+spec:
+  params:
+    - name: git_pr_title
+  results:
+    - name: bundle_path
+  steps:
+    - name: get-bundle-path
+      image: registry.access.redhat.com/ubi8-minimal
+      env:
+        - name: PR_TITLE
+          value: $(params.git_pr_title)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        # remove "operator " prefix
+        OPERATOR_NAME_AND_VERSION=${PR_TITLE#operator }
+
+        # remove brackets in version, and concatenate name and version with slash
+        BUNDLE_PATH=$(echo $OPERATOR_NAME_AND_VERSION | tr -d "()" | tr " " "/")
+
+        BUNDLE_PATH=$(echo operators/$BUNDLE_PATH)
+
+        echo -n $BUNDLE_PATH | tee $(results.bundle_path.path)
