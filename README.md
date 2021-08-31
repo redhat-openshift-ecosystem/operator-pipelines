@@ -60,6 +60,8 @@ To enable digest pinning, pass the following arguments:
 
 ```bash
   --param pin_digests=true \
+  --param git_username=<github_user_name> \
+  --param git_email=<github_email> \
   --workspace name=ssh-dir,secret=my-ssh-credentials
 ```
 

@@ -7,6 +7,10 @@ spec:
   params:
     - name: git_repo_url
     - name: git_revision
+    - name: git_username
+      default: "digestPinning"
+    - name: git_email
+      default: "no-reply@redhat.com"
     - name: bundle_path
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
@@ -70,12 +74,18 @@ spec:
       taskRef:
         name: commit-pinned-digest
       params:
+        - name: git_user_name
+          value: "$(params.git_username)"
+        - name: git_user_email
+          value: "$(params.git_email)"
         - name: dirty_flag
           value: "$(tasks.digest-pinning.results.dirty_flag)"
       workspaces:
         - name: source
           workspace: pipeline
           subPath: src
+        - name: ssh-directory
+          workspace: ssh-dir
 
     - name: yaml-lint
       runAfter:
