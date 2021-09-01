@@ -1,0 +1,48 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-cert-project-related-data
+spec:
+  params:
+    - name: cert_project_id
+      description: Identifier of certification project from Red Hat Connect
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+    - name: pyxis_url
+      default: https://pyxis.engineering.redhat.com
+  results:
+    - name: isv_pid
+      description: isv_pid of the certification project from Red Hat Connect
+    - name: repo_name
+      description: Repository name assigned to certification project from Red Hat Connect
+    - name: dist_method
+      description: Distribution method of the certification project- either certified or marketplace
+    - name: org_id
+      description: Unique identifier of the organization in Red Hat Connect
+  workspaces:
+    - name: pyxis-ssl-credentials
+      optional: true
+  steps:
+    - name: get-cert-project-related-data
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        get-cert-project-related-data \
+          --pyxis-url $(params.pyxis_url) \
+          --cert-project-id $(params.cert_project_id)
+
+        cat isv_pid | tee $(results.isv_pid.path)
+        cat repo_name | tee $(results.repo_name.path)
+        cat dist_method | tee $(results.dist_method.path)
+        cat org_id | tee $(results.org_id.path)
