@@ -36,6 +36,7 @@ tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
+  --param env=production \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=kubeconfig,secret=my-kubeconfig \
   --showlog
@@ -47,6 +48,7 @@ tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
+  --param env=production \
   --param registry=quay.io \
   --param image_namespace=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \

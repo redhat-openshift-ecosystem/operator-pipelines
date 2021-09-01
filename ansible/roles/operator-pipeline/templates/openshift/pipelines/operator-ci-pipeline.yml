@@ -17,8 +17,9 @@ spec:
     - name: bundle_path
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
-    - name: pyxis_url
-      default: https://catalog.redhat.com/api/containers/
+    - name: env
+      description: Which environment to run in. Can be one of [dev, qa, stage, production]
+      default: prod
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
@@ -40,7 +41,17 @@ spec:
     - name: pyxis-api-key
       optional: true
   tasks:
+    - name: set-env
+      taskRef:
+        name: set-env
+        kind: Task
+      params:
+        - name: env
+          value: $(params.env)
+    
     - name: checkout
+      runAfter:
+        - set-env
       taskRef:
         name: git-clone
         kind: Task
@@ -112,7 +123,7 @@ spec:
         - name: bundle_path
           value: "$(params.bundle_path)"
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -279,7 +290,7 @@ spec:
         - name: package_name
           value: "$(tasks.operator-validation.results.package_name)"
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -338,6 +349,15 @@ spec:
         - name: package_name
           value: "$(tasks.operator-validation.results.package_name)"
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
           value: "$(context.pipelineRun.name)"
+          
+    - name: show-support-link
+      taskRef:
+        name: show-support-link
+      params:
+        - name: env
+          value: "$(params.env)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
