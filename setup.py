@@ -30,6 +30,7 @@ setup(
             "reserve-operator-name=operatorcert.entrypoints.reserve_operator_name:main",
             "set-github-status=operatorcert.entrypoints.set_github_status:main",
             "link-pull-request=operatorcert.entrypoints.link_pull_request:main",
+            "get-cert-project-related-data=operatorcert.entrypoints.get_cert_project_related_data:main",
             "open-pull-request=operatorcert.entrypoints.github_pr:main",
         ],
     },
