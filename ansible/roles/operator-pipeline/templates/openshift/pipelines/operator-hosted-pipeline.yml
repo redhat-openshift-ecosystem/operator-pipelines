@@ -4,7 +4,6 @@ kind: Pipeline
 metadata:
   name: operator-hosted-pipeline
 spec:
-  # TODO: Clean-up git-related params when we'll start using webhooks. Many of them are redundant.
   params:
     - name: git_pr_branch
     - name: git_pr_title
@@ -29,6 +28,7 @@ spec:
     - name: registry-credentials
     - name: pyxis-ssl-credentials
     - name: github-bot-token
+    - name: kubeconfig
   tasks:
     # Git clone
     - name: checkout
@@ -76,14 +76,25 @@ spec:
       params:
         - name: bundle_path
           value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # Get cert project related data
+    - name: get-cert-project-related-data
+      runAfter:
+        - certification-project-check
+      taskRef:
+        name: get-cert-project-related-data
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
       workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
@@ -91,7 +102,7 @@ spec:
     - name: reserve-operator-name
       runAfter:
         - submission-validation
-        - certification-project-check
+        - get-cert-project-related-data
       taskRef:
         name: reserve-operator-name
       workspaces:
@@ -99,7 +110,7 @@ spec:
           workspace: pyxis-ssl-credentials
       params:
         - name: association
-          value: "$(tasks.certification-project-check.results.isv_pid)"
+          value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: operator_name
           value: "$(tasks.submission-validation.results.operator_name)"
         - name: pyxis_url
@@ -108,7 +119,6 @@ spec:
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
-
 
     # additional checks
     - name: operator-validation
@@ -353,8 +363,17 @@ spec:
       taskRef:
         name: preflight
       params:
-        - name: preflight_results_exists
-          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: bundle_index_image
+          value: *bundleIndexImage
+        - name: bundle_image
+          value: *bundleImage
+      workspaces:
+        - name: kubeconfig
+          workspace: kubeconfig
 
     - name: upload-artifacts
       runAfter:

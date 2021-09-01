@@ -27,6 +27,7 @@ spec:
     - name: repository
     - name: ssh-dir
       optional: true
+    - name: pyxis-ssl-credentials
   tasks:
     # Git clone
     - name: checkout
@@ -92,33 +93,57 @@ spec:
           subPath: src
 
     # Get additional data necessary for certification
-    - name: get-project-related-data
+    # Get cert project related data
+    - name: get-cert-project-related-data
       runAfter:
         - certification-project-check
       taskRef:
-        name: get-project-related-data
+        name: get-cert-project-related-data
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
+
+    - name: get-vendor-related-data
+      runAfter:
+        - get-cert-project-related-data
+      taskRef:
+        name: get-vendor-related-data
+      params:
+        - name: org_id
+          value: "$(tasks.get-cert-project-related-data.results.org_id)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
 
     # Publish image to OCP registry
     - name: imagestream-manipulation
       runAfter:
-        - get-project-related-data
         - operator-validation
+        - get-vendor-related-data
       taskRef:
         name: imagestream-manipulation
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: vendor_label
-          value: "$(tasks.get-project-related-data.results.vendor_label)"
+          value: "$(tasks.get-vendor-related-data.results.vendor_label)"
         - name: repository_name
-          value: "$(tasks.get-project-related-data.results.repository_name)"
+          value: "$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: isv_pid
-          value: "$(tasks.get-project-related-data.results.isv_pid)"
+          value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: dist_method
-          value: "$(tasks.get-project-related-data.results.dist_method)"
+          value: "$(tasks.get-cert-project-related-data.results.dist_method)"
         # params necessary to pull the image
         - name: registry
           value: "$(params.registry)"
@@ -139,11 +164,11 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: registry
-          value: "$(tasks.get-project-related-data.results.registry)"
+          value: "$(params.registry)"
         - name: vendor_label
-          value: "$(tasks.get-project-related-data.results.vendor_label)"
+          value: "$(tasks.get-vendor-related-data.results.vendor_label)"
         - name: repository_name
-          value: "$(tasks.get-project-related-data.results.repository_name)"
+          value: "$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: container_digest
           value: "$(tasks.imagestream-manipulation.results.container_digest)"
         - name: bundle_version
