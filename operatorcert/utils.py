@@ -38,4 +38,4 @@ def store_results(results: Dict[str, str]):
             logging.error(f"Result {result_name} is empty")
         logging.debug(f"Storing {result_name}")
         with open(result_name, "w") as result_file:
-            result_file.write(result_value)
+            result_file.write(str(result_value))

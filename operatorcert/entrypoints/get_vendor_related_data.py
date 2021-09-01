@@ -18,8 +18,7 @@ def setup_argparser() -> argparse.ArgumentParser:
         description="Get the Certification Project related data"
     )
     parser.add_argument(
-        "--cert-project-id",
-        help="Identifier of certification project from Red Hat Connect",
+        "--org-id", help="Unique identifier of the organization in Red Hat Connect"
     )
     parser.add_argument(
         "--pyxis-url",
@@ -31,27 +30,24 @@ def setup_argparser() -> argparse.ArgumentParser:
     return parser
 
 
-def get_cert_project_related_data(pyxis_url: str, cert_project_id: str) -> None:
+def get_vendor_related_data(pyxis_url: str, org_id: str) -> None:
     rsp = pyxis.get(
         urljoin(
             pyxis_url,
-            f"/v1/projects/certification/id/{cert_project_id}",
+            f"/v1/vendors/org-id/{org_id}",
         )
     )
 
     rsp.raise_for_status()
 
-    cert_project = rsp.json()
+    vendor = rsp.json()
 
     try:
         results = {
-            "isv_pid": cert_project["container"]["isv_pid"],
-            "repo_name": cert_project["container"]["repository_name"],
-            "dist_method": cert_project["container"]["distribution_method"],
-            "org_id": cert_project["org_id"],
+            "vendor_label": vendor["label"],
         }
     except KeyError as e:
-        logging.error("Expected data not found in Certification Project!")
+        logging.error("Expected data not found in Vendor!")
         raise e
 
     store_results(results)
@@ -66,7 +62,7 @@ def main() -> None:
         log_level = "DEBUG"
     logging.basicConfig(level=log_level)
 
-    get_cert_project_related_data(args.pyxis_url, args.cert_project_id)
+    get_vendor_related_data(args.pyxis_url, args.org_id)
 
 
 if __name__ == "__main__":
