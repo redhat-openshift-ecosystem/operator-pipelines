@@ -36,6 +36,7 @@ execute_playbook() {
         -e "env=$1" \
         -e "ocp_host=`oc whoami --show-server`" \
         -e "ocp_token=`oc whoami -t`" \
+        --tags init \
         -vvvv
 }
 
