@@ -6,14 +6,29 @@ metadata:
 spec:
   serviceAccountName: pipeline
   triggers:
-    - name: github-listener
+    - name: github-listener-prod
       interceptors:
         - cel:
             filter: >-
               (
-                header.match("X-GitHub-Event", "pull_request")
+                body.repository.html_url.contains("prod")
+                && header.match("X-GitHub-Event", "pull_request")
                 && body.action in ["opened", "reopened", "synchronize"]
                 && body.pull_request.base.ref == "main"
+              )
+      bindings:
+        - ref: operator-hosted-pipeline-trigger-binding
+      template:
+        name: operator-hosted-pipeline-trigger-template
+    - name: github-listener-preprod
+      interceptors:
+        - cel:
+            filter: >-
+              (
+                body.repository.html_url.contains("preprod")
+                && header.match("X-GitHub-Event", "pull_request")
+                && body.action in ["opened", "reopened", "synchronize"]
+                && body.pull_request.base.ref in ["dev", "qa", "stage"]
               )
       bindings:
         - ref: operator-hosted-pipeline-trigger-binding
@@ -36,15 +51,16 @@ spec:
     - name: git_pr_url
       value: $(body.pull_request.html_url)
     - name: git_fork_url
-      value: $(body.pull_request.head.repo.html_url)
+      value: $(body.pull_request.head.repo.ssh_url)
     - name: git_repo_url
-      value: $(body.pull_request.base.repo.html_url)
+      value: $(body.pull_request.base.repo.ssh_url)
     - name: git_username
       value: $(body.pull_request.head.user.login)
     - name: pr_head_label
       value: $(body.pull_request.head.label)
     - name: pyxis_url
       value: https://pyxis.engineering.redhat.com/
+    # TODO: use actual versions
     - name: preflight_min_version
       value: "1.0"
     - name: ci_min_version
@@ -101,7 +117,7 @@ spec:
             value: $(tt.params.ci_min_version)
         workspaces:
           - name: repository
-            volumeClaimTemplate: &volumeClaimTemplate5Gi
+            volumeClaimTemplate:
               spec:
                 accessModes:
                   - ReadWriteOnce
@@ -109,19 +125,29 @@ spec:
                   requests:
                     storage: 5Gi
           - name: results
-            volumeClaimTemplate: *volumeClaimTemplate5Gi
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 100Mi
           - name: ssh-dir
             secret:
-              secretName: "my-ssh-credentials"
+              secretName: "github-ssh-credentials"
           - name: registry-credentials
             secret:
-              secretName: "my-registry-credentials"
+              secretName: "registry-dockerconfig-credentials"
           - name: pyxis-ssl-credentials
             secret:
               secretName: "operator-pipeline-api-certs"
           - name: github-bot-token
             secret:
               secretName: "github-bot-token"
+          # TODO: passing kubeconfig here is just a temporary workaround to make the task pass
+          - name: kubeconfig
+            secret:
+              secretName: "kubeconfig"
 ---
 apiVersion: route.openshift.io/v1
 kind: Route

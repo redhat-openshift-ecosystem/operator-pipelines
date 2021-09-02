@@ -381,6 +381,7 @@ spec:
           workspace: repository
           subPath: src
 
+    # TODO: passing kubeconfig here is just a temporary workaround to make the task pass
     - name: preflight
       runAfter:
         - ocp-environment-preparation
