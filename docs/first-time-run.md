@@ -10,7 +10,7 @@
 
 ### Common for all the pipelines:
 #### Git SSH Secret
-The CI pipeline requires git SSH credentials with 
+The pipelines requires git SSH credentials with 
 write access to the repository if automatic digest pinning
 is enabled using the pin_digests param. This is disabled
 by default. Before executing the pipeline the user must
@@ -22,7 +22,7 @@ cat << EOF > ssh-secret.yml
 kind: Secret
 apiVersion: v1
 metadata:
-  name: my-ssh-credentials
+  name: github-ssh-credentials
 data:
   id_rsa: |
     < PRIVATE SSH KEY >
@@ -33,7 +33,7 @@ oc create -f ssh-secret.yml
 
 
 #### Registry Credentials
-The CI pipeline can optionally be configured to push images to a remote private
+The pipelines can optionally be configured to push images to a remote private
 registry. The user must create an auth secret containing the docker config. This
 secret can then be passed as a workspace named `registry-credentials` when invoking
 the pipeline.
@@ -43,7 +43,7 @@ cat << EOF > registry-secret.yml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: my-registry-secret
+  name: registry-dockerconfig-secret
 data:
   .dockerconfigjson: < BASE64 ENCODED DOCKER CONFIG >
 type: kubernetes.io/dockerconfigjson
@@ -95,8 +95,8 @@ The CI pipeline requires a kubeconfig with admin credentials. This can be create
 by logging into said cluster as an admin user.
 
 ```bash
-KUBECONFIG=my-kubeconfig oc login -u <username> -p <password>
-oc create secret generic my-kubeconfig --from-file=kubeconfig=my-kubeconfig
+KUBECONFIG=kubeconfig oc login -u <username> -p <password>
+oc create secret generic kubeconfig --from-file=kubeconfig=kubeconfig
 ```
 
 ### Only Hosted pipeline:
