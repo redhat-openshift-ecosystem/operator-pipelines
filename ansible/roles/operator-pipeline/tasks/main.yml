@@ -29,7 +29,7 @@
   tags:
     - init
 
-  - name: Create Operator pipeline cert secret
+- name: Create Operator pipeline cert secret
   no_log: yes
   k8s:
     state: present
