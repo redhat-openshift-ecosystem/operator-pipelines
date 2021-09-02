@@ -105,6 +105,7 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=kubeconfig,secret=my-kubeconfig \
   --workspace name=github-bot-token,secret=github-bot-token \
   --showlog
+  # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
 ```
 
 

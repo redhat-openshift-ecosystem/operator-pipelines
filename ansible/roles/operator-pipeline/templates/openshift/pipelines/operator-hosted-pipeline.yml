@@ -356,7 +356,6 @@ spec:
           workspace: repository
           subPath: src
 
-    # TODO pass a kubeconfig workspace (awaiting EET-1918)
     - name: preflight
       runAfter:
         - ocp-environment-preparation
@@ -372,6 +371,7 @@ spec:
         - name: bundle_image
           value: *bundleImage
       workspaces:
+        # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
         - name: kubeconfig
           workspace: kubeconfig
 

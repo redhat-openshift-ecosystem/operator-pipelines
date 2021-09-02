@@ -29,10 +29,11 @@ spec:
           value: $(params.pyxis_key_path)
       script: |
         #! /usr/bin/env bash
-        set -xe
+        set -xe -o pipefail
 
         get-vendor-related-data \
           --pyxis-url $(params.pyxis_url) \
           --org-id $(params.org_id)
 
-        cat vendor_label | tee $(results.vendor_label.path)
+        # `grep .` ensures, that pipe fail if jq returns no results
+        cat vendor | jq '.label' | grep . | tee $(results.vendor_label.path)
