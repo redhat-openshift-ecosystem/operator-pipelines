@@ -93,7 +93,6 @@ spec:
           subPath: src
 
     # Get additional data necessary for certification
-    # Get cert project related data
     - name: get-cert-project-related-data
       runAfter:
         - certification-project-check
@@ -103,9 +102,9 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
