@@ -43,18 +43,7 @@ def get_cert_project_related_data(pyxis_url: str, cert_project_id: str) -> None:
 
     cert_project = rsp.json()
 
-    try:
-        results = {
-            "isv_pid": cert_project["container"]["isv_pid"],
-            "repo_name": cert_project["container"]["repository_name"],
-            "dist_method": cert_project["container"]["distribution_method"],
-            "org_id": cert_project["org_id"],
-        }
-    except KeyError as e:
-        logging.error("Expected data not found in Certification Project!")
-        raise e
-
-    store_results(results)
+    store_results({"cert_project": cert_project})
 
 
 def main() -> None:

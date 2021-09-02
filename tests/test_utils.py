@@ -33,15 +33,17 @@ def test_store_results() -> None:
     results = {
         "example_name": "example_value",
         "other_name": "other_value",
+        "third_name": {"some": "dict"},
         "none": None,
     }
     mock_open = mock.mock_open()
     with mock.patch("builtins.open", mock_open):
         store_results(results)
 
-    assert mock_open.call_count == 3
+    assert mock_open.call_count == 4
     assert mock_open.call_args_list == [
         call("example_name", "w"),
         call("other_name", "w"),
+        call("third_name", "w"),
         call("none", "w"),
     ]

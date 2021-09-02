@@ -42,15 +42,7 @@ def get_vendor_related_data(pyxis_url: str, org_id: str) -> None:
 
     vendor = rsp.json()
 
-    try:
-        results = {
-            "vendor_label": vendor["label"],
-        }
-    except KeyError as e:
-        logging.error("Expected data not found in Vendor!")
-        raise e
-
-    store_results(results)
+    store_results({"vendor": vendor})
 
 
 def main() -> None:

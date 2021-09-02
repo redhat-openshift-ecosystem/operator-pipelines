@@ -18,8 +18,6 @@ def test_get_cert_project_related_data(
         "org_id": 123,
         "container": {
             "isv_pid": "some_pid",
-            "repository_name": "some_name",
-            "distribution_method": "some_method",
         },
     }
     mock_get.return_value = mock_rsp
@@ -27,26 +25,5 @@ def test_get_cert_project_related_data(
     get_cert_project_related_data("https://example.com", "id1234")
     # assert
     mock_store.assert_called_with(
-        {
-            "isv_pid": "some_pid",
-            "repo_name": "some_name",
-            "dist_method": "some_method",
-            "org_id": 123,
-        }
+        {"cert_project": {"org_id": 123, "container": {"isv_pid": "some_pid"}}}
     )
-
-
-@patch("operatorcert.entrypoints.get_cert_project_related_data.pyxis.get")
-def test_get_cert_project_related_data_missing_fields(mock_get: MagicMock) -> None:
-    # Arrange
-    mock_rsp = MagicMock()
-    mock_rsp.json.return_value = {
-        "org_id": 123,
-        "container": {
-            "fields": "are missing",
-        },
-    }
-    mock_get.return_value = mock_rsp
-    # Act & Assert
-    with pytest.raises(KeyError):
-        get_cert_project_related_data("https://example.com", "id1234")
