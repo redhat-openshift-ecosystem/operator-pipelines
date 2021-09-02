@@ -9,3 +9,4 @@ operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipel
 
 operator_pipeline_quay_token: ../../vaults/common/dockerconfig.json
 operator_pipeline_github_bot_token: ../../vaults/common/github-bot-token.txt
+operator_pipeline_webhook_secret: ../../vaults/common/github-webhook-secret.txt
