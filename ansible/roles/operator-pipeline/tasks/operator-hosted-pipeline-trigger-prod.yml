@@ -24,8 +24,7 @@
                   - cel:
                       filter: >-
                         (
-                          body.repository.html_url.contains("prod")
-                          && header.match("X-GitHub-Event", "pull_request")
+                          header.match("X-GitHub-Event", "pull_request")
                           && body.action in ["opened", "reopened", "synchronize"]
                           && body.pull_request.base.ref == "main"
                         )
@@ -63,11 +62,10 @@
                 value: $(body.pull_request.head.label)
               - name: pyxis_url
                 value: https://pyxis.engineering.redhat.com/
-              # TODO: use actual versions
               - name: preflight_min_version
-                value: "1.0"
+                value: "{{ preflight_min_version }}"
               - name: ci_min_version
-                value: "1.0"
+                value: "{{ ci_min_version }}"
 
     - name: Create Hosted pipeline Trigger Template (Prod)
       k8s:
@@ -166,7 +164,7 @@
           metadata:
             labels:
               eventlistener: operator-hosted-pipeline-github-listener-prod
-            name: operator-hosted-pipeline
+            name: operator-hosted-pipeline-prod
           spec:
             port:
               targetPort: http-listener

@@ -63,11 +63,10 @@
                 value: $(body.pull_request.head.label)
               - name: pyxis_url
                 value: https://pyxis.engineering.redhat.com/
-              # TODO: use actual versions
               - name: preflight_min_version
-                value: "1.0"
+                value: "{{ preflight_min_version }}"
               - name: ci_min_version
-                value: "1.0"
+                value: "{{ ci_min_version }}"
 
     - name: Create Hosted pipeline Trigger Template (Preprod)
       k8s:
@@ -166,7 +165,7 @@
           metadata:
             labels:
               eventlistener: operator-hosted-pipeline-github-listener-preprod
-            name: operator-hosted-pipeline
+            name: operator-hosted-pipeline-preprod
           spec:
             port:
               targetPort: http-listener
