@@ -1,7 +1,7 @@
 ---
-- name: Create trigger enabling running Hosted pipeline via GitHub webhook
+- name: Create trigger enabling running Hosted pipeline via GitHub webhook (Prod)
   block:
-    - name: Create Hosted pipeline event listener
+    - name: Create Hosted pipeline event listener (Prod)
       k8s:
         state: present
         namespace: "{{ oc_namespace }}"
@@ -9,7 +9,7 @@
           apiVersion: triggers.tekton.dev/v1alpha1
           kind: EventListener
           metadata:
-            name: operator-hosted-pipeline-github-listener
+            name: operator-hosted-pipeline-github-listener-prod
           spec:
             serviceAccountName: pipeline
             triggers:
@@ -18,7 +18,7 @@
                   - github:
                       secretRef:
                         secretName: github-webhook-secret
-                        secretKey: webhook-secret
+                        secretKey: webhook-secret-prod
                       eventTypes:
                         - pull_request
                   - cel:
@@ -30,31 +30,11 @@
                           && body.pull_request.base.ref == "main"
                         )
                 bindings:
-                  - ref: operator-hosted-pipeline-trigger-binding
+                  - ref: operator-hosted-pipeline-trigger-binding-prod
                 template:
-                  name: operator-hosted-pipeline-trigger-template
-              - name: github-listener-preprod
-                interceptors:
-                  - github:
-                      secretRef:
-                        secretName: github-webhook-secret
-                        secretKey: webhook-secret
-                      eventTypes:
-                        - pull_request
-                  - cel:
-                      filter: >-
-                        (
-                          body.repository.html_url.contains("preprod")
-                          && header.match("X-GitHub-Event", "pull_request")
-                          && body.action in ["opened", "reopened", "synchronize"]
-                          && body.pull_request.base.ref in ["dev", "qa", "stage"]
-                        )
-                bindings:
-                  - ref: operator-hosted-pipeline-trigger-binding
-                template:
-                  name: operator-hosted-pipeline-trigger-template
+                  name: operator-hosted-pipeline-trigger-template-prod
 
-    - name: Create Hosted pipeline Trigger Binding
+    - name: Create Hosted pipeline Trigger Binding (Prod)
       k8s:
         state: present
         namespace: "{{ oc_namespace }}"
@@ -64,7 +44,7 @@
           apiVersion: triggers.tekton.dev/v1alpha1
           kind: TriggerBinding
           metadata:
-            name: operator-hosted-pipeline-trigger-binding
+            name: operator-hosted-pipeline-trigger-binding-prod
           spec:
             params:
               - name: git_pr_branch
@@ -89,7 +69,7 @@
               - name: ci_min_version
                 value: "1.0"
 
-    - name: Create Hosted pipeline Trigger Template
+    - name: Create Hosted pipeline Trigger Template (Prod)
       k8s:
         state: present
         namespace: "{{ oc_namespace }}"
@@ -97,7 +77,7 @@
           apiVersion: triggers.tekton.dev/v1alpha1
           kind: TriggerTemplate
           metadata:
-            name: operator-hosted-pipeline-trigger-template
+            name: operator-hosted-pipeline-trigger-template-prod
           spec:
             params:
               - name: git_pr_branch
@@ -176,7 +156,7 @@
                       secret:
                         secretName: "kubeconfig"
 
-    - name: Create Hosted pipeline trigger route
+    - name: Create Hosted pipeline trigger route (Prod)
       k8s:
         state: present
         namespace: "{{ oc_namespace }}"
@@ -185,7 +165,7 @@
           kind: Route
           metadata:
             labels:
-              eventlistener: operator-hosted-pipeline-github-listener
+              eventlistener: operator-hosted-pipeline-github-listener-prod
             name: operator-hosted-pipeline
           spec:
             port:
@@ -193,4 +173,4 @@
             to:
               kind: Service
               # el- prefix means, that the service was created by EventListener.
-              name: el-operator-hosted-pipeline-github-listener
+              name: el-operator-hosted-pipeline-github-listener-prod
