@@ -126,12 +126,12 @@ spec:
           workspace: pyxis-ssl-credentials
 
     # Publish image to OCP registry
-    - name: imagestream-manipulation
+    - name: publish-to-ocp-registry
       runAfter:
         - operator-validation
         - get-vendor-related-data
       taskRef:
-        name: imagestream-manipulation
+        name: publish-to-ocp-registry
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
@@ -156,7 +156,7 @@ spec:
     # create or update container image
     - name: update-container-image
       runAfter:
-        - imagestream-manipulation
+        - publish-to-ocp-registry
       taskRef:
         name: update-container-image
       params:
@@ -169,7 +169,7 @@ spec:
         - name: repository_name
           value: "$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: container_digest
-          value: "$(tasks.imagestream-manipulation.results.container_digest)"
+          value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
         - name: is_latest
@@ -198,4 +198,4 @@ spec:
         - name: bundle_versions
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: container_digest
-          value: "$(tasks.imagestream-manipulation.results.container_digest)"
+          value: "$(tasks.publish-to-ocp-registry.results.container_digest)"

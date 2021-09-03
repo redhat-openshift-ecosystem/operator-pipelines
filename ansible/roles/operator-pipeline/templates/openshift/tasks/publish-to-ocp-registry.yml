@@ -1,0 +1,72 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: publish-to-ocp-registry
+spec:
+  params:
+    - name: cert_project_id
+      description: ID of the bundle Certification Project (as in bundle ci.yaml)
+    - name: registry
+      description: registry to pull the image from.
+    - name: vendor_label
+      description: name of the vendor
+    - name: repository_name
+    - name: isv_pid
+    - name: dist_method
+      description: distribution method- either marketplace or certified
+    - name: image_namespace
+      description: The namespace/organization where images from Hosted pipeline are stored.
+    - name: package_name
+      description: operator bundle name
+    - name: bundle_version
+      description: operator bundle version
+  results:
+    - name: container_digest
+  steps:
+    - name: imagestream-manipulations
+      image: quay.io/openshift/origin-cli:4.7
+      env:
+        - name: PROJECT_NAME
+          value: $(params.vendor_label)
+        - name: IMAGESTREAM_NAME
+          value: $(params.repository_name)
+        - name: TAG
+          value: $(params.bundle_version)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        ## create new openshift project and grant permissions for SA or use existing one
+        oc new-project $PROJECT_NAME && \
+        oc policy add-role-to-user edit -z pipeline -n $PROJECT_NAME || \
+        oc project $PROJECT_NAME
+
+        ## If Imagestream doesn't exists yet (can't get it), create it and annotate it
+        oc get imagestream $IMAGESTREAM_NAME || \
+        $(oc create imagestream $IMAGESTREAM_NAME && \
+        oc annotate imagestream $IMAGESTREAM_NAME pid=$(params.cert_project_id))
+
+        ## If role doesn't exists yet (can't get it), create it.
+        # It is needed, so that registry proxy have access to the imagestream.
+
+        ROLE_NAME=$(echo)
+
+        oc get role $ROLE_NAME || \
+        oc create role $ROLE_NAME \
+            --verb=get \
+            --resource=imagestreams,imagestreams/layers \
+            --resource-name=$IMAGESTREAM_NAME
+
+        ## Create rolebinding associated with the role
+        # ??
+
+        ## Create ImagestreamTag
+        oc create imagestreamtag $IMAGESTREAM_NAME:$TAG --from-image $(params.registry):$TAG
+
+        # If latest (test this):
+        # oc tag <namespace><imagestream name>:<tag> <namespace><imagestream name>:latest
+
+        ## Get the container digest?
+        ??
+
