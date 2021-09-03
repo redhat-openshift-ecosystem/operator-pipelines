@@ -13,6 +13,7 @@ spec:
     - name: git_email
       default: "no-reply@redhat.com"
     - name: upstream_repo_name
+      default: ""
       description: Upstream repository name where the pull request will be open
     - name: bundle_path
     - name: registry
@@ -22,6 +23,12 @@ spec:
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
+    - name: preflight_namespace
+      default: $(context.pipelineRun.namespace)
+      description: The namespace to use when running Preflight
+    - name: preflight_service_account
+      default: default
+      description: The service account to use when running Preflight
     - name: pin_digests
       description: Set to "true" to automatically generate the relatedImages
         section of the ClusterServiceVersion for you. If changes are made, the
@@ -248,9 +255,18 @@ spec:
           value: *bundleIndexImage
         - name: bundle_image
           value: *bundleImage
+        - name: namespace
+          value: "$(params.preflight_namespace)"
+        - name: service_account
+          value: "$(params.preflight_service_account)"
       workspaces:
+        - name: output
+          workspace: pipeline
+          subPath: preflight
         - name: kubeconfig
           workspace: kubeconfig
+        - name: credentials
+          workspace: registry-credentials
 
     - name: upload-artifacts
       runAfter:
@@ -283,7 +299,7 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline
-          subPath: src
+          subPath: preflight
         - name: pyxis-api-key
           workspace: pyxis-api-key
 
