@@ -8,7 +8,7 @@ spec:
     - name: env
       description: Enviroment. One of [dev, qa, stage, production]
     - name: type
-      description: Connect case type. 
+      description: Connect case type.
       default: "CERT"
     - name: source
       description: Connect case source.
@@ -23,6 +23,8 @@ spec:
       image: quay.io/redhat-isv/operator-pipelines-images
       script: |
         #! /usr/bin/env bash
+        set -e
+
         LINK_ENV="$(params.env)"
         # url-encode parameters
         LINK_TYPE=$(printf %s "$(params.type)" | jq -sRr @uri)
@@ -36,5 +38,5 @@ spec:
             URL_ENV="$URL_ENV.$LINK_ENV"
         fi
 
-
+        echo "Follow this link if you wish to open a support case:"
         echo "https://$URL_ENV.redhat.com/support/technology-partner/#/case/new?type=$LINK_TYPE&source=$LINK_SOURCE&cert_project_id=$CERT_PROJECT_ID&cert_project_type=$CERT_PROJECT_TYPE"
