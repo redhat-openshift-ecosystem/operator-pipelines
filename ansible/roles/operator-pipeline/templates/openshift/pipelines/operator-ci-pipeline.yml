@@ -19,7 +19,7 @@ spec:
       default: image-registry.openshift-image-registry.svc:5000
     - name: env
       description: Which environment to run in. Can be one of [dev, qa, stage, production]
-      default: prod
+      default: "production"
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
@@ -48,7 +48,7 @@ spec:
       params:
         - name: env
           value: $(params.env)
-    
+
     - name: checkout
       runAfter:
         - set-env
@@ -352,7 +352,7 @@ spec:
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
           value: "$(context.pipelineRun.name)"
-          
+
     - name: show-support-link
       taskRef:
         name: show-support-link
