@@ -88,7 +88,7 @@
       data:
         github_bot_token.txt: "{{ lookup('file', operator_pipeline_github_bot_token, rstrip=False) | b64encode }}"
 
-- name: Create Operator pipeline github webhook secret
+- name: Create Operator pipeline github webhook secret preprod
   no_log: yes
   k8s:
     state: present
@@ -105,7 +105,9 @@
           suffix: "{{ suffix }}"
           env: "{{ env }}"
       data:
-        webhook-secret: "{{ lookup('file', operator_pipeline_webhook_secret, rstrip=False) | b64encode }}"
+        webhook-secret-preprod: "{{ lookup('file', operator_pipeline_webhook_secret_preprod, rstrip=False) | b64encode }}"
+        webhook-secret-prod: "{{ lookup('file', operator_pipeline_webhook_secret_prod, rstrip=False) | b64encode }}"
+
 
 - name: Deploy pipeline tasks
   k8s:
@@ -126,4 +128,5 @@
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
     - ../templates/openshift/pipelines/operator-release-pipeline.yml
 
-- include: tasks/operator-hosted-pipeline-trigger.yml
+- include: tasks/operator-hosted-pipeline-trigger-preprod.yml
+- include: tasks/operator-hosted-pipeline-trigger-prod.yml
