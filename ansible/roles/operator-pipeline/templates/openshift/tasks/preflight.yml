@@ -19,19 +19,56 @@ spec:
       description: The Operator index image which includes the bundle
     - name: bundle_image
       description: The Operator bundle image under test
+    - name: service_account
+      description: The service account for the preflight config
+      default: "default"
+    - name: namespace
+      description: The namespace for the preflight config
+      default: "default"
   results:
     - name: log_output_file
     - name: result_output_file
     - name: artifacts_output_dir
   workspaces:
+    - name: output
+      description: A workspace to keep track of the task while PipelineRun.
     - name: kubeconfig
       description: A kubernetes config for the cluster used in preflight testing
+    - name: credentials
+      description: Docker config for retrieving the bundle image
+      optional: true
   steps:
     - name: check-operator
       image: $(params.base_image)
+      workingDir: $(workspaces.output.path)
+      env:
+        - name: PFLT_INDEXIMAGE
+          value: $(params.bundle_index_image)
+        - name: PFLT_SERVICEACCOUNT
+          value: $(params.service_account)
+        - name: PFLT_NAMESPACE
+          value: $(params.namespace)
+        - name: PFLT_LOGFILE
+          value: preflight.log
+        - name: PFLT_ARTIFACTS
+          value: artifacts
+        - name: KUBECONFIG
+          value: $(workspaces.kubeconfig.path)/kubeconfig
       script: |
         #! /usr/bin/env bash
         set -xe
+
+        if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
+          # Combine the default credentials
+          # with those found in the workspace to maintain access to the internal
+          # registry.
+          export DOCKER_CONFIG=/tmp/.docker
+          mkdir $DOCKER_CONFIG
+          jq -s '.[0] * .[1]' \
+            $(workspaces.credentials.path)/.dockerconfigjson \
+            $HOME/.docker/config.json \
+            > $DOCKER_CONFIG/config.json
+        fi
 
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
@@ -41,8 +78,6 @@ spec:
           echo -n "none" | tee $(results.artifacts_output_dir.path)
           exit 0
         fi
-
-        export KUBECONFIG=$(workspaces.kubeconfig.path)/kubeconfig
 
         preflight check operator $(params.bundle_image)
 
