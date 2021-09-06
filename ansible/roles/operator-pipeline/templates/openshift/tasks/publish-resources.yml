@@ -7,11 +7,57 @@ spec:
   params:
     - name: cert_project_id
       description: ID of the bundle Certification Project (as in bundle ci.yaml)
+    - name: org_id
+      description: Partner's Organization ID
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+    - name: environment
+      default: production
+      description: Environment where the pipeline runs
+    - name: pyxis_url
+      default: https://pyxis.engineering.redhat.com
+  workspaces:
+    - name: pyxis-ssl-credentials
+      optional: true
   steps:
-    - name: publish-resources
-      image: registry.access.redhat.com/ubi8-minimal
+    - name: publish-vendor
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
       script: |
         #! /usr/bin/env bash
-        echo "Publishing the Vendor and Repository"
+        set -xe
 
-        echo "ok"
+        echo "Publishing the Vendor"
+
+        publish \
+          --verbose \
+          --pyxis-url "$(params.pyxis_url)" \
+          --environment "$(params.environment)" \
+            vendor \
+              --org-id "$(params.org_id)"
+    - name: publish-repository
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        echo "Publishing the Repository"
+
+        publish \
+          --verbose \
+          --pyxis-url "$(params.pyxis_url)" \
+          --environment "$(params.environment)" \
+            repository \
+              --cert-project-id "$(params.cert_project_id)"
