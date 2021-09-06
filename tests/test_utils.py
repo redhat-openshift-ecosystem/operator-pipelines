@@ -47,3 +47,10 @@ def test_store_results() -> None:
         call("third_name", "w"),
         call("none", "w"),
     ]
+
+
+def test_get_registry_for_env() -> None:
+    assert utils.get_registry_for_env("production") == "registry.connect.redhat.com"
+    assert utils.get_registry_for_env("stage") == "registry.connect.stage.redhat.com"
+    assert utils.get_registry_for_env("qa") == "registry.connect.qa.redhat.com"
+    assert utils.get_registry_for_env("dev") == "registry.connect.dev.redhat.com"

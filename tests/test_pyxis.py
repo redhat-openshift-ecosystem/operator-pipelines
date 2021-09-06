@@ -98,3 +98,43 @@ def test_get_project_error(mock_session: MagicMock) -> None:
     )
     with pytest.raises(HTTPError):
         pyxis.get_project("https://foo.com/v1", "123")
+
+
+@patch("operatorcert.pyxis._get_session")
+def test_get_vendor_by_org_id(mock_session: MagicMock) -> None:
+    mock_session.return_value.get.return_value.json.return_value = {"key": "val"}
+    resp = pyxis.get_vendor_by_org_id("https://foo.com/v1", "123")
+
+    assert resp == {"key": "val"}
+
+
+@patch("operatorcert.pyxis._get_session")
+def test_get_vendor_by_org_id_error(mock_session: MagicMock) -> None:
+    response = Response()
+    response.status_code = 400
+    mock_session.return_value.get.return_value.raise_for_status.side_effect = HTTPError(
+        response=response
+    )
+    with pytest.raises(HTTPError):
+        pyxis.get_vendor_by_org_id("https://foo.com/v1", "123")
+
+
+@patch("operatorcert.pyxis._get_session")
+def test_get_repository_by_isv_pid(mock_session: MagicMock) -> None:
+    mock_session.return_value.get.return_value.json.return_value = {
+        "data": [{"key": "val"}]
+    }
+    resp = pyxis.get_repository_by_isv_pid("https://foo.com/v1", "123")
+
+    assert resp == {"key": "val"}
+
+
+@patch("operatorcert.pyxis._get_session")
+def test_get_repository_by_isv_pid_error(mock_session: MagicMock) -> None:
+    response = Response()
+    response.status_code = 400
+    mock_session.return_value.get.return_value.raise_for_status.side_effect = HTTPError(
+        response=response
+    )
+    with pytest.raises(HTTPError):
+        pyxis.get_repository_by_isv_pid("https://foo.com/v1", "123")

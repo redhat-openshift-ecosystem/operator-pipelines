@@ -33,6 +33,7 @@ setup(
             "get-cert-project-related-data=operatorcert.entrypoints.get_cert_project_related_data:main",
             "get-vendor-related-data=operatorcert.entrypoints.get_vendor_related_data:main",
             "open-pull-request=operatorcert.entrypoints.github_pr:main",
+            "publish=operatorcert.entrypoints.publish:main",
         ],
     },
 )

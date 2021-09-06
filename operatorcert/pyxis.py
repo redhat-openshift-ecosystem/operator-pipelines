@@ -150,3 +150,59 @@ def get_project(base_url: str, project_id: str) -> Dict[str, Any]:
         )
         raise
     return resp.json()
+
+
+def get_vendor_by_org_id(base_url: str, org_id: str) -> Dict[str, Any]:
+    """
+    Get vendor using organization ID
+
+    Args:
+        base_url (str): Pyxis based API url
+        org_id (str): Organization ID
+
+    Returns:
+        Dict[str, Any]: Vendor Pyxis response
+    """
+    session = _get_session()
+
+    project_url = urljoin(base_url, f"v1/vendors/org-id/{org_id}")
+    LOGGER.debug(f"Getting project details by org_id: {org_id}")
+    resp = session.get(project_url)
+
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError:
+        LOGGER.exception(
+            f"Unable to get vendor details {project_url} - {resp.status_code} - {resp.text}"
+        )
+        raise
+    return resp.json()
+
+
+def get_repository_by_isv_pid(base_url: str, isv_pid: str) -> Dict[str, Any]:
+    """
+    Get container repository using ISV pid
+
+    Args:
+        base_url (str): Pyxis based API url
+        isv_pid (str): Project's isv_pid
+
+    Returns:
+        Dict[str, Any]: Repository Pyxis response
+    """
+    session = _get_session()
+
+    repo_url = urljoin(base_url, "v1/repositories")
+    LOGGER.debug(f"Getting repository details by isv_pid: {isv_pid}")
+    query_filter = f"isv_pid=={isv_pid}"
+    resp = session.get(repo_url, params={"filter": query_filter})
+
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError:
+        LOGGER.exception(
+            f"Unable to get vendor details {repo_url} - {resp.status_code} - {resp.text}"
+        )
+        raise
+    json_resp = resp.json()
+    return None if len(json_resp.get("data")) == 0 else json_resp["data"][0]

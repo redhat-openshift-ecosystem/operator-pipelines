@@ -3,3 +3,4 @@ pyyaml==5.4.1
 requests==2.26.0
 yq==2.12.2
 giturlparse==0.10.0
+html2text==2020.1.16

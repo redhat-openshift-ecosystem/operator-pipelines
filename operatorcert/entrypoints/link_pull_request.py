@@ -1,9 +1,6 @@
 import argparse
-import base64
-import json
 import logging
-import os
-from typing import Any, Dict, List
+from typing import Any, Dict
 from urllib.parse import urljoin
 
 import magic
