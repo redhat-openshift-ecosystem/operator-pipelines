@@ -7,20 +7,15 @@ spec:
   params:
     - name: cert_project_id
       description: ID of the bundle Certification Project (as in bundle ci.yaml)
-    - name: registry
-      description: registry to pull the image from.
     - name: vendor_label
       description: name of the vendor
     - name: repository_name
-    - name: isv_pid
     - name: dist_method
       description: distribution method- either marketplace or certified
-    - name: image_namespace
-      description: The namespace/organization where images from Hosted pipeline are stored.
-    - name: package_name
-      description: operator bundle name
-    - name: bundle_version
-      description: operator bundle version
+    - name: image
+      description: reference to the existing index image
+    - name: is_latest
+      description: If explicitly set to "true", resulting image will be tagged as "latest"
   results:
     - name: container_digest
   steps:
@@ -35,8 +30,10 @@ spec:
           value: $(params.bundle_version)
         - name: DIST_METHOD
           value: $(params.dist_method)
-        - name: REGISTRY
-          value: $(params.registry)
+        - name: IMAGE
+          value: $(params.image)
+        - name: IS_LATEST
+          value: $(params.is_latest)
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -46,7 +43,7 @@ spec:
         IMAGESTREAM_NAME=$(echo ${IMAGESTREAM_NAME} | xargs)
         TAG=$(echo ${TAG} | xargs)
         DIST_METHOD=$(echo ${DIST_METHOD} | xargs)
-        REGISTRY=$(echo ${REGISTRY} | xargs)
+        IS_LATEST=$(echo ${IS_LATEST} | xargs)
 
         ROLE_NAME=$(echo ${PROJECT_NAME}-pull)
 
@@ -57,7 +54,7 @@ spec:
 
         ## Get the Imagestream OR if it doesn't exists- (create it AND annotate it)
         oc get imagestream $IMAGESTREAM_NAME || \
-        $(oc create imagestream $IMAGESTREAM_NAME && \
+        (oc create imagestream $IMAGESTREAM_NAME && \
         oc annotate imagestream $IMAGESTREAM_NAME pid=$(params.cert_project_id))
 
         ## Get the Role OR if it doesn't exists- create it
@@ -94,13 +91,15 @@ spec:
         fi
 
         ## Create ImagestreamTag
-        if ! error=$(oc create imagestreamtag $IMAGESTREAM_NAME:$TAG --from-image $REGISTRY:$TAG) && ! grep -v AlreadyExists <<<"$error"; then
+        if ! error=$(oc create imagestreamtag $IMAGESTREAM_NAME:$TAG --from-image $IMAGE) && ! grep -v AlreadyExists <<<"$error"; then
           echo "Unexpected error when creating resources: $error"
         fi
 
-        # If latest (test this):
-        oc tag $IMAGESTREAM_NAME:$TAG $IMAGESTREAM_NAME:latest
+        # optionally mark this tag as latest
+        if [ "$IS_LATEST" = "true" ]; then
+          oc tag $IMAGESTREAM_NAME:$TAG $IMAGESTREAM_NAME:latest
+        fi
 
-        ## Get the container digest?
-        # ??
+        ## Get the container digest
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o json | jq '.image.dockerImageMetadata.Id' | tr -d '"' | tee $(results.container_digest.path)
 

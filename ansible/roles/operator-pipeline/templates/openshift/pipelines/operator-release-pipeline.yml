@@ -13,7 +13,7 @@ spec:
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
     - name: is_latest
-      description: boolean- should this operator version be tagged as latest?
+      description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: registry
       description: temporary registry used by Hosted pipeline to pass the image to Release pipeline.
       default: quay.io
@@ -137,21 +137,12 @@ spec:
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: vendor_label
           value: "$(tasks.get-vendor-related-data.results.vendor_label)"
-        - name: repository_name
-          value: "$(tasks.get-cert-project-related-data.results.repo_name)"
-        - name: isv_pid
-          value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: dist_method
           value: "$(tasks.get-cert-project-related-data.results.dist_method)"
-        # params necessary to pull the image
-        - name: registry
-          value: "$(params.registry)"
-        - name: image_namespace
-          value: "$(params.image_namespace)"
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
-        - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: image
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+        - name: is_latest
+          value: "$(params.is_latest)"
 
     # create or update container image
     - name: update-container-image
