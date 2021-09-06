@@ -7,6 +7,8 @@ spec:
   params:
     - name: env
       description: Enviroment. One of [dev, qa, stage, production]
+    - name: access_type
+      description: Pyxis access type. One of [internal, external]
   results:
     - name: pyxis_url
   steps:
@@ -17,24 +19,55 @@ spec:
         set -e
 
         ENV="$(params.env)"
-
-        case $ENV in
-        production)
-          PYXIS_URL="https://catalog.redhat.com/api/containers/"
+        ACCESS_TYPE="$(params.access_type)"
+        
+        case $ACCESS_TYPE in
+        internal)
+          case $ENV in
+          production)
+            PYXIS_URL="https://pyxis.engineering.redhat.com"
+            ;;
+          stage)
+            PYXIS_URL="https://pyxis.stage.engineering.redhat.com"
+            ;;
+          qa)
+            PYXIS_URL="https://pyxis.qa.engineering.redhat.com"
+            ;;
+          dev)
+            PYXIS_URL="https://pyxis.dev.engineering.redhat.com"
+            ;;
+          *)
+            echo "Unknown environment."
+            exit 1
+            ;;
+          esac
           ;;
-        stage)
-          PYXIS_URL="https://pyxis-isv-stage.api.redhat.com"
-          ;;
-        qa)
-          PYXIS_URL="https://pyxis-isv-qa.api.redhat.com"
-          ;;
-        dev)
-          PYXIS_URL="https://pyxis-isv-dev.api.redhat.com"
+        external)
+          case $ENV in
+          production)
+            PYXIS_URL="https://catalog.redhat.com/api/containers/"
+            ;;
+          stage)
+            PYXIS_URL="https://pyxis-isv-stage.api.redhat.com"
+            ;;
+          qa)
+            PYXIS_URL="https://pyxis-isv-qa.api.redhat.com"
+            ;;
+          dev)
+            PYXIS_URL="https://pyxis-isv-dev.api.redhat.com"
+            ;;
+          *)
+            echo "Unknown environment."
+            exit 1
+            ;;
+          esac
           ;;
         *)
-          echo "Unknown environment."
+          echo "Unknown access type."
           exit 1
           ;;
         esac
+
+        
 
         echo -n $PYXIS_URL | tee $(results.pyxis_url.path)

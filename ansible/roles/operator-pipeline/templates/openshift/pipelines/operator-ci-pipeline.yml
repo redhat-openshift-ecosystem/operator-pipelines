@@ -48,6 +48,8 @@ spec:
       params:
         - name: env
           value: $(params.env)
+        - name: access_type
+          value: "external"
 
     - name: checkout
       runAfter:
