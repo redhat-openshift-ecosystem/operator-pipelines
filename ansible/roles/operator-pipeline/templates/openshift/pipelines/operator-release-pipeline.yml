@@ -114,6 +114,8 @@ spec:
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
@@ -130,6 +132,8 @@ spec:
       params:
         - name: org_id
           value: "$(tasks.get-cert-project-related-data.results.org_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
@@ -197,6 +201,19 @@ spec:
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: org_id
+          value: "$(tasks.get-cert-project-related-data.results.org_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+        - name: environment
+          value: "$(params.env)"
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
 
     # call IIB to publish the bundle
     - name: publish-bundle
