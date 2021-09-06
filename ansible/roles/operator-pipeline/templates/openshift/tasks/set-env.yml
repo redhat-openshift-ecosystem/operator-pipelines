@@ -69,5 +69,4 @@ spec:
         esac
 
 
-
         echo -n $PYXIS_URL | tee $(results.pyxis_url.path)
