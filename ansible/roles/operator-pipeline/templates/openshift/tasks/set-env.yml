@@ -20,7 +20,7 @@ spec:
 
         ENV="$(params.env)"
         ACCESS_TYPE="$(params.access_type)"
-        
+
         case $ACCESS_TYPE in
         internal)
           case $ENV in
@@ -68,6 +68,6 @@ spec:
           ;;
         esac
 
-        
+
 
         echo -n $PYXIS_URL | tee $(results.pyxis_url.path)
