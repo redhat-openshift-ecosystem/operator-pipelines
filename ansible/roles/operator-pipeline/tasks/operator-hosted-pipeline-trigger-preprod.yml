@@ -24,8 +24,7 @@
                   - cel:
                       filter: >-
                         (
-                          body.repository.html_url.contains("preprod")
-                          && header.match("X-GitHub-Event", "pull_request")
+                          header.match("X-GitHub-Event", "pull_request")
                           && body.action in ["opened", "reopened", "synchronize"]
                           && body.pull_request.base.ref in ["dev", "qa", "stage"]
                         )
