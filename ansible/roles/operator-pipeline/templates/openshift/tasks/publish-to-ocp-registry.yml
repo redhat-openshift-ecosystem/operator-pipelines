@@ -16,6 +16,8 @@ spec:
       description: reference to the existing index image
     - name: is_latest
       description: If explicitly set to "true", resulting image will be tagged as "latest"
+    - name: bundle_version
+      description: Operator bundle version.
   results:
     - name: container_digest
   steps:

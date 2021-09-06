@@ -143,6 +143,8 @@ spec:
           value: "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: is_latest
           value: "$(params.is_latest)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
 
     # create or update container image
     - name: update-container-image

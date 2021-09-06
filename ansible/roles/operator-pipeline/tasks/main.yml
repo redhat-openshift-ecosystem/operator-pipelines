@@ -70,7 +70,7 @@
               env: "{{ env }}"
           data:
             .dockerconfigjson: "{{ lookup('file', operator_pipeline_quay_token, rstrip=False) | b64encode }}"
-    - name: Link secret with pipeline service account
+    - name: Link secret with pipeline service account (for imagestream operations)
       ansible.builtin.shell: |
         oc secret link pipeline registry-dockerconfig-secret
 
