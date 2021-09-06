@@ -33,40 +33,74 @@ spec:
           value: $(params.repository_name)
         - name: TAG
           value: $(params.bundle_version)
+        - name: DIST_METHOD
+          value: $(params.dist_method)
+        - name: REGISTRY
+          value: $(params.registry)
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        ## create new openshift project and grant permissions for SA or use existing one
+        # trim the whitespaces from the params
+        PROJECT_NAME=$(echo ${PROJECT_NAME} | xargs)
+        IMAGESTREAM_NAME=$(echo ${IMAGESTREAM_NAME} | xargs)
+        TAG=$(echo ${TAG} | xargs)
+        DIST_METHOD=$(echo ${DIST_METHOD} | xargs)
+        REGISTRY=$(echo ${REGISTRY} | xargs)
+
+        ROLE_NAME=$(echo ${PROJECT_NAME}-pull)
+
+        ## (create new openshift project AND grant permissions for SA) OR if it already exists- use existing project
         oc new-project $PROJECT_NAME && \
         oc policy add-role-to-user edit -z pipeline -n $PROJECT_NAME || \
         oc project $PROJECT_NAME
 
-        ## If Imagestream doesn't exists yet (can't get it), create it and annotate it
+        ## Get the Imagestream OR if it doesn't exists- (create it AND annotate it)
         oc get imagestream $IMAGESTREAM_NAME || \
         $(oc create imagestream $IMAGESTREAM_NAME && \
         oc annotate imagestream $IMAGESTREAM_NAME pid=$(params.cert_project_id))
 
-        ## If role doesn't exists yet (can't get it), create it.
+        ## Get the Role OR if it doesn't exists- create it
         # It is needed, so that registry proxy have access to the imagestream.
-
-        ROLE_NAME=$(echo)
-
         oc get role $ROLE_NAME || \
         oc create role $ROLE_NAME \
             --verb=get \
             --resource=imagestreams,imagestreams/layers \
             --resource-name=$IMAGESTREAM_NAME
 
-        ## Create rolebinding associated with the role
-        # ??
+        ## (Re)create rolebinding associated with the role
+        if [ "$DIST_METHOD" = "rhcc" ]; then
+
+          # (Get rolebinding AND if it exists delete it)
+          oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
+
+          # create rolebinding
+          oc create rolebinding $ROLE_NAME --role=$ROLE_NAME \
+            --serviceaccount connect:proxysa \
+            --serviceaccount connect:rhmp-sa \
+            --serviceaccount connect:bpmsa
+        elif [ "$DIST_METHOD" = "marketplace_only" ]; then
+
+          # (Get rolebinding AND if it exists delete it)
+          oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
+
+          # Create rolebinding
+          oc create rolebinding $ROLE_NAME --role=$ROLE_NAME \
+            --serviceaccount connect:rhmp-sa \
+            --serviceaccount connect:bpmsa
+        else:
+          echo "Error: wrong distribution method ${DIST_METHOD}"
+          exit 1
+        fi
 
         ## Create ImagestreamTag
-        oc create imagestreamtag $IMAGESTREAM_NAME:$TAG --from-image $(params.registry):$TAG
+        if ! error=$(oc create imagestreamtag $IMAGESTREAM_NAME:$TAG --from-image $REGISTRY:$TAG) && ! grep -v AlreadyExists <<<"$error"; then
+          echo "Unexpected error when creating resources: $error"
+        fi
 
         # If latest (test this):
-        # oc tag <namespace><imagestream name>:<tag> <namespace><imagestream name>:latest
+        oc tag $IMAGESTREAM_NAME:$TAG $IMAGESTREAM_NAME:latest
 
         ## Get the container digest?
-        ??
+        # ??
 
