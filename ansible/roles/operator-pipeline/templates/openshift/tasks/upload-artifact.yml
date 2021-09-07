@@ -59,7 +59,6 @@ spec:
         fi
 
         echo "Uploading test log"
-        ls
 
         upload-artifacts \
           --cert-project-id "$(params.cert_project_id)" \
