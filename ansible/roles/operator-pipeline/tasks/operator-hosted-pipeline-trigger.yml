@@ -22,7 +22,7 @@
                   - github:
                       secretRef:
                         secretName: github-webhook-secret
-                        secretKey: "{{ webhook_secret_key }}"
+                        secretKey: webhook-secret
                       eventTypes:
                         - pull_request
                   - cel:
@@ -68,8 +68,8 @@
                 value: $(body.pull_request.head.user.login)
               - name: pr_head_label
                 value: $(body.pull_request.head.label)
-              - name: pyxis_url
-                value: https://pyxis.engineering.redhat.com/
+              - name: env
+                value: "{{ env }}"
               - name: preflight_min_version
                 value: "{{ preflight_min_version }}"
               - name: ci_min_version
@@ -98,7 +98,7 @@
               - name: git_username
               - name: pr_head_label
               - name: bundle_path
-              - name: pyxis_url
+              - name: env
               - name: preflight_min_version
               - name: ci_min_version
             resourcetemplates:
@@ -126,8 +126,8 @@
                       value: $(tt.params.pr_head_label)
                     - name: bundle_path
                       value: $(tt.params.bundle_path)
-                    - name: pyxis_url
-                      value: $(tt.params.pyxis_url)
+                    - name: env
+                      value: $(tt.params.env)
                     - name: preflight_min_version
                       value: $(tt.params.preflight_min_version)
                     - name: ci_min_version

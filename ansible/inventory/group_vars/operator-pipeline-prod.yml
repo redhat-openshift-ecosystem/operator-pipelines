@@ -1,4 +1,4 @@
 env: prod
 ocp_host: https://api.pipelines-prod.ijdb.p1.openshiftapps.com:6443
 branch: main
-webhook_secret_key: webhook-secret-prod
+operator_pipeline_webhook_secret: ../../vaults/prod/github-webhook-secret-prod.txt
