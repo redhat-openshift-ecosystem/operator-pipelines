@@ -97,12 +97,12 @@ spec:
           echo "Unexpected error when creating resources: $error"
         fi
 
-        ## Test, whether ImagestreamTag was created properly- if not,
-        # log the error and exit
+        ## Test, whether ImagestreamTag was created properly- OR, if not,
+        # (log the error AND exit)
         oc get imagestreamtag $IMAGESTREAM_NAME:$TAG \
-        || echo "Error while creating ImageStreamTag. Are you sure image $IMAGE is available \
+        || (echo "Error while creating ImageStreamTag. Are you sure image $IMAGE is available \
         and secret registry-dockerconfig-secret grants access to it?" \
-        && exit 1
+        && exit 1)
 
         # TODO: log istag error- sadly, this image doesn't contain jq.
         # oc get is $IMAGESTREAM_NAME -o json | jq '.status.tags[] | select(.tag | contains("$TAG")) | .conditions[].message'
@@ -114,4 +114,3 @@ spec:
 
         ## Get the container digest
         oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o json | jq '.image.dockerImageMetadata.Id' | tr -d '"' | tee $(results.container_digest.path)
-
