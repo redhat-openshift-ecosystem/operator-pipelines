@@ -205,7 +205,7 @@ def get_files_added_in_pr(
             logging.error(
                 f"Change not permitted: file: {modified_file['filename']}, status: {modified_file['status']}"
             )
-        raise RuntimeError("There are changes done to previously merged Bundles")
+        raise RuntimeError("There are changes done to previously merged files")
 
     return added_files_names
 
@@ -246,21 +246,14 @@ def parse_pr_title(pr_title: str) -> (str, str):
     Test, if PR title complies to regex.
     If yes, extract the Bundle name and version.
     """
-    # Semver regex from semver.org:
-    # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-    semver_regex = (
-        r"(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|["
-        r"1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+("
-        r"?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"
-    )
-
-    # Verify if PR title follows convention- it should contain the operator name.
-    regex = rf"^operator ([a-zA-Z0-9-]+) \(({semver_regex})\)$"
+    # Verify if PR title follows convention- it should contain the bundle name and version.
+    # any non- empty string without whitespaces makes a valid version.
+    regex = rf"^operator ([a-zA-Z0-9-]+) \(([^\s]+)\)$"
     regex_pattern = re.compile(regex)
 
     if not regex_pattern.match(pr_title):
         raise ValueError(
-            f"Pull request title {pr_title} does not follow the regex 'operator <operator_name> (<semver>)"
+            f"Pull request title {pr_title} does not follow the regex 'operator <operator_name> (<version>)"
         )
 
     matching = regex_pattern.search(pr_title)
@@ -280,8 +273,6 @@ def verify_pr_uniqueness(
 
     base_url = "https://api.github.com/repos/"
 
-    # complex regex of semver is replaced with regex valid for any string without whistespaces
-    # - no need to validate semver anymore
     regex = r"^operator ([a-zA-Z0-9-]+) [^\s]+$"
     regex_pattern = re.compile(regex)
 

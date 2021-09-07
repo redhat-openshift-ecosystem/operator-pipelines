@@ -21,7 +21,7 @@ def setup_argparser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--operator-name", help="Unique name of the operator package")
     parser.add_argument(
-        "--bundle-version", help="Operator Bundle version in the semver format"
+        "--bundle-version", help="Operator Bundle version"
     )
     parser.add_argument(
         # Github webhook payload contains it in path pull_request.head.label
