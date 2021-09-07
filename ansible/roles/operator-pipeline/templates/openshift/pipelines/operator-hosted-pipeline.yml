@@ -12,7 +12,9 @@ spec:
     - name: git_repo_url
     - name: git_username
     - name: pr_head_label
-    - name: pyxis_url
+    - name: env
+      description: Which environment to run in. Can be one of [dev, qa, stage, production]
+      default: "production"
     - name: bundle_path
     - name: preflight_min_version
     - name: ci_min_version
@@ -30,8 +32,21 @@ spec:
     - name: github-bot-token
     - name: kubeconfig
   tasks:
+    # Set environment
+    - name: set-env
+      taskRef:
+        name: set-env
+        kind: Task
+      params:
+        - name: env
+          value: $(params.env)
+        - name: access_type
+          value: "internal"
+
     # Git clone
     - name: checkout
+      runAfter:
+        - set-env
       taskRef:
         name: git-clone
         kind: Task
@@ -61,21 +76,31 @@ spec:
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: pyxis_url
-          value: $(params.pyxis_url)
+          value: $(tasks.set-env.results.pyxis_url)
       workspaces:
         - name: source
           workspace: repository
           subPath: src
 
+    # Get the bundle path
+    - name: get-bundle-path
+      runAfter:
+        - submission-validation
+      taskRef:
+        name: get-bundle-path
+      params:
+        - name: git_pr_title
+          value: $(params.git_pr_title)
+
     # Get cert project id
     - name: certification-project-check
       runAfter:
-        - checkout
+        - get-bundle-path
       taskRef:
         name: certification-project-check
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -114,7 +139,7 @@ spec:
         - name: operator_name
           value: "$(tasks.submission-validation.results.operator_name)"
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
@@ -128,9 +153,9 @@ spec:
         name: operator-validation
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:
         - name: source
           workspace: repository
@@ -143,7 +168,7 @@ spec:
         name: get-supported-versions
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -156,7 +181,7 @@ spec:
         name: yaml-lint
       params:
         - name: args
-          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(params.bundle_path)"]
+          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(tasks.get-bundle-path.results.bundle_path)"]
       workspaces:
         - name: shared-workspace
           workspace: repository
@@ -169,7 +194,7 @@ spec:
         name: digest-pinning
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -191,7 +216,7 @@ spec:
         name: content-hash
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -235,7 +260,7 @@ spec:
         name: dockerfile-creation
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -254,7 +279,7 @@ spec:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -291,7 +316,7 @@ spec:
         - name: IMAGE
           value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
         # - name: DOCKERFILE
         #   value: "Dockerfile.index"
       workspaces:
@@ -315,7 +340,7 @@ spec:
         name: get-ci-results-attempt
       params:
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
@@ -356,6 +381,7 @@ spec:
           workspace: repository
           subPath: src
 
+    # TODO: passing kubeconfig here is just a temporary workaround to make the task pass
     - name: preflight
       runAfter:
         - ocp-environment-preparation
@@ -398,7 +424,7 @@ spec:
         - name: package_name
           value: "$(tasks.operator-validation.results.package_name)"
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
@@ -438,7 +464,7 @@ spec:
         - name: test_result_id
           value: "$(tasks.get-ci-results-attempt.results.test_result_id)"
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
@@ -484,7 +510,7 @@ spec:
         - name: test_result_id
           value: "$(tasks.get-ci-results.results.test_result_id)"
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
@@ -507,7 +533,7 @@ spec:
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: github-bot-token
           workspace: github-bot-token
@@ -536,7 +562,7 @@ spec:
         - name: package_name
           value: "$(tasks.operator-validation.results.package_name)"
         - name: pyxis_url
-          value: "$(params.pyxis_url)"
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
           value: "$(context.pipelineRun.name)"
         - name: pyxis_cert_path

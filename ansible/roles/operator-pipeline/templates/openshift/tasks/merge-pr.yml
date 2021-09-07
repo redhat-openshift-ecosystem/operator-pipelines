@@ -27,7 +27,9 @@ spec:
       image: registry.access.redhat.com/ubi8-minimal
       script: |
         #! /usr/bin/env bash
-        set -xe
+
+        # DO NOT USE `set -x`, to avoid revealing the github bot token in logs!
+        set -e
 
         BOOL_MERGE=$(cat $(results.bool_merge.path))
 

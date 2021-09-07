@@ -36,8 +36,9 @@ tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
+  --param env=production \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=kubeconfig,secret=my-kubeconfig \
+  --workspace name=kubeconfig,secret=kubeconfig \
   --showlog
 ```
 If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:
@@ -47,11 +48,12 @@ tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
+  --param env=production \
   --param registry=quay.io \
   --param image_namespace=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=kubeconfig,secret=my-kubeconfig \
-  --workspace name=registry-credentials,secret=my-registry-secret \
+  --workspace name=kubeconfig,secret=kubeconfig \
+  --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
 ```
@@ -62,7 +64,7 @@ To enable digest pinning, pass the following arguments:
   --param pin_digests=true \
   --param git_username=<github_user_name> \
   --param git_email=<github_email> \
-  --workspace name=ssh-dir,secret=my-ssh-credentials
+  --workspace name=ssh-dir,secret=github-ssh-credentials
 ```
 
 ## Operator Hosted pipeline
@@ -88,22 +90,23 @@ The hosted pipeline can be triggered using the tkn CLI like so:
 tkn pipeline start operator-hosted-pipeline \
   --param git_pr_branch=test-PR-ok \
   --param git_pr_title="operator kogito-operator (1.6.1-ok)" \
-  --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/2 \
+  --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
   --param git_fork_url=git@github.com:MarcinGinszt/operator-pipelines-test.git \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_username=test_user \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
   --param bundle_path=operators/kogito-operator/1.6.1-ok \
-  --param pyxis_url=https://pyxis.engineering.redhat.com/ \
+  --param env=production \
   --param preflight_min_version=1.0.0 \
   --param ci_min_version=1.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=ssh-dir,secret=my-ssh-credentials \
-  --workspace name=registry-credentials,secret=my-registry-secret \
+  --workspace name=ssh-dir,secret=github-ssh-credentials \
+  --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=kubeconfig,secret=my-kubeconfig \
   --workspace name=github-bot-token,secret=github-bot-token \
+  --workspace name=kubeconfig,secret=my-kubeconfig \
   --showlog
   # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
 ```
@@ -136,6 +139,6 @@ tkn pipeline start operator-release-pipeline \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param is_latest=true \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=ssh-dir,secret=my-ssh-credentials \
+  --workspace name=ssh-dir,secret=github-ssh-credentials \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --showlog
