@@ -105,8 +105,7 @@
           suffix: "{{ suffix }}"
           env: "{{ env }}"
       data:
-        webhook-secret-preprod: "{{ lookup('file', operator_pipeline_webhook_secret_preprod, rstrip=False) | b64encode }}"
-        webhook-secret-prod: "{{ lookup('file', operator_pipeline_webhook_secret_prod, rstrip=False) | b64encode }}"
+        webhook-secret: "{{ lookup('file', operator_pipeline_webhook_secret, rstrip=False) | b64encode }}"
 
 
 - name: Deploy pipeline tasks
