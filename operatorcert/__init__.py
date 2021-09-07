@@ -247,7 +247,7 @@ def parse_pr_title(pr_title: str) -> (str, str):
     If yes, extract the Bundle name and version.
     """
     # Verify if PR title follows convention- it should contain the bundle name and version.
-    # any non- empty string without whitespaces makes a valid version.
+    # Any non- empty string without whitespaces makes a valid version.
     regex = rf"^operator ([a-zA-Z0-9-]+) \(([^\s]+)\)$"
     regex_pattern = re.compile(regex)
 

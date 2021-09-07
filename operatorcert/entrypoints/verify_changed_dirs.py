@@ -20,9 +20,7 @@ def setup_argparser() -> argparse.ArgumentParser:
         description="Verify, if only expected directories are changed by submission"
     )
     parser.add_argument("--operator-name", help="Unique name of the operator package")
-    parser.add_argument(
-        "--bundle-version", help="Operator Bundle version"
-    )
+    parser.add_argument("--bundle-version", help="Operator Bundle version")
     parser.add_argument(
         # Github webhook payload contains it in path pull_request.head.label
         "--pr-head-label",
