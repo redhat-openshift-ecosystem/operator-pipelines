@@ -88,7 +88,7 @@
       data:
         github_bot_token.txt: "{{ lookup('file', operator_pipeline_github_bot_token, rstrip=False) | b64encode }}"
 
-- name: Create Operator pipeline github webhook secret preprod
+- name: Create Operator pipeline github webhook secret
   no_log: yes
   k8s:
     state: present
@@ -128,5 +128,4 @@
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
     - ../templates/openshift/pipelines/operator-release-pipeline.yml
 
-- include: tasks/operator-hosted-pipeline-trigger-preprod.yml
-- include: tasks/operator-hosted-pipeline-trigger-prod.yml
+- include: tasks/operator-hosted-pipeline-trigger.yml
