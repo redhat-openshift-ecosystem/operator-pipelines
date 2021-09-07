@@ -97,6 +97,16 @@ spec:
           echo "Unexpected error when creating resources: $error"
         fi
 
+        ## Test, whether ImagestreamTag was created properly- if not,
+        # log the error and exit
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG \
+        || echo "Error while creating ImageStreamTag. Are you sure image $IMAGE is available \
+        and secret registry-dockerconfig-secret grants access to it?" \
+        && exit 1
+
+        # TODO: log istag error- sadly, this image doesn't contain jq.
+        # oc get is $IMAGESTREAM_NAME -o json | jq '.status.tags[] | select(.tag | contains("$TAG")) | .conditions[].message'
+
         # optionally mark this tag as latest
         if [ "$IS_LATEST" = "true" ]; then
           oc tag $IMAGESTREAM_NAME:$TAG $IMAGESTREAM_NAME:latest

@@ -137,6 +137,8 @@ spec:
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: vendor_label
           value: "$(tasks.get-vendor-related-data.results.vendor_label)"
+        - name: repository_name
+          value: "$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: dist_method
           value: "$(tasks.get-cert-project-related-data.results.dist_method)"
         - name: image
