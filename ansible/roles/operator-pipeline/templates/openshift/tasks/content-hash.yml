@@ -27,4 +27,4 @@ spec:
 
         cat hashes.txt
 
-        md5sum hashes.txt | awk '{ print $1 }' | tee $(results.md5sum.path)
+        md5sum hashes.txt | awk '{ print $1 }' | tr -d $'\n' | tee $(results.md5sum.path)
