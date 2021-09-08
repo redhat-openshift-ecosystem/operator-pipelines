@@ -63,7 +63,7 @@
           kind: Secret
           type: kubernetes.io/dockerconfigjson
           metadata:
-            name: operator-pipeline-registry-token-{{ suffix }}
+            name: registry-dockerconfig-secret
             labels:
               app: operator-pipeline
               suffix: "{{ suffix }}"
