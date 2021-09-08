@@ -22,7 +22,7 @@ spec:
     - name: container_digest
   steps:
     - name: imagestream-manipulations
-      image: quay.io/openshift/origin-cli:4.7
+      image: registry.redhat.io/openshift4/ose-cli:v4.8
       script: |
         #! /usr/bin/env bash
         set -xe
