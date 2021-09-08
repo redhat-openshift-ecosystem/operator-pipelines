@@ -24,20 +24,45 @@ spec:
       default: "default"
     - name: namespace
       description: The namespace for the preflight config
-      default: "default"
+      default: "$(context.taskRun.namespace)"
+    - name: log_level
+      description: Preflight logging level
+      default: info
+
   results:
     - name: log_output_file
     - name: result_output_file
     - name: artifacts_output_dir
   workspaces:
     - name: output
-      description: A workspace to keep track of the task while PipelineRun.
+      description: Storage for preflight results, logs and artifacts.
     - name: kubeconfig
       description: A kubernetes config for the cluster used in preflight testing
     - name: credentials
       description: Docker config for retrieving the bundle image
       optional: true
   steps:
+    - name: prepare-environment
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      workingDir: $(workspaces.output.path)
+      env:
+        - name: KUBECONFIG
+          value: $(workspaces.kubeconfig.path)/kubeconfig
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
+          # Combine the default credentials with those found in the workspace
+          # to maintain access to the internal registry.
+
+          export DOCKER_CONFIG=/tmp/.docker
+          mkdir $DOCKER_CONFIG
+          jq -s '.[0] * .[1]' \
+            $(workspaces.credentials.path)/.dockerconfigjson \
+            $HOME/.docker/config.json \
+            > $DOCKER_CONFIG/config.json
+        fi
     - name: check-operator
       image: $(params.base_image)
       workingDir: $(workspaces.output.path)
@@ -54,6 +79,8 @@ spec:
           value: artifacts
         - name: KUBECONFIG
           value: $(workspaces.kubeconfig.path)/kubeconfig
+        - name: PFLT_LOGLEVEL
+          value: $(params.log_level)
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -81,6 +108,6 @@ spec:
 
         preflight check operator $(params.bundle_image)
 
-        echo -n preflight.log | tee $(results.log_output_file.path)
+        echo -n $PFLT_LOGFILE | tee $(results.log_output_file.path)
         echo -n results.json | tee $(results.result_output_file.path)
-        echo -n artifacts | tee $(results.artifacts_output_dir.path)
+        echo -n $PFLT_ARTIFACTS | tee $(results.artifacts_output_dir.path)
