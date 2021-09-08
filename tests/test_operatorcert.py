@@ -219,7 +219,7 @@ def test_verify_changed_files_location(wrong_change: str):
         ("operator-test123 (1.0.1)", False, "", ""),
         ("operator-test123 (1.0.1)", False, "", ""),
         ("operator oper@tor-test123 (1.0.1)", False, "", ""),
-        ("operator operator-test123 (1)", False, "", ""),
+        ("operator operator-test123 (1)", True, "operator-test123", "1"),
     ],
 )
 def test_parse_pr_title(pr_title: str, is_valid: bool, name: str, version: str):
