@@ -1,5 +1,7 @@
 ---
 - name: Create trigger enabling running Hosted pipeline via GitHub webhook
+  tags:
+    - webhook
   block:
     - name: Create Hosted pipeline event listener
       k8s:
@@ -17,7 +19,7 @@
           spec:
             serviceAccountName: pipeline
             triggers:
-              - name: github-listener
+              - name: github-pull-request-listener
                 interceptors:
                   - github:
                       secretRef:
@@ -30,6 +32,25 @@
                         (
                           header.match("X-GitHub-Event", "pull_request")
                           && body.action in ["opened", "reopened", "synchronize"]
+                          && body.pull_request.base.ref == "{{ branch }}"
+                        )
+                bindings:
+                  - ref: operator-hosted-pipeline-trigger-binding
+                template:
+                  ref: operator-hosted-pipeline-trigger-template
+              - name: github-label-listener
+                interceptors:
+                  - github:
+                      secretRef:
+                        secretName: github-webhook-secret
+                        secretKey: webhook-secret
+                      eventTypes:
+                        - pull_request
+                  - cel:
+                      filter: >-
+                        (
+                          body.action == "labeled"
+                          && body.label.name == "pipeline/trigger"
                           && body.pull_request.base.ref == "{{ branch }}"
                         )
                 bindings:
