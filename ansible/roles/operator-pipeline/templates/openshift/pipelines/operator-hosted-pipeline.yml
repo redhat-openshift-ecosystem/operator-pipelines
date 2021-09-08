@@ -27,6 +27,7 @@ spec:
     - name: repository
     - name: results
     - name: ssh-dir
+      optional: true
     - name: registry-credentials
     - name: pyxis-ssl-credentials
     - name: github-bot-token
