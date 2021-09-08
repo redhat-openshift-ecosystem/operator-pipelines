@@ -23,29 +23,18 @@ spec:
   steps:
     - name: imagestream-manipulations
       image: quay.io/openshift/origin-cli:4.7
-      env:
-        - name: PROJECT_NAME
-          value: $(params.vendor_label)
-        - name: IMAGESTREAM_NAME
-          value: $(params.repository_name)
-        - name: TAG
-          value: $(params.bundle_version)
-        - name: DIST_METHOD
-          value: $(params.dist_method)
-        - name: IMAGE
-          value: $(params.image)
-        - name: IS_LATEST
-          value: $(params.is_latest)
       script: |
         #! /usr/bin/env bash
         set -xe
 
         # trim the whitespaces from the params
-        PROJECT_NAME=$(echo ${PROJECT_NAME} | xargs)
-        IMAGESTREAM_NAME=$(echo ${IMAGESTREAM_NAME} | xargs)
-        TAG=$(echo ${TAG} | xargs)
-        DIST_METHOD=$(echo ${DIST_METHOD} | xargs)
-        IS_LATEST=$(echo ${IS_LATEST} | xargs)
+        PROJECT_NAME=$(echo "$(params.vendor_label)" | xargs)
+        IMAGESTREAM_NAME=$(echo "$(params.repository_name)" | xargs)
+        TAG=$(echo "$(params.bundle_version)" | xargs)
+        DIST_METHOD=$(echo "$(params.dist_method)" | xargs)
+        IS_LATEST=$(echo "$(params.is_latest)" | xargs)
+
+        IMAGE=$(params.image)
 
         ROLE_NAME=$(echo ${PROJECT_NAME}-pull)
 
