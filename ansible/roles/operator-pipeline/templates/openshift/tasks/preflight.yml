@@ -85,18 +85,6 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
-          # Combine the default credentials
-          # with those found in the workspace to maintain access to the internal
-          # registry.
-          export DOCKER_CONFIG=/tmp/.docker
-          mkdir $DOCKER_CONFIG
-          jq -s '.[0] * .[1]' \
-            $(workspaces.credentials.path)/.dockerconfigjson \
-            $HOME/.docker/config.json \
-            > $DOCKER_CONFIG/config.json
-        fi
-
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           echo "Preflight results already exists- skipping"
