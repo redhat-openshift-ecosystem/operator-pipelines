@@ -201,6 +201,8 @@
           spec:
             port:
               targetPort: http-listener
+            tls:
+              termination: edge
             to:
               kind: Service
               # el- prefix means, that the service was created by EventListener.
