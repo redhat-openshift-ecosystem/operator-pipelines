@@ -43,7 +43,7 @@ spec:
           --cert-project-id $(params.cert_project_id)
 
         # `grep .` ensures, that pipe fail if jq returns no results
-        cat cert_project | jq '.container.isv_pid' | grep . | tee $(results.isv_pid.path)
-        cat cert_project | jq '.container.repository_name' | grep . | tee $(results.repo_name.path)
-        cat cert_project | jq '.container.distribution_method' | grep . | tee $(results.dist_method.path)
-        cat cert_project | jq '.org_id' | grep . | tee $(results.org_id.path)
+        cat cert_project | jq '.container.isv_pid' | tr -d '"' | grep . | tee $(results.isv_pid.path)
+        cat cert_project | jq '.container.repository_name' | tr -d '"' | grep . | tee $(results.repo_name.path)
+        cat cert_project | jq '.container.distribution_method' | tr -d '"' |  grep . | tee $(results.dist_method.path)
+        cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tee $(results.org_id.path)

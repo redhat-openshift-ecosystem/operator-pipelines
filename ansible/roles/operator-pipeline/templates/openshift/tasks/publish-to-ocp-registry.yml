@@ -1,0 +1,105 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: publish-to-ocp-registry
+spec:
+  params:
+    - name: cert_project_id
+      description: ID of the bundle Certification Project (as in bundle ci.yaml)
+    - name: vendor_label
+      description: name of the vendor
+    - name: repository_name
+    - name: dist_method
+      description: distribution method- either marketplace or certified
+    - name: image
+      description: reference to the existing index image
+    - name: is_latest
+      description: If explicitly set to "true", resulting image will be tagged as "latest"
+    - name: bundle_version
+      description: Operator bundle version.
+  results:
+    - name: container_digest
+  steps:
+    - name: imagestream-manipulations
+      image: registry.redhat.io/openshift4/ose-cli:v4.8
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        # trim the whitespaces from the params
+        PROJECT_NAME=$(echo "$(params.vendor_label)" | xargs)
+        IMAGESTREAM_NAME=$(echo "$(params.repository_name)" | xargs)
+        TAG=$(echo "$(params.bundle_version)" | xargs)
+        DIST_METHOD=$(echo "$(params.dist_method)" | xargs)
+        IS_LATEST=$(echo "$(params.is_latest)" | xargs)
+
+        IMAGE=$(params.image)
+
+        ROLE_NAME=$(echo ${PROJECT_NAME}-pull)
+
+        ## (create new openshift project AND grant permissions for SA) OR if it already exists- use existing project
+        oc new-project $PROJECT_NAME && \
+        oc policy add-role-to-user edit -z pipeline -n $PROJECT_NAME || \
+        oc project $PROJECT_NAME
+
+        ## Get the Imagestream OR if it doesn't exists- (create it AND annotate it)
+        oc get imagestream $IMAGESTREAM_NAME || \
+        (oc create imagestream $IMAGESTREAM_NAME && \
+        oc annotate imagestream $IMAGESTREAM_NAME pid=$(params.cert_project_id))
+
+        ## Get the Role OR if it doesn't exists- create it
+        # It is needed, so that registry proxy have access to the imagestream.
+        oc get role $ROLE_NAME || \
+        oc create role $ROLE_NAME \
+            --verb=get \
+            --resource=imagestreams,imagestreams/layers \
+            --resource-name=$IMAGESTREAM_NAME
+
+        ## (Re)create rolebinding associated with the role
+        if [ "$DIST_METHOD" = "rhcc" ]; then
+
+          # (Get rolebinding AND if it exists delete it)
+          oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
+
+          # create rolebinding
+          oc create rolebinding $ROLE_NAME --role=$ROLE_NAME \
+            --serviceaccount connect:proxysa \
+            --serviceaccount connect:rhmp-sa \
+            --serviceaccount connect:bpmsa
+        elif [ "$DIST_METHOD" = "marketplace_only" ]; then
+
+          # (Get rolebinding AND if it exists delete it)
+          oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
+
+          # Create rolebinding
+          oc create rolebinding $ROLE_NAME --role=$ROLE_NAME \
+            --serviceaccount connect:rhmp-sa \
+            --serviceaccount connect:bpmsa
+        else:
+          echo "Error: wrong distribution method ${DIST_METHOD}"
+          exit 1
+        fi
+
+        ## Create ImagestreamTag
+        if ! error=$(oc create imagestreamtag $IMAGESTREAM_NAME:$TAG --from-image $IMAGE) && ! grep -v AlreadyExists <<<"$error"; then
+          echo "Unexpected error when creating resources: $error"
+        fi
+
+        ## Test, whether ImagestreamTag was created properly- OR, if not,
+        # (log the error AND exit)
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG \
+        || (echo "Error while creating ImageStreamTag. Are you sure image $IMAGE is available \
+        and secret registry-dockerconfig-secret grants access to it?" \
+        && exit 1)
+
+        # TODO: log istag error- sadly, this image doesn't contain jq.
+        # oc get is $IMAGESTREAM_NAME -o json | jq '.status.tags[] | select(.tag | contains("$TAG")) | .conditions[].message'
+
+        # optionally mark this tag as latest
+        if [ "$IS_LATEST" = "true" ]; then
+          oc tag $IMAGESTREAM_NAME:$TAG $IMAGESTREAM_NAME:latest
+        fi
+
+        ## Get the container digest
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o json | jq '.image.dockerImageMetadata.Id' | tr -d '"' | tee $(results.container_digest.path)

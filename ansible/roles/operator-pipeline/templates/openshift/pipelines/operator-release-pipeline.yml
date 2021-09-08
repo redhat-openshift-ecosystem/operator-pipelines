@@ -13,7 +13,7 @@ spec:
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
     - name: is_latest
-      description: boolean- should this operator version be tagged as latest?
+      description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: registry
       description: temporary registry used by Hosted pipeline to pass the image to Release pipeline.
       default: quay.io
@@ -143,12 +143,12 @@ spec:
           workspace: pyxis-ssl-credentials
 
     # Publish image to OCP registry
-    - name: imagestream-manipulation
+    - name: publish-to-ocp-registry
       runAfter:
         - operator-validation
         - get-vendor-related-data
       taskRef:
-        name: imagestream-manipulation
+        name: publish-to-ocp-registry
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
@@ -156,24 +156,19 @@ spec:
           value: "$(tasks.get-vendor-related-data.results.vendor_label)"
         - name: repository_name
           value: "$(tasks.get-cert-project-related-data.results.repo_name)"
-        - name: isv_pid
-          value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: dist_method
           value: "$(tasks.get-cert-project-related-data.results.dist_method)"
-        # params necessary to pull the image
-        - name: registry
-          value: "$(params.registry)"
-        - name: image_namespace
-          value: "$(params.image_namespace)"
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+        - name: image
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+        - name: is_latest
+          value: "$(params.is_latest)"
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
 
     # create or update container image
     - name: update-container-image
       runAfter:
-        - imagestream-manipulation
+        - publish-to-ocp-registry
       taskRef:
         name: update-container-image
       params:
@@ -186,7 +181,7 @@ spec:
         - name: repository_name
           value: "$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: container_digest
-          value: "$(tasks.imagestream-manipulation.results.container_digest)"
+          value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
         - name: is_latest
@@ -228,4 +223,4 @@ spec:
         - name: bundle_versions
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: container_digest
-          value: "$(tasks.imagestream-manipulation.results.container_digest)"
+          value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
