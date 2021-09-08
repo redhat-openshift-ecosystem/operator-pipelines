@@ -23,6 +23,8 @@ spec:
       description: Distribution method of the certification project- either certified or marketplace
     - name: org_id
       description: Unique identifier of the organization in Red Hat Connect
+    - name: contacts
+      description: List of accounts with permissions allowing operator submission
   workspaces:
     - name: pyxis-ssl-credentials
       optional: true
@@ -47,3 +49,4 @@ spec:
         cat cert_project | jq '.container.repository_name' | tr -d '"' | grep . | tee $(results.repo_name.path)
         cat cert_project | jq '.container.distribution_method' | tr -d '"' |  grep . | tee $(results.dist_method.path)
         cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tee $(results.org_id.path)
+        cat cert_project | jq '.contacts[].email_address' | tr -d '"' | grep . | tee $(results.contacts.path)
