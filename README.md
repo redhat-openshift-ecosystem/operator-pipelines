@@ -91,8 +91,8 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_pr_branch=test-PR-ok \
   --param git_pr_title="operator kogito-operator (1.6.1-ok)" \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
-  --param git_fork_url=git@github.com:MarcinGinszt/operator-pipelines-test.git \
-  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+  --param git_fork_url=https://github.com/MarcinGinszt/operator-pipelines-test.git \
+  --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_username=test_user \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
   --param bundle_path=operators/kogito-operator/1.6.1-ok \
@@ -101,7 +101,6 @@ tkn pipeline start operator-hosted-pipeline \
   --param ci_min_version=1.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=ssh-dir,secret=github-ssh-credentials \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=kubeconfig,secret=my-kubeconfig \
@@ -135,10 +134,9 @@ The release pipeline can be triggered using the tkn CLI like so:
 
 
 tkn pipeline start operator-release-pipeline \
-  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+  --param git_repo_url=https://github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param is_latest=true \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=ssh-dir,secret=github-ssh-credentials \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --showlog

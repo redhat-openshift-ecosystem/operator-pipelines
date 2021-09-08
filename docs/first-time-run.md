@@ -9,28 +9,6 @@
 
 
 ### Common for all the pipelines:
-#### Git SSH Secret
-The pipelines requires git SSH credentials with 
-write access to the repository if automatic digest pinning
-is enabled using the pin_digests param. This is disabled
-by default. Before executing the pipeline the user must
-create a secret in the same namespace as the pipeline.
-
-To create the secret run the following commands (substituting your key):
-```bash
-cat << EOF > ssh-secret.yml
-kind: Secret
-apiVersion: v1
-metadata:
-  name: github-ssh-credentials
-data:
-  id_rsa: |
-    < PRIVATE SSH KEY >
-EOF
-
-oc create -f ssh-secret.yml
-```
-
 
 #### Registry Credentials
 The pipelines can optionally be configured to push images to a remote private
@@ -80,6 +58,29 @@ oc import-image redhat-marketplace-index \
 ```
 
 ### Only CI pipeline:
+
+#### Git SSH Secret
+The pipelines requires git SSH credentials with 
+write access to the repository if automatic digest pinning
+is enabled using the pin_digests param. This is disabled
+by default. Before executing the pipeline the user must
+create a secret in the same namespace as the pipeline.
+
+To create the secret run the following commands (substituting your key):
+```bash
+cat << EOF > ssh-secret.yml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: github-ssh-credentials
+data:
+  id_rsa: |
+    < PRIVATE SSH KEY >
+EOF
+
+oc create -f ssh-secret.yml
+```
+
 #### Container API access
 CI pipelines automatically upload a test results, logs and artifacts using Red Hat
 container API. This requires a partner's API key and the key needs to be created

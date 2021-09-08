@@ -35,7 +35,7 @@
                 bindings:
                   - ref: operator-hosted-pipeline-trigger-binding
                 template:
-                  name: operator-hosted-pipeline-trigger-template
+                  ref: operator-hosted-pipeline-trigger-template
 
     - name: Create Hosted pipeline Trigger Binding
       k8s:
@@ -61,9 +61,9 @@
               - name: git_pr_url
                 value: $(body.pull_request.html_url)
               - name: git_fork_url
-                value: $(body.pull_request.head.repo.ssh_url)
+                value: $(body.pull_request.head.repo.html_url)
               - name: git_repo_url
-                value: $(body.pull_request.base.repo.ssh_url)
+                value: $(body.pull_request.base.repo.html_url)
               - name: git_username
                 value: $(body.pull_request.head.user.login)
               - name: pr_head_label
@@ -149,9 +149,6 @@
                           resources:
                             requests:
                               storage: 100Mi
-                    - name: ssh-dir
-                      secret:
-                        secretName: "github-ssh-credentials"
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-credentials"
