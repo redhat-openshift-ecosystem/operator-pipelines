@@ -1,6 +1,5 @@
 import argparse
 import logging
-import sys
 
 from operatorcert import (
     get_files_added_in_pr,
