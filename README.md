@@ -93,7 +93,7 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
   --param git_fork_url=https://github.com/MarcinGinszt/operator-pipelines-test.git \
   --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
-  --param git_username=test_user \
+  --param git_username=foo@redhat.com \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
   --param bundle_path=operators/kogito-operator/1.6.1-ok \
   --param env=production \

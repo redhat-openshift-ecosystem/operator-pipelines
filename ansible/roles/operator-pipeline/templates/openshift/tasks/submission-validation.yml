@@ -10,6 +10,8 @@ spec:
     - name: git_pr_url
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers
+    - name: contacts
+      description: List of accounts with permissions allowing operator submission
   results:
     - name: cert_project_id
     - name: operator_name
@@ -26,14 +28,16 @@ spec:
 
         # 1. Verify via regex if PR title follows convention
         # 2. Verify, that new version is added and no existing one modified
-        # 2. TODO: Verify, if the user which created the PR is allowed to
+        # 3. Verify, if the user which created the PR is allowed to
         # submit the operator
-        # 3. Verify that there is no other open PRs for this operator
+        # 4. Verify that there is no other open PRs for this operator
         verify-submission \
           --pr-title "$(params.git_pr_title)" \
           --available-repositories redhat-openshift-ecosystem/operator-pipelines-test \
           --pr-url $(params.git_pr_url) \
-          --verbose
+          --git-username $(params.git_username) \
+          --verbose \
+          --contacts $(params.contacts)
 
         cat bundle_name | tee $(results.operator_name.path)
         cat bundle_version | tee $(results.bundle_version.path)
