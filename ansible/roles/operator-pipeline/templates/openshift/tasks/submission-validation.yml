@@ -26,10 +26,6 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        FILE_WITH_CONTACTS=contacts.txt
-        touch $FILE_WITH_CONTACTS
-        echo "$(params.contacts)" > $FILE_WITH_CONTACTS
-
         # 1. Verify via regex if PR title follows convention
         # 2. Verify, that new version is added and no existing one modified
         # 3. Verify, if the user which created the PR is allowed to
@@ -40,8 +36,8 @@ spec:
           --available-repositories redhat-openshift-ecosystem/operator-pipelines-test \
           --pr-url $(params.git_pr_url) \
           --git-username $(params.git_username) \
-          --contacts-file $FILE_WITH_CONTACTS \
-          --verbose
+          --verbose \
+          --contacts $(params.contacts)
 
         cat bundle_name | tee $(results.operator_name.path)
         cat bundle_version | tee $(results.bundle_version.path)

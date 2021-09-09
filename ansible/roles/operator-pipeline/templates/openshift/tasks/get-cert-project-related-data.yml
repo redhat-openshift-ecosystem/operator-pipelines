@@ -49,4 +49,4 @@ spec:
         cat cert_project | jq '.container.repository_name' | tr -d '"' | grep . | tee $(results.repo_name.path)
         cat cert_project | jq '.container.distribution_method' | tr -d '"' |  grep . | tee $(results.dist_method.path)
         cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tee $(results.org_id.path)
-        cat cert_project | jq '.contacts[].email_address' | tr -d '"' | grep . | tee $(results.contacts.path)
+        cat cert_project | jq '.contacts[].email_address' | tr '\n' ' ' | tr -d '"' | grep . | tee $(results.contacts.path)
