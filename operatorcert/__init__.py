@@ -270,6 +270,15 @@ def parse_pr_title(pr_title: str) -> (str, str):
     return bundle_name, bundle_version
 
 
+def validate_user(git_username: str, contacts: List[str]):
+    if git_username not in contacts:
+        raise Exception(
+            f"User {git_username} doesn't have permissions to submit the bundle."
+        )
+    else:
+        logging.info(f"User {git_username} has permission to submit the bundle.")
+
+
 def verify_pr_uniqueness(
     available_repositories: List[str], base_pr_url: str, base_pr_bundle_name: str
 ) -> None:

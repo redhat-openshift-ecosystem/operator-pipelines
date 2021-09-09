@@ -292,6 +292,15 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
         )
 
 
+def test_validate_user():
+    contacts = ["some_user", "some_other_user"]
+
+    operatorcert.validate_user("some_user", contacts)
+
+    with pytest.raises(Exception):
+        operatorcert.validate_user("one_without_permissions", contacts)
+
+
 @patch("operatorcert.pyxis.get")
 def test_download_test_results(mock_get: MagicMock):
     # Arrange
