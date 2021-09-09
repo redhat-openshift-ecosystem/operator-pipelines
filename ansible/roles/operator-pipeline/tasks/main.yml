@@ -71,7 +71,8 @@
           data:
             .dockerconfigjson: "{{ lookup('file', operator_pipeline_quay_token, rstrip=False) | b64encode }}"
     - name: Link secret with pipeline service account (for imagestream operations)
-      community.general.oc: |
+      raw: |
+        echo $KUBECONFIG &&
         oc secret link pipeline registry-dockerconfig-secret
 
 - name: Create Operator pipeline github bot token secret
