@@ -135,9 +135,9 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
@@ -165,15 +165,17 @@ spec:
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
 
-    # create or update container image
-    - name: update-container-image
+    # create container image
+    - name: create-container-image
       runAfter:
         - publish-to-ocp-registry
       taskRef:
-        name: update-container-image
+        name: create-container-image
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: isv_pid
+          value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: registry
           value: "$(params.registry)"
         - name: vendor_label
@@ -186,11 +188,20 @@ spec:
           value: "$(tasks.operator-validation.results.bundle_version)"
         - name: is_latest
           value: $(params.is_latest)
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
 
     # Publish Vendor, Repository
     - name: publish-resources
       runAfter:
-        - update-container-image
+        - create-container-image
       taskRef:
         name: publish-resources
       params:
@@ -201,9 +212,9 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
         - name: environment
           value: "$(params.env)"
       workspaces:

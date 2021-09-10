@@ -1,0 +1,68 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-container-image
+spec:
+  params:
+    - name: pyxis_api_key_secret
+      default: pyxis-api-secret
+      description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+      description: Path to Pyxis key. Valid only when internal Pyxis is used.
+    - name: pyxis_url
+      default: https://catalog.redhat.com/api/containers/
+    - name: cert_project_id
+      description: ID of the bundle Certification Project (as in bundle ci.yaml)
+    - name: isv_pid
+      description: isv_pid of the certification project from Red Hat Connect
+    - name: registry
+      description: certification project registry
+    - name: vendor_label
+      description: name of the vendor
+    - name: repository_name
+    - name: container_digest
+      description: imagestream container_digest
+    - name: bundle_version
+      description: operator bundle version
+    - name: is_latest
+      description: boolean- should this operator version be tagged as latest?
+  workspaces:
+    - name: pyxis-ssl-credentials
+  steps:
+    - name: update-container-image
+      image: quay.io/redhat-isv/operator-pipelines-images:03987d1486a8d5fd3caf3afb5fc07efd1fe3149dd5a32f82b1ef8675e26e9b02
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
+        - name: PYXIS_URL
+          value: $(params.pyxis_url)
+        - name: ISV_PID
+          value: $(params.isv_pid)
+        - name: REGISTRY
+          value: $(params.registry)
+        - name: REPOSITORY
+          value: $(params.repository_name)
+        - name: CONTAINER_DIGEST
+          value: $(params.container_digest)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+        echo "Creating container image"
+
+        create-container-image \
+          --pyxis-url $PYXIS_URL \
+          --isv-pid $ISV_PID \
+          --repo-published "true" \
+          --registry $REGISTRY \
+          --repository $REPOSITORY \
+          --certified "true" \
+          --docker-image-digest $CONTAINER_DIGEST \
+          --verbose
+
