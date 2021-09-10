@@ -87,7 +87,7 @@ container API. This requires a partner's API key and the key needs to be created
 as a secret in openshift cluster before running a Tekton pipeline.
 
 ```bash
-oc create secret generic pyxis-api-secret --from-literal PYXIS_API_KEY=< API KEY >
+oc create secret generic pyxis-api-secret --from-literal pyxis_api_key=< API KEY >
 ```
 
 #### Kubeconfig
