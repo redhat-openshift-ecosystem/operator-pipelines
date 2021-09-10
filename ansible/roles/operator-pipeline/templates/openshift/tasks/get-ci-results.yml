@@ -20,9 +20,11 @@ spec:
     # They are kept if they have value, or
     # they are replaced.
     - name: preflight_results_exists
+    - name: preflight_results
     - name: test_result_id
   results:
     - name: test_result_id
+    - name: preflight_results
   workspaces:
     - name: results
     - name: pyxis-ssl-credentials
@@ -46,6 +48,8 @@ spec:
 
           echo $(params.test_result_id) | tee $(results.test_result_id.path)
 
+          echo $(params.preflight_results) | tee $(results.preflight_results.path)
+
           exit 0
         fi
 
@@ -63,3 +67,4 @@ spec:
           --verbose
 
         cat test_result_id | tee $(results.test_result_id.path)
+        cat test_results.json | tee $(results.preflight_results.path)

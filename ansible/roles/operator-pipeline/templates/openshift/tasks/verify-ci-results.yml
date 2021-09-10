@@ -5,8 +5,12 @@ metadata:
   name: verify-ci-results
 spec:
   params:
+    - name: preflight_results
     - name: preflight_min_version
     - name: ci_min_version
+  results:
+    - name: test_result
+      description: Result from the preflight test.
   workspaces:
     - name: results
   steps:
@@ -15,7 +19,20 @@ spec:
       workingDir: $(workspaces.results.path)
       script: |
         #! /usr/bin/env bash
+
         # Did the tests pass?
-        # did preflight/ CI have the latest version?
-        # If results exists, store them in the workspace
         # In case of failure- comment on the PR with tailored support link
+        PREFLIGHT_RESULTS=$(params.preflight_results)
+        CHECK_RESULTS=$(cat PREFLIGHT_RESULTS | jq '.passed' | grep .)
+        if [ $CHECK_RESULTS == "false"]; then
+          echo "failure" | tee $(results.test_result.path)
+          exit 0
+        fi 
+
+        # did preflight/ CI have the latest version?
+        PREFLIGHT_VERSION=$(cat PREFLIGHT_RESULTS | jq '.test_library.version' | grep .)
+        if [$PREFLIGHT_VERSION >= $(params.preflight_min_version)]; then
+          echo "preflight is having the latest version"
+        fi
+        echo "success" | tee $(results.test_result.path)
+       
