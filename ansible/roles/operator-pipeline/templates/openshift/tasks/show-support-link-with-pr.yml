@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: show-support-link
+  name: show-support-link-with-pr
 spec:
   params:
     - name: env
@@ -19,11 +19,11 @@ spec:
       description: Connect cert project type. Should be Operator Bundle Image for operator pipelines.
       default: "Operator Bundle Image"
     - name: pull_request_url
-      defaul: ""
+      default: ""
   results:
     - name: comment
   steps:
-    - name: show-support-link
+    - name: show-support-link-with-pr
       image: quay.io/redhat-isv/operator-pipelines-images
       script: |
         #! /usr/bin/env bash

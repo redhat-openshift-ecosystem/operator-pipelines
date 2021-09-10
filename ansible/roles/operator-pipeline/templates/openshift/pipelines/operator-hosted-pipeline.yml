@@ -506,7 +506,7 @@ spec:
       taskRef:
         name: verify-ci-results
       params:
-        - name: preflight_results_exists
+        - name: preflight_results
           value: "$(tasks.get-ci-results.results.preflight_results)"
         - name: preflight_min_version
           value: $(params.preflight_min_version)
@@ -534,7 +534,7 @@ spec:
         - name: github-bot-token
           workspace: github-bot-token
         - name: comment-file
-          workspace: comment-file
+          workspace: results
 
     # link pull request details to test results
     - name: link-pull-request
