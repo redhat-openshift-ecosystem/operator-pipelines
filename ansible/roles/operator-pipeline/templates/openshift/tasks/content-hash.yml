@@ -19,11 +19,10 @@ spec:
         set -xe
         echo "Compute md5hash of bundle content..."
 
-        find $(params.bundle_path) -not -name "Dockerfile" -type f -printf '%f\t%p\n' | \
-          sort -V -k1 | \
-          cut -d$'\t' -f2 | \
+        find $(params.bundle_path) -not -name "Dockerfile" -type f | \
           tr '\n' '\0' | \
-          xargs -r0 -I {} md5sum "{}" >> hashes.txt
+          xargs -r0 -I {} md5sum "{}" | \
+          sort >> hashes.txt
 
         cat hashes.txt
 
