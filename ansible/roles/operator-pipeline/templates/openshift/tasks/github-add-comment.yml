@@ -114,7 +114,7 @@ spec:
           if not "$(params.COMMENT_TAG)":
             print("REPLACE requested but no COMMENT_TAG specified")
             sys.exit(1)
-          github_token = "" 
+          github_token = ""
           with open(f"{os.environ["GITHUBTOKEN"]}/github_bot_token.txt","r") as file:
             github_token = file.read()
           r = conn.request(

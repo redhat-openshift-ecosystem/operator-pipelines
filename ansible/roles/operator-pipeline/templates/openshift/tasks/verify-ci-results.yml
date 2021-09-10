@@ -27,7 +27,7 @@ spec:
         if [ $CHECK_RESULTS == "false"]; then
           echo "failure" | tee $(results.test_result.path)
           exit 0
-        fi 
+        fi
 
         # did preflight/ CI have the latest version?
         PREFLIGHT_VERSION=$(cat PREFLIGHT_RESULTS | jq '.test_library.version' | grep .)
@@ -35,4 +35,3 @@ spec:
           echo "preflight is having the latest version"
         fi
         echo "success" | tee $(results.test_result.path)
-       

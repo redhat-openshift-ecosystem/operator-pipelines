@@ -516,7 +516,7 @@ spec:
         - name: results
           workspace: results
           subPath: results
-    
+
     # Comment on the github PR
     - name: github-add-comment
       runAfter:
