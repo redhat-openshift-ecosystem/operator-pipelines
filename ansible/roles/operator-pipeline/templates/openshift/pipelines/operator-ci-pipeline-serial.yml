@@ -1,0 +1,378 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: operator-ci-pipeline-serial
+spec:
+  params:
+    - name: git_repo_url
+    - name: git_branch
+      description: git branch name
+    - name: git_username
+      default: "digestPinning"
+    - name: git_email
+      default: "no-reply@redhat.com"
+    - name: upstream_repo_name
+      default: ""
+      description: Upstream repository name where the pull request will be open
+    - name: bundle_path
+    - name: registry
+      default: image-registry.openshift-image-registry.svc:5000
+    - name: env
+      description: Which environment to run in. Can be one of [dev, qa, stage, production]
+      default: "production"
+    - name: image_namespace
+      default: $(context.pipelineRun.namespace)
+      description: The namespace/organization all built images will be pushed to.
+    - name: preflight_namespace
+      default: $(context.pipelineRun.namespace)
+      description: The namespace to use when running Preflight
+    - name: preflight_service_account
+      default: default
+      description: The service account to use when running Preflight
+    - name: pin_digests
+      description: Set to "true" to automatically generate the relatedImages
+        section of the ClusterServiceVersion for you. If changes are made, the
+        result will be committed to GitHub.
+      default: "false"
+    - name: submit
+      description: Set to "true" to submit results and open a pull request.
+      default: "false"
+  workspaces:
+    - name: pipeline
+    - name: kubeconfig
+    - name: ssh-dir
+      optional: true
+    - name: registry-credentials
+      optional: true
+    - name: pyxis-api-key
+      optional: true
+  tasks:
+    - name: set-env
+      taskRef:
+        name: set-env
+        kind: Task
+      params:
+        - name: env
+          value: $(params.env)
+        - name: access_type
+          value: "external"
+
+    - name: checkout
+      runAfter:
+        - set-env
+      taskRef:
+        name: git-clone
+        kind: Task
+      params:
+        - name: url
+          value: $(params.git_repo_url)
+        - name: revision
+          value: $(params.git_branch)
+      workspaces:
+        - name: output
+          workspace: pipeline
+          subPath: src
+        - name: ssh-directory
+          workspace: ssh-dir
+
+    - name: digest-pinning
+      runAfter:
+        - checkout
+      taskRef:
+        name: digest-pinning
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+        - name: enabled
+          value: "$(params.pin_digests)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: commit-pinned-digest
+      runAfter:
+        - digest-pinning
+      taskRef:
+        name: commit-pinned-digest
+      params:
+        - name: git_user_name
+          value: "$(params.git_username)"
+        - name: git_user_email
+          value: "$(params.git_email)"
+        - name: dirty_flag
+          value: "$(tasks.digest-pinning.results.dirty_flag)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+        - name: ssh-directory
+          workspace: ssh-dir
+
+    - name: yaml-lint
+      runAfter:
+        - commit-pinned-digest
+      taskRef:
+        name: yaml-lint
+      params:
+        - name: args
+          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(params.bundle_path)"]
+      workspaces:
+        - name: shared-workspace
+          workspace: pipeline
+          subPath: src
+
+    - name: operator-validation
+      runAfter:
+        - yaml-lint
+      taskRef:
+        name: operator-validation
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: get-supported-versions
+      runAfter:
+        - operator-validation
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: certification-project-check
+      runAfter:
+        - get-supported-versions
+      taskRef:
+        name: certification-project-check
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: content-hash
+      runAfter:
+        - certification-project-check
+      taskRef:
+        name: content-hash
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: dockerfile-creation
+      runAfter:
+        - content-hash
+      taskRef:
+        name: dockerfile-creation
+      params:
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+        # - name: dockerfile
+        #   value: "cert.Dockerfile"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    # Bundle Image (Operator Bundle) is a container image that stores
+    # Kubernetes manifests and metadata associated with an operator.
+    # A bundle is meant to represent a specific version of an operator on cluster.
+    - name: build-bundle
+      runAfter:
+        - dockerfile-creation
+      taskRef:
+        # custom task that supports auth
+        # TODO: try push auth changes to upstream
+        name: buildah
+        kind: Task
+      params:
+        - name: IMAGE
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+        - name: CONTEXT
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+        - name: credentials
+          workspace: registry-credentials
+
+    # Index image contains a record of bundle images from which
+    # manifests could be extract in order to install an operator.
+    - name: generate-index
+      runAfter:
+        - build-bundle
+      taskRef:
+        name: generate-index
+      params:
+        - name: bundle_image
+          value: *bundleImage
+        - name: from_index
+          value: "$(tasks.get-supported-versions.results.max_supported_index)"
+      workspaces:
+        - name: output
+          workspace: pipeline
+          subPath: index
+        - name: credentials
+          workspace: registry-credentials
+
+    - name: build-index
+      runAfter:
+        - generate-index
+      taskRef:
+        name: buildah
+        kind: Task
+      params:
+        - name: IMAGE
+          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+        - name: DOCKERFILE
+          value: "$(tasks.generate-index.results.index_dockerfile)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: index
+        - name: credentials
+          workspace: registry-credentials
+
+    - name: preflight
+      runAfter:
+        - build-index
+      taskRef:
+        name: preflight
+      params:
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: bundle_index_image
+          value: *bundleIndexImage
+        - name: bundle_image
+          value: *bundleImage
+        - name: namespace
+          value: "$(params.preflight_namespace)"
+        - name: service_account
+          value: "$(params.preflight_service_account)"
+      workspaces:
+        - name: output
+          workspace: pipeline
+          subPath: preflight
+        - name: kubeconfig
+          workspace: kubeconfig
+        - name: credentials
+          workspace: registry-credentials
+
+    - name: upload-artifacts
+      runAfter:
+        - preflight
+      when:
+        - input: $(params.submit)
+          operator: in
+          values:
+            - "true"
+      taskRef:
+        name: upload-artifacts
+      params:
+        - name: log_file
+          value: "$(tasks.preflight.results.log_output_file)"
+        - name: artifacts_dir
+          value: "$(tasks.preflight.results.artifacts_output_dir)"
+        - name: result_file
+          value: "$(tasks.preflight.results.result_output_file)"
+        - name: md5sum
+          value: "$(tasks.content-hash.results.md5sum)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: preflight
+        - name: pyxis-api-key
+          workspace: pyxis-api-key
+
+    - name: open-pr
+      runAfter:
+        - upload-artifacts
+      taskRef:
+        name: open-pull-request
+      params:
+        - name: git_repo_url
+          value: "$(params.git_repo_url)"
+        - name: repository_name
+          value: "$(params.upstream_repo_name)"
+        - name: repository_branch
+          value: "$(params.git_branch)"
+        - name: digest_pinned_branch
+          value: "$(tasks.commit-pinned-digest.results.branch)"
+        - name: test_logs_url
+          value: "$(tasks.upload-artifacts.results.log_url)"
+        - name: test_result_url
+          value: "$(tasks.upload-artifacts.results.result_url)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: certification_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+  finally:
+    - name: upload-pipeline-logs
+      taskRef:
+        name: upload-pipeline-logs
+      when:
+        - input: $(params.submit)
+          operator: in
+          values:
+            - "true"
+      workspaces:
+        - name: pyxis-api-key
+          workspace: pyxis-api-key
+      params:
+        - name: md5sum
+          value: "$(tasks.content-hash.results.md5sum)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pipeline_name
+          value: "$(context.pipelineRun.name)"
+
+    - name: show-support-link
+      taskRef:
+        name: show-support-link
+      params:
+        - name: env
+          value: "$(params.env)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"

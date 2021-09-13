@@ -24,10 +24,10 @@ spec:
       default: "default"
     - name: namespace
       description: The namespace for the preflight config
-      default: "$(context.taskRun.namespace)"
+      default: "default"
     - name: log_level
       description: Preflight logging level
-      default: info
+      default: trace
 
   results:
     - name: log_output_file
@@ -96,6 +96,7 @@ spec:
 
         preflight check operator $(params.bundle_image)
 
+        mv $PFLT_ARTIFACTS/results.json results.json
         echo -n $PFLT_LOGFILE | tee $(results.log_output_file.path)
         echo -n results.json | tee $(results.result_output_file.path)
         echo -n $PFLT_ARTIFACTS | tee $(results.artifacts_output_dir.path)
