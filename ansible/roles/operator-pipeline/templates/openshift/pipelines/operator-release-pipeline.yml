@@ -10,6 +10,8 @@ spec:
     - name: git_revision
       description: git revision used to check out project
       default: "main"
+    - name: git_commit
+      description: Git repository HEAD commit
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
     - name: is_latest
@@ -28,6 +30,7 @@ spec:
     - name: ssh-dir
       optional: true
     - name: pyxis-ssl-credentials
+    - name: github-bot-token
   tasks:
     # Set environment
     - name: set-env
@@ -224,3 +227,24 @@ spec:
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: container_digest
           value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
+
+    - name: set-github-status-published
+      runAfter:
+        - publish-bundle
+      taskRef:
+        name: set-github-status
+      params:
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Operator $(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version) has
+            been published."
+        - name: state
+          value: "$(tasks.publish-bundle.results.status)"
+        - name: context
+          value: "$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+      workspaces:
+        - name: github-bot-token
+          workspace: github-bot-token
