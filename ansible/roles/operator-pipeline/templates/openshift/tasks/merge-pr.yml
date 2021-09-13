@@ -38,7 +38,7 @@ spec:
           exit 0
         fi
 
-        GITHUB_BOT_TOKEN_PATH=$(workspaces.github-bot-token.path)/github_bot_token.txt
+        GITHUB_BOT_TOKEN_PATH=$(workspaces.github-bot-token.path)/github_bot_token
         export GITHUB_BOT_TOKEN=$(cat $GITHUB_BOT_TOKEN_PATH)
 
         # get the PR number and the repository name from the original PR url-

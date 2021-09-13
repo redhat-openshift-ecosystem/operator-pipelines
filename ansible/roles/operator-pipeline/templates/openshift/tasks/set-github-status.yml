@@ -24,7 +24,7 @@ spec:
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       env:
         - name: GITHUB_BOT_TOKEN_PATH
-          value: $(workspaces.github-bot-token.path)/github_bot_token.txt
+          value: $(workspaces.github-bot-token.path)/github_bot_token
       script: |
         #! /usr/bin/env bash
         # Don't use set -x to avoid exposing github token
