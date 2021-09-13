@@ -34,8 +34,8 @@ spec:
   workspaces:
     - name: pyxis-ssl-credentials
   steps:
-    - name: update-container-image
-      image: quay.io/redhat-isv/operator-pipelines-images:03987d1486a8d5fd3caf3afb5fc07efd1fe3149dd5a32f82b1ef8675e26e9b02
+    - name: create-container-image
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)
