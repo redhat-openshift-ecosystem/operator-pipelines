@@ -100,7 +100,7 @@
           suffix: "{{ suffix }}"
           env: "{{ env }}"
       data:
-        github_bot_token.txt: "{{ lookup('file', operator_pipeline_github_bot_token, rstrip=False) | b64encode }}"
+        github_bot_token: "{{ lookup('file', operator_pipeline_github_bot_token, rstrip=False) | b64encode }}"
 
 - name: Create Operator pipeline github webhook secret
   no_log: yes
