@@ -5,9 +5,6 @@ metadata:
   name: create-container-image
 spec:
   params:
-    - name: pyxis_api_key_secret
-      default: pyxis-api-secret
-      description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
     - name: pyxis_cert_path
       default: ""
       description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
