@@ -172,28 +172,20 @@ spec:
       taskRef:
         name: create-container-image
       params:
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: isv_pid
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: registry
           value: "$(params.registry)"
-        - name: vendor_label
-          value: "$(tasks.get-vendor-related-data.results.vendor_label)"
         - name: repository_name
           value: "$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: container_digest
           value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
-        - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
-        - name: is_latest
-          value: $(params.is_latest)
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials

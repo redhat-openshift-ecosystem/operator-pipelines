@@ -16,21 +16,14 @@ spec:
       description: Path to Pyxis key. Valid only when internal Pyxis is used.
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers/
-    - name: cert_project_id
-      description: ID of the bundle Certification Project (as in bundle ci.yaml)
     - name: isv_pid
       description: isv_pid of the certification project from Red Hat Connect
     - name: registry
       description: certification project registry
-    - name: vendor_label
-      description: name of the vendor
     - name: repository_name
+      description: Repository name assigned to certification project from Red Hat Connect
     - name: container_digest
       description: imagestream container_digest
-    - name: bundle_version
-      description: operator bundle version
-    - name: is_latest
-      description: boolean- should this operator version be tagged as latest?
   workspaces:
     - name: pyxis-ssl-credentials
   steps:
