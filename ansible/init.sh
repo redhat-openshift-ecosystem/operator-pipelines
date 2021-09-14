@@ -60,16 +60,12 @@ main() {
     for env in $environments;
     do
         execute_playbook $env $passwd_file
-    done
 
-    # Grant the pipeline service account permissions to create projects
-    # -it cannot be done in Playbook, as ansible SA has no permissions to create
-    # cluster-scoped resources- and this command creates ClusterRoleBinding
-    for env in $environments;
-    do
+        # Grant the pipeline service account permissions to create projects
+        # -it cannot be done in Playbook, as ansible SA has no permissions to create
+        # cluster-scoped resources- and this command creates ClusterRoleBinding
         oc adm policy add-cluster-role-to-user self-provisioner -z pipeline -n operator-pipeline-$env
     done
-
 
     # Asks if the script should update the secret-vars.yml files
     read -p "Service accounts configured for ($environments). Update secret-vars with tokens? [y/N] " -n 1 -r
