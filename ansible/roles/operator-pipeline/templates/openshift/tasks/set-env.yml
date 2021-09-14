@@ -6,67 +6,79 @@ metadata:
 spec:
   params:
     - name: env
-      description: Enviroment. One of [dev, qa, stage, production]
+      description: Environment. One of [dev, qa, stage, production]
     - name: access_type
       description: Pyxis access type. One of [internal, external]
   results:
     - name: pyxis_url
+      description: Container API URL based for selected environment
+    - name: target_branch
+      description: Target branch for submitted PR in upstream repository
   steps:
     - name: set-env
       image: registry.access.redhat.com/ubi8-minimal
       script: |
         #! /usr/bin/env bash
-        set -e
+        set -ex
 
         ENV="$(params.env)"
         ACCESS_TYPE="$(params.access_type)"
 
-        case $ACCESS_TYPE in
-        internal)
-          case $ENV in
-          production)
-            PYXIS_URL="https://pyxis.engineering.redhat.com"
-            ;;
-          stage)
-            PYXIS_URL="https://pyxis.stage.engineering.redhat.com"
-            ;;
-          qa)
-            PYXIS_URL="https://pyxis.qa.engineering.redhat.com"
-            ;;
-          dev)
-            PYXIS_URL="https://pyxis.dev.engineering.redhat.com"
-            ;;
-          *)
-            echo "Unknown environment."
+        if ! [[ "$ACCESS_TYPE" =~ ^(internal|external)$ ]]; then
+            echo "Unknown access type."
             exit 1
+        fi
+
+        case $ENV in
+            production)
+                case $ACCESS_TYPE in
+                    internal)
+                    PYXIS_URL="https://pyxis.engineering.redhat.com"
+                    ;;
+                    external)
+                    PYXIS_URL="https://catalog.redhat.com/api/containers/"
+                    ;;
+                esac
+                TARGET_BRANCH="main"
             ;;
-          esac
-          ;;
-        external)
-          case $ENV in
-          production)
-            PYXIS_URL="https://catalog.redhat.com/api/containers/"
+            stage)
+                case $ACCESS_TYPE in
+                    internal)
+                    PYXIS_URL="https://pyxis.stage.engineering.redhat.com"
+                    ;;
+                    external)
+                    PYXIS_URL="https://pyxis-isv-stage.api.redhat.com"
+                    ;;
+                esac
+                TARGET_BRANCH="stage"
             ;;
-          stage)
-            PYXIS_URL="https://pyxis-isv-stage.api.redhat.com"
+            qa)
+                case $ACCESS_TYPE in
+                    internal)
+                    PYXIS_URL="https://pyxis.qa.engineering.redhat.com"
+                    ;;
+                    external)
+                    PYXIS_URL="https://pyxis-isv-qa.api.redhat.com"
+                    ;;
+                esac
+                TARGET_BRANCH="qa"
             ;;
-          qa)
-            PYXIS_URL="https://pyxis-isv-qa.api.redhat.com"
+            dev)
+                case $ACCESS_TYPE in
+                    internal)
+                    PYXIS_URL="https://pyxis.dev.engineering.redhat.com"
+                    ;;
+                    external)
+                    PYXIS_URL="https://pyxis-isv-dev.api.redhat.com"
+                    ;;
+                esac
+                TARGET_BRANCH="dev"
             ;;
-          dev)
-            PYXIS_URL="https://pyxis-isv-dev.api.redhat.com"
-            ;;
-          *)
-            echo "Unknown environment."
-            exit 1
-            ;;
-          esac
-          ;;
-        *)
-          echo "Unknown access type."
-          exit 1
-          ;;
+            *)
+                echo "Unknown environment."
+                exit 1
+                ;;
         esac
 
-
         echo -n $PYXIS_URL | tee $(results.pyxis_url.path)
+        echo -n $TARGET_BRANCH | tee $(results.target_branch.path)

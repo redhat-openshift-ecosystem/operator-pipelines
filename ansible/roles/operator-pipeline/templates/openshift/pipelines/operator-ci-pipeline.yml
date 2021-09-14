@@ -329,6 +329,8 @@ spec:
           value: "$(params.git_branch)"
         - name: digest_pinned_branch
           value: "$(tasks.commit-pinned-digest.results.branch)"
+        - name: target_branch
+          value: "$(tasks.set-env.results.target_branch)"
         - name: test_logs_url
           value: "$(tasks.upload-artifacts.results.log_url)"
         - name: test_result_url
