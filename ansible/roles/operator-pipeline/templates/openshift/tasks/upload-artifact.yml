@@ -16,6 +16,8 @@ spec:
       description: Path to Pyxis key. Valid only when internal Pyxis is used.
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers/
+    - name: connect_url
+      default: https://connect.redhat.com
     - name: log_file
     - name: result_file
     - name: artifacts_dir
@@ -28,6 +30,9 @@ spec:
   results:
     - name: log_url
     - name: result_url
+      description: URL to the Pyxis test results endpoint
+    - name: result_spa_url
+      description: URL to the Connect SPA test results page
   workspaces:
     - name: source
     - name: pyxis-ssl-credentials
@@ -116,6 +121,11 @@ spec:
 
         echo "Test result URL: "
         echo -n $RESULT_URL | tee $(results.result_url.path)
+
+        RESULT_SPA_URL="$(params.connect_url)/projects/$(params.cert_project_id)/test-results"
+
+        echo "Test result SPA URL: "
+        echo -n $RESULT_SPA_URL | tee $(results.result_spa_url.path)
 
     - name: upload-test-artifacts
       image: quay.io/redhat-isv/operator-pipelines-images:latest

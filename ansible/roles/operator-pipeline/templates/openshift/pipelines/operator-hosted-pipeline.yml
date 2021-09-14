@@ -454,6 +454,8 @@ spec:
           value: "$(tasks.operator-validation.results.package_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
+        - name: connect_url
+          value: "$(tasks.set-env.results.connect_url)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
@@ -541,7 +543,7 @@ spec:
           value: $(params.git_commit)
         - name: description
           value: "Operator test for $(tasks.submission-validation.results.operator_name)
-            complete. Test result URL: $(tasks.upload-artifacts.results.result_url)"
+            complete. Test result URL: $(tasks.upload-artifacts.results.result_spa_url)"
         - name: state
           value: "$(tasks.verify-ci-results.results.test_result)"
         - name: context
