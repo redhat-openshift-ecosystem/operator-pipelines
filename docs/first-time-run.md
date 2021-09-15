@@ -87,7 +87,7 @@ container API. This requires a partner's API key and the key needs to be created
 as a secret in openshift cluster before running a Tekton pipeline.
 
 ```bash
-oc create secret generic pyxis-api-secret --from-literal PYXIS_API_KEY=< API KEY >
+oc create secret generic pyxis-api-secret --from-literal pyxis_api_key=< API KEY >
 ```
 
 #### Kubeconfig
@@ -116,5 +116,18 @@ To automatically merge the PR, Hosted pipeline uses GitHub API. To authenticate
 when using this method, secret containing bot token should be created.
 
 ```bash
-oc create secret generic github-bot-token --from-literal github_bot_token.txt=< BOT TOKEN >
+oc create secret generic github-bot-token --from-literal github_bot_token=< BOT TOKEN >
+```
+
+### Only Hosted pipeline:
+#### Service account permissions
+
+Openshift Pipelines are using self- created service account named Pipeline. 
+To grant permissions to create new namespaces, run:
+```bash
+oc secret link pipeline registry-dockerconfig-secret
+```
+To grant permissions to pull images from specified registries by service account, run
+```bash
+oc adm policy add-cluster-role-to-user self-provisioner -z pipeline -n <YOUR_NAMESPACE> 
 ```

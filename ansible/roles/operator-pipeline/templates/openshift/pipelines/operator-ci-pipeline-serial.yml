@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: operator-ci-pipeline
+  name: operator-ci-pipeline-serial
 spec:
   params:
     - name: git_repo_url
@@ -125,7 +125,7 @@ spec:
 
     - name: operator-validation
       runAfter:
-        - commit-pinned-digest
+        - yaml-lint
       taskRef:
         name: operator-validation
       params:
@@ -140,7 +140,7 @@ spec:
 
     - name: get-supported-versions
       runAfter:
-        - commit-pinned-digest
+        - operator-validation
       taskRef:
         name: get-supported-versions
       params:
@@ -153,7 +153,7 @@ spec:
 
     - name: certification-project-check
       runAfter:
-        - commit-pinned-digest
+        - get-supported-versions
       taskRef:
         name: certification-project-check
       params:
@@ -166,7 +166,7 @@ spec:
 
     - name: content-hash
       runAfter:
-        - commit-pinned-digest
+        - certification-project-check
       taskRef:
         name: content-hash
       params:
@@ -179,14 +179,14 @@ spec:
 
     - name: dockerfile-creation
       runAfter:
-        - operator-validation
-        - yaml-lint
-        - certification-project-check
+        - content-hash
       taskRef:
         name: dockerfile-creation
       params:
         - name: bundle_path
           value: "$(params.bundle_path)"
+        # - name: dockerfile
+        #   value: "cert.Dockerfile"
       workspaces:
         - name: source
           workspace: pipeline
@@ -220,7 +220,6 @@ spec:
     - name: generate-index
       runAfter:
         - build-bundle
-        - get-supported-versions
       taskRef:
         name: generate-index
       params:
@@ -282,7 +281,6 @@ spec:
 
     - name: upload-artifacts
       runAfter:
-        - content-hash
         - preflight
       when:
         - input: $(params.submit)
@@ -329,8 +327,6 @@ spec:
           value: "$(params.git_branch)"
         - name: digest_pinned_branch
           value: "$(tasks.commit-pinned-digest.results.branch)"
-        - name: target_branch
-          value: "$(tasks.set-env.results.target_branch)"
         - name: test_logs_url
           value: "$(tasks.upload-artifacts.results.log_url)"
         - name: test_result_url
