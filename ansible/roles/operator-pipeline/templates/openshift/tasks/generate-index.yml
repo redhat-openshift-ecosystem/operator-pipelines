@@ -26,6 +26,7 @@ spec:
       workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
+        exit 0
         set -xe
 
         if [[ "$(workspaces.credentials.bound)" == "true" ]]; then

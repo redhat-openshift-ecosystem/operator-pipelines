@@ -399,16 +399,10 @@ spec:
       taskRef:
         name: ocp-environment-preparation
       params:
-        - name: index_image
-          value: *bundleIndexImage
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+        - name: ocp_version
+          value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
 
     # TODO: passing kubeconfig here is just a temporary workaround to make the task pass
     - name: preflight

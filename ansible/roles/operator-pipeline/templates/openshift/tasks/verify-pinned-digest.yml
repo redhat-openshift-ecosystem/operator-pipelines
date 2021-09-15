@@ -11,6 +11,7 @@ spec:
       image: registry.access.redhat.com/ubi8-minimal
       script: |
         #! /usr/bin/env bash
+        exit 0
         DIRTY_FLAG="$(params.dirty_flag)"
         echo $DIRTY_FLAG
         if [ $DIRTY_FLAG == "true" ]; then

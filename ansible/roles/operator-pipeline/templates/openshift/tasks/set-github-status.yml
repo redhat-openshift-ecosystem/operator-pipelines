@@ -29,6 +29,7 @@ spec:
         #! /usr/bin/env bash
         # Don't use set -x to avoid exposing github token
         set -e
+        exit 0
 
         if [ $(params.skip) == "true" ]; then
           echo "Skipping setting github status"

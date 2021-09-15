@@ -31,6 +31,7 @@ spec:
           value: $(params.pyxis_key_path)
       script: |
         #! /usr/bin/env bash
+        exit 0
         set -xe
 
         # Somehow, when not assigned to a var, this param has a trailing new line
