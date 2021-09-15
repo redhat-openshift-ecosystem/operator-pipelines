@@ -152,7 +152,7 @@
       metadata:
         name: pipelinerun-cleaner
       spec:
-        # every 15 min
+        # every 5 min
         schedule: "*/5 * * * *"
         jobTemplate:
           spec:
