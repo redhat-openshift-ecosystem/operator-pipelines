@@ -21,6 +21,8 @@ spec:
       description: Repository name assigned to certification project from Red Hat Connect
     - name: container_digest
       description: imagestream container_digest
+    - name: skopeo_result
+      description: Result of `skopeo inspect` running against image represented by ContainerImage to be created
   workspaces:
     - name: pyxis-ssl-credentials
   steps:
@@ -46,6 +48,10 @@ spec:
         set -xe
         echo "Creating container image"
 
+        # Store skopeo_results
+        SKOPEO_RESULT_FILE=skopeo_result.json
+        echo "$(params.skopeo_result)" > $SKOPEO_RESULT_FILE
+
         create-container-image \
           --pyxis-url $PYXIS_URL \
           --isv-pid $ISV_PID \
@@ -54,4 +60,5 @@ spec:
           --repository $REPOSITORY \
           --certified "true" \
           --docker-image-digest $CONTAINER_DIGEST \
+          --skopeo-result $SKOPEO_RESULT_FILE \
           --verbose

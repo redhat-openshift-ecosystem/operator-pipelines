@@ -31,6 +31,7 @@ spec:
       optional: true
     - name: pyxis-ssl-credentials
     - name: github-bot-token
+    - name: registry-credentials
   tasks:
     # Set environment
     - name: set-env
@@ -152,6 +153,11 @@ spec:
       params:
         - name: image
           value: "docker://$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+        - name: registry
+          value: $(params.registry)
+      workspaces:
+        - name: registry-credentials
+          workspace: registry-credentials
 
     # Publish image to OCP registry
     - name: publish-to-ocp-registry
@@ -197,6 +203,8 @@ spec:
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: skopeo_result
+          value: "$(tasks.skopeo-inspect.results.skopeo_result)"
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials

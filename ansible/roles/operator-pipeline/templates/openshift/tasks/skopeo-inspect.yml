@@ -2,10 +2,16 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: merge-pr
+  name: skopeo-inspect
 spec:
   params:
     - name: image
+      description: reference to the existing index image
+    - name: registry
+      description: Registry that contains index image
+  workspaces:
+    - name: registry-credentials
+      description: Docker config for retrieving the index image
   results:
     - name: skopeo_result
   steps:
@@ -14,4 +20,6 @@ spec:
       script: |
         set -xe pipefail
 
-        skopeo inspect $(params.image) | $(results.skopeo_result)
+        skopeo login $(params.registry) --authfile $(workspaces.credentials.path)/.dockerconfigjson \
+
+        skopeo inspect $(params.image) | tee $(results.skopeo_result.path)

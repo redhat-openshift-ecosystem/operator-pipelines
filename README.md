@@ -143,4 +143,5 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=github-bot-token,secret=github-bot-token \
+  --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --showlog
