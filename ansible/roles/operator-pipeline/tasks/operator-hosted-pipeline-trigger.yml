@@ -87,6 +87,8 @@
                 value: $(body.pull_request.base.repo.html_url)
               - name: git_username
                 value: $(body.pull_request.head.user.login)
+              - name: git_commit
+                value: $(body.pull_request.head.sha)
               - name: pr_head_label
                 value: $(body.pull_request.head.label)
               - name: env
@@ -117,6 +119,7 @@
               - name: git_fork_url
               - name: git_repo_url
               - name: git_username
+              - name: git_commit
               - name: pr_head_label
               - name: bundle_path
               - name: env

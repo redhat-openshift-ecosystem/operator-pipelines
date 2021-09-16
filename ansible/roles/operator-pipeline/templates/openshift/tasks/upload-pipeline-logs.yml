@@ -57,7 +57,7 @@ spec:
         set -xe
 
         if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
-          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
           export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 

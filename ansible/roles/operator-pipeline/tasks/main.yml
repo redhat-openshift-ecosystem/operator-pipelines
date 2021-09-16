@@ -11,7 +11,7 @@
           metadata:
             name: "{{ service_account_name }}"
 
-    - name: Grant service account admin access
+    - name: Grant ansible service account admin access
       k8s:
         state: present
         namespace: "{{ oc_namespace }}"
@@ -100,7 +100,7 @@
           suffix: "{{ suffix }}"
           env: "{{ env }}"
       data:
-        github_bot_token.txt: "{{ lookup('file', operator_pipeline_github_bot_token, rstrip=False) | b64encode }}"
+        github_bot_token: "{{ lookup('file', operator_pipeline_github_bot_token, rstrip=False) | b64encode }}"
 
 - name: Create Operator pipeline github webhook secret
   no_log: yes
@@ -121,6 +121,24 @@
       data:
         webhook-secret: "{{ lookup('file', operator_pipeline_webhook_secret, rstrip=False) | b64encode }}"
 
+- name: Create Operator pipeline kerberos keytab secret
+  no_log: yes
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: kerberos-keytab
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        keytab: "{{ lookup('file', kerberos_keytab, rstrip=False) | b64encode }}"
 
 - name: Deploy pipeline tasks
   k8s:
@@ -140,5 +158,29 @@
   with_items:
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
     - ../templates/openshift/pipelines/operator-release-pipeline.yml
+
+
+- name: Create cleaning CronJob
+  k8s:
+    state: present
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: pipelinerun-cleaner
+      spec:
+        # every 5 min
+        schedule: "*/5 * * * *"
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: "{{ service_account_name }}"
+                containers:
+                  - name: tkn
+                    image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8:0.19.0-2
+                    command: ["tkn", "pipelinerun", "delete", "--keep", '"{{ preserve_after_cleanup }}"']
+                restartPolicy: OnFailure
 
 - include: tasks/operator-hosted-pipeline-trigger.yml

@@ -33,10 +33,12 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        echo "Attempting to reserve operator name"
+        # Somehow, when not assigned to a var, this param has a trailing new line
+        ASSOCIATION=$(params.association)
+        echo "Attempting to reserve operator name for assocation $ASSOCIATION"
 
         reserve-operator-name \
-          --association "$(params.association)"  \
+          --association $ASSOCIATION \
           --operator-name "$(params.operator_name)" \
           --pyxis-url "$(params.pyxis_url)" \
           --source "certified-operators" \

@@ -11,6 +11,9 @@ spec:
       description: imagestream container_digest
     - name: bundle_versions
       description: All known supported OCP indices
+  results:
+    - name: status
+      description: Indicates a status of publishing a bundle to an index
   steps:
     - name: publish-bundle
       image: registry.access.redhat.com/ubi8-minimal
@@ -21,4 +24,4 @@ spec:
         echo "Calling the IIB"
         echo "Got result- updating GitHub status"
 
-        echo "ok"
+        echo "success" | tee "$(results.status.path)"
