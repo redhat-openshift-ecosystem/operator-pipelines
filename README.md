@@ -39,6 +39,7 @@ tkn pipeline start operator-ci-pipeline \
   --param env=production \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=kubeconfig,secret=kubeconfig \
+  --workspace name=ssh-dir,secret=github-ssh-credentials \
   --showlog
 ```
 If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:
@@ -103,9 +104,9 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
-  --workspace name=kubeconfig,secret=my-kubeconfig \
+  --workspace name=kubeconfig,secret=kubeconfig \
   --workspace name=github-bot-token,secret=github-bot-token \
-  --workspace name=kubeconfig,secret=my-kubeconfig \
+  --workspace name=kubeconfig,secret=kubeconfig \
   --showlog
   # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
 ```

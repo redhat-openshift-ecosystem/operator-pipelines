@@ -1,0 +1,17 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: merge-pr
+spec:
+  params:
+    - name: image
+  results:
+    - name: skopeo_result
+  steps:
+    - name: skopeo-inspect
+      image: registry.redhat.io/rhel8/skopeo:8.4-13
+      script: |
+        set -xe pipefail
+
+        skopeo inspect $(params.image) | $(results.skopeo_result)

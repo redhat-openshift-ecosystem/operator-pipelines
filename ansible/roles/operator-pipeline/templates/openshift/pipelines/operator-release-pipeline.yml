@@ -142,6 +142,14 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
+    - name: skopeo-inspect
+      taskRef:
+        name: skopeo-inspect
+        kind: Task
+      params:
+        - name: image
+          value: "docker://$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+
     # Publish image to OCP registry
     - name: publish-to-ocp-registry
       runAfter:
