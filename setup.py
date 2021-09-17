@@ -34,6 +34,7 @@ setup(
             "get-vendor-related-data=operatorcert.entrypoints.get_vendor_related_data:main",
             "open-pull-request=operatorcert.entrypoints.github_pr:main",
             "publish=operatorcert.entrypoints.publish:main",
+            "hydra-checklist=operatorcert.entrypoints.hydra_checklist:main",
         ],
     },
 )
