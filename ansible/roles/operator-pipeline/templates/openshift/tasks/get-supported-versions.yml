@@ -15,7 +15,7 @@ spec:
     - name: indices
       description: All known supported OCP indices
     - name: max_version_indices
-      description: Latest known supported OCP indice
+      description: Latest known supported OCP indices
   workspaces:
     - name: source
   steps:

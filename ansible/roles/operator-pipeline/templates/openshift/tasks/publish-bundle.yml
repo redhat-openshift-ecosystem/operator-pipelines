@@ -11,17 +11,39 @@ spec:
       description: imagestream container_digest
     - name: bundle_versions
       description: All known supported OCP indices
+    - name: iib_url
+      description: IIB API url
+      default: https://iib.engineering.redhat.com
+    - name: kerberos_keytab
+      description: Kerberos keytab file name
+      default: krb5.keytab
   results:
     - name: status
       description: Indicates a status of publishing a bundle to an index
+  workspaces:
+    - name: krb-keytab
+      description: Workspace with kerberos keytab.
   steps:
     - name: publish-bundle
-      image: registry.access.redhat.com/ubi8-minimal
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: QUAY_USER
+          value: "todo:get-from-secret"
+        - name: QUAY_TOKEN
+          value: "todo:get-from-secret"
+        - name: CNR_TOKEN
+          value: "todo:get-from-secret"
+        - name: KRB_KEYTAB_FILE
+          value: "$(workspaces.credentials.path)/$(params.kerberos_keytab)"
       script: |
         #! /usr/bin/env bash
-        echo "Starting bundle publish process"
-        echo "updating GitHub status to pending"
-        echo "Calling the IIB"
-        echo "Got result- updating GitHub status"
+
+        # TODO: create index pull spec, bundle pull spec and org
+        index \
+          --iib-url "$(params.iib_url)" \
+          --from-index redhat/redhat----certified-operator-index:v4.6 \
+          --bundle-pullspec quay.io/redhat-isv/kogito-operator@sha256:b781ff252c9823bac15afa17394dfbd753594f74591635dc9df24f3c64848b39 \
+          --organization certified-operator \
+          --verbose
 
         echo "success" | tee "$(results.status.path)"
