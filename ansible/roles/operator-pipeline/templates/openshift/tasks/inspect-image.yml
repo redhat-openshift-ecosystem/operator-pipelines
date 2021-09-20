@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: skopeo-inspect
+  name: inspect-image
 spec:
   params:
     - name: image
@@ -12,14 +12,22 @@ spec:
   workspaces:
     - name: registry-credentials
       description: Docker config for retrieving the index image
-  results:
-    - name: skopeo_result
+    - name: image-data
+      description: Workspace to store the large json files with the image data
   steps:
     - name: skopeo-inspect
       image: registry.redhat.io/rhel8/skopeo:8.4-13
       script: |
-        set -xe pipefail
+        set -xe
 
         skopeo login $(params.registry) --authfile $(workspaces.credentials.path)/.dockerconfigjson \
 
-        skopeo inspect $(params.image) | tee $(results.skopeo_result.path)
+        skopeo inspect docker://$(params.image) > $(workspaces.image-data.path)/skopeo.json
+    - name: podman-inspect
+      image: registry.redhat.io/rhel8/podman:8.4-14
+      script: |
+        set -xe
+
+        podman pull $(params.image)
+
+        podman image inspect $(params.image) > $(workspaces.image-data.path)/podman.json

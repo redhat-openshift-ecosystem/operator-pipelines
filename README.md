@@ -141,6 +141,7 @@ tkn pipeline start operator-release-pipeline \
   --param git_commit=3ffff387caac0a5b475f44c4a54fb45eebb8dd8e \
   --param is_latest=true \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=github-bot-token,secret=github-bot-token \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \

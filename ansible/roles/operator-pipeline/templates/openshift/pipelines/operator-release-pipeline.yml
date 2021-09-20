@@ -32,6 +32,7 @@ spec:
     - name: pyxis-ssl-credentials
     - name: github-bot-token
     - name: registry-credentials
+    - name: image-data
   tasks:
     # Set environment
     - name: set-env
@@ -146,18 +147,20 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
-    - name: skopeo-inspect
+    - name: inspect-image
       taskRef:
-        name: skopeo-inspect
+        name: inspect-image
         kind: Task
       params:
         - name: image
-          value: "docker://$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: registry
           value: $(params.registry)
       workspaces:
         - name: registry-credentials
           workspace: registry-credentials
+        - name: image-data
+          workspace: image-data
 
     # Publish image to OCP registry
     - name: publish-to-ocp-registry
@@ -176,7 +179,7 @@ spec:
         - name: dist_method
           value: "$(tasks.get-cert-project-related-data.results.dist_method)"
         - name: image
-          value: "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: *bundleIndexImage
         - name: is_latest
           value: "$(params.is_latest)"
         - name: bundle_version
@@ -186,6 +189,7 @@ spec:
     - name: create-container-image
       runAfter:
         - publish-to-ocp-registry
+        - inspect-image
       taskRef:
         name: create-container-image
       params:
@@ -203,11 +207,15 @@ spec:
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
-        - name: skopeo_result
-          value: "$(tasks.skopeo-inspect.results.skopeo_result)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: is_latest
+          value: "$(params.is_latest)"
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
+        - name: image-data
+          workspace: image-data
 
     # Publish Vendor, Repository
     - name: publish-resources

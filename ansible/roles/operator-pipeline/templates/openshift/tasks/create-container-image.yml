@@ -21,10 +21,15 @@ spec:
       description: Repository name assigned to certification project from Red Hat Connect
     - name: container_digest
       description: imagestream container_digest
-    - name: skopeo_result
-      description: Result of `skopeo inspect` running against image represented by ContainerImage to be created
+    - name: bundle_version
+      description: Operator bundle version
+    - name: is_latest
+      description: If explicitly set to "true", resulting image will be tagged as "latest"
   workspaces:
     - name: pyxis-ssl-credentials
+      description: SSL certificates allowing authentication in Pyxis
+    - name: image-data
+      description: JSON files with data about image retrieved with Skopeo and Podman
   steps:
     - name: create-container-image
       image: quay.io/redhat-isv/operator-pipelines-images:latest
@@ -43,14 +48,16 @@ spec:
           value: $(params.repository_name)
         - name: CONTAINER_DIGEST
           value: $(params.container_digest)
+        - name: BUNDLE_VERSION
+          value: $(params.bundle_version)
+        - name: IS_LATEST
+          value: $(params.is_latest)
       script: |
         #! /usr/bin/env bash
         set -xe
         echo "Creating container image"
 
-        # Store skopeo_results
-        SKOPEO_RESULT_FILE=skopeo_result.json
-        echo "$(params.skopeo_result)" > $SKOPEO_RESULT_FILE
+        IMAGE_SIZE=$(cat $(workspaces.image-data.path)/podman.json | jq '.[0].Size')
 
         create-container-image \
           --pyxis-url $PYXIS_URL \
@@ -60,5 +67,8 @@ spec:
           --repository $REPOSITORY \
           --certified "true" \
           --docker-image-digest $CONTAINER_DIGEST \
-          --skopeo-result $SKOPEO_RESULT_FILE \
+          --skopeo-result $(workspaces.image-data.path)/skopeo.json \
+          --bundle-version $BUNDLE_VERSION \
+          --image-size $IMAGE_SIZE \
+          --is-latest $IS_LATEST \
           --verbose
