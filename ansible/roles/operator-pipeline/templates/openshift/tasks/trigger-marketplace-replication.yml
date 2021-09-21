@@ -1,0 +1,39 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: trigger-marketplace-replication
+spec:
+  params:
+    - name: bundle_image
+      description: Registry path to the operator bundle image
+    - name: bundle_image_digest
+      description: Digest of the operator bundle image
+    - name: package
+      description: Operator package name
+    - name: ocp_version
+      description: OCP versions in the bundle annotations
+    - name: version
+      description: Version of the operator bundle
+  workspaces:
+    - name: ibm-webhook-token
+  steps:
+    - name: trigger-marketplace-replication
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: WEBHOOK_TOKEN_PATH
+          value: $(workspaces.ibm-webhook-token.path)/token
+      script: |
+        #! /usr/bin/env bash
+        # Don't use set -x to avoid exposing webhook token
+        set -e
+
+        export IBM_WEBHOOK_TOKEN=$(cat $WEBHOOK_TOKEN_PATH)
+
+        marketplace-replication \
+          --bundle-image "$(params.bundle_image)" \
+          --bundle-image-digest "$(params.bundle_image_digest)" \
+          --package "$(params.package)" \
+          --ocp-version "$(params.ocp_version)" \
+          --version "$(params.version)" \
+          --verbose

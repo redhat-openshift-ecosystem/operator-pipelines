@@ -50,3 +50,8 @@ spec:
           | jq -r '.max_version_index.path' \
           | tr -d '\n\r' \
           | tee $(results.max_version_indices.path)
+
+        echo $VERSION_INFO \
+          | jq -r '.versions_annotation' \
+          | tr -d '\n\r' \
+          | tee $(results.ocp_version.path)

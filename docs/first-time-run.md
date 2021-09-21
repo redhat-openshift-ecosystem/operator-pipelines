@@ -183,3 +183,11 @@ To create the secret which contains the OCP cluster Kubeconfig:
 oc create secret generic ocp-registry-kubeconfig \
   --from-literal kubeconfig=<kubeconfig>
 ```
+
+#### IBM webhook token
+The Release pipeline needs to call an IBM webhook to trigger marketplace replication. To
+authenticate with the webhook, a token is needed.
+
+```bash
+oc create secret generic ibm-webhook-token --from-literal ibm-webhook-token=< TOKEN >
+```
