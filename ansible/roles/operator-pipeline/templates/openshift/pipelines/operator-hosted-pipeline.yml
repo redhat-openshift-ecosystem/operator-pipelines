@@ -552,13 +552,15 @@ spec:
         - verify-ci-results
       taskRef:
         name: github-add-comment
+      when:
+        - input: $(tasks.verify-ci-results.results.test_result)
+          operator: in
+          value: "failure"
       params:
         - name: REQUEST_URL
           value: "$(params.git_pr_url)"
         - name: COMMENT_OR_FILE
           value: "$(tasks.show-support-link-with-pr.results.comment)"
-        - name: test_result
-          value: "$(tasks.verify-ci-results.results.test_result)"
       workspaces:
         - name: github-bot-token
           workspace: github-bot-token
