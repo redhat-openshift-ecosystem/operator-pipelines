@@ -564,6 +564,7 @@ spec:
           workspace: github-bot-token
         - name: comment-file
           workspace: results
+
     - name: set-github-status-result
       runAfter:
         - verify-ci-results
