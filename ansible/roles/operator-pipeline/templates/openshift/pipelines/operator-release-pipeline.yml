@@ -46,6 +46,7 @@ spec:
     - name: registry-credentials
     - name: image-data
     - name: ocp-registry-kubeconfig
+    - name: ibm-webhook-token
 
   tasks:
     # Set a pending GitHub status check first to provide the user with immeditate feedback.
@@ -286,6 +287,28 @@ spec:
         - name: ocp-registry-kubeconfig
           workspace: ocp-registry-kubeconfig
 
+    # Trigger IBM webhook for marketplace replication
+    - name: trigger-marketplace-replication
+      runAfter:
+        - publish-to-ocp-registry
+        - get-supported-versions
+      taskRef:
+        name: trigger-marketplace-replication
+      params:
+        - name: bundle_image
+          value: *bundleImage
+        - name: bundle_image_digest
+          value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
+        - name: package
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: ocp_version
+          value: "$(tasks.get-supported-versions.results.ocp_version)"
+        - name: version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+      workspaces:
+        - name: ibm-webhook-token
+          workspace: ibm-webhook-token
+
     # create container image
     - name: create-container-image
       runAfter:
@@ -348,6 +371,7 @@ spec:
       runAfter:
         - publish-resources
         - get-supported-versions
+        - trigger-marketplace-replication
       taskRef:
         name: publish-bundle
       params:

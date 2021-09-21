@@ -149,5 +149,6 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=kerberos-keytab,secret=kerberos-keytab \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=ocp-registry-kubeconfig,secret=ocp-registry-kubeconfig \
+  --workspace name=ibm-webhook-token,secret=ibm-webhook-token \
   --showlog
 ```
