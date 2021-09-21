@@ -29,9 +29,4 @@ spec:
           exit 0
         fi
 
-        # did preflight/ CI have the latest version?
-        PREFLIGHT_VERSION=$(cat PREFLIGHT_RESULTS | jq '.test_library.version' | grep .)
-        if [$PREFLIGHT_VERSION >= $(params.preflight_min_version)]; then
-          echo "preflight is having the latest version"
-        fi
         echo "success" | tee $(results.test_result.path)
