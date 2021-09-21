@@ -550,12 +550,12 @@ spec:
     - name: github-add-comment
       runAfter:
         - verify-ci-results
-      taskRef:
-        name: github-add-comment
       when:
         - input: $(tasks.verify-ci-results.results.test_result)
           operator: in
-          value: "failure"
+          values: ["failure"]
+      taskRef:
+        name: github-add-comment
       params:
         - name: REQUEST_URL
           value: "$(params.git_pr_url)"
