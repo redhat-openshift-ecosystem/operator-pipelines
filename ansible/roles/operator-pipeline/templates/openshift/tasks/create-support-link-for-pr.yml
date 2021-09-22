@@ -25,17 +25,22 @@ spec:
   steps:
     - name: create-support-link-for-pr
       image: quay.io/redhat-isv/operator-pipelines-images
+      env:
+        - name: LINK_ENV
+          value: $(params.env)
+        - name: LINK_TYPE
+          value: $(params.type)
+        - name: LINK_SOURCE
+          value: $(params.source)
+        - name: CERT_PROJECT_ID
+          value: $(params.cert_project_id)
+        - name: CERT_PROJECT_TYPE
+          value: $(params.cert_project_type)
+        - name: PULL_REUQEST_URL
+          value: $(params.pull_request_url)
       script: |
         #! /usr/bin/env bash
         set -e
-
-        LINK_ENV="$(params.env)"
-        # url parameters
-        LINK_TYPE=$(printf %s "$(params.type)")
-        LINK_SOURCE=$(printf %s "$(params.source)")
-        CERT_PROJECT_ID=$(printf %s "$(params.cert_project_id)")
-        CERT_PROJECT_TYPE=$(printf %s "$(params.cert_project_type)")
-        PULL_REUQEST_URL=$(printf %s "$(params.pull_request_url)")
 
         echo "Follow this link if you wish to open a support case:"
         echo "https://$URL_ENV.redhat.com/support/technology-partner/#/case/new?type=$LINK_TYPE&source=$LINK_SOURCE&cert_project_id=$CERT_PROJECT_ID&cert_project_type=$CERT_PROJECT_TYPE&pull_request_url=$PULL_REUQEST_URL" | tee $(results.comment.path)

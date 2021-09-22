@@ -27,6 +27,7 @@ spec:
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
   workspaces:
+    - name: pipeline
     - name: repository
     - name: results
     - name: ssh-dir
@@ -429,6 +430,9 @@ spec:
         # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
         - name: kubeconfig
           workspace: kubeconfig
+        - name: output
+          workspace: pipeline
+          subPath: preflight
 
     - name: upload-artifacts
       runAfter:

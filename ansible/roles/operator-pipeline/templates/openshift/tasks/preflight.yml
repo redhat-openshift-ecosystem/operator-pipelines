@@ -36,7 +36,6 @@ spec:
   workspaces:
     - name: output
       description: Storage for preflight results, logs and artifacts.
-      optional: true
     - name: kubeconfig
       description: A kubernetes config for the cluster used in preflight testing
     - name: credentials
