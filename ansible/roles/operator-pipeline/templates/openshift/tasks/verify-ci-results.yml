@@ -26,9 +26,9 @@ spec:
         # did preflight/ CI have the latest version?
         PREFLIGHT_VERSION=$(cat PREFLIGHT_RESULTS | jq '.test_library.version' | grep .)
         if [ "$(printf '%s\n' "$PREFLIGHT_MIN_VERSION" "$PREFLIGHT_VERSION" | sort -V | head -n1)" = "$PREFLIGHT_MIN_VERSION" ]; then
-          echo "preflight version satisfies the minimun requirement of version"
+          echo "Preflight version satisfies the minimun requirement of version"
         else
-          echo "preflight is having an outdated version $PREFLIGHT_VERSION"
+          echo "Preflight is having an outdated version $PREFLIGHT_VERSION"
           echo "Preflight version requires version $(params.preflight_min_version) or higher."
           exit 1
         fi
