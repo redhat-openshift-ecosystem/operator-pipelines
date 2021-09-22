@@ -356,6 +356,7 @@ def download_test_results(args) -> Optional[str]:
         {
             "passed": query_results[0]["passed"],
             "results": query_results[0]["results"],
+            "test_library": query_results[0]["test_library"],
         },
         indent=4,
     )

@@ -331,7 +331,14 @@ def test_download_test_results(mock_get: MagicMock):
 
     # Happy path- there are resources (test results)
     mock_rsp.json.return_value = {
-        "data": [{"_id": "1234", "results": {"a": "ok"}, "passed": True}]
+        "data": [
+            {
+                "_id": "1234",
+                "results": {"a": "ok"},
+                "passed": True,
+                "test_library": {},
+            }
+        ]
     }
     mock_get.return_value = mock_rsp
     # Act
