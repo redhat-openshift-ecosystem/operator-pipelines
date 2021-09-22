@@ -517,9 +517,9 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
-    - name: show-support-link-with-pr
+    - name: create-support-link-for-pr
       taskRef:
-        name: show-support-link-with-pr
+        name: create-support-link-for-pr
       params:
         - name: env
           value: "$(params.env)"
@@ -560,7 +560,7 @@ spec:
         - name: REQUEST_URL
           value: "$(params.git_pr_url)"
         - name: COMMENT_OR_FILE
-          value: "$(tasks.show-support-link-with-pr.results.comment)"
+          value: "$(tasks.create-support-link-for-pr.results.comment)"
       workspaces:
         - name: github-bot-token
           workspace: github-bot-token

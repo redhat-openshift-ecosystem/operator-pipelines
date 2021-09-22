@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: show-support-link-with-pr
+  name: create-support-link-for-pr
 spec:
   params:
     - name: env
@@ -23,25 +23,19 @@ spec:
   results:
     - name: comment
   steps:
-    - name: show-support-link-with-pr
+    - name: create-support-link-for-pr
       image: quay.io/redhat-isv/operator-pipelines-images
       script: |
         #! /usr/bin/env bash
         set -e
 
         LINK_ENV="$(params.env)"
-        # url-encode parameters
-        LINK_TYPE=$(printf %s "$(params.type)" | jq -sRr @uri)
-        LINK_SOURCE=$(printf %s "$(params.source)" | jq -sRr @uri)
-        CERT_PROJECT_ID=$(printf %s "$(params.cert_project_id)" | jq -sRr @uri)
-        CERT_PROJECT_TYPE=$(printf %s "$(params.cert_project_type)" | jq -sRr @uri)
-        PULL_REUQEST_URL=$(printf %s "$(params.pull_request_url)" | jq -sRr @uri)
-
-        # select the correct connect instance
-        URL_ENV="connect"
-        if [[ $LINK_ENV != "production" ]]; then
-            URL_ENV="$URL_ENV.$LINK_ENV"
-        fi
+        # url parameters
+        LINK_TYPE=$(printf %s "$(params.type)")
+        LINK_SOURCE=$(printf %s "$(params.source)")
+        CERT_PROJECT_ID=$(printf %s "$(params.cert_project_id)")
+        CERT_PROJECT_TYPE=$(printf %s "$(params.cert_project_type)")
+        PULL_REUQEST_URL=$(printf %s "$(params.pull_request_url)")
 
         echo "Follow this link if you wish to open a support case:"
         echo "https://$URL_ENV.redhat.com/support/technology-partner/#/case/new?type=$LINK_TYPE&source=$LINK_SOURCE&cert_project_id=$CERT_PROJECT_ID&cert_project_type=$CERT_PROJECT_TYPE&pull_request_url=$PULL_REUQEST_URL" | tee $(results.comment.path)
