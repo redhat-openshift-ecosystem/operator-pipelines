@@ -44,6 +44,13 @@ spec:
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id)
 
+        CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status')
+        if [ $CERTIFICATION_STATUS == "Started" ]; then
+          update-cert-project-data \
+            --pyxis-url $(params.pyxis_url) \
+            --cert-project-id $(params.cert_project_id) \
+            --certification-status "In Progress"
+
         # `grep .` ensures, that pipe fail if jq returns no results
         cat cert_project | jq '.container.isv_pid' | tr -d '"' | grep . | tee $(results.isv_pid.path)
         cat cert_project | jq '.container.repository_name' | tr -d '"' | grep . | tee $(results.repo_name.path)
