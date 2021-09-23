@@ -227,6 +227,13 @@ spec:
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: container_digest
           value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
 
     - name: set-github-status-published
       runAfter:

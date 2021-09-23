@@ -11,6 +11,16 @@ spec:
       description: imagestream container_digest
     - name: bundle_versions
       description: All known supported OCP indices
+    - name: pyxis_url
+      default: https://pyxis.engineering.redhat.com
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+  workspaces:
+    - name: pyxis-ssl-credentials
+      optional: true
   results:
     - name: status
       description: Indicates a status of publishing a bundle to an index
@@ -25,3 +35,22 @@ spec:
         echo "Got result- updating GitHub status"
 
         echo "success" | tee "$(results.status.path)"
+
+    - name: update-cert-project-data
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe -o pipefail
+
+        if [ $(results.status.path) == "success" ]; then
+          update-cert-project-data \
+            --pyxis-url $(params.pyxis_url) \
+            --cert-project-id $(params.cert_project_id) \
+            --certification-status "Published"       
+        fi
+
