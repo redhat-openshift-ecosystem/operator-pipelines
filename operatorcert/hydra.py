@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import requests
 import sys
 from typing import Any, Dict
@@ -41,6 +42,12 @@ def get(url: str) -> Dict[str, Any]:
         Dict[str, Any]: Hydra response
     """
     session = _get_session()
+
+    # Set up proxy for preprod instances due to Akamai preprod lockdown
+    regex = re.compile(r"^https:\/\/connect\.(dev|qa|stage)\.redhat\.com*")
+    match = regex.match(url)
+    if match:
+        session.proxies["https"] = "http://squid.corp.redhat.com:3128"
 
     LOGGER.debug(f"GET Hydra API request: {url}")
     resp = session.get(url)

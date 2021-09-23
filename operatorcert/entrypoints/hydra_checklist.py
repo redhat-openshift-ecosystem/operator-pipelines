@@ -2,7 +2,6 @@ import argparse
 import logging
 import sys
 from typing import Any
-from urllib.parse import urljoin
 
 from operatorcert import hydra
 
@@ -23,7 +22,7 @@ def setup_argparser() -> Any:
     )
     parser.add_argument(
         "--hydra-url",
-        default="https://connect.redhat.com/hydra/prm/",
+        default="https://connect.redhat.com/hydra/prm",
         help="URL to the Hydra API",
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
@@ -32,9 +31,10 @@ def setup_argparser() -> Any:
 
 def check_hydra_checklist_status(cert_project_id: str, hydra_url: str) -> Any:
     # query hydra checklist API
-    hydra_checklist_url = urljoin(
-        hydra_url, f"v1/projects/{cert_project_id}/checklist/status"
-    )
+    # Not using urljoin because for some reason it will eat up the prm at the end if
+    # url doesn't end with a /
+    hydra_checklist_url = f"{hydra_url}/v1/projects/{cert_project_id}/checklist/status"
+
     LOGGER.info("Examining pre-certification checklist from Hydra...")
     hydra_resp = hydra.get(hydra_checklist_url)
     if hydra_resp["completed"]:

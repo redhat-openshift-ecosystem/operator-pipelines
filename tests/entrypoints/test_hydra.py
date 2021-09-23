@@ -27,6 +27,14 @@ def test_get(mock_session: MagicMock) -> None:
     assert resp == {"key": "val"}
 
 
+@patch("operatorcert.hydra._get_session")
+def test_get_preprod_proxy(mock_session: MagicMock) -> None:
+    mock_session.return_value.get.return_value.json.return_value = {"key": "val"}
+
+    resp = hydra.get("https://connect.dev.redhat.com/foo/bar")
+    assert resp == {"key": "val"}
+
+
 @patch("sys.exit")
 @patch("operatorcert.hydra._get_session")
 def test_get_with_error(mock_session: MagicMock, mock_exit: MagicMock) -> None:
