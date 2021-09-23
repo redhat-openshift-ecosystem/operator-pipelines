@@ -78,8 +78,8 @@ spec:
         if [ $DIRTY_FLAG == "true" ]; then
           echo "Commit changes to temporary branch"
 
-          RANDOM_STRING=$(cat /dev/urandom | tr -dc 'a-z0-9'| fold -w 3 | head -n 1)
-          TEMP_BRANCH="pinned-operator-manifest-${RANDOM_STRING}"
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          TEMP_BRANCH="${CURRENT_BRANCH}-pinned"
           git checkout -b "${TEMP_BRANCH}"
           git add -u
           git commit -m "Pin the operator manifests"
