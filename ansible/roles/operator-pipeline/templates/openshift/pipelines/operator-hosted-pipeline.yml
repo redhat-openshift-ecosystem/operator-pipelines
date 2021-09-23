@@ -106,6 +106,25 @@ spec:
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
+    
+    # Update cert project related data
+    - name: update-cert-project-data
+      runAfter:
+        - get-cert-project-related-data
+      taskRef:
+        name: update-cert-project-data
+      params:
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+        - name: certification_status
+          value: "$(tasks.get-cert-project-related-data.results.certification_status)"
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
 
     # Validate submission
     - name: submission-validation
