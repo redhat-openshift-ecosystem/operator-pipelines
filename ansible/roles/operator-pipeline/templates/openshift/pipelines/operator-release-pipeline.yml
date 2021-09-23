@@ -227,7 +227,7 @@ spec:
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: container_digest
           value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
-    
+
     # Update cert project related data
     - name: update-cert-project-data
       runAfter:

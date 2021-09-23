@@ -106,7 +106,7 @@ spec:
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
-    
+
     # Update cert project related data
     - name: update-cert-project-data
       runAfter:
