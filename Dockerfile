@@ -22,6 +22,7 @@ RUN dnf update -y && \
     findutils \
     git \
     jq \
+    yamllint \
     openssl-devel \
     pip \
     python3-devel && \
