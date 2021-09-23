@@ -15,8 +15,6 @@ spec:
       default: https://catalog.redhat.com/api/containers/
     - name: isv_pid
       description: isv_pid of the certification project from Red Hat Connect
-    - name: registry
-      description: certification project registry
     - name: repository_name
       description: Repository name assigned to certification project from Red Hat Connect
     - name: container_digest
@@ -42,8 +40,6 @@ spec:
           value: $(params.pyxis_url)
         - name: ISV_PID
           value: $(params.isv_pid)
-        - name: REGISTRY
-          value: $(params.registry)
         - name: REPOSITORY
           value: $(params.repository_name)
         - name: CONTAINER_DIGEST
@@ -57,17 +53,16 @@ spec:
         set -xe
         echo "Creating container image"
 
-        IMAGE_SIZE=$(cat $(workspaces.image-data.path)/podman.json | jq '.[0].Size')
-
         create-container-image \
           --pyxis-url $PYXIS_URL \
           --isv-pid $ISV_PID \
           --repo-published "true" \
-          --registry $REGISTRY \
+          --registry "registry.connect.redhat.com" \
           --repository $REPOSITORY \
           --certified "true" \
           --docker-image-digest $CONTAINER_DIGEST \
           --skopeo-result $(workspaces.image-data.path)/skopeo.json \
+          --podman-result $(workspaces.image-data.path)/podman.json \
           --bundle-version $BUNDLE_VERSION \
           --image-size $IMAGE_SIZE \
           --is-latest $IS_LATEST \

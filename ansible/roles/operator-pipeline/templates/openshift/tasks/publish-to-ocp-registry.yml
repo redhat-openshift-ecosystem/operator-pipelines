@@ -13,7 +13,7 @@ spec:
     - name: dist_method
       description: distribution method- either marketplace or certified
     - name: image
-      description: reference to the existing index image
+      description: reference to the existing bundle image
     - name: is_latest
       description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: bundle_version
@@ -27,6 +27,8 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        # jq needs to be installed in order to get the particular fields of the json resources definitions.
+        # TODO: provide image with oc and jq
         dnf install jq -y
 
         # This task authenticates to registry with the credentials associated with service account

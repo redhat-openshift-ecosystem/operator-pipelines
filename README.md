@@ -101,7 +101,7 @@ tkn pipeline start operator-hosted-pipeline \
   --param env=production \
   --param preflight_min_version=1.0.0 \
   --param ci_min_version=1.0.0 \
-  --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
@@ -141,7 +141,7 @@ tkn pipeline start operator-release-pipeline \
   --param git_commit=3ffff387caac0a5b475f44c4a54fb45eebb8dd8e \
   --param is_latest=true \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=github-bot-token,secret=github-bot-token \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \

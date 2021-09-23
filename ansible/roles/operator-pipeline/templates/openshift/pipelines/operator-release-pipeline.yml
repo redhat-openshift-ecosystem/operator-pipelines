@@ -153,7 +153,7 @@ spec:
         kind: Task
       params:
         - name: image
-          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: registry
           value: $(params.registry)
       workspaces:
@@ -179,7 +179,7 @@ spec:
         - name: dist_method
           value: "$(tasks.get-cert-project-related-data.results.dist_method)"
         - name: image
-          value: *bundleIndexImage
+          value: *bundleImage
         - name: is_latest
           value: "$(params.is_latest)"
         - name: bundle_version
@@ -195,8 +195,6 @@ spec:
       params:
         - name: isv_pid
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
-        - name: registry
-          value: "$(params.registry)"
         - name: repository_name
           value: "$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: container_digest
