@@ -64,6 +64,5 @@ spec:
           --skopeo-result $(workspaces.image-data.path)/skopeo.json \
           --podman-result $(workspaces.image-data.path)/podman.json \
           --bundle-version $BUNDLE_VERSION \
-          --image-size $IMAGE_SIZE \
           --is-latest $IS_LATEST \
           --verbose
