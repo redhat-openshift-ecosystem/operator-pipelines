@@ -9,7 +9,7 @@ spec:
       default: "false"
       description: Skips preflight execution if set to "true"
     - name: base_image
-      default: quay.io/opdev/preflight:0.0.0
+      default: quay.io/redhat-isv/digest-pinning-tool:latest
       description: Preflight image used
     - name: package_name
       description: Package name for the Operator under test
