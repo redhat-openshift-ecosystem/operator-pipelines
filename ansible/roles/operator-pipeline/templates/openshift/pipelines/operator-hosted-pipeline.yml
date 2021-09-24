@@ -525,8 +525,8 @@ spec:
       taskRef:
         name: create-support-link-for-pr
       params:
-        - name: env
-          value: "$(params.env)"
+        - name: connect_url
+          value: $(tasks.set-env.results.connect_url)
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pull_request_url
