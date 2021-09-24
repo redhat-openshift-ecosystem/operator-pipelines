@@ -27,7 +27,6 @@ spec:
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
   workspaces:
-    - name: pipeline
     - name: repository
     - name: results
     - name: ssh-dir
@@ -431,7 +430,7 @@ spec:
         - name: kubeconfig
           workspace: kubeconfig
         - name: output
-          workspace: pipeline
+          workspace: repository
           subPath: preflight
 
     - name: upload-artifacts
