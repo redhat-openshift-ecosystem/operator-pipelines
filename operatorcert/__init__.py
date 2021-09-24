@@ -68,7 +68,10 @@ def get_csv_annotations(bundle_path: pathlib.Path, package: str) -> Dict:
 
 
 def get_supported_indices(
-    pyxis_url: str, ocp_versions_range: str, max_ocp_version: str = None
+    pyxis_url: str,
+    ocp_versions_range: str,
+    organization: str,
+    max_ocp_version: str = None,
 ) -> List[str]:
     """
     Gets all the known supported OCP indices for this bundle.
@@ -76,6 +79,7 @@ def get_supported_indices(
     Args:
         pyxis_url (str): Base URL to Pyxis
         ocp_versions_range (str): OpenShift version annotation
+        organization (str): Organization of the index (e.g. "certified-operators")
         max_ocp_version (str): OLM property in the bundle CSV
 
     Returns:
@@ -83,7 +87,7 @@ def get_supported_indices(
     """
     url = urljoin(pyxis_url, "v1/operators/indices")
 
-    filter_ = "organization==certified-operators"
+    filter_ = f"organization=={organization}"
     if max_ocp_version:
         filter_ += f";ocp_version=le={max_ocp_version}"
 
@@ -102,7 +106,9 @@ def get_supported_indices(
     return rsp.json()["data"]
 
 
-def ocp_version_info(bundle_path: pathlib.Path, pyxis_url: str) -> Dict:
+def ocp_version_info(
+    bundle_path: pathlib.Path, pyxis_url: str, organization: str
+) -> Dict:
     """
     Gathers some information pertaining to the OpenShift versions defined in the
     Operator bundle.
@@ -110,6 +116,7 @@ def ocp_version_info(bundle_path: pathlib.Path, pyxis_url: str) -> Dict:
     Args:
         bundle_path (Path): A path to the root of the bundle
         pyxis_url (str): Base URL to Pyxis
+        organization (str): Organization of the index (e.g. "certified-operators")
 
     Returns:
         A dict of pertinent OCP version information
@@ -136,7 +143,7 @@ def ocp_version_info(bundle_path: pathlib.Path, pyxis_url: str) -> Dict:
             break
 
     indices = get_supported_indices(
-        pyxis_url, ocp_versions_range, max_ocp_version=max_ocp_version
+        pyxis_url, ocp_versions_range, organization, max_ocp_version=max_ocp_version
     )
 
     if not indices:

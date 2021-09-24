@@ -72,7 +72,7 @@ def test_get_supported_indices(mock_get: MagicMock) -> None:
     mock_get.return_value = mock_rsp
 
     result = operatorcert.get_supported_indices(
-        "https://foo.bar", "4.6-4.8", max_ocp_version="4.7"
+        "https://foo.bar", "4.6-4.8", "certified-operators", max_ocp_version="4.7"
     )
     assert result == ["foo", "bar"]
 
@@ -81,7 +81,8 @@ def test_get_supported_indices(mock_get: MagicMock) -> None:
 def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
     bundle_root = bundle["root"]
     mock_indices.return_value = [{"ocp_version": "4.7", "path": "quay.io/foo:4.7"}]
-    info = operatorcert.ocp_version_info(bundle_root, "")
+    organization = "certified-operators"
+    info = operatorcert.ocp_version_info(bundle_root, "", organization)
     assert info == {
         "versions_annotation": "4.6-4.8",
         "max_version_property": "4.7",
@@ -91,7 +92,7 @@ def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
 
     mock_indices.return_value = []
     with pytest.raises(ValueError):
-        operatorcert.ocp_version_info(bundle_root, "")
+        operatorcert.ocp_version_info(bundle_root, "", organization)
 
     annotations = {
         "annotations": {
@@ -102,14 +103,14 @@ def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
         yaml.safe_dump(annotations, fh)
 
     with pytest.raises(ValueError):
-        operatorcert.ocp_version_info(bundle_root, "")
+        operatorcert.ocp_version_info(bundle_root, "", organization)
 
     annotations["annotations"] = {"com.redhat.openshift.versions": "4.6-4.8"}
     with bundle["annotations"].open("w") as fh:
         yaml.safe_dump(annotations, fh)
 
     with pytest.raises(ValueError):
-        operatorcert.ocp_version_info(bundle_root, "")
+        operatorcert.ocp_version_info(bundle_root, "", organization)
 
 
 def test_get_repo_and_org_from_github_url():
