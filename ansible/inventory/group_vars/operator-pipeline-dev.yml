@@ -4,5 +4,5 @@ branch: "{{ env }}"
 operator_pipeline_webhook_secret: ../../vaults/common/github-webhook-secret-preprod.txt
 kerberos_keytab: ../../vaults/common/nonprod-operatorpipelines.keytab
 
-# how many of newest pipelineruns should be presrved on cleanup?
-preserve_after_cleanup: 5
+# how many of newest pipelineruns should be preserved on cleanup?
+preserve_after_cleanup: "5"

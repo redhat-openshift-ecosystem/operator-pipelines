@@ -14,6 +14,8 @@ spec:
       description: Container API URL based for selected environment
     - name: target_branch
       description: Target branch for submitted PR in upstream repository
+    - name: connect_url
+      description: Connect SPA URL based on selected environment
   steps:
     - name: set-env
       image: registry.access.redhat.com/ubi8-minimal
@@ -40,6 +42,7 @@ spec:
                     ;;
                 esac
                 TARGET_BRANCH="main"
+                CONNECT_URL="https://connect.redhat.com"
             ;;
             stage)
                 case $ACCESS_TYPE in
@@ -51,6 +54,7 @@ spec:
                     ;;
                 esac
                 TARGET_BRANCH="stage"
+                CONNECT_URL="https://connect.stage.redhat.com"
             ;;
             qa)
                 case $ACCESS_TYPE in
@@ -62,6 +66,7 @@ spec:
                     ;;
                 esac
                 TARGET_BRANCH="qa"
+                CONNECT_URL="https://connect.qa.redhat.com"
             ;;
             dev)
                 case $ACCESS_TYPE in
@@ -73,6 +78,7 @@ spec:
                     ;;
                 esac
                 TARGET_BRANCH="dev"
+                CONNECT_URL="https://connect.dev.redhat.com"
             ;;
             *)
                 echo "Unknown environment."
@@ -82,3 +88,4 @@ spec:
 
         echo -n $PYXIS_URL | tee $(results.pyxis_url.path)
         echo -n $TARGET_BRANCH | tee $(results.target_branch.path)
+        echo -n $CONNECT_URL | tee $(results.connect_url.path)
