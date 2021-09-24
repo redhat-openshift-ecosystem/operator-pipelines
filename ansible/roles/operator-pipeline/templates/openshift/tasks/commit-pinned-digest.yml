@@ -83,7 +83,7 @@ spec:
           git checkout -b "${TEMP_BRANCH}"
           git add -u
           git commit -m "Pin the operator manifests"
-          git push origin "${TEMP_BRANCH}"
+          git push origin "${TEMP_BRANCH}" -f
 
           echo -n "$TEMP_BRANCH" > $(results.branch.path)
 
