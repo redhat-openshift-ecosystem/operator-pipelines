@@ -149,7 +149,7 @@ def create_repository(args: Any, project: Dict[str, Any]) -> Any:
     repo_name = container.get("repository_name")
     repository = f"{vendor_label}/{repo_name}"
 
-    long_description = container.get("repository_description", " ")
+    long_description = container.get("repository_description") or " "
     # strip html, trim by word boundary, max length 100, add ellipsis
     short_description = html2text.html2text(long_description)
     short_description = textwrap.wrap(short_description, 97)[0] + "..."

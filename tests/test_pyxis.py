@@ -63,6 +63,25 @@ def test_patch_error(mock_session: MagicMock) -> None:
 
 
 @patch("operatorcert.pyxis._get_session")
+def test_put(mock_session: MagicMock) -> None:
+    mock_session.return_value.put.return_value.json.return_value = {"key": "val"}
+    resp = pyxis.put("https://foo.com/v1/bar", {})
+
+    assert resp == {"key": "val"}
+
+
+@patch("operatorcert.pyxis._get_session")
+def test_put_error(mock_session: MagicMock) -> None:
+    response = Response()
+    response.status_code = 400
+    mock_session.return_value.put.return_value.raise_for_status.side_effect = HTTPError(
+        response=response
+    )
+    with pytest.raises(HTTPError):
+        pyxis.put("https://foo.com/v1/bar", {})
+
+
+@patch("operatorcert.pyxis._get_session")
 def test_get(mock_session: MagicMock) -> None:
     mock_session.return_value.get.return_value = {"key": "val"}
     resp = pyxis.get("https://foo.com/v1/bar")
