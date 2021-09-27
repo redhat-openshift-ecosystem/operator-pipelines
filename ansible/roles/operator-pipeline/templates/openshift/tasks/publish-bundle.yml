@@ -5,10 +5,8 @@ metadata:
   name: publish-bundle
 spec:
   params:
-    - name: cert_project_id
-      description: ID of the bundle Certification Project (as in bundle ci.yaml)
-    - name: container_digest
-      description: imagestream container_digest
+    - name: bundle_pullspec
+      description: Bundle pullspec
     - name: bundle_versions
       description: All known supported OCP indices
     - name: iib_url
@@ -17,33 +15,67 @@ spec:
     - name: kerberos_keytab
       description: Kerberos keytab file name
       default: krb5.keytab
+    - name: operator_distribution_method
+      description: Operator distribution method. Can be one of [connect, marketplace]
+    - name: environment
+      description: |
+        Which environment the pipeline is running in. Can be one of [dev, qa, stage, production]  
   results:
     - name: status
       description: Indicates a status of publishing a bundle to an index
   workspaces:
-    - name: krb-keytab
-      description: Workspace with kerberos keytab.
+    - name: kerberos-keytab
   steps:
     - name: publish-bundle
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       env:
         - name: QUAY_USER
-          value: "todo:get-from-secret"
+          valueFrom:
+            secretKeyRef:
+              name: iib-quay-credentials
+              key: username
         - name: QUAY_TOKEN
-          value: "todo:get-from-secret"
-        - name: CNR_TOKEN
-          value: "todo:get-from-secret"
+          valueFrom:
+            secretKeyRef:
+              name: iib-quay-credentials
+              key: password
         - name: KRB_KEYTAB_FILE
-          value: "$(workspaces.credentials.path)/$(params.kerberos_keytab)"
+          value: "$(workspaces.kerberos-keytab.path)/$(params.kerberos_keytab)"
+        - name: DIST_METHOD
+          value: "$(params.operator_distribution_method)"
       script: |
         #! /usr/bin/env bash
+        set -xe
+        
+        # select the correct index
 
-        # TODO: create index pull spec, bundle pull spec and org
+        case "$(params.environment)" in
+            production)
+                case $DIST_METHOD in
+                    connect)
+                      FROM_INDEX="quay.io/redhat/redhat----certified-operator-index"
+                    ;;
+                    marketplace)
+                      FROM_INDEX="quay.io/redhat/redhat----redhat-marketplace-index"
+                    ;;
+                    *)
+                      echo "Unknown value for operator_distribution_method: $DIST_METHOD"
+                      exit 1
+                    ;;
+                esac
+            ;;
+            *)
+                echo "Publishing bundle to an index is a NOOP for preprod environments at this time."
+                echo "success" | tee "$(results.status.path)"
+                exit 0
+            ;;
+        esac
+
         index \
           --iib-url "$(params.iib_url)" \
-          --from-index redhat/redhat----certified-operator-index:v4.6 \
-          --bundle-pullspec quay.io/redhat-isv/kogito-operator@sha256:b781ff252c9823bac15afa17394dfbd753594f74591635dc9df24f3c64848b39 \
-          --organization certified-operator \
+          --from-index $FROM_INDEX \
+          --indices "$(params.bundle_versions)"
+          --bundle-pullspec "$(params.bundle_pullspec)" \
           --verbose
 
         echo "success" | tee "$(results.status.path)"

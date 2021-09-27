@@ -11,7 +11,7 @@ spec:
       description: name of the vendor
     - name: repository_name
     - name: dist_method
-      description: distribution method- either marketplace or certified
+      description: operator distribution method- either marketplace or connect
     - name: image
       description: reference to the existing index image
     - name: is_latest
@@ -20,6 +20,7 @@ spec:
       description: Operator bundle version.
   results:
     - name: container_digest
+    - name: image_pullspec
   steps:
     - name: imagestream-manipulations
       image: registry.redhat.io/openshift4/ose-cli:v4.8
@@ -57,7 +58,7 @@ spec:
             --resource-name=$IMAGESTREAM_NAME
 
         ## (Re)create rolebinding associated with the role
-        if [ "$DIST_METHOD" = "rhcc" ]; then
+        if [ "$DIST_METHOD" = "connect" ]; then
 
           # (Get rolebinding AND if it exists delete it)
           oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
@@ -67,7 +68,7 @@ spec:
             --serviceaccount connect:proxysa \
             --serviceaccount connect:rhmp-sa \
             --serviceaccount connect:bpmsa
-        elif [ "$DIST_METHOD" = "marketplace_only" ]; then
+        elif [ "$DIST_METHOD" = "marketplace" ]; then
 
           # (Get rolebinding AND if it exists delete it)
           oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
@@ -102,4 +103,5 @@ spec:
         fi
 
         ## Get the container digest
-        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o json | jq '.image.dockerImageMetadata.Id' | tr -d '"' | tee $(results.container_digest.path)
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath '.image.dockerImageMetadata.Id' | tr -d '"'| tr -d "\n" | tee $(results.container_digest.path)
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath '.image.dockerImageReference' | tr -d '"'| tr -d "\n" | tee $(results.image_pullspec.path)

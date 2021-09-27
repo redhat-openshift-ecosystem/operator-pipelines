@@ -131,3 +131,20 @@ To grant permissions to pull images from specified registries by service account
 ```bash
 oc adm policy add-cluster-role-to-user self-provisioner -z pipeline -n <YOUR_NAMESPACE> 
 ```
+
+### Only Release pipeline:
+#### Kerberos credentials
+For submitting the IIB build, you need kerberos keytab in a secret:
+```bash
+oc create secret generic kerberos-keytab \
+  --from-file krb5.keytab
+```
+
+#### Quay credentials
+Release pipeline uses Quay credentials to authenticate a push to an index image
+during the IIB build.
+```bash
+oc create secret generic iib-quay-credentials \
+  --from-literal username=<QUAY_USERNAME> \
+  --from-literal password=<QUAY_PASSWORD>
+```

@@ -31,6 +31,8 @@ spec:
       optional: true
     - name: pyxis-ssl-credentials
     - name: github-bot-token
+    - name: kerberos-keytab
+
   tasks:
     # Set environment
     - name: set-env
@@ -160,7 +162,7 @@ spec:
         - name: repository_name
           value: "$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: dist_method
-          value: "$(tasks.get-cert-project-related-data.results.dist_method)"
+          value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
         - name: image
           value: "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: is_latest
@@ -221,12 +223,20 @@ spec:
       taskRef:
         name: publish-bundle
       params:
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_versions
           value: "$(tasks.get-supported-versions.results.indices)"
-        - name: container_digest
-          value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
+        - name: bundle_pullspec
+          value: "$(tasks.publish-to-ocp-registry.results.image_pullspec)"
+        - name: operator_distribution_method
+          value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
+        - name: iib_url
+          value: "$(tasks.set-env.results.iib_url)"        
+        - name: environment
+          value: "$(params.env)"
+      workspaces:
+        - name: kerberos-keytab
+          workspace: kerberos-keytab
+
 
     - name: set-github-status-published
       runAfter:

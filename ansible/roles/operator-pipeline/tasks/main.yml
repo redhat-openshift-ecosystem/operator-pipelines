@@ -138,7 +138,27 @@
           suffix: "{{ suffix }}"
           env: "{{ env }}"
       data:
-        keytab: "{{ lookup('file', kerberos_keytab, rstrip=False) | b64encode }}"
+        krb5.keytab: "{{ lookup('file', kerberos_keytab, rstrip=False) | b64encode }}"
+
+- name: Create Operator pipeline IIB quay credentials secret
+  no_log: yes
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: iib-quay-credentials
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        username: "{{ quay_username | b64encode }}"
+        password: "{{ quay_password | b64encode }}"
 
 - name: Deploy pipeline tasks
   k8s:
