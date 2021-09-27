@@ -14,7 +14,7 @@ spec:
     - name: source
   steps:
     - name: pin-digest
-      image: quay.io/redhat-isv/digest-pinning-tool:sha256:21cb7af396031d03b601d65e5600acdbd71dfe46a11dedd55b9a2abc507c6bee
+      image: quay.io/redhat-isv/digest-pinning-tool@sha256:21cb7af396031d03b601d65e5600acdbd71dfe46a11dedd55b9a2abc507c6bee
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
