@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: update-cert-project-data
+  name: update-cert-project-status
 spec:
   params:
     - name: cert_project_id
@@ -20,7 +20,7 @@ spec:
     - name: pyxis-ssl-credentials
       optional: true
   steps:
-    - name: update-cert-project-data
+    - name: update-cert-project-status
       image: quay.io/redhat-isv/operator-pipelines-images:latest
       env:
         - name: PYXIS_CERT_PATH
@@ -37,7 +37,7 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        update-cert-project-data \
+        update-cert-project-status \
           --pyxis-url $PYXIS_URL \
           --cert-project-id $CERT_PROJECT_ID \
           --certification-status $CERTIFICATION_STATUS

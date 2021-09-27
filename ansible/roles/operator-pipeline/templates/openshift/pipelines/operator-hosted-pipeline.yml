@@ -108,11 +108,11 @@ spec:
           workspace: pyxis-ssl-credentials
 
     # Update cert project related data
-    - name: update-cert-project-data
+    - name: update-cert-project-status
       runAfter:
         - get-cert-project-related-data
       taskRef:
-        name: update-cert-project-data
+        name: update-cert-project-status
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
