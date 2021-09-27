@@ -9,7 +9,7 @@ spec:
       default: "false"
       description: Skips preflight execution if set to "true"
     - name: base_image
-      default: quay.io/redhat-isv/preflight-test:latest
+      default: quay.io/redhat-isv/preflight-test:sha256:2c26d7d8835b75088b1c29fa764d453b2f47dd7af530eb87a986766045693d2a
       description: Preflight image used
     - name: package_name
       description: Package name for the Operator under test
