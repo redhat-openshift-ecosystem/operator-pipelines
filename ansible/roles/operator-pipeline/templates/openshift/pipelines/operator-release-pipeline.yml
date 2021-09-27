@@ -33,6 +33,7 @@ spec:
     - name: github-bot-token
     - name: registry-credentials
     - name: image-data
+    - name: ocp-kubeconfig
   tasks:
     # Set environment
     - name: set-env
@@ -184,6 +185,9 @@ spec:
           value: "$(params.is_latest)"
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
+      workspaces:
+        - name: ocp-kubeconfig
+          workspace: ocp-kubeconfig
 
     # create container image
     - name: create-container-image

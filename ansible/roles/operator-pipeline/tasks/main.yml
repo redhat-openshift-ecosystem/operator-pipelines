@@ -140,6 +140,25 @@
       data:
         keytab: "{{ lookup('file', kerberos_keytab, rstrip=False) | b64encode }}"
 
+- name: Create OCP cluster Kubeconfig secret
+  no_log: yes
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: ocp-kubeconfig
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        kubeconfig: "{{ lookup('file', operator_pipeline_kubeconfig_ocp_local_path, rstrip=False) | b64encode }}"
+
 - name: Deploy pipeline tasks
   k8s:
     state: present
@@ -158,7 +177,6 @@
   with_items:
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
     - ../templates/openshift/pipelines/operator-release-pipeline.yml
-
 
 - name: Create cleaning CronJob
   k8s:

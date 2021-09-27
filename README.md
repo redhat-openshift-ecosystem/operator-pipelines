@@ -146,4 +146,5 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=github-bot-token,secret=github-bot-token \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+  --workspace name=ocp-kubeconfig,secret=ocp-kubeconfig \
   --showlog

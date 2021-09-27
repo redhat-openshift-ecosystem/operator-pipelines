@@ -18,6 +18,9 @@ spec:
       description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: bundle_version
       description: Operator bundle version.
+  workspaces:
+    - name: ocp-kubeconfig
+      description: Kubeconfig for service account allowing connection with cluster that contains the ocp registries
   results:
     - name: container_digest
   steps:
@@ -26,6 +29,9 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
+
+        cp $(workspaces.ocp-kubeconfig.path)/kubeconfig $HOME/kubeconfig
+        export KUBECONFIG=$HOME/kubeconfig
 
         # jq needs to be installed in order to get the particular fields of the json resources definitions.
         # TODO: provide image with oc and jq
