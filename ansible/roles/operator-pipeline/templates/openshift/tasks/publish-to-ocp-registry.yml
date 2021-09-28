@@ -25,7 +25,7 @@ spec:
     - name: container_digest
   steps:
     - name: imagestream-manipulations
-      image: registry.redhat.io/openshift4/ose-cli:v4.8
+      image: registry.redhat.io/openshift4/ose-cli@sha256:eed7052f0013b85087cd9fa8e4b328f56a027846107d32a65daeb3a50cf23b49
       script: |
         #! /usr/bin/env bash
         set -xe
