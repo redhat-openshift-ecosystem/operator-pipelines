@@ -1,0 +1,33 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: decrypt-preflight-artifacts
+spec:
+  params:
+    - name: artifacts-tarball-uri
+      default: $(results.preflight-prowjob-base-url)/artifacts/preflight-common-claim/operator-pipelines-preflight-common-crypt/artifacts/preflight.tar.gz.asc
+      type: string
+  steps:
+    - name: get-artifacts-and-decrypt
+      image: registry.redhat.io/ubi8/ubi
+      env:
+        - name: ARTIFACTS_TARBALL_URI
+          value: $(params.artifacts-tarball-uri)
+        - name: PIPELINE_GPG_DECRYPTION_PRIVATE_KEY
+          value: $(workspaces.gpg-decryption-key.path)/private
+        - name: PIPELINE_GPG_DECRYPTION_PUBLIC_KEY
+          value: $(workspaces.gpg-decryption-key.path)/public
+      script: |
+        curl -sLO "${ARTIFACTS_TARBALL_URL}"
+
+        gpg -q --import "${PIPELINE_GPG_DECRYPTION_PRIVATE_KEY}" 1> /dev/null
+        echo "`gpg --list-keys|grep -B1 'Operator Pipelines'|awk 'NR==1 { print }'|tr -d '[:space:]'`":6: | gpg --import-ownertrust 1> /dev/null
+
+        gpg -q --import "${PIPELINE_GPG_DECRYPTION_PUBLIC_KEY}" 1> /dev/null
+        echo "`gpg --list-keys|grep -B1 'Preflight Trigger'|awk 'NR==1 { print }'|tr -d '[:space:]'`":6: | gpg --import-ownertrust 1> /dev/null
+
+        gpg -d "`basename ${ARTIFACTS_TARBALL_URI}`" | tar -xzf -
+  workspaces:
+    - name: gpg-decryption-key
+      description: 'Kubernetes Secret containing GPG key to decrypt artifacts tarball'
