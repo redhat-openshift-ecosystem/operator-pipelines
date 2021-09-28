@@ -30,6 +30,7 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        # Copying Kubeconfig from secret workspace to grant edit permissions
         cp $(workspaces.ocp-kubeconfig.path)/kubeconfig $HOME/kubeconfig
         export KUBECONFIG=$HOME/kubeconfig
 
