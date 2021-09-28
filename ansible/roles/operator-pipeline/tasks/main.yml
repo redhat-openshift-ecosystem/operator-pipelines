@@ -50,38 +50,24 @@
         operator-pipeline.key: "{{ lookup('file', operator_pipeline_private_key_local_path, rstrip=False) | b64encode }}"
         operator-pipeline.pem: "{{ lookup('file', operator_pipeline_private_cert_local_path, rstrip=False) | b64encode }}"
 
-- name: Grant registry access
-  block:
-    - name: Create Operator pipeline quay token secret
-      no_log: yes
-      k8s:
-        state: present
-        force: yes
-        namespace: "{{ oc_namespace }}"
-        definition:
-          apiVersion: v1
-          kind: Secret
-          type: kubernetes.io/dockerconfigjson
-          metadata:
-            name: registry-dockerconfig-secret
-            labels:
-              app: operator-pipeline
-              suffix: "{{ suffix }}"
-              env: "{{ env }}"
-          data:
-            .dockerconfigjson: "{{ lookup('file', operator_pipeline_quay_token, rstrip=False) | b64encode }}"
-    - name: Link secret with pipeline service account (for imagestream operations)
-      k8s:
-        state: present
-        force: yes
-        namespace: "{{ oc_namespace }}"
-        definition:
-          apiVersion: v1
-          kind: ServiceAccount
-          metadata:
-            name: pipeline
-          secrets:
-            - name: registry-dockerconfig-secret
+- name: Create Operator pipeline quay token secret
+  no_log: yes
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: kubernetes.io/dockerconfigjson
+      metadata:
+        name: registry-dockerconfig-secret
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        .dockerconfigjson: "{{ lookup('file', operator_pipeline_quay_token, rstrip=False) | b64encode }}"
 
 - name: Create Operator pipeline github bot token secret
   no_log: yes

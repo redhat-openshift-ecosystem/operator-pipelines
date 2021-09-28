@@ -98,6 +98,12 @@ spec:
           echo "Unexpected error when creating resources: $error"
         fi
 
+        ## Wait for ImagestreamTag creation
+        until oc get is $IMAGESTREAM_NAME -o json | jq --arg TAG "$TAG" '[.status.tags[] | select(.tag == $TAG)] | length == 1' --exit-status; do
+          echo "Waiting for the tag creation..."
+          sleep 1
+        done
+
         ## Test, whether ImagestreamTag was created properly- OR, if not,
         # (log the error AND exit)
         oc get imagestreamtag $IMAGESTREAM_NAME:$TAG \
