@@ -57,7 +57,7 @@ spec:
         cat test_result_id | tee $(results.test_result_id.path)
 
     - name: indicate-if-results-exists
-      image: registry.access.redhat.com/ubi8-minimal
+      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
       workingDir: $(workspaces.results.path)
       script: |
         #! /usr/bin/env bash
