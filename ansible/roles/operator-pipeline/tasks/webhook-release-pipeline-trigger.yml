@@ -88,4 +88,3 @@
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-credentials"
-
