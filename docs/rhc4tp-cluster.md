@@ -6,7 +6,7 @@ To prepare the RHC4TP clusters to be used by the pipeline, for each of environme
 1. Create a service account
 
 ```bash
-oc create sa operator-pipelines
+oc create sa operator-pipelines -n default
 ```
 
 2. Create a Kubeconfig for the service account. It should be stored in the repository Ansible Vault.
@@ -42,7 +42,6 @@ users:
 current-context: ${serviceAccount}@${clusterName}
 "
 ```
-
 
 3.  Grant the service account the permissions to create projects
 

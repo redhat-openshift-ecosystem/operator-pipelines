@@ -137,7 +137,7 @@
       kind: Secret
       type: opaque
       metadata:
-        name: ocp-kubeconfig
+        name: ocp-registry-kubeconfig
         labels:
           app: operator-pipeline
           suffix: "{{ suffix }}"

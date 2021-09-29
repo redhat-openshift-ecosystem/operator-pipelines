@@ -19,7 +19,7 @@ spec:
     - name: bundle_version
       description: Operator bundle version.
   workspaces:
-    - name: ocp-kubeconfig
+    - name: ocp-registry-kubeconfig
       description: Kubeconfig for service account allowing connection with cluster that contains the ocp registries
   results:
     - name: container_digest
@@ -31,7 +31,7 @@ spec:
         set -xe
 
         # Copying Kubeconfig from secret workspace to grant edit permissions
-        cp $(workspaces.ocp-kubeconfig.path)/kubeconfig $HOME/kubeconfig
+        cp $(workspaces.ocp-registry-kubeconfig.path)/kubeconfig $HOME/kubeconfig
         export KUBECONFIG=$HOME/kubeconfig
 
         # jq needs to be installed in order to get the particular fields of the json resources definitions.
