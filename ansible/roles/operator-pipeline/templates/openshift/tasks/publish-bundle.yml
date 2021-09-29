@@ -19,7 +19,7 @@ spec:
       description: Operator distribution method. Can be one of [connect, marketplace]
     - name: environment
       description: |
-        Which environment the pipeline is running in. Can be one of [dev, qa, stage, production]  
+        Which environment the pipeline is running in. Can be one of [dev, qa, stage, production]
   results:
     - name: status
       description: Indicates a status of publishing a bundle to an index
@@ -46,7 +46,7 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
-        
+
         # select the correct index
 
         case "$(params.environment)" in

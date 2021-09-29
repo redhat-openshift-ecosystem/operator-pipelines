@@ -257,7 +257,7 @@ spec:
         - name: operator_distribution_method
           value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
         - name: iib_url
-          value: "$(tasks.set-env.results.iib_url)"        
+          value: "$(tasks.set-env.results.iib_url)"
         - name: environment
           value: "$(params.env)"
       workspaces:

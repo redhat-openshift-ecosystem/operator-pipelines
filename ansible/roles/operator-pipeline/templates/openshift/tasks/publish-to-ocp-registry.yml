@@ -28,10 +28,6 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        # jq needs to be installed in order to get the particular fields of the json resources definitions.
-        # TODO: provide image with oc and jq
-        dnf install jq -y
-
         # This task authenticates to registry with the credentials associated with service account
 
         # trim the whitespaces from the params
@@ -108,5 +104,5 @@ spec:
 
         ### Results
         ## Get the container digest
-        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath '.image.dockerImageMetadata.Id' | tr -d '"'| tr -d "\n" | tee $(results.container_digest.path)
-        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath '.image.dockerImageReference' | tr -d '"'| tr -d "\n" | tee $(results.image_pullspec.path)
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath='{.image.dockerImageMetadata.Id}' | tr -d '"' | tee $(results.container_digest.path)
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath='{.image.dockerImageReference}' | tr -d '"' | tee $(results.image_pullspec.path)
