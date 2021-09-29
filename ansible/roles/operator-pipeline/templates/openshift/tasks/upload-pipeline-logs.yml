@@ -35,7 +35,7 @@ spec:
       optional: true
   steps:
     - name: get-pipeline-logs
-      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8:0.19.0-2
+      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
       script: |
         #! /usr/bin/env bash
         set -xe

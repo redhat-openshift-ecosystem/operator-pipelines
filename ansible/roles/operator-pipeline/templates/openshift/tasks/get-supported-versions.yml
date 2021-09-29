@@ -26,7 +26,8 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        VERSION_INFO=$(ocp-version-info $(params.bundle_path))
+        ORGANIZATION=$(cat config.yaml | yq -r '.organization')
+        VERSION_INFO=$(ocp-version-info $(params.bundle_path) $ORGANIZATION)
         echo $VERSION_INFO | jq
 
         echo $VERSION_INFO \
