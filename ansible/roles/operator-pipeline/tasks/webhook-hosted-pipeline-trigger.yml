@@ -1,63 +1,8 @@
 ---
 - name: Create trigger enabling running Hosted pipeline via GitHub webhook
   tags:
-    - webhook
+    - webhook-hosted
   block:
-    - name: Create Hosted pipeline event listener
-      k8s:
-        state: present
-        namespace: "{{ oc_namespace }}"
-        definition:
-          apiVersion: triggers.tekton.dev/v1alpha1
-          kind: EventListener
-          metadata:
-            name: operator-hosted-pipeline-github-listener
-            labels:
-              app: operator-pipeline
-              suffix: "{{ suffix }}"
-              env: "{{ env }}"
-          spec:
-            serviceAccountName: pipeline
-            triggers:
-              - name: github-pull-request-listener
-                interceptors:
-                  - github:
-                      secretRef:
-                        secretName: github-webhook-secret
-                        secretKey: webhook-secret
-                      eventTypes:
-                        - pull_request
-                  - cel:
-                      filter: >-
-                        (
-                          header.match("X-GitHub-Event", "pull_request")
-                          && body.action in ["opened", "reopened", "synchronize"]
-                          && body.pull_request.base.ref == "{{ branch }}"
-                        )
-                bindings:
-                  - ref: operator-hosted-pipeline-trigger-binding
-                template:
-                  ref: operator-hosted-pipeline-trigger-template
-              - name: github-label-listener
-                interceptors:
-                  - github:
-                      secretRef:
-                        secretName: github-webhook-secret
-                        secretKey: webhook-secret
-                      eventTypes:
-                        - pull_request
-                  - cel:
-                      filter: >-
-                        (
-                          body.action == "labeled"
-                          && body.label.name == "pipeline/trigger"
-                          && body.pull_request.base.ref == "{{ branch }}"
-                        )
-                bindings:
-                  - ref: operator-hosted-pipeline-trigger-binding
-                template:
-                  ref: operator-hosted-pipeline-trigger-template
-
     - name: Create Hosted pipeline Trigger Binding
       k8s:
         state: present
@@ -156,6 +101,8 @@
                       value: $(tt.params.preflight_min_version)
                     - name: ci_min_version
                       value: $(tt.params.ci_min_version)
+                    - name: git_commit
+                      value: $(tt.params.git_commit)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
@@ -186,27 +133,3 @@
                     - name: kubeconfig
                       secret:
                         secretName: "kubeconfig"
-
-    - name: Create Hosted pipeline trigger route
-      k8s:
-        state: present
-        namespace: "{{ oc_namespace }}"
-        definition:
-          apiVersion: route.openshift.io/v1
-          kind: Route
-          metadata:
-            labels:
-              eventlistener: operator-hosted-pipeline-github-listener
-              app: operator-pipeline
-              suffix: "{{ suffix }}"
-              env: "{{ env }}"
-            name: operator-hosted-pipeline
-          spec:
-            port:
-              targetPort: http-listener
-            tls:
-              termination: edge
-            to:
-              kind: Service
-              # el- prefix means, that the service was created by EventListener.
-              name: el-operator-hosted-pipeline-github-listener

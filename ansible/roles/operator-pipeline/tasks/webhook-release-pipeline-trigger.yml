@@ -1,0 +1,86 @@
+---
+- name: Create trigger enabling running Release pipeline via GitHub webhook
+  tags:
+    - webhook-release
+  block:
+    - name: Create Release pipeline Trigger Binding
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          # To see the PR webhook payload, set the logLevel to debug in configmap config-logging-triggers
+          # Other GitHub PR webhook payload example: https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerBinding
+          metadata:
+            name: operator-release-pipeline-trigger-binding
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_repo_url
+                value: $(body.pull_request.base.repo.html_url)
+              - name: git_commit
+                value: $(body.pull_request.head.sha)
+    - name: Create Release pipeline Trigger Template
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerTemplate
+          metadata:
+            name: operator-release-pipeline-trigger-template
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_repo_url
+              - name: bundle_path
+              - name: git_commit
+              - name: is_latest
+            resourcetemplates:
+              - apiVersion: tekton.dev/v1beta1
+                kind: PipelineRun
+                metadata:
+                  generateName: operator-release-pipeline-run
+                spec:
+                  pipelineRef:
+                    name: operator-release-pipeline
+                  params:
+                    - name: git_repo_url
+                      value: $(tt.params.git_repo_url)
+                    - name: bundle_path
+                      value: $(tt.params.bundle_path)
+                    - name: git_commit
+                      value: $(tt.params.git_commit)
+                  workspaces:
+                    - name: repository
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 5Gi
+                    - name: image-data
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi
+                    - name: registry-credentials
+                      secret:
+                        secretName: "registry-dockerconfig-credentials"
+                    - name: pyxis-ssl-credentials
+                      secret:
+                        secretName: "operator-pipeline-api-certs"
+                    - name: github-bot-token
+                      secret:
+                        secretName: "github-bot-token"
