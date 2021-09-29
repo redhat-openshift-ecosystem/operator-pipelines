@@ -66,7 +66,6 @@
               - name: git_username
               - name: git_commit
               - name: pr_head_label
-              - name: bundle_path
               - name: env
               - name: preflight_min_version
               - name: ci_min_version
@@ -93,8 +92,6 @@
                       value: $(tt.params.git_username)
                     - name: pr_head_label
                       value: $(tt.params.pr_head_label)
-                    - name: bundle_path
-                      value: $(tt.params.bundle_path)
                     - name: env
                       value: $(tt.params.env)
                     - name: preflight_min_version
@@ -133,3 +130,6 @@
                     - name: kubeconfig
                       secret:
                         secretName: "kubeconfig"
+                    - name: hydra-credentials
+                      secret:
+                        secretName: "hydra-credentials"
