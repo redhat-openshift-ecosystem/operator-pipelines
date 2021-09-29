@@ -34,6 +34,7 @@ spec:
     - name: kerberos-keytab
     - name: registry-credentials
     - name: image-data
+    - name: ocp-registry-kubeconfig
 
   tasks:
     # Set environment
@@ -188,6 +189,9 @@ spec:
           value: "$(params.is_latest)"
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
+      workspaces:
+        - name: ocp-registry-kubeconfig
+          workspace: ocp-registry-kubeconfig
 
     # create container image
     - name: create-container-image

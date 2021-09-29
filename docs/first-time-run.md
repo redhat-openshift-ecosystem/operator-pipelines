@@ -129,18 +129,6 @@ oc create secret generic hydra-credentials \
   --from-literal password=<password>
 ```
 
-#### Service account permissions
-
-Openshift Pipelines are using self- created service account named Pipeline. 
-To grant permissions to create new namespaces, run:
-```bash
-oc secret link pipeline registry-dockerconfig-secret
-```
-To grant permissions to pull images from specified registries by service account, run
-```bash
-oc adm policy add-cluster-role-to-user self-provisioner -z pipeline -n <YOUR_NAMESPACE> 
-```
-
 ### Only Release pipeline:
 #### Kerberos credentials
 For submitting the IIB build, you need kerberos keytab in a secret:
