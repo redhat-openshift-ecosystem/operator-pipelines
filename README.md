@@ -6,6 +6,10 @@
 
 See [first-time-run.md](docs/first-time-run.md)
 
+**To publish the image to OCP registry, cluster with registry should be prepared at first.**
+
+See one-time actions necessary to prepare new cluster: [rhc4tp-cluster.md](docs/rhc4tp-cluster.md)
+
 ## Local setup
 To create local cluster for sake of testing the pipelines, see [local-dev.md](docs/local-dev.md)
 
@@ -146,4 +150,5 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=github-bot-token,secret=github-bot-token \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+  --workspace name=ocp-registry-kubeconfig,secret=ocp-registry-kubeconfig \
   --showlog
