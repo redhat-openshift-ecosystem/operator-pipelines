@@ -35,6 +35,12 @@ spec:
           echo "failure" | tee $(results.test_result.path)
           exit 1
         fi
+        # Did the tests pass?
+        # In case of failure- comment on the PR with tailored support link
+        CHECK_RESULTS=$(echo $PREFLIGHT_RESULTS | jq '.passed' | tr -d '"' | grep .)
+        if [ $CHECK_RESULTS = "false" ]; then
+          echo "failure" | tee $(results.test_result.path)
+          exit 0
+        fi
 
-        # TODO replace with real value
         echo "success" | tee $(results.test_result.path)
