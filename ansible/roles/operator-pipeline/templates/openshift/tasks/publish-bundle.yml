@@ -29,4 +29,4 @@ spec:
         echo "success" | tee "$(results.status.path)"
 
         # TODO: Include below result only when the STATUS is set to SUCCESS
-        echo "Published" | tee $(results.certification_status.path)
+        echo -n "Published" | tee $(results.certification_status.path)

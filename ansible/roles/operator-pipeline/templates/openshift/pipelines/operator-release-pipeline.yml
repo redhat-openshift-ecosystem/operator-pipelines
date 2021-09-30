@@ -264,6 +264,8 @@ spec:
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path

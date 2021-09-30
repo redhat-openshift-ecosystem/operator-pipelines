@@ -40,6 +40,6 @@ spec:
         update-cert-project-status \
           --pyxis-url $PYXIS_URL \
           --cert-project-id $CERT_PROJECT_ID \
-          --certification-status $CERTIFICATION_STATUS
+          --certification-status "$CERTIFICATION_STATUS"
 
         echo "Updating the Certification Project status to $CERTIFICATION_STATUS"
