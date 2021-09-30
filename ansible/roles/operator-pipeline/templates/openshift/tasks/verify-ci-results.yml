@@ -15,7 +15,7 @@ spec:
     - name: results
   steps:
     - name: verify-ci-results
-      image: registry.access.redhat.com/ubi8-minimal
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.results.path)
       env:
         - name: PREFLIGHT_MIN_VERSION
@@ -24,15 +24,14 @@ spec:
           value: $(params.preflight_results)
       script: |
         #! /usr/bin/env bash
-        set -o pipefail
+        set -xe -o pipefail
 
         # did preflight/ CI have the latest version?
-        PREFLIGHT_VERSION=$(cat $PREFLIGHT_RESULTS | jq '.test_library.version' | grep .)
+        PREFLIGHT_VERSION=$(echo $PREFLIGHT_RESULTS | jq '.test_library.version' |  tr -d '"' | grep .)
         if [ "$(printf '%s\n' "$PREFLIGHT_MIN_VERSION" "$PREFLIGHT_VERSION" | sort -V | head -n1)" = "$PREFLIGHT_MIN_VERSION" ]; then
-          echo "Preflight version satisfies the minimun requirement of version"
+          echo "Preflight version $PREFLIGHT_VERSION satisfies the minimun requirement of version $PREFLIGHT_MIN_VERSION"
         else
-          echo "Preflight is having an outdated version $PREFLIGHT_VERSION"
-          echo "Preflight version requires version $PREFLIGHT_MIN_VERSION or higher."
+          echo "Preflight version $PREFLIGHT_VERSION must be $PREFLIGHT_MIN_VERSION or higher."
           echo "failure" | tee $(results.test_result.path)
           exit 1
         fi

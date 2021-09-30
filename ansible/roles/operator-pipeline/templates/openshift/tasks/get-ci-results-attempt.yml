@@ -69,4 +69,5 @@ spec:
         else
           echo "Results doesn't exists"
           echo -n "false" | tee $(results.preflight_results_exists.path)
+          echo -n "none" | tee $(results.preflight_results.path)
         fi
