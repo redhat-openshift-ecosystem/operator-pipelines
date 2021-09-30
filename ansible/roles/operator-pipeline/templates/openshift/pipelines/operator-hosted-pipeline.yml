@@ -439,6 +439,9 @@ spec:
         # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
         - name: kubeconfig
           workspace: kubeconfig
+        - name: output
+          workspace: repository
+          subPath: preflight
 
     - name: upload-artifacts
       runAfter:
@@ -502,6 +505,8 @@ spec:
       params:
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
+        - name: preflight_results
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results)"
         - name: test_result_id
           value: "$(tasks.get-ci-results-attempt.results.test_result_id)"
         - name: pyxis_url
@@ -525,6 +530,17 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
+    - name: create-support-link-for-pr
+      taskRef:
+        name: create-support-link-for-pr
+      params:
+        - name: connect_url
+          value: $(tasks.set-env.results.connect_url)
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pull_request_url
+          value: "$(params.git_pr_url)"
+
     # Verify the CI results
     - name: verify-ci-results
       runAfter:
@@ -532,6 +548,8 @@ spec:
       taskRef:
         name: verify-ci-results
       params:
+        - name: preflight_results
+          value: "$(tasks.get-ci-results.results.preflight_results)"
         - name: preflight_min_version
           value: $(params.preflight_min_version)
         - name: ci_min_version
@@ -540,6 +558,27 @@ spec:
         - name: results
           workspace: results
           subPath: results
+
+    # Comment on the github PR
+    - name: github-add-comment
+      runAfter:
+        - verify-ci-results
+      when:
+        - input: $(tasks.verify-ci-results.results.test_result)
+          operator: in
+          values: ["failure"]
+      taskRef:
+        name: github-add-comment
+      params:
+        - name: REQUEST_URL
+          value: "$(params.git_pr_url)"
+        - name: COMMENT_OR_FILE
+          value: "$(tasks.create-support-link-for-pr.results.comment)"
+      workspaces:
+        - name: github-bot-token
+          workspace: github-bot-token
+        - name: comment-file
+          workspace: results
 
     - name: set-github-status-result
       runAfter:
