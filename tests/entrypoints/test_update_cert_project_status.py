@@ -18,7 +18,7 @@ def test_update_cert_project_status(
     args.cert_project_id = "id1234"
     args.certification_date = "Started"
     mock_rsp = MagicMock()
-    mock_rsp.json.return_value = {
+    mock_rsp = {
         "org_id": 123,
         "container": {
             "isv_pid": "some_pid",

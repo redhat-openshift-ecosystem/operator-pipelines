@@ -56,9 +56,7 @@ def update_cert_project_status(args: Any) -> None:
         payload,
     )
 
-    rsp.raise_for_status()
-
-    cert_project = rsp.json()
+    cert_project = rsp
 
     store_results({"cert_project": cert_project})
 
