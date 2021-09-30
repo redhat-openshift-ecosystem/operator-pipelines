@@ -1,0 +1,68 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-container-image
+spec:
+  params:
+    - name: pyxis_cert_path
+      default: ""
+      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
+    - name: pyxis_key_path
+      default: ""
+      description: Path to Pyxis key. Valid only when internal Pyxis is used.
+    - name: pyxis_url
+      default: https://catalog.redhat.com/api/containers/
+    - name: isv_pid
+      description: isv_pid of the certification project from Red Hat Connect
+    - name: repository_name
+      description: Repository name assigned to certification project from Red Hat Connect
+    - name: container_digest
+      description: imagestream container_digest
+    - name: bundle_version
+      description: Operator bundle version
+    - name: is_latest
+      description: If explicitly set to "true", resulting image will be tagged as "latest"
+  workspaces:
+    - name: pyxis-ssl-credentials
+      description: SSL certificates allowing authentication in Pyxis
+    - name: image-data
+      description: JSON files with data about image retrieved with Skopeo and Podman
+  steps:
+    - name: create-container-image
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      env:
+        - name: PYXIS_CERT_PATH
+          value: $(params.pyxis_cert_path)
+        - name: PYXIS_KEY_PATH
+          value: $(params.pyxis_key_path)
+        - name: PYXIS_URL
+          value: $(params.pyxis_url)
+        - name: ISV_PID
+          value: $(params.isv_pid)
+        - name: REPOSITORY
+          value: $(params.repository_name)
+        - name: CONTAINER_DIGEST
+          value: $(params.container_digest)
+        - name: BUNDLE_VERSION
+          value: $(params.bundle_version)
+        - name: IS_LATEST
+          value: $(params.is_latest)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+        echo "Creating container image"
+
+        create-container-image \
+          --pyxis-url $PYXIS_URL \
+          --isv-pid $ISV_PID \
+          --repo-published "true" \
+          --registry "registry.connect.redhat.com" \
+          --repository $REPOSITORY \
+          --certified "true" \
+          --docker-image-digest $CONTAINER_DIGEST \
+          --skopeo-result $(workspaces.image-data.path)/skopeo.json \
+          --podman-result $(workspaces.image-data.path)/podman.json \
+          --bundle-version $BUNDLE_VERSION \
+          --is-latest $IS_LATEST \
+          --verbose

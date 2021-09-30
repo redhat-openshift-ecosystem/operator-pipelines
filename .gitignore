@@ -1,6 +1,7 @@
 # secrets
 ssh-secret.yml
 registry-secret.yml
+kubeconfig
 
 # VSCode project settings
 .vscode/
