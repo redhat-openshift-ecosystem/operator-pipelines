@@ -25,6 +25,8 @@ spec:
       description: Unique identifier of the organization in Red Hat Connect
     - name: contacts
       description: List of accounts with permissions allowing operator submission
+    - name: certification_status
+      description: Certification status of the cert Project
   workspaces:
     - name: pyxis-ssl-credentials
       optional: true
@@ -43,6 +45,11 @@ spec:
         get-cert-project-related-data \
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id)
+
+        CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
+        if [ $CERTIFICATION_STATUS == "Started" ]; then
+          echo -n "In Progress" | tee $(results.certification_status.path)
+        fi
 
         # `grep .` ensures, that pipe fail if jq returns no results
         cat cert_project | jq '.container.isv_pid' | tr -d '"' | grep . | tee $(results.isv_pid.path)

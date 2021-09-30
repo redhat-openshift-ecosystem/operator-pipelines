@@ -5,6 +5,7 @@ metadata:
   name: verify-ci-results
 spec:
   params:
+    - name: preflight_results
     - name: preflight_min_version
     - name: ci_min_version
   results:
@@ -14,14 +15,32 @@ spec:
     - name: results
   steps:
     - name: verify-ci-results
-      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
       workingDir: $(workspaces.results.path)
+      env:
+        - name: PREFLIGHT_MIN_VERSION
+          value: $(params.preflight_min_version)
+        - name: PREFLIGHT_RESULTS
+          value: $(params.preflight_results)
       script: |
         #! /usr/bin/env bash
-        # Did the tests pass?
-        # did preflight/ CI have the latest version?
-        # If results exists, store them in the workspace
-        # In case of failure- comment on the PR with tailored support link
+        set -xe -o pipefail
 
-        # TODO replace with real value
+        # did preflight/ CI have the latest version?
+        PREFLIGHT_VERSION=$(echo $PREFLIGHT_RESULTS | jq '.test_library.version' |  tr -d '"' | grep .)
+        if [ "$(printf '%s\n' "$PREFLIGHT_MIN_VERSION" "$PREFLIGHT_VERSION" | sort -V | head -n1)" = "$PREFLIGHT_MIN_VERSION" ]; then
+          echo "Preflight version $PREFLIGHT_VERSION satisfies the minimun requirement of version $PREFLIGHT_MIN_VERSION"
+        else
+          echo "Preflight version $PREFLIGHT_VERSION must be $PREFLIGHT_MIN_VERSION or higher."
+          echo "failure" | tee $(results.test_result.path)
+          exit 1
+        fi
+        # Did the tests pass?
+        # In case of failure- comment on the PR with tailored support link
+        CHECK_RESULTS=$(echo $PREFLIGHT_RESULTS | jq '.passed' | tr -d '"' | grep .)
+        if [ $CHECK_RESULTS = "false" ]; then
+          echo "failure" | tee $(results.test_result.path)
+          exit 0
+        fi
+
         echo "success" | tee $(results.test_result.path)
