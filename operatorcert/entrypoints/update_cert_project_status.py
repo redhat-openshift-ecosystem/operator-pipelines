@@ -46,7 +46,7 @@ def update_cert_project_status(args: Any) -> None:
 
     payload = {
         "certification_status": args.certification_status,
-        "certification_date": datetime.now(timezone.utc),
+        "certification_date": datetime.now(timezone.utc).isoformat(),
     }
     rsp = pyxis.patch(
         urljoin(
