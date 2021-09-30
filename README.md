@@ -82,7 +82,7 @@ oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
 # Install external dependencies
 oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml
 oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
-oc apply -f https://github.com/tektoncd/catalog/blob/main/task/github-add-comment/0.4/github-add-comment.yaml
+oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/github-add-comment/0.4/github-add-comment.yaml
 ```
 
 ### Execution
