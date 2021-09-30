@@ -14,6 +14,8 @@ spec:
   results:
     - name: status
       description: Indicates a status of publishing a bundle to an index
+    - name: certification_status
+      description: Certification status of the cert Project
   steps:
     - name: publish-bundle
       image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
@@ -25,3 +27,6 @@ spec:
         echo "Got result- updating GitHub status"
 
         echo "success" | tee "$(results.status.path)"
+
+        # TODO: Include below result only when the STATUS is set to SUCCESS
+        echo -n "Published" | tee $(results.certification_status.path)

@@ -18,6 +18,9 @@ spec:
       description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: bundle_version
       description: Operator bundle version.
+  workspaces:
+    - name: ocp-registry-kubeconfig
+      description: Kubeconfig for service account allowing connection with cluster that contains the ocp registries
   results:
     - name: container_digest
   steps:
@@ -26,6 +29,10 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
+
+        # Copying Kubeconfig from secret workspace to grant edit permissions
+        cp $(workspaces.ocp-registry-kubeconfig.path)/kubeconfig $HOME/kubeconfig
+        export KUBECONFIG=$HOME/kubeconfig
 
         # jq needs to be installed in order to get the particular fields of the json resources definitions.
         # TODO: provide image with oc and jq
@@ -91,6 +98,12 @@ spec:
         if ! error=$(oc create imagestreamtag $IMAGESTREAM_NAME:$TAG --from-image $IMAGE) && ! grep -v AlreadyExists <<<"$error"; then
           echo "Unexpected error when creating resources: $error"
         fi
+
+        ## Wait for ImagestreamTag creation
+        until oc get is $IMAGESTREAM_NAME -o json | jq --arg TAG "$TAG" '[.status.tags[] | select(.tag == $TAG)] | length == 1' --exit-status; do
+          echo "Waiting for the tag creation..."
+          sleep 1
+        done
 
         ## Test, whether ImagestreamTag was created properly- OR, if not,
         # (log the error AND exit)
