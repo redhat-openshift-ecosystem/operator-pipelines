@@ -23,6 +23,8 @@ spec:
   results:
     - name: status
       description: Indicates a status of publishing a bundle to an index
+    - name: certification_status
+      description: Certification status of the cert Project
   workspaces:
     - name: kerberos-keytab
   steps:
@@ -79,3 +81,4 @@ spec:
           --verbose
 
         echo "success" | tee "$(results.status.path)"
+        echo -n "Published" | tee $(results.certification_status.path)
