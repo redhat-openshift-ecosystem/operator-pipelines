@@ -105,9 +105,9 @@ def call_ibm_webhook(args: Any) -> None:
             # TODO enable SSL verification for prod webhook
             verify=False,
         )
-        LOGGER.debug("Webhook response: ", response)
+        LOGGER.debug("Webhook response: %s", response)
     except TwirpServerException as e:
-        LOGGER.exception(e)
+        LOGGER.exception(str(e))
         sys.exit(1)
 
 
