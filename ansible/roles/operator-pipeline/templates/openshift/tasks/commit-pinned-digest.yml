@@ -24,6 +24,7 @@ spec:
         volume types.
   params:
     - name: dirty_flag
+    - name: git_branch
     - name: verbose
       description: Log the commands that are executed during `commit-pinned-digest`'s operation.
       type: string
@@ -53,6 +54,8 @@ spec:
       image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
       workingDir: $(workspaces.source.path)
       env:
+        - name: CURRENT_BRANCH
+          value: "$(params.git_branch)"
         - name: HOME
           value: "$(params.userHome)"
         - name: PARAM_VERBOSE
@@ -86,7 +89,6 @@ spec:
         if [ $DIRTY_FLAG == "true" ]; then
           echo "Commit changes to temporary branch"
 
-          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           TEMP_BRANCH="${CURRENT_BRANCH}-pinned"
           git checkout -b "${TEMP_BRANCH}"
           git add -u
