@@ -299,6 +299,8 @@ spec:
           value: *bundleImage
         - name: bundle_image_digest
           value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
         - name: package
           value: "$(tasks.operator-validation.results.package_name)"
         - name: ocp_version

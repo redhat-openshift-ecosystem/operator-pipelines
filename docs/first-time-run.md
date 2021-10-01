@@ -189,5 +189,5 @@ The Release pipeline needs to call an IBM webhook to trigger marketplace replica
 authenticate with the webhook, a token is needed.
 
 ```bash
-oc create secret generic ibm-webhook-token --from-literal ibm-webhook-token=< TOKEN >
+oc create secret generic ibm-webhook-token --from-literal token=< TOKEN >
 ```
