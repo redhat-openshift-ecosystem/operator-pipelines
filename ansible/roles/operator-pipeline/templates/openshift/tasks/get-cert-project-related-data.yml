@@ -67,7 +67,7 @@ spec:
             echo "Invalid $ORGANIZATION"
             exit 1
             ;;
-        esac      
+        esac
 
         CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
         if [ $CERTIFICATION_STATUS == "Started" ]; then
