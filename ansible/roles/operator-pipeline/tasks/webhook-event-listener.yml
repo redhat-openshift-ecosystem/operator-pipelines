@@ -39,7 +39,7 @@
                   - ref: operator-hosted-pipeline-trigger-binding
                 template:
                   ref: operator-hosted-pipeline-trigger-template
-              # run Hosted pipeline on PR labeled with label "pipeline/trigger"
+              # run Hosted pipeline on PR labeled with label "pipeline/trigger-hosted"
               - name: github-label-listener
                 interceptors:
                   - github:
@@ -52,7 +52,7 @@
                       filter: >-
                         (
                           body.action == "labeled"
-                          && body.label.name == "pipeline/trigger"
+                          && body.label.name == "pipeline/trigger-hosted"
                           && body.pull_request.base.ref == "{{ branch }}"
                         )
                 bindings:
@@ -81,7 +81,7 @@
                   - ref: operator-release-pipeline-trigger-binding
                 template:
                   ref: operator-release-pipeline-trigger-template
-              # run Release pipeline on PR labeled with label "pipeline/trigger"
+              # run Release pipeline on PR labeled with label "pipeline/trigger-release"
               - name: github-label-listener
                 interceptors:
                   - github:
