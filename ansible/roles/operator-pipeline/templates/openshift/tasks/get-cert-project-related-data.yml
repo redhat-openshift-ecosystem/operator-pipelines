@@ -47,7 +47,7 @@ spec:
         get-cert-project-related-data \
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id)
-      
+
         ORGANIZATION=$(cat config.yaml | yq -r '.organization')
         OPERATOR_DISTRIBUTION=$(cat cert_project | jq '.operator_distribution'| tr -d '"')
         case "$ORGANIZATION" in
@@ -67,7 +67,7 @@ spec:
             echo "Invalid $ORGANIZATION"
             exit 1
             ;;
-        esac          
+        esac      
 
         CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
         if [ $CERTIFICATION_STATUS == "Started" ]; then
