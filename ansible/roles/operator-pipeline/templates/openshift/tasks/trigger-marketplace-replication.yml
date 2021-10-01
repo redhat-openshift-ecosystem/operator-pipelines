@@ -9,6 +9,8 @@ spec:
       description: Registry path to the operator bundle image
     - name: bundle_image_digest
       description: Digest of the operator bundle image
+    - name: git_repo_url
+      description: ssh address of GitHub repository
     - name: package
       description: Operator package name
     - name: ocp_version
@@ -33,6 +35,7 @@ spec:
         marketplace-replication \
           --bundle-image "$(params.bundle_image)" \
           --bundle-image-digest "$(params.bundle_image_digest)" \
+          --git-repo-url "$(params.git_repo_url)" \
           --package "$(params.package)" \
           --ocp-version "$(params.ocp_version)" \
           --version "$(params.version)" \
