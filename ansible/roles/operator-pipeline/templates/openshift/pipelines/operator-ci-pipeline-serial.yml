@@ -99,6 +99,8 @@ spec:
       taskRef:
         name: commit-pinned-digest
       params:
+        - name: git_branch
+          value: "$(params.git_branch)"
         - name: git_user_name
           value: "$(params.git_username)"
         - name: git_user_email
