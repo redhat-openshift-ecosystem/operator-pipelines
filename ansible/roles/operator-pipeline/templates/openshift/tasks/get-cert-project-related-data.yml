@@ -53,13 +53,13 @@ spec:
         case "$ORGANIZATION" in
           "certified-operators")
             if [ "$OPERATOR_DISTRIBUTION" != "connect" ]; then
-              echo "The operator distribution $OPERATOR_DISTRIBUTION does not belong to $ORGANIZATION organization"
+              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
               exit 1
             fi
             ;;
           "redhat-marketplace")
             if [ "$OPERATOR_DISTRIBUTION" != "marketplace" ]; then
-              echo "The operator distribution $OPERATOR_DISTRIBUTION does not belong to $ORGANIZATION organization"
+              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
               exit 1
             fi
             ;;
