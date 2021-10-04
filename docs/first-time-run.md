@@ -128,3 +128,15 @@ oc create secret generic hydra-credentials \
   --from-literal username=<username>  \
   --from-literal password=<password>
 ```
+
+### Only Release pipeline:
+
+#### OCP-registry-kubeconfig
+OCP clusters contains the public registries for Operator Bundle Images.
+To publish the image to this registry, Pipeline connects to OCP cluster via
+Kubeconfig.
+To create the secret which contains the OCP cluster Kubeconfig: 
+```bash
+oc create secret generic ocp-registry-kubeconfig \
+  --from-literal kubeconfig=<kubeconfig>
+```
