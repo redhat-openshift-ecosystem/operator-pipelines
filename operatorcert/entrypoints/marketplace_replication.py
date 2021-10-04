@@ -102,7 +102,8 @@ def call_ibm_webhook(args: Any) -> None:
             request=request,
             headers=headers,
             server_path_prefix="",
-            # TODO enable SSL verification for prod webhook
+            # TODO: Currently, the endpoint in insecure in the preprod environments.
+            # When the production endpoint will be ready, we should be able to use it securely without additional cert.
             verify=False,
         )
         LOGGER.debug("Webhook response: %s", response)
