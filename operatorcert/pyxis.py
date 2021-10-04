@@ -4,7 +4,6 @@ from typing import Any, Dict
 from urllib.parse import urljoin
 
 import requests
-from requests.sessions import session
 
 LOGGER = logging.getLogger("operator-cert")
 

@@ -2,6 +2,9 @@ from pathlib import Path
 from unittest import mock
 from unittest.mock import call, MagicMock
 
+import pytest
+import os
+
 from operatorcert import utils
 from operatorcert.utils import store_results
 
@@ -54,3 +57,15 @@ def test_get_registry_for_env() -> None:
     assert utils.get_registry_for_env("stage") == "registry.connect.stage.redhat.com"
     assert utils.get_registry_for_env("qa") == "registry.connect.qa.redhat.com"
     assert utils.get_registry_for_env("dev") == "registry.connect.dev.redhat.com"
+
+
+def test_set_client_keytab() -> None:
+    assert utils.set_client_keytab("") is None
+
+    with pytest.raises(IOError):
+        utils.set_client_keytab("non-existent")
+
+    with mock.patch("os.path.isfile") as mock_isfile:
+        mock_isfile.return_value = True
+        utils.set_client_keytab("test")
+        assert os.environ["KRB5_CLIENT_KTNAME"] == "FILE:test"

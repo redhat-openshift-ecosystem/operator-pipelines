@@ -1,7 +1,10 @@
 import json
 import logging
+import os
 import pathlib
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
+
+LOGGER = logging.getLogger("operator-cert")
 
 
 def find_file(
@@ -63,3 +66,19 @@ def get_registry_for_env(environment: str) -> str:
     }
 
     return env_to_registry[environment]
+
+
+def set_client_keytab(keytab_file: str):
+    """
+    Set env variable with default client keytab.
+    Args:
+        keytab_file (path): path to keytab file (default /etc/krb5.krb)
+    """
+    if not keytab_file:
+        return
+    if not os.path.isfile(keytab_file):
+        raise IOError("Keytab file %s does not exist", keytab_file)
+    os.environ["KRB5_CLIENT_KTNAME"] = "FILE:{}".format(keytab_file)
+    LOGGER.debug(
+        "Set KRB5_CLIENT_KTNAME env variable: %s", os.environ["KRB5_CLIENT_KTNAME"]
+    )

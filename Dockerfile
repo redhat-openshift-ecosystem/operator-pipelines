@@ -21,12 +21,17 @@ RUN dnf update -y && \
     dnf install -y \
     findutils \
     git \
+    gcc \
     jq \
+    krb5-devel \
+    krb5-workstation \
     yamllint \
     openssl-devel \
     pip \
     python3-devel && \
     dnf clean all
+
+COPY config/krb5.conf /etc/krb5.conf
 
 RUN curl -LO https://github.com/operator-framework/operator-sdk/releases/download/v1.8.1/operator-sdk_linux_amd64 && \
     chmod +x operator-sdk_linux_amd64 && \
