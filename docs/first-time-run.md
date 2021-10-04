@@ -128,3 +128,31 @@ oc create secret generic hydra-credentials \
   --from-literal username=<username>  \
   --from-literal password=<password>
 ```
+
+### Only Release pipeline:
+#### Kerberos credentials
+For submitting the IIB build, you need kerberos keytab in a secret:
+```bash
+oc create secret generic kerberos-keytab \
+  --from-file krb5.keytab
+```
+
+#### Quay credentials
+Release pipeline uses Quay credentials to authenticate a push to an index image
+during the IIB build.
+```bash
+oc create secret generic iib-quay-credentials \
+  --from-literal username=<QUAY_USERNAME> \
+  --from-literal password=<QUAY_PASSWORD>
+```
+
+#### OCP-registry-kubeconfig
+OCP clusters contains the public registries for Operator Bundle Images.
+To publish the image to this registry, Pipeline connects to OCP cluster via
+Kubeconfig.
+To create the secret which contains the OCP cluster Kubeconfig: 
+```bash
+oc create secret generic ocp-registry-kubeconfig \
+  --from-literal kubeconfig=<kubeconfig>
+```
+

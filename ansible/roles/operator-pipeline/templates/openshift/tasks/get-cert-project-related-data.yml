@@ -19,8 +19,8 @@ spec:
       description: isv_pid of the certification project from Red Hat Connect
     - name: repo_name
       description: Repository name assigned to certification project from Red Hat Connect
-    - name: dist_method
-      description: Distribution method of the certification project- either certified or marketplace
+    - name: operator_distribution
+      description: Distribution method of the operator - either connect or marketplace
     - name: org_id
       description: Unique identifier of the organization in Red Hat Connect
     - name: contacts
@@ -75,8 +75,8 @@ spec:
         fi
 
         # `grep .` ensures, that pipe fail if jq returns no results
-        cat cert_project | jq '.container.isv_pid' | tr -d '"' | grep . | tee $(results.isv_pid.path)
-        cat cert_project | jq '.container.repository_name' | tr -d '"' | grep . | tee $(results.repo_name.path)
-        cat cert_project | jq '.container.distribution_method' | tr -d '"' |  grep . | tee $(results.dist_method.path)
-        cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tee $(results.org_id.path)
-        cat cert_project | jq '.contacts[].email_address' | tr '\n' ' ' | tr -d '"' | grep . | tee $(results.contacts.path)
+        cat cert_project | jq '.container.isv_pid' | tr -d '"' | grep . | tr -d "\n" | tee $(results.isv_pid.path)
+        cat cert_project | jq '.container.repository_name' | tr -d '"' | grep . | tr -d "\n" | tee $(results.repo_name.path)
+        cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.org_id.path)
+        cat cert_project | jq '.contacts[].email_address' | tr '\n' ' ' | tr -d '"' | grep . | tr -d "\n" | tee $(results.contacts.path)
+        cat cert_project | jq '.operator_distribution' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.operator_distribution.path)
