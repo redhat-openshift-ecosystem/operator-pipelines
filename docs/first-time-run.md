@@ -100,14 +100,6 @@ KUBECONFIG=kubeconfig oc login -u <username> -p <password>
 oc create secret generic kubeconfig --from-file=kubeconfig=kubeconfig
 ```
 
-#### GitHub Bot token
-To automatically merge the PR, Hosted pipeline uses GitHub API. To authenticate
-when using this method, secret containing bot token should be created.
-
-```bash
-oc create secret generic github-bot-token --from-literal github_bot_token=< BOT TOKEN >
-```
-
 ### Only Hosted pipeline:
 #### Container API access
 The hosted pipeline communicates with internal Container API that requires cert + key.
@@ -127,6 +119,14 @@ Hydra over basic auth, secret containing service account credentials should be c
 oc create secret generic hydra-credentials \
   --from-literal username=<username>  \
   --from-literal password=<password>
+```
+
+#### GitHub Bot token
+To automatically merge the PR, Hosted pipeline uses GitHub API. To authenticate
+when using this method, secret containing bot token should be created.
+
+```bash
+oc create secret generic github-bot-token --from-literal github_bot_token=< BOT TOKEN >
 ```
 
 ### Only Release pipeline:

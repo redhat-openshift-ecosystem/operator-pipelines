@@ -112,7 +112,6 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=kubeconfig,secret=kubeconfig \
   --workspace name=github-bot-token,secret=github-bot-token \
-  --workspace name=kubeconfig,secret=kubeconfig \
   --workspace name=hydra-credentials,secret=hydra-credentials \
   --showlog
   # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
