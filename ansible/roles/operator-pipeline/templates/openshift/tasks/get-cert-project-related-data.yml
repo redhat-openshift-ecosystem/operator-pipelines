@@ -30,9 +30,11 @@ spec:
   workspaces:
     - name: pyxis-ssl-credentials
       optional: true
+    - name: source
   steps:
     - name: get-cert-project-related-data
       image: quay.io/redhat-isv/operator-pipelines-images:latest
+      workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)
@@ -45,6 +47,27 @@ spec:
         get-cert-project-related-data \
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id)
+
+        ORGANIZATION=$(cat config.yaml | yq -r '.organization')
+        OPERATOR_DISTRIBUTION=$(cat cert_project | jq '.operator_distribution'| tr -d '"')
+        case "$ORGANIZATION" in
+          "certified-operators")
+            if [ "$OPERATOR_DISTRIBUTION" != "connect" ]; then
+              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
+              exit 1
+            fi
+            ;;
+          "redhat-marketplace")
+            if [ "$OPERATOR_DISTRIBUTION" != "marketplace" ]; then
+              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
+              exit 1
+            fi
+            ;;
+          *)
+            echo "Invalid $ORGANIZATION"
+            exit 1
+            ;;
+        esac
 
         CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
         if [ $CERTIFICATION_STATUS == "Started" ]; then
