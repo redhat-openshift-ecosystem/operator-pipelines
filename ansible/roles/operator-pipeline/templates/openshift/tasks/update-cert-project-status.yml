@@ -5,8 +5,8 @@ metadata:
   name: update-cert-project-status
 spec:
   params:
-    - name: update_cert_project_status
-      default: "false"
+    - name: new_certification_status
+      description: New Certification status of the cert Project
     - name: cert_project_id
       description: Identifier of certification project from Red Hat Connect
     - name: pyxis_cert_path
@@ -16,8 +16,8 @@ spec:
       default: ""
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
-    - name: certification_status
-      description: Certification status of the cert Project
+    - name: current_certification_status
+      description: Current Certification status of the cert Project
   workspaces:
     - name: pyxis-ssl-credentials
       optional: true
@@ -33,19 +33,23 @@ spec:
           value: $(params.pyxis_url)
         - name: CERT_PROJECT_ID
           value: $(params.cert_project_id)
-        - name: CERTIFICATION_STATUS
-          value: $(params.certification_status)
-        - name: UPDATE_CERT_PROJECT_STATUS
-          value: $(params.update_cert_project_status)
+        - name: CURRENT_CERTIFICATION_STATUS
+          value: $(params.current_certification_status)
+        - name: NEW_CERTIFICATION_STATUS
+          value: $(params.new_certification_status)
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        if [ "$UPDATE_CERT_PROJECT_STATUS" == "true" ]; then
+        if [ "$CURRENT_CERTIFICATION_STATUS" != "$NEW_CERTIFICATION_STATUS" ]; then
+          echo "Updating the Certification Project status to $NEW_CERTIFICATION_STATUS."
           update-cert-project-status \
             --pyxis-url $PYXIS_URL \
             --cert-project-id $CERT_PROJECT_ID \
-            --certification-status "$CERTIFICATION_STATUS"
+            --certification-status "$NEW_CERTIFICATION_STATUS"
 
-          echo "Updating the Certification Project status to $CERTIFICATION_STATUS"
+          echo "The Certification Project status is successfully updated to $NEW_CERTIFICATION_STATUS state."
+          exit 0
         fi
+        
+        echo "The certification project is currently in $CURRENT_CERTIFICATION_STATUS state."

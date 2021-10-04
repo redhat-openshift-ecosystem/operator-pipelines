@@ -15,8 +15,8 @@ spec:
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
   results:
-    - name: update_cert_project_status
-      description: The boolean value indicating if the cert project status needs to be updated or not
+    - name: new_certification_status
+      description: New Certification status of the cert Project
     - name: isv_pid
       description: isv_pid of the certification project from Red Hat Connect
     - name: repo_name
@@ -27,8 +27,8 @@ spec:
       description: Unique identifier of the organization in Red Hat Connect
     - name: contacts
       description: List of accounts with permissions allowing operator submission
-    - name: certification_status
-      description: Certification status of the cert Project
+    - name: current_certification_status
+      description: Current Certification status of the cert Project
   workspaces:
     - name: pyxis-ssl-credentials
       optional: true
@@ -48,10 +48,13 @@ spec:
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id)
 
-        CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
-        if [ $CERTIFICATION_STATUS == "Started" ]; then
-          echo -n "In Progress" | tee $(results.certification_status.path)
-          echo -n "true" | tee $(results.update_cert_project_status.path)
+        CURRENT_CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
+        if [ $CURRENT_CERTIFICATION_STATUS != "Published" ]; then
+          echo -n "In Progress" | tee $(results.new_certification_status.path)
+          echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.current_certification_status.path)
+        else
+          echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.new_certification_status.path)
+          echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.current_certification_status.path)
         fi
 
         # `grep .` ensures, that pipe fail if jq returns no results
@@ -60,5 +63,3 @@ spec:
         cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.org_id.path)
         cat cert_project | jq '.contacts[].email_address' | tr '\n' ' ' | tr -d '"' | grep . | tr -d "\n" | tee $(results.contacts.path)
         cat cert_project | jq '.operator_distribution' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.operator_distribution.path)
-        echo -n "none" | tee $(results.certification_status.path)
-        echo -n "false" | tee $(results.update_cert_project_status.path)
