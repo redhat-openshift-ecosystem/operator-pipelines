@@ -11,7 +11,7 @@ spec:
       description: name of the vendor
     - name: repository_name
     - name: dist_method
-      description: distribution method- either marketplace or certified
+      description: operator distribution method- either marketplace or connect
     - name: image
       description: reference to the existing bundle image
     - name: is_latest
@@ -23,6 +23,7 @@ spec:
       description: Kubeconfig for service account allowing connection with cluster that contains the ocp registries
   results:
     - name: container_digest
+    - name: image_pullspec
   steps:
     - name: imagestream-manipulations
       image: registry.redhat.io/openshift4/ose-cli@sha256:eed7052f0013b85087cd9fa8e4b328f56a027846107d32a65daeb3a50cf23b49
@@ -33,10 +34,6 @@ spec:
         # Copying Kubeconfig from secret workspace to grant edit permissions
         cp $(workspaces.ocp-registry-kubeconfig.path)/kubeconfig $HOME/kubeconfig
         export KUBECONFIG=$HOME/kubeconfig
-
-        # jq needs to be installed in order to get the particular fields of the json resources definitions.
-        # TODO: provide image with oc and jq
-        dnf install jq -y
 
         # This task authenticates to registry with the credentials associated with service account
 
@@ -70,7 +67,7 @@ spec:
             --resource-name=$IMAGESTREAM_NAME
 
         ## (Re)create rolebinding associated with the role
-        if [ "$DIST_METHOD" = "rhcc" ]; then
+        if [ "$DIST_METHOD" = "connect" ]; then
 
           # (Get rolebinding AND if it exists delete it)
           oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
@@ -80,7 +77,7 @@ spec:
             --serviceaccount connect:proxysa \
             --serviceaccount connect:rhmp-sa \
             --serviceaccount connect:bpmsa
-        elif [ "$DIST_METHOD" = "marketplace_only" ]; then
+        elif [ "$DIST_METHOD" = "marketplace" ]; then
 
           # (Get rolebinding AND if it exists delete it)
           oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
@@ -100,17 +97,19 @@ spec:
         fi
 
         ## Wait for ImagestreamTag creation
-        until oc get is $IMAGESTREAM_NAME -o json | jq --arg TAG "$TAG" '[.status.tags[] | select(.tag == $TAG)] | length == 1' --exit-status; do
+        JSONPATH="{range .status.tags[?(@.tag==\"$TAG\")]}{.tag}{\"\n\"}{end}"
+        until [ $(oc get is $IMAGESTREAM_NAME -o jsonpath="$JSONPATH" | grep $TAG | wc -l) == 1 ]; do
           echo "Waiting for the tag creation..."
           sleep 1
         done
 
         ## Test, whether ImagestreamTag was created properly- OR, if not,
         # (log the error AND exit)
+        JSONPATH="{.status.tags[?(@.tag==\"$TAG\")].conditions[].message}"
         oc get imagestreamtag $IMAGESTREAM_NAME:$TAG \
         || (echo "Error while creating ImageStreamTag. Are you sure image $IMAGE is available \
         and secret registry-dockerconfig-secret grants access to it? Error: " \
-        && oc get is $IMAGESTREAM_NAME -o json | jq '.status.tags[] | select(.tag | contains("$TAG")) | .conditions[].message' \
+        && oc get is $IMAGESTREAM_NAME -o jsonpath="$JSONPATH" \
         && exit 1)
 
         # optionally mark this tag as latest
@@ -120,4 +119,5 @@ spec:
 
         ### Results
         ## Get the container digest
-        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o json | jq '.image.dockerImageMetadata.Id' | tr -d '"' | tee $(results.container_digest.path)
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath='{.image.dockerImageMetadata.Id}' | tr -d '"' | tee $(results.container_digest.path)
+        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath='{.image.dockerImageReference}' | tr -d '"' | tee $(results.image_pullspec.path)

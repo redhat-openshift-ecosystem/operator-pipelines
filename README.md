@@ -150,6 +150,7 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=github-bot-token,secret=github-bot-token \
+  --workspace name=kerberos-keytab,secret=kerberos-keytab \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=ocp-registry-kubeconfig,secret=ocp-registry-kubeconfig \
   --showlog
