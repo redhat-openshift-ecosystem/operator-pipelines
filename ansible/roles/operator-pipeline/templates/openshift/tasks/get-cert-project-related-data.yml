@@ -23,8 +23,8 @@ spec:
       description: Distribution method of the operator - either connect or marketplace
     - name: org_id
       description: Unique identifier of the organization in Red Hat Connect
-    - name: contacts
-      description: List of accounts with permissions allowing operator submission
+    - name: github_usernames
+      description: List of GitHub accounts with permissions allowing operator submission
     - name: certification_status
       description: Certification status of the cert Project
   workspaces:
@@ -78,5 +78,5 @@ spec:
         cat cert_project | jq '.container.isv_pid' | tr -d '"' | grep . | tr -d "\n" | tee $(results.isv_pid.path)
         cat cert_project | jq '.container.repository_name' | tr -d '"' | grep . | tr -d "\n" | tee $(results.repo_name.path)
         cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.org_id.path)
-        cat cert_project | jq '.contacts[].email_address' | tr '\n' ' ' | tr -d '"' | grep . | tr -d "\n" | tee $(results.contacts.path)
+        cat cert_project | jq '.container.github_usernames[]' | tr '\n' ' ' | tr -d '"' | grep . | tr -d "\n" | tee $(results.github_usernames.path)
         cat cert_project | jq '.operator_distribution' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.operator_distribution.path)
