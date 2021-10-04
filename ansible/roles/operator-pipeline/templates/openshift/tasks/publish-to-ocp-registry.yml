@@ -97,17 +97,19 @@ spec:
         fi
 
         ## Wait for ImagestreamTag creation
-        until oc get is $IMAGESTREAM_NAME -o json | jq --arg TAG "$TAG" '[.status.tags[] | select(.tag == $TAG)] | length == 1' --exit-status; do
+        JSONPATH="{range .status.tags[?(@.tag==\"$TAG\")]}{.tag}{\"\n\"}{end}"
+        until [ $(oc get is $IMAGESTREAM_NAME -o jsonpath="$JSONPATH" | grep $TAG | wc -l) == 1 ]; do
           echo "Waiting for the tag creation..."
           sleep 1
         done
 
         ## Test, whether ImagestreamTag was created properly- OR, if not,
         # (log the error AND exit)
+        JSONPATH="{.status.tags[?(@.tag==\"$TAG\")].conditions[].message}"
         oc get imagestreamtag $IMAGESTREAM_NAME:$TAG \
         || (echo "Error while creating ImageStreamTag. Are you sure image $IMAGE is available \
         and secret registry-dockerconfig-secret grants access to it? Error: " \
-        && oc get is $IMAGESTREAM_NAME -o json | jq '.status.tags[] | select(.tag | contains("$TAG")) | .conditions[].message' \
+        && oc get is $IMAGESTREAM_NAME -o jsonpath="$JSONPATH" \
         && exit 1)
 
         # optionally mark this tag as latest
