@@ -66,17 +66,33 @@ spec:
                     ;;
                 esac
             ;;
+            stage)
+                case $DIST_METHOD in
+                    connect)
+                      FROM_INDEX="quay.io/redhat-pending/redhat----certified-operator-index"
+                    ;;
+                    marketplace)
+                      FROM_INDEX="quay.io/redhat-pending/redhat----redhat-marketplace-index"
+                    ;;
+                    *)
+                      echo "Unknown value for operator_distribution_method: $DIST_METHOD"
+                      exit 1
+                    ;;
+                esac
+            ;;
             *)
-                echo "Publishing bundle to an index is a NOOP for preprod environments at this time."
+                echo "Publishing bundle to an index is a NOOP for dev and qa environments at this time."
                 echo "success" | tee "$(results.status.path)"
                 exit 0
             ;;
         esac
 
+        INDICES="$(echo $(params.bundle_versions) | tr -d '[,]')"
+
         index \
           --iib-url "$(params.iib_url)" \
           --from-index $FROM_INDEX \
-          --indices "$(params.bundle_versions)"
+          --indices $INDICES \
           --bundle-pullspec "$(params.bundle_pullspec)" \
           --verbose
 
