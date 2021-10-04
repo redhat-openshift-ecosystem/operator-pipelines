@@ -36,6 +36,7 @@ spec:
     - name: github-bot-token
     - name: kubeconfig
     - name: hydra-credentials
+    - name: preflight-decryption-key
   tasks:
     # Set environment
     - name: set-env
@@ -109,6 +110,9 @@ spec:
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
+        - name: source
+          workspace: repository
+          subPath: src
 
     # Update cert project related data
     - name: update-cert-project-status
@@ -443,43 +447,44 @@ spec:
           workspace: repository
           subPath: src
 
-    # TODO: passing kubeconfig here is just a temporary workaround to make the task pass
-    - name: preflight
+    - name: preflight-trigger
       runAfter:
         - ocp-environment-preparation
       taskRef:
-        name: preflight
+        kind: Task
+        name: preflight-trigger
       params:
-        - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+        - name: asset_type
+          value: operator
         - name: bundle_index_image
-          value: *bundleIndexImage
+          value: >-
+            $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)
         - name: bundle_image
-          value: *bundleImage
+          value: >-
+            $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)
       workspaces:
-        # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
         - name: kubeconfig
           workspace: kubeconfig
+        - name: gpg-decryption-key
+          workspace: preflight-decryption-key
         - name: output
+          subPath: src
           workspace: repository
-          subPath: preflight
 
     - name: upload-artifacts
       runAfter:
-        - preflight
+        - preflight-trigger
       taskRef:
         name: upload-artifacts
       params:
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
         - name: log_file
-          value: "$(tasks.preflight.results.log_output_file)"
+          value: "$(tasks.preflight-trigger.results.log_output_file)"
         - name: artifacts_dir
-          value: "$(tasks.preflight.results.artifacts_output_dir)"
+          value: "$(tasks.preflight-trigger.results.artifacts_output_dir)"
         - name: result_file
-          value: "$(tasks.preflight.results.result_output_file)"
+          value: "$(tasks.preflight-trigger.results.result_output_file)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
