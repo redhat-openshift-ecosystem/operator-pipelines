@@ -51,5 +51,5 @@ spec:
           echo "The Certification Project status is successfully updated to $NEW_CERTIFICATION_STATUS state."
           exit 0
         fi
-        
+
         echo "The certification project is currently in $CURRENT_CERTIFICATION_STATUS state."
