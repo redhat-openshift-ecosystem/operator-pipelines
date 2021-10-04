@@ -10,7 +10,7 @@ spec:
     - name: git_pr_url
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers
-    - name: contacts
+    - name: github_usernames
       description: List of accounts with permissions allowing operator submission
   results:
     - name: cert_project_id
@@ -37,7 +37,7 @@ spec:
           --pr-url $(params.git_pr_url) \
           --git-username $(params.git_username) \
           --verbose \
-          --contacts $(params.contacts)
+          --contacts $(params.github_usernames)
 
         cat bundle_name | tee $(results.operator_name.path)
         cat bundle_version | tee $(results.bundle_version.path)
