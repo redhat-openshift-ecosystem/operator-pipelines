@@ -5,6 +5,8 @@ metadata:
   name: update-cert-project-status
 spec:
   params:
+    - name: update_cert_project_status
+      default: "false"
     - name: cert_project_id
       description: Identifier of certification project from Red Hat Connect
     - name: pyxis_cert_path
@@ -33,13 +35,17 @@ spec:
           value: $(params.cert_project_id)
         - name: CERTIFICATION_STATUS
           value: $(params.certification_status)
+        - name: UPDATE_CERT_PROJECT_STATUS
+          value: $(params.update_cert_project_status)
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        update-cert-project-status \
-          --pyxis-url $PYXIS_URL \
-          --cert-project-id $CERT_PROJECT_ID \
-          --certification-status "$CERTIFICATION_STATUS"
+        if [ "$UPDATE_CERT_PROJECT_STATUS" == "true" ]; then
+          update-cert-project-status \
+            --pyxis-url $PYXIS_URL \
+            --cert-project-id $CERT_PROJECT_ID \
+            --certification-status "$CERTIFICATION_STATUS"
 
-        echo "Updating the Certification Project status to $CERTIFICATION_STATUS"
+          echo "Updating the Certification Project status to $CERTIFICATION_STATUS"
+        fi

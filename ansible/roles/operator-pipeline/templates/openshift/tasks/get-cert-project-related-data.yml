@@ -15,6 +15,8 @@ spec:
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
   results:
+    - name: update_cert_project_status
+      description: The boolean value indicating if the cert project status needs to be updated or not
     - name: isv_pid
       description: isv_pid of the certification project from Red Hat Connect
     - name: repo_name
@@ -49,6 +51,7 @@ spec:
         CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
         if [ $CERTIFICATION_STATUS == "Started" ]; then
           echo -n "In Progress" | tee $(results.certification_status.path)
+          echo -n "true" | tee $(results.update_cert_project_status.path)
         fi
 
         # `grep .` ensures, that pipe fail if jq returns no results
@@ -57,3 +60,5 @@ spec:
         cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.org_id.path)
         cat cert_project | jq '.contacts[].email_address' | tr '\n' ' ' | tr -d '"' | grep . | tr -d "\n" | tee $(results.contacts.path)
         cat cert_project | jq '.operator_distribution' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.operator_distribution.path)
+        echo -n "none" | tee $(results.certification_status.path)
+        echo -n "false" | tee $(results.update_cert_project_status.path)

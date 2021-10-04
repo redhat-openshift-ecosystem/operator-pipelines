@@ -117,6 +117,8 @@ spec:
       taskRef:
         name: update-cert-project-status
       params:
+        - name: update_cert_project_status
+          value: "$(tasks.get-cert-project-related-data.results.update_cert_project_status)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_url
