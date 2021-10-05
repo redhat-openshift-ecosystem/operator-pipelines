@@ -165,6 +165,26 @@
       data:
         kubeconfig: "{{ lookup('file', operator_pipeline_kubeconfig_ocp_local_path, rstrip=False) | b64encode }}"
 
+- name: Create OCP cluster Hydra credentials secret
+  no_log: yes
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: hydra-credentials
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        username: "{{ lookup('file', operator_pipeline_hydra_username_local_path, rstrip=False) | b64encode }}"
+        password: "{{ lookup('file', operator_pipeline_hydra_password_local_path, rstrip=False) | b64encode }}"
+
 - name: Deploy pipeline tasks
   k8s:
     state: present
