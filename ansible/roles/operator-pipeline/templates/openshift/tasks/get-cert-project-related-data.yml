@@ -47,8 +47,13 @@ spec:
           --cert-project-id $(params.cert_project_id)
 
         CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
-        if [ $CERTIFICATION_STATUS == "Started" ]; then
+        if [ "$CERTIFICATION_STATUS" == "Started" ]; then
           echo -n "In Progress" | tee $(results.certification_status.path)
+        else
+          echo "Not going to update the certification status from "Started" \
+          to "In Progress". Current status:"
+          echo $CERTIFICATION_STATUS
+          echo -n "Don't Update" | tee $(results.certification_status.path)
         fi
 
         # `grep .` ensures, that pipe fail if jq returns no results
