@@ -24,7 +24,7 @@ spec:
         # Don't use set -x to avoid exposing Hydra credentials
         set -e
 
-        HYDRA_URL=$(params.connect_url)/hydra/prm/
+        HYDRA_URL=$(params.connect_url)/hydra/prm
 
         export HYDRA_USERNAME=$(cat $HYDRA_USERNAME_PATH)
         export HYDRA_PASSWORD=$(cat $HYDRA_PASSWORD_PATH)

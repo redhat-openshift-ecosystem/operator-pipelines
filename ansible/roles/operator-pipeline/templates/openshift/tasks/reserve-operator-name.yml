@@ -29,12 +29,12 @@ spec:
           value: $(params.pyxis_cert_path)
         - name: PYXIS_KEY_PATH
           value: $(params.pyxis_key_path)
+        - name: ASSOCIATION
+          value: $(params.association)
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        # Somehow, when not assigned to a var, this param has a trailing new line
-        ASSOCIATION=$(params.association)
         echo "Attempting to reserve operator name for assocation $ASSOCIATION"
 
         reserve-operator-name \
