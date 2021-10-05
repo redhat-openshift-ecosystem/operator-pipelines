@@ -50,7 +50,7 @@ spec:
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id)
 
-        CURRENT_CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
+        CURRENT_CERTIFICATION_STATUS=$(cat cert_project | jq -r '.certification_status')
         if [ $CURRENT_CERTIFICATION_STATUS != "Published" ]; then
           echo -n "In Progress" | tee $(results.new_certification_status.path)
           echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.current_certification_status.path)
