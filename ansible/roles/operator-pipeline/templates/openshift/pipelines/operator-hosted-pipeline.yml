@@ -35,6 +35,7 @@ spec:
     - name: github-bot-token
     - name: kubeconfig
     - name: hydra-credentials
+    - name: preflight-decryption-key
   tasks:
     # Set environment
     - name: set-env
@@ -101,6 +102,8 @@ spec:
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
@@ -108,11 +111,18 @@ spec:
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
+        - name: source
+          workspace: repository
+          subPath: src
 
-    # Update cert project related data
+    # Update cert project related data from "started" to "in progress"
     - name: update-cert-project-status
       runAfter:
         - get-cert-project-related-data
+      when:
+        - input: "$(tasks.get-cert-project-related-data.results.certification_status)"
+          operator: in
+          values: ["In Progress"]
       taskRef:
         name: update-cert-project-status
       params:
@@ -145,8 +155,8 @@ spec:
           value: $(tasks.set-env.results.pyxis_url)
         - name: git_username
           value: $(params.git_username)
-        - name: contacts
-          value: "$(tasks.get-cert-project-related-data.results.contacts)"
+        - name: github_usernames
+          value: "$(tasks.get-cert-project-related-data.results.github_usernames)"
       workspaces:
         - name: source
           workspace: repository
@@ -440,43 +450,44 @@ spec:
           workspace: repository
           subPath: src
 
-    # TODO: passing kubeconfig here is just a temporary workaround to make the task pass
-    - name: preflight
+    - name: preflight-trigger
       runAfter:
         - ocp-environment-preparation
       taskRef:
-        name: preflight
+        kind: Task
+        name: preflight-trigger
       params:
-        - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+        - name: asset_type
+          value: operator
         - name: bundle_index_image
-          value: *bundleIndexImage
+          value: >-
+            $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)
         - name: bundle_image
-          value: *bundleImage
+          value: >-
+            $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)
       workspaces:
-        # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
         - name: kubeconfig
           workspace: kubeconfig
+        - name: gpg-decryption-key
+          workspace: preflight-decryption-key
         - name: output
+          subPath: src
           workspace: repository
-          subPath: preflight
 
     - name: upload-artifacts
       runAfter:
-        - preflight
+        - preflight-trigger
       taskRef:
         name: upload-artifacts
       params:
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
         - name: log_file
-          value: "$(tasks.preflight.results.log_output_file)"
+          value: "$(tasks.preflight-trigger.results.log_output_file)"
         - name: artifacts_dir
-          value: "$(tasks.preflight.results.artifacts_output_dir)"
+          value: "$(tasks.preflight-trigger.results.artifacts_output_dir)"
         - name: result_file
-          value: "$(tasks.preflight.results.result_output_file)"
+          value: "$(tasks.preflight-trigger.results.result_output_file)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id

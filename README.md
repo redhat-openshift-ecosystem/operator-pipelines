@@ -110,7 +110,6 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=github-bot-token,secret=github-bot-token \
-  --workspace name=kubeconfig,secret=kubeconfig \
   --workspace name=hydra-credentials,secret=hydra-credentials \
   --showlog
   # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
@@ -148,6 +147,7 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=github-bot-token,secret=github-bot-token \
+  --workspace name=kerberos-keytab,secret=kerberos-keytab \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=ocp-registry-kubeconfig,secret=ocp-registry-kubeconfig \
   --showlog
