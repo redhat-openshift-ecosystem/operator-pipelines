@@ -103,6 +103,8 @@ spec:
       params:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
@@ -114,10 +116,14 @@ spec:
           workspace: repository
           subPath: src
 
-    # Update cert project related data
+    # Update cert project related data from "started" to "in progress"
     - name: update-cert-project-status
       runAfter:
         - get-cert-project-related-data
+      when:
+        - input: "$(tasks.get-cert-project-related-data.results.certification_status)"
+          operator: in
+          values: ["In Progress"]
       taskRef:
         name: update-cert-project-status
       params:
