@@ -119,7 +119,7 @@ spec:
       when:
         - input: "$(tasks.get-cert-project-related-data.results.certification_status)"
           operator: in
-          values: [ "In Progress" ]
+          values: ["In Progress"]
       taskRef:
         name: update-cert-project-status
       params:
