@@ -182,10 +182,15 @@
                     - name: github-bot-token
                       secret:
                         secretName: "github-bot-token"
-                    # TODO: passing kubeconfig here is just a temporary workaround to make the task pass
-                    - name: kubeconfig
+                    - name: prow-kubeconfig
                       secret:
-                        secretName: "kubeconfig"
+                        secretName: "prow-kubeconfig"
+                    - name: preflight-decryption-key
+                      secret:
+                        secretName: "preflight-decryption-key"
+                    - name: hydra-credentials
+                      secret:
+                        secretName: "hydra-credentials"
 
     - name: Create Hosted pipeline trigger route
       k8s:

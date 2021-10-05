@@ -12,8 +12,13 @@ operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipel
 
 operator_pipeline_kubeconfig_ocp_local_path: ../../vaults/{{ env }}/kubeconfig-ocp
 
+operator_pipeline_kubeconfig_prow_local_path: ../../vaults/common/kubeconfig-prow
 operator_pipeline_quay_token: ../../vaults/common/dockerconfig.json
 operator_pipeline_github_bot_token: ../../vaults/common/github-bot-token.txt
 
 operator_pipeline_hydra_username_local_path: ../../vaults/common/nonprod-hydra-username
 operator_pipeline_hydra_password_local_path: ../../vaults/common/nonprod-hydra-password
+
+# todo: replace with preflight_decryption_key
+operator_pipeline_preflight_decryption_key_private_local_path: ../../vaults/common/preflight-decryption-key-priv.gpg
+operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/common/preflight-decryption-key-pub.gpg

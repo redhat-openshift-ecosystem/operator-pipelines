@@ -129,6 +129,36 @@ oc create secret generic hydra-credentials \
   --from-literal password=<password>
 ```
 
+#### Prow-kubeconfig
+Preflight tests are running on the separete cluster. To start the cluster with the test,
+Pipelines are using Prowjob.
+To connect to the cluster with the Prowjob installed, a Kubeconfig should be supplied.
+```bash
+oc create secret generic prow-kubeconfig \
+  --from-literal kubeconfig=<kubeconfig>
+```
+
+#### Preflight decryption key
+Results of the preflight tests are protected by encryption. In order to retrieve them
+from the preflight job, gpg decryption key should be supplied.
+```bash
+oc create secret generic preflight-decryption-key \
+  --from-literal private=<private gpg key> \
+  --from-literal public=<public gpg key>
+```
+
+#### OCP-registry-kubeconfig
+OCP clusters contains the public registries for Operator Bundle Images.
+To publish the image to this registry, Pipeline connects to OCP cluster via
+Kubeconfig.
+To create the secret which contains the OCP cluster Kubeconfig: 
+```bash
+oc create secret generic ocp-registry-kubeconfig \
+  --from-literal kubeconfig=<kubeconfig>
+```
+
+
+
 ### Only Release pipeline:
 #### Kerberos credentials
 For submitting the IIB build, you need kerberos keytab in a secret:
@@ -155,4 +185,3 @@ To create the secret which contains the OCP cluster Kubeconfig:
 oc create secret generic ocp-registry-kubeconfig \
   --from-literal kubeconfig=<kubeconfig>
 ```
-

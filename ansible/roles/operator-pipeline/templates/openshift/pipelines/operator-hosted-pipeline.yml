@@ -34,7 +34,7 @@ spec:
     - name: registry-credentials
     - name: pyxis-ssl-credentials
     - name: github-bot-token
-    - name: kubeconfig
+    - name: prow-kubeconfig
     - name: hydra-credentials
     - name: preflight-decryption-key
   tasks:
@@ -468,7 +468,7 @@ spec:
             $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)
       workspaces:
         - name: kubeconfig
-          workspace: kubeconfig
+          workspace: prow-kubeconfig
         - name: gpg-decryption-key
           workspace: preflight-decryption-key
         - name: output
