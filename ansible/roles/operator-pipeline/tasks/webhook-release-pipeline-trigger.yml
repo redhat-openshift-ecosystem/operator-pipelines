@@ -45,6 +45,8 @@
               - name: git_commit
               - name: git_pr_title
               - name: is_latest
+              # TODO: This parameter should be removed- see ISV-1211
+              - name: image_namespace
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
@@ -62,6 +64,9 @@
                       value: $(tt.params.git_pr_title)
                     - name: is_latest
                       value: "true"
+                    # TODO: This parameter should be removed- see ISV-1211
+                    - name: image_namespace
+                      value: redhat-isv
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
