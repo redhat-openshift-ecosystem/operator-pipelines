@@ -295,8 +295,10 @@ spec:
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
-        - name: certification_status
-          value: "$(tasks.publish-bundle.results.certification_status)"
+        - name: new_certification_status
+          value: "$(tasks.publish-bundle.results.new_certification_status)"
+        - name: current_certification_status
+          value: "$(tasks.get-cert-project-related-data.results.current_certification_status)"
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials

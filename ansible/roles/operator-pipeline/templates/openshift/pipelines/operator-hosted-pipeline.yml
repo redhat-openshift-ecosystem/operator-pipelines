@@ -33,7 +33,7 @@ spec:
     - name: registry-credentials
     - name: pyxis-ssl-credentials
     - name: github-bot-token
-    - name: kubeconfig
+    - name: prow-kubeconfig
     - name: hydra-credentials
     - name: preflight-decryption-key
   tasks:
@@ -126,6 +126,8 @@ spec:
       taskRef:
         name: update-cert-project-status
       params:
+        - name: new_certification_status
+          value: "$(tasks.get-cert-project-related-data.results.new_certification_status)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_url
@@ -134,8 +136,8 @@ spec:
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
-        - name: certification_status
-          value: "$(tasks.get-cert-project-related-data.results.certification_status)"
+        - name: current_certification_status
+          value: "$(tasks.get-cert-project-related-data.results.current_certification_status)"
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
@@ -467,7 +469,7 @@ spec:
             $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)
       workspaces:
         - name: kubeconfig
-          workspace: kubeconfig
+          workspace: prow-kubeconfig
         - name: gpg-decryption-key
           workspace: preflight-decryption-key
         - name: output

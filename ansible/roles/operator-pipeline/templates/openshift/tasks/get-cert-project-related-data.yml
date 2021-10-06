@@ -15,6 +15,8 @@ spec:
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
   results:
+    - name: new_certification_status
+      description: New Certification status of the cert Project
     - name: isv_pid
       description: isv_pid of the certification project from Red Hat Connect
     - name: repo_name
@@ -23,10 +25,12 @@ spec:
       description: Distribution method of the operator - either connect or marketplace
     - name: org_id
       description: Unique identifier of the organization in Red Hat Connect
+    - name: contacts
+      description: List of accounts with permissions allowing operator submission
+    - name: current_certification_status
+      description: Current Certification status of the cert Project
     - name: github_usernames
       description: List of GitHub accounts with permissions allowing operator submission
-    - name: certification_status
-      description: Certification status of the cert Project
   workspaces:
     - name: pyxis-ssl-credentials
       optional: true
@@ -48,6 +52,15 @@ spec:
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id)
 
+        CURRENT_CERTIFICATION_STATUS=$(cat cert_project | jq -r '.certification_status')
+        if [ $CURRENT_CERTIFICATION_STATUS != "Published" ]; then
+          echo -n "In Progress" | tee $(results.new_certification_status.path)
+          echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.current_certification_status.path)
+        else
+          echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.new_certification_status.path)
+          echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.current_certification_status.path)
+        fi
+
         ORGANIZATION=$(cat config.yaml | yq -r '.organization')
         OPERATOR_DISTRIBUTION=$(cat cert_project | jq '.operator_distribution'| tr -d '"')
         case "$ORGANIZATION" in
@@ -68,16 +81,6 @@ spec:
             exit 1
             ;;
         esac
-
-        CERTIFICATION_STATUS=$(cat cert_project | jq '.certification_status'| tr -d '"')
-        if [ "$CERTIFICATION_STATUS" == "Started" ]; then
-          echo -n "In Progress" | tee $(results.certification_status.path)
-        else
-          echo "Not going to update the certification status from "Started" \
-          to "In Progress". Current status:"
-          echo $CERTIFICATION_STATUS
-          echo -n "Don't Update" | tee $(results.certification_status.path)
-        fi
 
         # `grep .` ensures, that pipe fail if jq returns no results
         cat cert_project | jq '.container.isv_pid' | tr -d '"' | grep . | tr -d "\n" | tee $(results.isv_pid.path)
