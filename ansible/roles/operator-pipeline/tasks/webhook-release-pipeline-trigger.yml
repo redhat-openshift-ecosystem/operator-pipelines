@@ -21,7 +21,7 @@
           spec:
             params:
               - name: git_repo_url
-                value: $(body.pull_request.base.repo.html_url)
+                value: $(body.pull_request.base.repo.clone_url)
               - name: git_commit
                 value: $(body.pull_request.head.sha)
               - name: git_pr_title
