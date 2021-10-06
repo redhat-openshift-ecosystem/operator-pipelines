@@ -1,3 +1,4 @@
+import os.path
 from unittest.mock import MagicMock, patch
 
 from operatorcert.entrypoints import upload_artifacts
@@ -24,8 +25,8 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
     args.cert_project_id = "123123"
 
     mock_b64.return_value = b"a"
-
-    upload_artifacts.upload_artifact(args, "tests/data/preflight.log", 1)
+    filename = "tests/data/preflight.log"
+    upload_artifacts.upload_artifact(args, filename, 1)
 
     mock_post.assert_called_once_with(
         "http://foo.com/v1/projects/certification/id/123123/artifacts",
@@ -34,6 +35,7 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
             "certification_hash": args.certification_hash,
             "content_type": "text/plain",
             "filename": "preflight.log",
+            "file_size": os.path.getsize(filename),
             "operator_package_name": args.operator_package_name,
             "version": args.operator_version,
             "org_id": 1,

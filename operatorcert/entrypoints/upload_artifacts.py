@@ -96,6 +96,7 @@ def upload_artifact(args: Any, file_path: str, org_id: Any = None) -> Dict[str, 
         args.pyxis_url, f"v1/projects/certification/id/{args.cert_project_id}/artifacts"
     )
     file_name = os.path.basename(file_path)
+    file_size = os.path.getsize(file_path)
     with open(file_path, "rb") as artifact:
         content = artifact.read()
     base64_content = base64.b64encode(content).decode("utf8")
@@ -106,6 +107,7 @@ def upload_artifact(args: Any, file_path: str, org_id: Any = None) -> Dict[str, 
         "certification_hash": args.certification_hash,
         "content_type": mime,
         "filename": file_name,
+        "file_size": file_size,
         "operator_package_name": args.operator_package_name,
         "version": args.operator_version,
     }
