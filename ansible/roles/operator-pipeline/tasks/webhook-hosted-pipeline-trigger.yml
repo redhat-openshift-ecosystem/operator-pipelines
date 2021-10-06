@@ -119,7 +119,7 @@
                               storage: 100Mi
                     - name: registry-credentials
                       secret:
-                        secretName: "registry-dockerconfig-credentials"
+                        secretName: "registry-dockerconfig-secret"
                     - name: pyxis-ssl-credentials
                       secret:
                         secretName: "operator-pipeline-api-certs"
