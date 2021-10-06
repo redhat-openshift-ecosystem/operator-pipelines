@@ -120,7 +120,7 @@ spec:
       runAfter:
         - get-cert-project-related-data
       when:
-        - input: "$(tasks.get-cert-project-related-data.results.certification_status)"
+        - input: "$(tasks.get-cert-project-related-data.results.new_certification_status)"
           operator: in
           values: ["In Progress"]
       taskRef:
