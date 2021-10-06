@@ -1,0 +1,96 @@
+---
+- name: Create trigger enabling running Release pipeline via GitHub webhook
+  tags:
+    - webhook-release
+  block:
+    - name: Create Release pipeline Trigger Binding
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          # To see the PR webhook payload, set the logLevel to debug in configmap config-logging-triggers
+          # Other GitHub PR webhook payload example: https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerBinding
+          metadata:
+            name: operator-release-pipeline-trigger-binding
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_repo_url
+                value: $(body.pull_request.base.repo.clone_url)
+              - name: git_commit
+                value: $(body.pull_request.head.sha)
+              - name: git_pr_title
+                value: $(body.pull_request.title)
+    - name: Create Release pipeline Trigger Template
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerTemplate
+          metadata:
+            name: operator-release-pipeline-trigger-template
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_repo_url
+              - name: git_commit
+              - name: git_pr_title
+              - name: is_latest
+            resourcetemplates:
+              - apiVersion: tekton.dev/v1beta1
+                kind: PipelineRun
+                metadata:
+                  generateName: operator-release-pipeline-run
+                spec:
+                  pipelineRef:
+                    name: operator-release-pipeline
+                  params:
+                    - name: git_repo_url
+                      value: $(tt.params.git_repo_url)
+                    - name: git_commit
+                      value: $(tt.params.git_commit)
+                    - name: git_pr_title
+                      value: $(tt.params.git_pr_title)
+                    - name: is_latest
+                      value: "true"
+                  workspaces:
+                    - name: repository
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteMany
+                          resources:
+                            requests:
+                              storage: 5Gi
+                    - name: image-data
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteMany
+                          resources:
+                            requests:
+                              storage: 100Mi
+                    - name: pyxis-ssl-credentials
+                      secret:
+                        secretName: "operator-pipeline-api-certs"
+                    - name: github-bot-token
+                      secret:
+                        secretName: "github-bot-token"
+                    - name: kerberos-keytab
+                      secret:
+                        secretName: "kerberos-keytab"
+                    - name: registry-credentials
+                      secret:
+                        secretName: "registry-dockerconfig-credentials"
+                    - name: ocp-registry-kubeconfig
+                      secret:
+                        secretName: "ocp-registry-kubeconfig"

@@ -18,7 +18,6 @@ spec:
     - name: env
       description: Which environment to run in. Can be one of [dev, qa, stage, production]
       default: "production"
-    - name: bundle_path
     - name: preflight_min_version
     - name: ci_min_version
     - name: registry
@@ -121,7 +120,7 @@ spec:
       runAfter:
         - get-cert-project-related-data
       when:
-        - input: "$(tasks.get-cert-project-related-data.results.certification_status)"
+        - input: "$(tasks.get-cert-project-related-data.results.new_certification_status)"
           operator: in
           values: ["In Progress"]
       taskRef:

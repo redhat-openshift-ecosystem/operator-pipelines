@@ -12,8 +12,8 @@ spec:
       default: "main"
     - name: git_commit
       description: Git repository HEAD commit
-    - name: bundle_path
-      description: path indicating the location of the certified bundle within the repository
+    - name: git_pr_title
+      description: title of the pull request with operator submission
     - name: is_latest
       description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: registry
@@ -69,15 +69,26 @@ spec:
         - name: ssh-directory
           workspace: ssh-dir
 
+    # Get the bundle path
+    - name: get-bundle-path
+      runAfter:
+        - checkout
+      taskRef:
+        name: get-bundle-path
+      params:
+        - name: git_pr_title
+          value: $(params.git_pr_title)
+
+
     # Get cert project id
     - name: certification-project-check
       runAfter:
-        - checkout
+        - get-bundle-path
       taskRef:
         name: certification-project-check
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -91,7 +102,7 @@ spec:
         name: get-supported-versions
       params:
         - name: bundle_path
-          value: $(params.bundle_path)
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -107,7 +118,7 @@ spec:
         name: operator-validation
       params:
         - name: bundle_path
-          value: "$(params.bundle_path)"
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:

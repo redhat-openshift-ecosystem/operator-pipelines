@@ -102,7 +102,6 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_username=foo@redhat.com \
   --param git_commit=0aeff5f71e4fc2d4990474780b56d9312554da5a \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
-  --param bundle_path=operators/kogito-operator/1.6.1-ok \
   --param env=production \
   --param preflight_min_version=1.0.0 \
   --param ci_min_version=1.0.0 \
@@ -142,8 +141,8 @@ The release pipeline can be triggered using the tkn CLI like so:
 
 tkn pipeline start operator-release-pipeline \
   --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
-  --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param git_commit=3ffff387caac0a5b475f44c4a54fb45eebb8dd8e \
+  --param git_pr_title="operator kogito-operator (1.6.1-ok)" \
   --param is_latest=true \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \

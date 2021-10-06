@@ -1,63 +1,8 @@
 ---
 - name: Create trigger enabling running Hosted pipeline via GitHub webhook
   tags:
-    - webhook
+    - webhook-hosted
   block:
-    - name: Create Hosted pipeline event listener
-      k8s:
-        state: present
-        namespace: "{{ oc_namespace }}"
-        definition:
-          apiVersion: triggers.tekton.dev/v1alpha1
-          kind: EventListener
-          metadata:
-            name: operator-hosted-pipeline-github-listener
-            labels:
-              app: operator-pipeline
-              suffix: "{{ suffix }}"
-              env: "{{ env }}"
-          spec:
-            serviceAccountName: pipeline
-            triggers:
-              - name: github-pull-request-listener
-                interceptors:
-                  - github:
-                      secretRef:
-                        secretName: github-webhook-secret
-                        secretKey: webhook-secret
-                      eventTypes:
-                        - pull_request
-                  - cel:
-                      filter: >-
-                        (
-                          header.match("X-GitHub-Event", "pull_request")
-                          && body.action in ["opened", "reopened", "synchronize"]
-                          && body.pull_request.base.ref == "{{ branch }}"
-                        )
-                bindings:
-                  - ref: operator-hosted-pipeline-trigger-binding
-                template:
-                  ref: operator-hosted-pipeline-trigger-template
-              - name: github-label-listener
-                interceptors:
-                  - github:
-                      secretRef:
-                        secretName: github-webhook-secret
-                        secretKey: webhook-secret
-                      eventTypes:
-                        - pull_request
-                  - cel:
-                      filter: >-
-                        (
-                          body.action == "labeled"
-                          && body.label.name == "pipeline/trigger"
-                          && body.pull_request.base.ref == "{{ branch }}"
-                        )
-                bindings:
-                  - ref: operator-hosted-pipeline-trigger-binding
-                template:
-                  ref: operator-hosted-pipeline-trigger-template
-
     - name: Create Hosted pipeline Trigger Binding
       k8s:
         state: present
@@ -82,9 +27,9 @@
               - name: git_pr_url
                 value: $(body.pull_request.html_url)
               - name: git_fork_url
-                value: $(body.pull_request.head.repo.html_url)
+                value: $(body.pull_request.head.repo.clone_url)
               - name: git_repo_url
-                value: $(body.pull_request.base.repo.html_url)
+                value: $(body.pull_request.base.repo.clone_url)
               - name: git_username
                 value: $(body.pull_request.head.user.login)
               - name: git_commit
@@ -121,7 +66,6 @@
               - name: git_username
               - name: git_commit
               - name: pr_head_label
-              - name: bundle_path
               - name: env
               - name: preflight_min_version
               - name: ci_min_version
@@ -148,20 +92,20 @@
                       value: $(tt.params.git_username)
                     - name: pr_head_label
                       value: $(tt.params.pr_head_label)
-                    - name: bundle_path
-                      value: $(tt.params.bundle_path)
                     - name: env
                       value: $(tt.params.env)
                     - name: preflight_min_version
                       value: $(tt.params.preflight_min_version)
                     - name: ci_min_version
                       value: $(tt.params.ci_min_version)
+                    - name: git_commit
+                      value: $(tt.params.git_commit)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
                         spec:
                           accessModes:
-                            - ReadWriteOnce
+                            - ReadWriteMany
                           resources:
                             requests:
                               storage: 5Gi
@@ -169,7 +113,7 @@
                       volumeClaimTemplate:
                         spec:
                           accessModes:
-                            - ReadWriteOnce
+                            - ReadWriteMany
                           resources:
                             requests:
                               storage: 100Mi
