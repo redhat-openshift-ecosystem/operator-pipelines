@@ -130,9 +130,11 @@ oc create secret generic hydra-credentials \
 ```
 
 #### Prow-kubeconfig
-Preflight tests are running on the separete cluster. To start the cluster with the test,
-Pipelines are using Prowjob.
-To connect to the cluster with the Prowjob installed, a Kubeconfig should be supplied.
+Preflight tests are running on the separete cluster. To provision a cluster destined for the tests,
+Pipelines are using Prowjob. Thus, to start the preflight test, there is needede a Kubeconfig to cluster
+with enabled
+- [ProwJob](https://github.com/kubernetes/test-infra/tree/master/prow)
+- [OperatorCI](https://docs.ci.openshift.org/docs/architecture/ci-operator/)
 ```bash
 oc create secret generic prow-kubeconfig \
   --from-literal kubeconfig=<kubeconfig>
