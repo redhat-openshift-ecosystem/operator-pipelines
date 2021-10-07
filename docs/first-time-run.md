@@ -11,9 +11,9 @@
 ### Common for all the pipelines:
 
 #### Registry Credentials
-The pipelines can optionally be configured to push images to a remote private
-registry. The user must create an auth secret containing the docker config. This
-secret can then be passed as a workspace named `registry-credentials` when invoking
+The pipelines can optionally be configured to push and pull images to/from a remote
+private registry. The user must create an auth secret containing the docker config.
+This secret can then be passed as a workspace named `registry-credentials` when invoking
 the pipeline.
 
 ```bash
