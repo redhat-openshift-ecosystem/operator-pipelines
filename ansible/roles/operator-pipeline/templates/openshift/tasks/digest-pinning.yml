@@ -12,7 +12,29 @@ spec:
     - name: dirty_flag
   workspaces:
     - name: source
+    - name: registry-credentials
+      optional: true
   steps:
+    - name: combine-credentials
+      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        if [[ "$(workspaces.registry-credentials.bound)" == "true" ]]; then
+          # Setup registry credentials for pinning tools. Combine the default credentials
+          # with those found in the workspace to maintain access to the internal
+          # registry.
+          export DOCKER_CONFIG=.docker
+          export REGISTRY_AUTH_FILE="$DOCKER_CONFIG/config-custom.json"
+          mkdir -p $DOCKER_CONFIG
+
+          jq -s '.[0] * .[1]' \
+            $(workspaces.registry-credentials.path)/.dockerconfigjson \
+            $HOME/.docker/config.json \
+            > "$REGISTRY_AUTH_FILE"
+        fi
     - name: pin-digest
       image: quay.io/redhat-isv/digest-pinning-tool@sha256:21cb7af396031d03b601d65e5600acdbd71dfe46a11dedd55b9a2abc507c6bee
       workingDir: $(workspaces.source.path)
@@ -24,6 +46,11 @@ spec:
           echo "Digest pinning is not enabled"
           echo -n "false" | tee $(results.dirty_flag.path)
           exit 0
+        fi
+
+        if [[ "$(workspaces.registry-credentials.bound)" == "true" ]]; then
+          export DOCKER_CONFIG=.docker
+          export REGISTRY_AUTH_FILE="$DOCKER_CONFIG/config-custom.json"
         fi
 
         BUNDLE_PATH=$(realpath $(params.bundle_path))

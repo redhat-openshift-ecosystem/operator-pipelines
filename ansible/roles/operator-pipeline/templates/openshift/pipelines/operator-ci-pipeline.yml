@@ -92,6 +92,8 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
+        - name: registry-credentials
+          workspace: registry-credentials
 
     - name: commit-pinned-digest
       runAfter:

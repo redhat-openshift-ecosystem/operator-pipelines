@@ -72,6 +72,10 @@ To enable digest pinning, pass the following arguments:
   --workspace name=ssh-dir,secret=github-ssh-credentials
 ```
 
+If any of bundle's related images is stored in private registry user needs to
+provide registry tokens for all used private registries. See more details about
+how to provide registry token in [first-time-run.md](docs/first-time-run.md).
+
 ## Operator Hosted pipeline
 The Hosted Operator Certification Pipeline is used as a validation of the operator
 bundles. It’s an additional (to CI pipeline) layer of validation that has to run within
