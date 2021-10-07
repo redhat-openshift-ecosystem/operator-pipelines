@@ -50,7 +50,7 @@ spec:
       description: |
         The actual comment to add or the filename containing comment to post.
       type: string
-    
+
     - name: GITHUB_TOKEN_SECRET_NAME
       description: |
         The name of the Kubernetes Secret that contains the GitHub token.
