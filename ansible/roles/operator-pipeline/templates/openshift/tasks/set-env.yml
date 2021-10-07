@@ -50,7 +50,7 @@ spec:
             stage)
                 case $ACCESS_TYPE in
                     internal)
-                    PYXIS_URL="https://pyxis.stage.engineering.redhat.com"
+                    PYXIS_URL="https://pyxis.isv.stage.engineering.redhat.com"
                     ;;
                     external)
                     PYXIS_URL="https://pyxis-isv-stage.api.redhat.com"
@@ -63,7 +63,7 @@ spec:
             qa)
                 case $ACCESS_TYPE in
                     internal)
-                    PYXIS_URL="https://pyxis.qa.engineering.redhat.com"
+                    PYXIS_URL="https://pyxis.isv.qa.engineering.redhat.com"
                     ;;
                     external)
                     PYXIS_URL="https://pyxis-isv-qa.api.redhat.com"
@@ -76,7 +76,7 @@ spec:
             dev)
                 case $ACCESS_TYPE in
                     internal)
-                    PYXIS_URL="https://pyxis.dev.engineering.redhat.com"
+                    PYXIS_URL="https://pyxis.isv.dev.engineering.redhat.com"
                     ;;
                     external)
                     PYXIS_URL="https://pyxis-isv-dev.api.redhat.com"
