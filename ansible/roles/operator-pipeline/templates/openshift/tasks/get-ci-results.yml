@@ -43,12 +43,12 @@ spec:
         set -xe
 
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
-        if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
+        if [ "$PREFLIGHT_RESULTS_EXISTS" == "true" ]; then
           echo "Preflight results already exists- skipping"
 
-          echo $(params.test_result_id) | tee $(results.test_result_id.path)
+          echo "$(params.test_result_id)" | tee $(results.test_result_id.path)
 
-          echo $(params.preflight_results) | tee $(results.preflight_results.path)
+          echo "$(params.preflight_results)" | tee $(results.preflight_results.path)
 
           exit 0
         fi

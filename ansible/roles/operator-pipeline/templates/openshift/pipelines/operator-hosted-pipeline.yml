@@ -431,30 +431,11 @@ spec:
         - name: github-bot-token
           workspace: github-bot-token
 
-    # If we didn't got the CI pipeline preflight test results
-    # run preflight here
-    # and try to retrieve them again
-    - name: ocp-environment-preparation
-      runAfter:
-        - get-ci-results-attempt
-        - build-index
-      taskRef:
-        name: ocp-environment-preparation
-      params:
-        - name: index_image
-          value: *bundleIndexImage
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
-        - name: preflight_results_exists
-          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
+    # TODO: this step runs always now, despite if the results exists or not
+    # https://issues.redhat.com/browse/ISV-1223
     - name: preflight-trigger
       runAfter:
-        - ocp-environment-preparation
+        - get-ci-results-attempt
       taskRef:
         kind: Task
         name: preflight-trigger
@@ -467,6 +448,8 @@ spec:
         - name: bundle_image
           value: >-
             $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)
+        - name: preflight_results_exists
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
       workspaces:
         - name: kubeconfig
           workspace: prow-kubeconfig
@@ -624,6 +607,9 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
+          # TODO: upload-artifact not always results with result_spa_url! Also,
+          #  result points to external (instead of internal) Pyxis instance
+          # https://issues.redhat.com/browse/ISV-1219
           value: "Operator test for $(tasks.submission-validation.results.operator_name)
             complete. Test result URL: $(tasks.upload-artifacts.results.result_spa_url)"
         - name: state

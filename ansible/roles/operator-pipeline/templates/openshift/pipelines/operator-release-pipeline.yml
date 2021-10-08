@@ -282,7 +282,6 @@ spec:
         - name: kerberos-keytab
           workspace: kerberos-keytab
 
-
     # Update cert project related data
     - name: update-cert-project-status
       runAfter:
