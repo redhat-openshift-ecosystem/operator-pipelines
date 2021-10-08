@@ -448,8 +448,6 @@ spec:
         - name: bundle_image
           value: >-
             $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)
-        - name: preflight_results_exists
-          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
       workspaces:
         - name: kubeconfig
           workspace: prow-kubeconfig
