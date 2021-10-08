@@ -69,8 +69,6 @@
               - name: env
               - name: preflight_min_version
               - name: ci_min_version
-              # TODO: This parameter should be removed- see ISV-1211
-              - name: image_namespace
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
@@ -102,9 +100,6 @@
                       value: $(tt.params.ci_min_version)
                     - name: git_commit
                       value: $(tt.params.git_commit)
-                    # TODO: This parameter should be removed- see ISV-1211
-                    - name: image_namespace
-                      value: redhat-isv
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
