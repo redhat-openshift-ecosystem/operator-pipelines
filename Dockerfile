@@ -33,10 +33,6 @@ RUN dnf update -y && \
 
 COPY config/krb5.conf /etc/krb5.conf
 
-RUN curl -LO https://github.com/operator-framework/operator-sdk/releases/download/v1.8.1/operator-sdk_linux_amd64 && \
-    chmod +x operator-sdk_linux_amd64 && \
-    mv operator-sdk_linux_amd64 /usr/local/bin/operator-sdk
-
 # Install opm CLI
 RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.17.5/linux-amd64-opm && \
     chmod +x linux-amd64-opm && \
