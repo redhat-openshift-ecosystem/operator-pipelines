@@ -19,12 +19,6 @@ spec:
   workspaces:
     - name: source
   steps:
-    - name: operator-sdk-validation
-      image: "$(params.pipeline_image)"
-      workingDir: $(workspaces.source.path)
-      script: |
-        #! /usr/bin/env bash
-        operator-sdk bundle validate $(params.bundle_path)
     - name: bundle-parse
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
