@@ -12,7 +12,7 @@ operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipel
 
 operator_pipeline_kubeconfig_ocp_local_path: ../../vaults/{{ env }}/kubeconfig-ocp
 
-operator_pipeline_quay_token: ../../vaults/{{ env }}/dockerconfig.json
+operator_pipeline_registry_token: ../../vaults/{{ env }}/dockerconfig.json
 
 operator_pipeline_kubeconfig_prow_local_path: ../../vaults/common/kubeconfig-prow
 operator_pipeline_github_bot_token: ../../vaults/common/github-bot-token.txt
