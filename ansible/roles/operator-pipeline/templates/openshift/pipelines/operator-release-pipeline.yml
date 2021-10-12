@@ -28,12 +28,17 @@ spec:
     - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:latest"
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
   workspaces:
     - name: repository
     - name: ssh-dir
       optional: true
     - name: pyxis-ssl-credentials
-    - name: github-bot-token
     - name: kerberos-keytab
     - name: registry-credentials
     - name: image-data
@@ -168,9 +173,10 @@ spec:
           value: pending
         - name: context
           value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
-      workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
 
     # Get additional data necessary for certification
     - name: get-cert-project-related-data
@@ -419,9 +425,10 @@ spec:
           value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: target_url
           value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
-      workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
 
     - name: set-github-status-failure
       taskRef:
@@ -445,6 +452,7 @@ spec:
           value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
         - name: target_url
           value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
-      workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"

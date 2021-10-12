@@ -22,14 +22,21 @@ spec:
     - name: skip
       default: "false"
       description: Flag to skip the setting of github status.
-  workspaces:
-    - name: github-bot-token
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
   steps:
     - name: set-github-status
       image: "$(params.pipeline_image)"
       env:
-        - name: GITHUB_BOT_TOKEN_PATH
-          value: $(workspaces.github-bot-token.path)/github_bot_token
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
       script: |
         #! /usr/bin/env bash
         # Don't use set -x to avoid exposing github token
@@ -41,8 +48,6 @@ spec:
         fi
 
         echo "Setting github status of commit $(params.commit_sha) to $(params.state)"
-
-        export GITHUB_TOKEN=$(cat $GITHUB_BOT_TOKEN_PATH)
 
         set-github-status \
           --git-repo-url "$(params.git_repo_url)" \

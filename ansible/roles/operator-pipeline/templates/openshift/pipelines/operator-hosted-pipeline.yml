@@ -28,6 +28,12 @@ spec:
     - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:latest"
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
   workspaces:
     - name: repository
     - name: results
@@ -35,7 +41,6 @@ spec:
       optional: true
     - name: registry-credentials
     - name: pyxis-ssl-credentials
-    - name: github-bot-token
     - name: prow-kubeconfig
     - name: hydra-credentials
     - name: preflight-decryption-key
@@ -206,9 +211,10 @@ spec:
           value: pending
         - name: context
           value: "operator-test/$(tasks.submission-validation.results.operator_name)"
-      workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
 
     # reserve operator name
     - name: reserve-operator-name
@@ -631,9 +637,11 @@ spec:
           value: $(params.git_pr_url)
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
       workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
         - name: source
           workspace: repository
           subPath: src
@@ -681,9 +689,9 @@ spec:
         - name: COMMENT_OR_FILE
           value: "There were some errors in your Operator bundle. You can use [this support case]($(tasks.create-support-link-for-pr.results.comment)) to contact the Red Hat certification team for review."
         - name: GITHUB_TOKEN_SECRET_NAME
-          value: github-bot-token
+          value: "$(params.github_token_secret_name)"
         - name: GITHUB_TOKEN_SECRET_KEY
-          value: github_bot_token
+          value: "$(params.github_token_secret_key)"
       workspaces:
         - name: comment-file
           workspace: results
@@ -711,9 +719,10 @@ spec:
           value: success
         - name: context
           value: "operator-test/$(tasks.submission-validation.results.operator_name)"
-      workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
 
     # Set the github status to failure if the pipeline didn't pass
     - name: set-github-status-failure
@@ -738,6 +747,7 @@ spec:
           value: failure
         - name: context
           value: "operator-test/$(tasks.submission-validation.results.operator_name)"
-      workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"

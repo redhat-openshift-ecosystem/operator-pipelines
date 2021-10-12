@@ -8,6 +8,12 @@ spec:
     - name: pipeline_image
     - name: git_pr_url
     - name: bundle_path
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
   workspaces:
     - name: github-bot-token
     - name: source
@@ -26,6 +32,12 @@ spec:
 
     - name: merge-pr
       image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      env:
+        - name: GITHUB_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
       script: |
         #! /usr/bin/env bash
 
@@ -38,9 +50,6 @@ spec:
           echo "merge explicitly set to false- not merging the Pull Request"
           exit 0
         fi
-
-        GITHUB_BOT_TOKEN_PATH=$(workspaces.github-bot-token.path)/github_bot_token
-        export GITHUB_BOT_TOKEN=$(cat $GITHUB_BOT_TOKEN_PATH)
 
         # get the PR number and the repository name from the original PR url-
         # it will be used for the api.github url
