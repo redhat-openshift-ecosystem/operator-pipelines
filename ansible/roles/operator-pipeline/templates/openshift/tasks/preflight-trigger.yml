@@ -16,6 +16,9 @@ spec:
       type: string
     - name: asset_type
       type: string
+    - name: skip
+      default: "false"
+      description: Set to "true" to skip
   results:
     - description: ''
       name: log_output_file
@@ -26,42 +29,44 @@ spec:
   steps:
     - image: registry.access.redhat.com/ubi8/go-toolset
       name: clone-for-configs
-      resources: {}
+      workingDir: $(workspaces.output.path)
       script: |
         #!/usr/bin/env bash
+
+        if [ "$(params.skip)" == "true" ]; then
+          echo "Preflight testing has been skipped"
+          exit 0
+        fi
+
         echo "Cloning https://github.com/openshift/release"
         git clone https://github.com/openshift/release
-      workingDir: $(workspaces.output.path)
-    - args:
-        - '-job-name'
-        - >-
-          periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-claim
-        - '-job-config-path'
-        - >-
-          release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-periodics.yaml
-        - '-prow-config-path'
-        - release/core-services/prow/02_config/_config.yaml
-        - '-ocp-version'
-        - $(params.ocp_version)
-        - '-pflt-artifacts'
-        - artifacts
-        - '-pflt-log-level'
-        - $(params.log_level)
-        - '-pflt-index-image'
-        - $(params.bundle_index_image)
-        - '-test-asset'
-        - $(params.bundle_image)
-        - '-asset-type'
-        - $(params.asset_type)
-        - '-output-path'
-        - prowjob-base-url
+    - name: create-prowjob
       env:
         - name: KUBECONFIG
           value: $(workspaces.kubeconfig.path)/kubeconfig
       image: quay.io/opdev/preflight-trigger
-      name: create-prowjob
-      resources: {}
       workingDir: $(workspaces.output.path)
+      script: |
+        #!/usr/bin/env sh
+
+        if [ "$(params.skip)" == "true" ]; then
+          echo "Preflight testing has been skipped"
+          exit 0
+        fi
+
+        set -xe
+
+        preflight-trigger \
+          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-claim" \
+          -job-config-path "release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-periodics.yaml" \
+          -prow-config-path release/core-services/prow/02_config/_config.yaml \
+          -ocp-version "$(params.ocp_version)" \
+          -pflt-artifacts artifacts \
+          -pflt-log-level "$(params.log_level)" \
+          -pflt-index-image "$(params.bundle_index_image)" \
+          -test-asset "$(params.bundle_image)" \
+          -asset-type "$(params.asset_type)" \
+          -output-path prowjob-base-url
     - env:
         - name: PIPELINE_GPG_DECRYPTION_PRIVATE_KEY
           value: $(workspaces.gpg-decryption-key.path)/private
@@ -69,9 +74,16 @@ spec:
           value: $(workspaces.gpg-decryption-key.path)/public
       image: registry.redhat.io/ubi8/ubi
       name: get-artifacts-and-decrypt
-      resources: {}
       script: >
         #!/usr/bin/env bash
+
+        if [ "$(params.skip)" == "true" ]; then
+          echo "Preflight testing has been skipped"
+          echo -n "none" > $(results.log_output_file.path)
+          echo -n "none" > $(results.result_output_file.path)
+          echo -n "none" > $(results.artifacts_output_dir.path)
+          exit 0
+        fi
 
         BASE_URL="https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/origin-ci-test/logs/"
 

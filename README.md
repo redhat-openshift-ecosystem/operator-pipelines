@@ -72,6 +72,10 @@ To enable digest pinning, pass the following arguments:
   --workspace name=ssh-dir,secret=github-ssh-credentials
 ```
 
+If any of bundle's related images is stored in private registry user needs to
+provide registry tokens for all used private registries. See more details about
+how to provide registry token in [first-time-run.md](docs/first-time-run.md).
+
 ## Operator Hosted pipeline
 The Hosted Operator Certification Pipeline is used as a validation of the operator
 bundles. It’s an additional (to CI pipeline) layer of validation that has to run within
@@ -103,8 +107,8 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_commit=0aeff5f71e4fc2d4990474780b56d9312554da5a \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
   --param env=production \
-  --param preflight_min_version=1.0.0 \
-  --param ci_min_version=1.0.0 \
+  --param preflight_min_version=0.0.0 \
+  --param ci_min_version=0.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
@@ -138,7 +142,7 @@ oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clo
 ### Execution
 The release pipeline can be triggered using the tkn CLI like so:
 
-
+```bash
 tkn pipeline start operator-release-pipeline \
   --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_commit=3ffff387caac0a5b475f44c4a54fb45eebb8dd8e \
@@ -152,3 +156,4 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=ocp-registry-kubeconfig,secret=ocp-registry-kubeconfig \
   --showlog
+```

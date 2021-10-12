@@ -11,23 +11,15 @@
 ### Common for all the pipelines:
 
 #### Registry Credentials
-The pipelines can optionally be configured to push images to a remote private
-registry. The user must create an auth secret containing the docker config. This
-secret can then be passed as a workspace named `registry-credentials` when invoking
+The pipelines can optionally be configured to push and pull images to/from a remote
+private registry. The user must create an auth secret containing the docker config.
+This secret can then be passed as a workspace named `registry-credentials` when invoking
 the pipeline.
 
 ```bash
-cat << EOF > registry-secret.yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: registry-dockerconfig-secret
-data:
-  .dockerconfigjson: < BASE64 ENCODED DOCKER CONFIG >
-type: kubernetes.io/dockerconfigjson
-EOF
-
-oc create -f registry-secret.yml
+oc create secret generic registry-dockerconfig-secret \
+  --type kubernetes.io/dockerconfigjson \
+  --from-file .dockerconfigjson=config.json
 ```
 
 #### Red Hat Catalog Imagestreams

@@ -20,7 +20,7 @@ spec:
       script: |
         set -xe
 
-        skopeo login $(params.registry) --authfile $(workspaces.credentials.path)/.dockerconfigjson \
+        skopeo login $(params.registry) --authfile $(workspaces.registry-credentials.path)/.dockerconfigjson \
 
         skopeo inspect docker://$(params.image) > $(workspaces.image-data.path)/skopeo.json
     - name: podman-inspect

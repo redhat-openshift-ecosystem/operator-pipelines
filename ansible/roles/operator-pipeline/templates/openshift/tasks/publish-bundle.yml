@@ -23,8 +23,6 @@ spec:
   results:
     - name: status
       description: Indicates a status of publishing a bundle to an index
-    - name: new_certification_status
-      description: New Certification status of the cert Project
   workspaces:
     - name: kerberos-keytab
   steps:
@@ -82,7 +80,7 @@ spec:
             ;;
             *)
                 echo "Publishing bundle to an index is a NOOP for dev and qa environments at this time."
-                echo "success" | tee "$(results.status.path)"
+                echo -n "success" | tee "$(results.status.path)"
                 exit 0
             ;;
         esac
@@ -96,5 +94,4 @@ spec:
           --bundle-pullspec "$(params.bundle_pullspec)" \
           --verbose
 
-        echo "success" | tee "$(results.status.path)"
-        echo -n "Published" | tee $(results.new_certification_status.path)
+        echo -n "success" | tee "$(results.status.path)"

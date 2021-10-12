@@ -144,6 +144,9 @@ spec:
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
+        - name: source
+          workspace: repository
+          subPath: src
 
     - name: get-vendor-related-data
       runAfter:
@@ -279,8 +282,7 @@ spec:
         - name: kerberos-keytab
           workspace: kerberos-keytab
 
-
-    # Update cert project related data
+    # Updates certification status to "Published"
     - name: update-cert-project-status
       runAfter:
         - publish-bundle
@@ -295,8 +297,9 @@ spec:
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          # The project is always published if this is executing
         - name: new_certification_status
-          value: "$(tasks.publish-bundle.results.new_certification_status)"
+          value: "Published"
         - name: current_certification_status
           value: "$(tasks.get-cert-project-related-data.results.current_certification_status)"
       workspaces:

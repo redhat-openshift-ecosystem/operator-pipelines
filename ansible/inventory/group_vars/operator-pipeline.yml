@@ -3,8 +3,8 @@ env: unset
 oc_namespace: operator-pipeline-{{ env }}
 service_account_name: operator-pipeline-admin
 suffix: "{{ env }}"
-preflight_min_version: 1.0.0
-ci_min_version: 1.0.0
+preflight_min_version: 0.0.0
+ci_min_version: 0.0.0
 
 ##### Secrets locations
 operator_pipeline_private_key_local_path: ../../vaults/{{ env }}/operator-pipeline.key
@@ -12,8 +12,9 @@ operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipel
 
 operator_pipeline_kubeconfig_ocp_local_path: ../../vaults/{{ env }}/kubeconfig-ocp
 
+operator_pipeline_quay_token: ../../vaults/{{ env }}/dockerconfig.json
+
 operator_pipeline_kubeconfig_prow_local_path: ../../vaults/common/kubeconfig-prow
-operator_pipeline_quay_token: ../../vaults/common/dockerconfig.json
 operator_pipeline_github_bot_token: ../../vaults/common/github-bot-token.txt
 
 operator_pipeline_hydra_username_local_path: ../../vaults/common/nonprod-hydra-username
