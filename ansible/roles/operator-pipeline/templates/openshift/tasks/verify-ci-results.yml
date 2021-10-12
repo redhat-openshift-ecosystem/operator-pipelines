@@ -33,15 +33,15 @@ spec:
           echo "Preflight version $PREFLIGHT_VERSION satisfies the minimun requirement of version $PREFLIGHT_MIN_VERSION"
         else
           echo "Preflight version $PREFLIGHT_VERSION must be $PREFLIGHT_MIN_VERSION or higher."
-          echo "failure" | tee $(results.test_result.path)
+          echo -n "failure" | tee $(results.test_result.path)
           exit 1
         fi
         # Did the tests pass?
         # In case of failure- comment on the PR with tailored support link
         CHECK_RESULTS=$(echo $PREFLIGHT_RESULTS | jq '.passed' | tr -d '"' | grep .)
         if [ $CHECK_RESULTS = "false" ]; then
-          echo "failure" | tee $(results.test_result.path)
+          echo -n "failure" | tee $(results.test_result.path)
           exit 0
         fi
 
-        echo "success" | tee $(results.test_result.path)
+        echo -n "success" | tee $(results.test_result.path)

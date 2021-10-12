@@ -680,9 +680,11 @@ spec:
           value: "$(params.git_pr_url)"
         - name: COMMENT_OR_FILE
           value: "$(tasks.create-support-link-for-pr.results.comment)"
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: github-bot-token
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: github_bot_token
       workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
         - name: comment-file
           workspace: results
 
