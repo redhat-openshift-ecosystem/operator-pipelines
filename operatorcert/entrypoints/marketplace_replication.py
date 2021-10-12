@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import pathlib
 import re
 import sys
 from typing import Any
@@ -10,6 +11,7 @@ from twirp.context import Context
 from twirp.exceptions import TwirpServerException
 from google.protobuf.json_format import Parse
 
+from operatorcert import get_csv_content
 from operatorcert.webhook.webhook import webhook_twirp
 from operatorcert.webhook.webhook import webhook_pb2
 from operatorcert.logger import setup_logger
@@ -29,14 +31,9 @@ def setup_argparser() -> Any:
         description="Call the IBM webhook to trigger marketplace replication"
     )
     parser.add_argument(
-        "--bundle-image",
+        "--bundle-path",
         required=True,
-        help="Registry path to the operator bundle image",
-    )
-    parser.add_argument(
-        "--bundle-image-digest",
-        required=True,
-        help="Digest of the operator bundle image",
+        help="Location of the operator bundle",
     )
     parser.add_argument("--git-repo-url", required=True, help="URL of the git repo")
     parser.add_argument("--package", required=True, help="Operator package name")
@@ -81,15 +78,20 @@ def call_ibm_webhook(args: Any) -> None:
         )
         sys.exit(1)
 
+    csv = get_csv_content(pathlib.Path(args.bundle_path), args.package)
+    related_images = csv.get("spec", {}).get("relatedImages")
+    if not related_images:
+        LOGGER.error("No related images found in cluster service version file.")
+        sys.exit(1)
+
     bundle_data = {
         "package": args.package,
         "ocp_version": args.ocp_version,
         "organization": "redhat-marketplace",
-        "related_images": [
-            {"digest": args.bundle_image_digest, "image": args.bundle_image}
-        ],
+        "related_images": related_images,
         "version": args.version,
     }
+    LOGGER.debug(f"Sending bundle data: {bundle_data}")
 
     client = webhook_twirp.MirrorServiceClient(args.webhook_url)
     try:

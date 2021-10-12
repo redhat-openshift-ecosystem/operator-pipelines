@@ -43,6 +43,29 @@ def get_bundle_annotations(bundle_path: pathlib.Path) -> Dict:
         return content.get("annotations", {})
 
 
+def get_csv_content(bundle_path: pathlib.Path, package: str) -> Dict:
+    """
+    Gets all the content of the bundle CSV
+
+    Args:
+        bundle_path (Path): A path to the bundle version
+        package (str): Operator package name
+
+    Returns:
+        A dict of all the fields in the bundle CSV
+    """
+    paths = [
+        ("manifests", f"{package}.clusterserviceversion.yaml"),
+        ("manifests", f"{package}.clusterserviceversion.yml"),
+    ]
+    csv_path = find_file(bundle_path, paths)
+    if not csv_path:
+        raise RuntimeError("Cluster service version (CSV) file not found")
+
+    with csv_path.open() as fh:
+        return yaml.safe_load(fh)
+
+
 def get_csv_annotations(bundle_path: pathlib.Path, package: str) -> Dict:
     """
     Gets all the annotations from the bundle CSV
@@ -54,17 +77,8 @@ def get_csv_annotations(bundle_path: pathlib.Path, package: str) -> Dict:
     Returns:
         A dict of all the annotation keys and values
     """
-    paths = [
-        ("manifests", f"{package}.clusterserviceversion.yaml"),
-        ("manifests", f"{package}.clusterserviceversion.yml"),
-    ]
-    csv_path = find_file(bundle_path, paths)
-    if not csv_path:
-        raise RuntimeError("Cluster service version (CSV) file not found")
-
-    with csv_path.open() as fh:
-        content = yaml.safe_load(fh)
-        return content.get("metadata", {}).get("annotations", {})
+    content = get_csv_content(bundle_path, package)
+    return content.get("metadata", {}).get("annotations", {})
 
 
 def get_supported_indices(

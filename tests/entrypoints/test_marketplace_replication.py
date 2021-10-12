@@ -33,12 +33,14 @@ def test_marketplace_replication_no_token() -> None:
         marketplace_replication.call_ibm_webhook(args)
 
 
+@patch("operatorcert.entrypoints.marketplace_replication.get_csv_content")
 @patch(
     "operatorcert.entrypoints.marketplace_replication.webhook_twirp.MirrorServiceClient"
 )
 def test_marketplace_replication(
-    mock_mirror_client: MagicMock, monkeypatch: Any
+    mock_mirror_client: MagicMock, mock_get_csv: MagicMock, monkeypatch: Any
 ) -> None:
+    mock_get_csv.return_value = {"spec": {"relatedImages": [{"name": "test-image"}]}}
     args = MagicMock()
     args.git_repo_url = (
         "git@github.com/redhat-openshift-ecosystem/redhat-marketplace-operators-preprod"
@@ -52,3 +54,7 @@ def test_marketplace_replication(
 
     marketplace_replication.call_ibm_webhook(args)
     mock_mirror_client.return_value.NewOperatorBundles.assert_called_once()
+
+    mock_get_csv.return_value = {}
+    with pytest.raises(SystemExit):
+        marketplace_replication.call_ibm_webhook(args)
