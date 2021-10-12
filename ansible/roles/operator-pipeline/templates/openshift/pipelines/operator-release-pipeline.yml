@@ -82,7 +82,6 @@ spec:
         - name: git_pr_title
           value: $(params.git_pr_title)
 
-
     # Get cert project id
     - name: certification-project-check
       runAfter:
@@ -102,7 +101,7 @@ spec:
     # Get the bundle versions to build index
     - name: get-supported-versions
       runAfter:
-        - checkout
+        - get-bundle-path
       taskRef:
         name: get-supported-versions
       params:
@@ -120,7 +119,7 @@ spec:
     # TODO: split this task
     - name: operator-validation
       runAfter:
-        - checkout
+        - get-bundle-path
       taskRef:
         name: operator-validation
       params:
@@ -134,6 +133,26 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+
+    - name: set-github-status-pending
+      runAfter:
+        - operator-validation
+      taskRef:
+        name: set-github-status
+      params:
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Publish $(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)."
+        - name: state
+          value: pending
+        - name: context
+          value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+      workspaces:
+        - name: github-bot-token
+          workspace: github-bot-token
 
     # Get additional data necessary for certification
     - name: get-cert-project-related-data
@@ -180,6 +199,8 @@ spec:
           workspace: pyxis-ssl-credentials
 
     - name: inspect-image
+      runAfter:
+        - set-github-status-pending
       taskRef:
         name: inspect-image
         kind: Task
@@ -197,8 +218,8 @@ spec:
     # Publish image to OCP registry
     - name: publish-to-ocp-registry
       runAfter:
-        - operator-validation
         - get-vendor-related-data
+        - set-github-status-pending
       taskRef:
         name: publish-to-ocp-registry
       params:
@@ -301,12 +322,16 @@ spec:
         - name: kerberos-keytab
           workspace: kerberos-keytab
 
+  finally:
+
     # Updates certification status to "Published"
     - name: update-cert-project-status
-      runAfter:
-        - publish-bundle
       taskRef:
         name: update-cert-project-status
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Succeeded", "Completed"]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -327,11 +352,13 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
-    - name: set-github-status-published
-      runAfter:
-        - publish-bundle
+    - name: set-github-status-success
       taskRef:
         name: set-github-status
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Succeeded", "Completed"]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -340,12 +367,35 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Operator $(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version) has
-            been published."
+          value: "Publish $(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)."
         - name: state
-          value: "$(tasks.publish-bundle.results.status)"
+          value: success
         - name: context
-          value: "$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+      workspaces:
+        - name: github-bot-token
+          workspace: github-bot-token
+
+    - name: set-github-status-failure
+      taskRef:
+        name: set-github-status
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values: ["Succeeded", "Completed"]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Publish $(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)."
+        - name: state
+          value: failure
+        - name: context
+          value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
       workspaces:
         - name: github-bot-token
           workspace: github-bot-token
