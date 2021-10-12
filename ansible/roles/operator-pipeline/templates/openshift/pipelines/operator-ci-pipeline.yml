@@ -38,6 +38,9 @@ spec:
     - name: submit
       description: Set to "true" to submit results and open a pull request.
       default: "false"
+    - name: pipeline_image
+      description: An image of operator-pipeline-images.
+      default: "quay.io/redhat-isv/operator-pipelines-images:latest"
   workspaces:
     - name: pipeline
     - name: kubeconfig
@@ -88,6 +91,8 @@ spec:
           value: "$(params.bundle_path)"
         - name: enabled
           value: "$(params.pin_digests)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -122,6 +127,8 @@ spec:
       taskRef:
         name: yaml-lint
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: args
           value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(params.bundle_path)"]
       workspaces:
@@ -135,6 +142,8 @@ spec:
       taskRef:
         name: operator-validation
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
         - name: pyxis_url
@@ -150,6 +159,8 @@ spec:
       taskRef:
         name: get-supported-versions
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
       workspaces:
@@ -163,6 +174,8 @@ spec:
       taskRef:
         name: certification-project-check
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
       workspaces:
@@ -176,6 +189,8 @@ spec:
       taskRef:
         name: content-hash
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
       workspaces:
@@ -191,6 +206,8 @@ spec:
       taskRef:
         name: dockerfile-creation
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
       workspaces:
@@ -230,6 +247,8 @@ spec:
       taskRef:
         name: generate-index
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_image
           value: *bundleImage
         - name: from_index
@@ -265,6 +284,8 @@ spec:
       taskRef:
         name: preflight
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
         - name: package_name
@@ -298,6 +319,8 @@ spec:
       taskRef:
         name: upload-artifacts
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: log_file
           value: "$(tasks.preflight.results.log_output_file)"
         - name: artifacts_dir
@@ -327,6 +350,8 @@ spec:
       taskRef:
         name: open-pull-request
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_repo_url
           value: "$(params.git_repo_url)"
         - name: repository_name
@@ -365,6 +390,8 @@ spec:
         - name: pyxis-api-key
           workspace: pyxis-api-key
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
@@ -382,6 +409,8 @@ spec:
       taskRef:
         name: show-support-link
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: env
           value: "$(params.env)"
         - name: cert_project_id

@@ -5,6 +5,7 @@ metadata:
   name: upload-pipeline-logs
 spec:
   params:
+    - name: pipeline_image
     - name: pyxis_api_key_secret
       default: pyxis-api-secret
       description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
@@ -45,7 +46,7 @@ spec:
         tkn pipelinerun logs "$(params.pipeline_name)" > pipeline.logs
 
     - name: upload-pipeline-logs
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)

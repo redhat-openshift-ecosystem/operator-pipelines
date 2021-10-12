@@ -5,6 +5,7 @@ metadata:
   name: certification-project-check
 spec:
   params:
+    - name: pipeline_image
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
   results:
@@ -14,7 +15,7 @@ spec:
     - name: source
   steps:
     - name: certification-project-check
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash

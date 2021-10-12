@@ -5,6 +5,7 @@ metadata:
   name: update-cert-project-status
 spec:
   params:
+    - name: pipeline_image
     - name: new_certification_status
       description: New Certification status of the cert Project
     - name: cert_project_id
@@ -23,7 +24,7 @@ spec:
       optional: true
   steps:
     - name: update-cert-project-status
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)

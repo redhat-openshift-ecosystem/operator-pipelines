@@ -5,6 +5,7 @@ metadata:
   name: get-vendor-related-data
 spec:
   params:
+    - name: pipeline_image
     - name: org_id
       description: Unique identifier of the organization in Red Hat Connect
     - name: pyxis_cert_path
@@ -21,7 +22,7 @@ spec:
       optional: true
   steps:
     - name: get-vendor-related-data
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)

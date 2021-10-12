@@ -5,6 +5,7 @@ metadata:
   name: merge-pr
 spec:
   params:
+    - name: pipeline_image
     - name: git_pr_url
     - name: bundle_path
   workspaces:
@@ -14,7 +15,7 @@ spec:
     - name: bool_merge
   steps:
     - name: check-if-merge
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
         PKG_PATH=$(dirname $(realpath $(params.bundle_path)))

@@ -5,6 +5,7 @@ metadata:
   name: set-github-status
 spec:
   params:
+    - name: pipeline_image
     - name: git_repo_url
     - name: commit_sha
       description: SHA of the commit to set the status for.
@@ -25,7 +26,7 @@ spec:
     - name: github-bot-token
   steps:
     - name: set-github-status
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       env:
         - name: GITHUB_BOT_TOKEN_PATH
           value: $(workspaces.github-bot-token.path)/github_bot_token

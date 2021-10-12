@@ -5,6 +5,7 @@ metadata:
   name: upload-artifacts
 spec:
   params:
+    - name: pipeline_image
     - name: pyxis_api_key_secret
       default: pyxis-api-secret
       description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
@@ -41,7 +42,7 @@ spec:
       optional: true
   steps:
     - name: upload-test-logs
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
@@ -82,7 +83,7 @@ spec:
         echo -n $LOG_URL | tee $(results.log_url.path)
 
     - name: upload-test-results
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
@@ -128,7 +129,7 @@ spec:
         echo -n $RESULT_SPA_URL | tee $(results.result_spa_url.path)
 
     - name: upload-test-artifacts
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH

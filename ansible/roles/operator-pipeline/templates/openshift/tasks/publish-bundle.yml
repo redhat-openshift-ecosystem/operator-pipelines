@@ -5,6 +5,7 @@ metadata:
   name: publish-bundle
 spec:
   params:
+    - name: pipeline_image
     - name: bundle_pullspec
       description: Bundle pullspec
     - name: bundle_versions
@@ -27,7 +28,7 @@ spec:
     - name: kerberos-keytab
   steps:
     - name: publish-bundle
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       env:
         - name: QUAY_USER
           valueFrom:

@@ -5,6 +5,7 @@ metadata:
   name: open-pull-request
 spec:
   params:
+    - name: pipeline_image
     - name: git_repo_url
       description: Source git repository URL.
     - name: repository_branch
@@ -37,7 +38,7 @@ spec:
     - name: source
   steps:
     - name: open-pull-request
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       env:
         - name: GITHUB_TOKEN

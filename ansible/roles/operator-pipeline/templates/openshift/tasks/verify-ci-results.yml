@@ -5,6 +5,7 @@ metadata:
   name: verify-ci-results
 spec:
   params:
+    - name: pipeline_image
     - name: preflight_results
     - name: preflight_min_version
     - name: ci_min_version
@@ -15,7 +16,7 @@ spec:
     - name: results
   steps:
     - name: verify-ci-results
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.results.path)
       env:
         - name: PREFLIGHT_MIN_VERSION

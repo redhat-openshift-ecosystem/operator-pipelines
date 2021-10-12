@@ -5,6 +5,7 @@ metadata:
   name: get-ci-results
 spec:
   params:
+    - name: pipeline_image
     - name: pyxis_cert_path
       default: ""
       description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
@@ -31,7 +32,7 @@ spec:
       optional: true
   steps:
     - name: get-results
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.results.path)
       env:
         - name: PYXIS_CERT_PATH

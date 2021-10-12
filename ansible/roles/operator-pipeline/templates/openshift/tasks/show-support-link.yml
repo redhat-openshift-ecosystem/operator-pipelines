@@ -5,6 +5,7 @@ metadata:
   name: show-support-link
 spec:
   params:
+    - name: pipeline_image
     - name: env
       description: Enviroment. One of [dev, qa, stage, production]
     - name: type
@@ -20,7 +21,7 @@ spec:
       default: "Operator Bundle Image"
   steps:
     - name: show-support-link
-      image: quay.io/redhat-isv/operator-pipelines-images
+      image: "$(params.pipeline_image)"
       script: |
         #! /usr/bin/env bash
         set -e
