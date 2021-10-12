@@ -82,6 +82,22 @@ spec:
         - name: git_pr_title
           value: $(params.git_pr_title)
 
+    # Compute a hash of the content so pipeline logs can be uploaded with it
+    - name: content-hash
+      runAfter:
+        - get-bundle-path
+      taskRef:
+        name: content-hash
+      params:
+        - name: bundle_path
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Get cert project id
     - name: certification-project-check
       runAfter:
@@ -140,6 +156,8 @@ spec:
       taskRef:
         name: set-github-status
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_repo_url
           value: $(params.git_repo_url)
         - name: commit_sha
@@ -324,6 +342,33 @@ spec:
 
   finally:
 
+    # Upload the logs of this pipeline
+    - name: upload-pipeline-logs
+      taskRef:
+        name: upload-pipeline-logs
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: md5sum
+          value: "$(tasks.content-hash.results.md5sum)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: bundle_version
+          value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pipeline_name
+          value: "$(context.pipelineRun.name)"
+        - name: pyxis_cert_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+
     # Updates certification status to "Published"
     - name: update-cert-project-status
       taskRef:
@@ -372,6 +417,8 @@ spec:
           value: success
         - name: context
           value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+        - name: target_url
+          value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
       workspaces:
         - name: github-bot-token
           workspace: github-bot-token
@@ -396,6 +443,8 @@ spec:
           value: failure
         - name: context
           value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+        - name: target_url
+          value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
       workspaces:
         - name: github-bot-token
           workspace: github-bot-token
