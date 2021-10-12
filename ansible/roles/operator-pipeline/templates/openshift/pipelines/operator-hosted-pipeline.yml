@@ -550,29 +550,6 @@ spec:
           workspace: results
           subPath: results
 
-    - name: set-github-status-result
-      runAfter:
-        - verify-ci-results
-      taskRef:
-        name: set-github-status
-      params:
-        - name: git_repo_url
-          value: $(params.git_repo_url)
-        - name: commit_sha
-          value: $(params.git_commit)
-        - name: description
-          value: "Operator test for $(tasks.submission-validation.results.operator_name)
-            complete. Test result URL: $(tasks.upload-artifacts.results.result_spa_url)"
-        - name: state
-          value: "$(tasks.verify-ci-results.results.test_result)"
-        - name: context
-          value: "operator-test/$(tasks.submission-validation.results.operator_name)"
-        - name: skip
-          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
-      workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
-
     # link pull request details to test results
     - name: link-pull-request
       runAfter:
