@@ -5,6 +5,7 @@ metadata:
   name: content-hash
 spec:
   params:
+    - name: image_tag
     - name: bundle_path
   results:
     - name: md5sum

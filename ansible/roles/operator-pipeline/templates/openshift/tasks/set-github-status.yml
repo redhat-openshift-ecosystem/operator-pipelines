@@ -5,6 +5,7 @@ metadata:
   name: set-github-status
 spec:
   params:
+    - name: image_tag
     - name: git_repo_url
     - name: commit_sha
       description: SHA of the commit to set the status for.

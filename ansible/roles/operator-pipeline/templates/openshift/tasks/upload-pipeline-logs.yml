@@ -5,6 +5,7 @@ metadata:
   name: upload-pipeline-logs
 spec:
   params:
+    - name: image_tag
     - name: pyxis_api_key_secret
       default: pyxis-api-secret
       description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.

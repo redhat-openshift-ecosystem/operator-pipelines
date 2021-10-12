@@ -5,6 +5,7 @@ metadata:
   name: submission-validation
 spec:
   params:
+    - name: image_tag
     - name: git_username
     - name: git_pr_title
     - name: git_pr_url

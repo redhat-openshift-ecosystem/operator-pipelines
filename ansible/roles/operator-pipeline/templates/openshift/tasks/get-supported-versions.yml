@@ -5,6 +5,7 @@ metadata:
   name: get-supported-versions
 spec:
   params:
+    - name: image_tag
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
   results:

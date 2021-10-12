@@ -5,6 +5,7 @@ metadata:
   name: show-support-link
 spec:
   params:
+    - name: image_tag
     - name: env
       description: Enviroment. One of [dev, qa, stage, production]
     - name: type

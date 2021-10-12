@@ -5,6 +5,7 @@ metadata:
   name: get-vendor-related-data
 spec:
   params:
+    - name: image_tag
     - name: org_id
       description: Unique identifier of the organization in Red Hat Connect
     - name: pyxis_cert_path

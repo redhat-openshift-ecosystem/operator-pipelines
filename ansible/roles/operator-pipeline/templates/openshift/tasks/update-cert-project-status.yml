@@ -5,6 +5,7 @@ metadata:
   name: update-cert-project-status
 spec:
   params:
+    - name: image_tag
     - name: new_certification_status
       description: New Certification status of the cert Project
     - name: cert_project_id

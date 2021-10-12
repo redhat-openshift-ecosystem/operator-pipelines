@@ -5,6 +5,7 @@ metadata:
   name: query-publishing-checklist
 spec:
   params:
+    - name: image_tag
     - name: cert_project_id
       description: ID of the bundle Certification Project
     - name: connect_url

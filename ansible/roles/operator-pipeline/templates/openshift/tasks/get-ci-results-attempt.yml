@@ -5,6 +5,7 @@ metadata:
   name: get-ci-results-attempt
 spec:
   params:
+    - name: image_tag
     - name: pyxis_cert_path
       default: ""
       description: Path to Pyxis certificates. Valid only when internal Pyxis is used.

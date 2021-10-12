@@ -5,6 +5,7 @@ metadata:
   name: dockerfile-creation
 spec:
   params:
+    - name: image_tag
     - name: bundle_path
   results:
     - name: bundle_dockerfile_path

@@ -16,6 +16,7 @@ spec:
     - name: shared-workspace
       description: A workspace that contains the fetched git repository.
   params:
+    - name: image_tag
     - name: args
       type: array
       description: extra args needs to append

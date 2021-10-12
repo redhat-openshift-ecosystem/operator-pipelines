@@ -5,6 +5,7 @@ metadata:
   name: open-pull-request
 spec:
   params:
+    - name: image_tag
     - name: git_repo_url
       description: Source git repository URL.
     - name: repository_branch

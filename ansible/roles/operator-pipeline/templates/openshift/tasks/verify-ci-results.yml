@@ -5,6 +5,7 @@ metadata:
   name: verify-ci-results
 spec:
   params:
+    - name: image_tag
     - name: preflight_results
     - name: preflight_min_version
     - name: ci_min_version

@@ -5,6 +5,7 @@ metadata:
   name: get-cert-project-related-data
 spec:
   params:
+    - name: image_tag
     - name: cert_project_id
       description: Identifier of certification project from Red Hat Connect
     - name: pyxis_cert_path

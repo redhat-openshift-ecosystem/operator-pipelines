@@ -5,6 +5,7 @@ metadata:
   name: create-support-link-for-pr
 spec:
   params:
+    - name: image_tag
     - name: type
       description: Connect case type.
       default: "CERT"

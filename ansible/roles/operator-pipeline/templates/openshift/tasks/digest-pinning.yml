@@ -8,6 +8,7 @@ spec:
     - name: bundle_path
     - name: enabled
       default: "true"
+    - name: image_tag
   results:
     - name: dirty_flag
   workspaces:

@@ -5,6 +5,7 @@ metadata:
   name: publish-bundle
 spec:
   params:
+    - name: image_tag
     - name: bundle_pullspec
       description: Bundle pullspec
     - name: bundle_versions

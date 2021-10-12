@@ -5,6 +5,7 @@ metadata:
   name: verify-changed-directories
 spec:
   params:
+    - name: image_tag
     - name: operator_name
     - name: bundle_version
     - name: pr_head_label
