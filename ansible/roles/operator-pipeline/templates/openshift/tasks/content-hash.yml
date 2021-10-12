@@ -5,7 +5,7 @@ metadata:
   name: content-hash
 spec:
   params:
-    - name: image_tag
+    - name: pipeline_image
     - name: bundle_path
   results:
     - name: md5sum
@@ -13,7 +13,7 @@ spec:
     - name: source
   steps:
     - name: compute-md5sum
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash

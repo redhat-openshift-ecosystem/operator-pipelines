@@ -5,7 +5,7 @@ metadata:
   name: operator-validation
 spec:
   params:
-    - name: image_tag
+    - name: pipeline_image
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
     - name: pyxis_url
@@ -20,13 +20,13 @@ spec:
     - name: source
   steps:
     - name: operator-sdk-validation
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
         operator-sdk bundle validate $(params.bundle_path)
     - name: bundle-parse
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash

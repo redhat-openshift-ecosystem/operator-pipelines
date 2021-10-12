@@ -5,7 +5,7 @@ metadata:
   name: submission-validation
 spec:
   params:
-    - name: image_tag
+    - name: pipeline_image
     - name: git_username
     - name: git_pr_title
     - name: git_pr_url
@@ -22,7 +22,7 @@ spec:
   steps:
     - name: submission-validation
       workingDir: $(workspaces.source.path)
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       script: |
         #! /usr/bin/env bash
         set -xe

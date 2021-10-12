@@ -25,7 +25,7 @@ spec:
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
-    - name: image_tag
+    - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:latest"
   workspaces:
@@ -89,8 +89,8 @@ spec:
       taskRef:
         name: certification-project-check
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -105,8 +105,8 @@ spec:
       taskRef:
         name: create-support-link-for-pr
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: connect_url
           value: $(tasks.set-env.results.connect_url)
         - name: cert_project_id
@@ -121,8 +121,8 @@ spec:
       taskRef:
         name: get-cert-project-related-data
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_url
@@ -145,8 +145,8 @@ spec:
       taskRef:
         name: submission-validation
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_pr_title
           value: $(params.git_pr_title)
         - name: git_pr_url
@@ -170,8 +170,8 @@ spec:
       taskRef:
         name: update-cert-project-status
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: new_certification_status
           value: "$(tasks.get-cert-project-related-data.results.new_certification_status)"
         - name: cert_project_id
@@ -194,8 +194,8 @@ spec:
       taskRef:
         name: set-github-status
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_repo_url
           value: $(params.git_repo_url)
         - name: commit_sha
@@ -221,8 +221,8 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: association
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: operator_name
@@ -241,8 +241,8 @@ spec:
       taskRef:
         name: operator-validation
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
         - name: pyxis_url
@@ -258,8 +258,8 @@ spec:
       taskRef:
         name: get-supported-versions
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -273,8 +273,8 @@ spec:
       taskRef:
         name: yaml-lint
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: args
           value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(tasks.get-bundle-path.results.bundle_path)"]
       workspaces:
@@ -288,8 +288,8 @@ spec:
       taskRef:
         name: digest-pinning
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -312,8 +312,8 @@ spec:
       taskRef:
         name: content-hash
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -327,8 +327,8 @@ spec:
       taskRef:
         name: verify-changed-directories
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: operator_name
           value: "$(tasks.submission-validation.results.operator_name)"
         - name: bundle_version
@@ -345,8 +345,8 @@ spec:
       taskRef:
         name: query-publishing-checklist
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: connect_url
@@ -368,8 +368,8 @@ spec:
       taskRef:
         name: dockerfile-creation
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -406,8 +406,8 @@ spec:
       taskRef:
         name: generate-index
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_image
           value: *bundleImage
         - name: from_index
@@ -448,8 +448,8 @@ spec:
       taskRef:
         name: get-ci-results-attempt
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: md5sum
@@ -505,8 +505,8 @@ spec:
       taskRef:
         name: upload-artifacts
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
         - name: log_file
@@ -544,8 +544,8 @@ spec:
       taskRef:
         name: get-ci-results
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
         - name: preflight_results
@@ -580,8 +580,8 @@ spec:
       taskRef:
         name: verify-ci-results
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: preflight_results
           value: "$(tasks.get-ci-results.results.preflight_results)"
         - name: preflight_min_version
@@ -600,8 +600,8 @@ spec:
       taskRef:
         name: link-pull-request
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: test_result_id
           value: "$(tasks.get-ci-results.results.test_result_id)"
         - name: pyxis_url
@@ -625,8 +625,8 @@ spec:
       taskRef:
         name: merge-pr
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: bundle_path
@@ -648,8 +648,8 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
@@ -697,8 +697,8 @@ spec:
       taskRef:
         name: set-github-status
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_repo_url
           value: $(params.git_repo_url)
         - name: commit_sha
@@ -724,8 +724,8 @@ spec:
       taskRef:
         name: set-github-status
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_repo_url
           value: $(params.git_repo_url)
         - name: commit_sha

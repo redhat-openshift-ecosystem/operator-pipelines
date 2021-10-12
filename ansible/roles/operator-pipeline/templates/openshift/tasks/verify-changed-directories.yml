@@ -5,7 +5,7 @@ metadata:
   name: verify-changed-directories
 spec:
   params:
-    - name: image_tag
+    - name: pipeline_image
     - name: operator_name
     - name: bundle_version
     - name: pr_head_label
@@ -14,7 +14,7 @@ spec:
       default: main
   steps:
     - name: verify-changed-directories
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       script: |
         #! /usr/bin/env bash
         set -xe

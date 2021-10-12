@@ -5,7 +5,7 @@ metadata:
   name: create-support-link-for-pr
 spec:
   params:
-    - name: image_tag
+    - name: pipeline_image
     - name: type
       description: Connect case type.
       default: "CERT"
@@ -24,7 +24,7 @@ spec:
     - name: comment
   steps:
     - name: create-support-link-for-pr
-      image: quay.io/redhat-isv/operator-pipelines-images
+      image: "$(params.pipeline_image)"
       script: |
         #! /usr/bin/env bash
         set -e

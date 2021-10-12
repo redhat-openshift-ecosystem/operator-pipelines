@@ -25,7 +25,7 @@ spec:
     - name: env
       description: Which environment to run in. Can be one of [dev, qa, stage, production]
       default: "production"
-    - name: image_tag
+    - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:latest"
   workspaces:
@@ -90,8 +90,8 @@ spec:
       taskRef:
         name: certification-project-check
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -106,8 +106,8 @@ spec:
       taskRef:
         name: get-supported-versions
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -124,8 +124,8 @@ spec:
       taskRef:
         name: operator-validation
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
         - name: pyxis_url
@@ -142,8 +142,8 @@ spec:
       taskRef:
         name: get-cert-project-related-data
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_url
@@ -165,8 +165,8 @@ spec:
       taskRef:
         name: get-vendor-related-data
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: org_id
           value: "$(tasks.get-cert-project-related-data.results.org_id)"
         - name: pyxis_url
@@ -228,8 +228,8 @@ spec:
       taskRef:
         name: create-container-image
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: isv_pid
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: repository_name
@@ -259,8 +259,8 @@ spec:
       taskRef:
         name: publish-resources
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: org_id
@@ -285,8 +285,8 @@ spec:
       taskRef:
         name: publish-bundle
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_versions
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: bundle_pullspec
@@ -308,8 +308,8 @@ spec:
       taskRef:
         name: update-cert-project-status
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_url
@@ -333,8 +333,8 @@ spec:
       taskRef:
         name: set-github-status
       params:
-        - name: image_tag
-          value: "$(params.image_tag)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_repo_url
           value: $(params.git_repo_url)
         - name: commit_sha
