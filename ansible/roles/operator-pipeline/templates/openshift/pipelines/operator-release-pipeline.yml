@@ -168,11 +168,11 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Publish $(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)."
+          value: "Publishing $(tasks.operator-validation.results.package_name)."
         - name: state
           value: pending
         - name: context
-          value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: "operator/publish"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
@@ -418,11 +418,11 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Publish $(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)."
+          value: "Failed to publish $(tasks.operator-validation.results.package_name)."
         - name: state
           value: success
         - name: context
-          value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: "operator/publish"
         - name: target_url
           value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
         - name: github_token_secret_name
@@ -445,11 +445,11 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Publish $(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)."
+          value: "Published $(tasks.operator-validation.results.package_name)."
         - name: state
           value: failure
         - name: context
-          value: "operator-publish/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: "operator/publish"
         - name: target_url
           value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
         - name: github_token_secret_name
