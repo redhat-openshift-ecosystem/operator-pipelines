@@ -5,23 +5,24 @@ metadata:
   name: trigger-marketplace-replication
 spec:
   params:
-    - name: bundle_image
-      description: Registry path to the operator bundle image
-    - name: bundle_image_digest
-      description: Digest of the operator bundle image
+    - name: bundle_path
+      description: path indicating the location of the certified bundle within the repository
     - name: git_repo_url
       description: ssh address of GitHub repository
     - name: package
       description: Operator package name
+    - name: pipeline_image
     - name: ocp_version
       description: OCP versions in the bundle annotations
     - name: version
       description: Version of the operator bundle
   workspaces:
     - name: ibm-webhook-token
+    - name: source
   steps:
     - name: trigger-marketplace-replication
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
       env:
         - name: WEBHOOK_TOKEN_PATH
           value: $(workspaces.ibm-webhook-token.path)/token
@@ -33,8 +34,7 @@ spec:
         export IBM_WEBHOOK_TOKEN=$(cat $WEBHOOK_TOKEN_PATH)
 
         marketplace-replication \
-          --bundle-image "$(params.bundle_image)" \
-          --bundle-image-digest "$(params.bundle_image_digest)" \
+          --bundle-path "$(params.bundle_path)" \
           --git-repo-url "$(params.git_repo_url)" \
           --package "$(params.package)" \
           --ocp-version "$(params.ocp_version)" \

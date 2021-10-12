@@ -295,14 +295,14 @@ spec:
       taskRef:
         name: trigger-marketplace-replication
       params:
-        - name: bundle_image
-          value: *bundleImage
-        - name: bundle_image_digest
-          value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
+        - name: bundle_path
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
         - name: git_repo_url
           value: $(params.git_repo_url)
         - name: package
           value: "$(tasks.operator-validation.results.package_name)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: ocp_version
           value: "$(tasks.get-supported-versions.results.ocp_version)"
         - name: version
@@ -310,6 +310,9 @@ spec:
       workspaces:
         - name: ibm-webhook-token
           workspace: ibm-webhook-token
+        - name: source
+          workspace: repository
+          subPath: src
 
     # create container image
     - name: create-container-image

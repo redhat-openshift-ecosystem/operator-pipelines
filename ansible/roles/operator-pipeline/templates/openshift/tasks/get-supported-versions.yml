@@ -17,6 +17,8 @@ spec:
       description: All known supported OCP indices
     - name: max_version_indices
       description: Latest known supported OCP indices
+    - name: ocp_version
+      description: OCP version annotation of the bundle
   workspaces:
     - name: source
   steps:
