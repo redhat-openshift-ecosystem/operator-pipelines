@@ -630,7 +630,7 @@ spec:
         - name: REQUEST_URL
           value: "$(params.git_pr_url)"
         - name: COMMENT_OR_FILE
-          value: "$(tasks.create-support-link-for-pr.results.comment)"
+          value: "There were some errors in your Operator bundle. You can use [this support case]($(tasks.create-support-link-for-pr.results.comment)) to contact the Red Hat certification team for review."
         - name: GITHUB_TOKEN_SECRET_NAME
           value: github-bot-token
         - name: GITHUB_TOKEN_SECRET_KEY
