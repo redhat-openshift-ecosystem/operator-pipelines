@@ -87,9 +87,6 @@
                     - name: pyxis-ssl-credentials
                       secret:
                         secretName: "operator-pipeline-api-certs"
-                    - name: github-bot-token
-                      secret:
-                        secretName: "github-bot-token"
                     - name: kerberos-keytab
                       secret:
                         secretName: "kerberos-keytab"
