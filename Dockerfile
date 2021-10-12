@@ -22,11 +22,13 @@ RUN dnf update -y && \
     findutils \
     git \
     gcc \
+    gnupg2 \
     jq \
     krb5-devel \
     krb5-workstation \
     yamllint \
     openssl-devel \
+    pinentry \
     pip \
     python3-devel && \
     dnf clean all
