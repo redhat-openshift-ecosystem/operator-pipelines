@@ -16,7 +16,6 @@ spec:
     It can take either a filename or a comment as input and can
     post the comment back to GitHub accordingly.
   workspaces:
-    - name: github-bot-token
     - name: comment-file
       optional: true
       description: The optional workspace containing comment file to be posted.
@@ -51,6 +50,18 @@ spec:
       description: |
         The actual comment to add or the filename containing comment to post.
       type: string
+
+    - name: GITHUB_TOKEN_SECRET_NAME
+      description: |
+        The name of the Kubernetes Secret that contains the GitHub token.
+      type: string
+      default: github
+
+    - name: GITHUB_TOKEN_SECRET_KEY
+      description: |
+        The key within the Kubernetes Secret that contains the GitHub token.
+      type: string
+      default: token
 
     - name: COMMENT_TAG
       description: |
