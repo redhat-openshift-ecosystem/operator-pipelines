@@ -692,9 +692,6 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: GITHUB_TOKEN_SECRET_KEY
           value: "$(params.github_token_secret_key)"
-      workspaces:
-        - name: comment-file
-          workspace: results
 
     # Set the github status to success if the pipeline passed
     - name: set-github-status-success
