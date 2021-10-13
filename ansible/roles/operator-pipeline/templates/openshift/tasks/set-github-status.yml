@@ -49,10 +49,19 @@ spec:
 
         echo "Setting github status of commit $(params.commit_sha) to $(params.state)"
 
-        set-github-status \
-          --git-repo-url "$(params.git_repo_url)" \
-          --commit-sha "$(params.commit_sha)" \
-          --status "$(params.state)" \
-          --context "$(params.context)" \
-          --description "$(params.description)" \
-          --target-url "$(params.target_url)"
+        if [ -z $(params.target_url)];then
+          set-github-status \
+            --git-repo-url "$(params.git_repo_url)" \
+            --commit-sha "$(params.commit_sha)" \
+            --status "$(params.state)" \
+            --context "$(params.context)" \
+            --description "$(params.description)"
+        else
+          set-github-status \
+            --git-repo-url "$(params.git_repo_url)" \
+            --commit-sha "$(params.commit_sha)" \
+            --status "$(params.state)" \
+            --context "$(params.context)" \
+            --description "$(params.description)" \
+            --target-url "$(params.target_url)"
+        fi
