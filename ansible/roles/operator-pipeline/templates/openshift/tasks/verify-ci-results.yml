@@ -25,7 +25,7 @@ spec:
           value: $(params.preflight_results)
       script: |
         #! /usr/bin/env bash
-        set -xe -o pipefail
+        set -e -o pipefail
 
         # did preflight/ CI have the latest version?
         PREFLIGHT_VERSION=$(cat $PREFLIGHT_RESULTS | jq -r '.test_library.version')
@@ -40,8 +40,9 @@ spec:
         # Did the tests pass?
         CHECK_RESULTS=$(cat $PREFLIGHT_RESULTS | jq -r '.passed')
         if [ $CHECK_RESULTS = "false" ]; then
+          echo "Not all preflight tests passed."
           echo -n "failure" | tee $(results.test_result.path)
-          exit 0
+          exit 1
         fi
 
         echo -n "success" | tee $(results.test_result.path)
