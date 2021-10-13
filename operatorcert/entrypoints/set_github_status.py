@@ -21,6 +21,10 @@ def setup_argparser() -> argparse.ArgumentParser:
         "--git-repo-url",
         help="URL of the git repo",
     )
+    parser.add_argument(
+        "--target-url",
+        help="The target_url for further details",
+    )
     parser.add_argument("--commit-sha", help="SHA of the commit to set status for")
     parser.add_argument(
         "--status",
@@ -43,6 +47,7 @@ def set_github_status(args) -> None:
         "context": args.context,
         "description": args.description,
         "state": args.status,
+        "target_url": args.target_url,
     }
     github.post(
         urljoin(
