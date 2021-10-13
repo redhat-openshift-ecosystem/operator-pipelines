@@ -55,7 +55,8 @@ spec:
       script: |
         #! /usr/bin/env bash
         echo "Uploading pipeline logs"
-        set -xe
+        # DO NOT USE `set -x`, to avoid revealing the secrets in logs!
+        set -e
 
         if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
           API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
