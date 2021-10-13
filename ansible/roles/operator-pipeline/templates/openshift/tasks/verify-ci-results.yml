@@ -28,7 +28,7 @@ spec:
         set -xe -o pipefail
 
         # did preflight/ CI have the latest version?
-        PREFLIGHT_VERSION=$(echo $PREFLIGHT_RESULTS | jq '.test_library.version' |  tr -d '"' | grep .)
+        PREFLIGHT_VERSION=$(cat $PREFLIGHT_RESULTS | jq -r '.test_library.version')
         if [ "$(printf '%s\n' "$PREFLIGHT_MIN_VERSION" "$PREFLIGHT_VERSION" | sort -V | head -n1)" = "$PREFLIGHT_MIN_VERSION" ]; then
           echo "Preflight version $PREFLIGHT_VERSION satisfies the minimun requirement of version $PREFLIGHT_MIN_VERSION"
         else
@@ -36,9 +36,9 @@ spec:
           echo -n "failure" | tee $(results.test_result.path)
           exit 1
         fi
+
         # Did the tests pass?
-        # In case of failure- comment on the PR with tailored support link
-        CHECK_RESULTS=$(echo $PREFLIGHT_RESULTS | jq '.passed' | tr -d '"' | grep .)
+        CHECK_RESULTS=$(cat $PREFLIGHT_RESULTS | jq -r '.passed')
         if [ $CHECK_RESULTS = "false" ]; then
           echo -n "failure" | tee $(results.test_result.path)
           exit 0
