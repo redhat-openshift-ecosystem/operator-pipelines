@@ -33,7 +33,7 @@ spec:
       default: github-bot-token
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
-      default: github-bot-token
+      default: github_bot_token
   workspaces:
     - name: repository
     - name: results

@@ -54,4 +54,5 @@ spec:
           --commit-sha "$(params.commit_sha)" \
           --status "$(params.state)" \
           --context "$(params.context)" \
-          --description "$(params.description)"
+          --description "$(params.description)" \
+          --target-url "$(params.target_url)"
