@@ -47,8 +47,32 @@ spec:
     - name: ocp-registry-kubeconfig
 
   tasks:
+    # Set a pending GitHub status check first to provide the user with immeditate feedback.
+    - name: set-github-status-pending
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Publishing the Operator bundle."
+        - name: state
+          value: pending
+        - name: context
+          value: "operator/publish"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # Set environment
     - name: set-env
+      runAfter:
+        - set-github-status-pending
       taskRef:
         name: set-env
         kind: Task
@@ -173,29 +197,6 @@ spec:
           workspace: repository
           subPath: src
 
-    - name: set-github-status-pending
-      runAfter:
-        - operator-validation
-      taskRef:
-        name: set-github-status
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: git_repo_url
-          value: $(params.git_repo_url)
-        - name: commit_sha
-          value: $(params.git_commit)
-        - name: description
-          value: "Publishing $(tasks.operator-validation.results.package_name)."
-        - name: state
-          value: pending
-        - name: context
-          value: "operator/publish"
-        - name: github_token_secret_name
-          value: "$(params.github_token_secret_name)"
-        - name: github_token_secret_key
-          value: "$(params.github_token_secret_key)"
-
     # Get additional data necessary for certification
     - name: get-cert-project-related-data
       runAfter:
@@ -242,7 +243,7 @@ spec:
 
     - name: inspect-image
       runAfter:
-        - set-github-status-pending
+        - operator-validation
       taskRef:
         name: inspect-image
         kind: Task
@@ -261,7 +262,6 @@ spec:
     - name: publish-to-ocp-registry
       runAfter:
         - get-vendor-related-data
-        - set-github-status-pending
       taskRef:
         name: publish-to-ocp-registry
       params:

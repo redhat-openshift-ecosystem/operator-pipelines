@@ -45,8 +45,32 @@ spec:
     - name: hydra-credentials
     - name: preflight-decryption-key
   tasks:
+    # Set a pending GitHub status check first to provide the user with immeditate feedback.
+    - name: set-github-status-pending
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Certifying the Operator bundle."
+        - name: state
+          value: pending
+        - name: context
+          value: "operator/test"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # Set environment
     - name: set-env
+      runAfter:
+        - set-github-status-pending
       taskRef:
         name: set-env
         kind: Task
@@ -193,34 +217,10 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
-    - name: set-github-status-pending
-      runAfter:
-        - submission-validation
-      taskRef:
-        name: set-github-status
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: git_repo_url
-          value: $(params.git_repo_url)
-        - name: commit_sha
-          value: $(params.git_commit)
-        - name: description
-          value: "Certifying $(tasks.submission-validation.results.operator_name)."
-        - name: state
-          value: pending
-        - name: context
-          value: "operator/test"
-        - name: github_token_secret_name
-          value: "$(params.github_token_secret_name)"
-        - name: github_token_secret_key
-          value: "$(params.github_token_secret_key)"
-
     # reserve operator name
     - name: reserve-operator-name
       runAfter:
         - update-cert-project-status
-        - set-github-status-pending
       taskRef:
         name: reserve-operator-name
       workspaces:
