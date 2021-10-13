@@ -38,6 +38,7 @@ spec:
       default: github_bot_token
   workspaces:
     - name: repository
+    - name: results
     - name: ssh-dir
       optional: true
     - name: pyxis-ssl-credentials
@@ -220,6 +221,8 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: results
+          workspace: results
 
     - name: get-vendor-related-data
       runAfter:

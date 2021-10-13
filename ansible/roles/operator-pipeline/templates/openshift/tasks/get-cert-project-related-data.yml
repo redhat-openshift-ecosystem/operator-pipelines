@@ -36,6 +36,7 @@ spec:
     - name: pyxis-ssl-credentials
       optional: true
     - name: source
+    - name: results
   steps:
     - name: get-cert-project-related-data
       image: "$(params.pipeline_image)"
@@ -53,7 +54,10 @@ spec:
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id)
 
-        CURRENT_CERTIFICATION_STATUS=$(cat cert_project | jq -r '.certification_status')
+        PROJECT_DATA_PATH="$(workspaces.results.path)/cert_project.json"
+        cp cert_project $PROJECT_DATA_PATH
+
+        CURRENT_CERTIFICATION_STATUS=$(cat $PROJECT_DATA_PATH | jq -r '.certification_status')
         if [ "$CURRENT_CERTIFICATION_STATUS" != "Published" ]; then
           echo -n "In Progress" | tee $(results.new_certification_status.path)
           echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.current_certification_status.path)
@@ -84,8 +88,8 @@ spec:
         esac
 
         # `grep .` ensures, that pipe fail if jq returns no results
-        cat cert_project | jq '.container.isv_pid' | tr -d '"' | grep . | tr -d "\n" | tee $(results.isv_pid.path)
-        cat cert_project | jq '.container.repository_name' | tr -d '"' | grep . | tr -d "\n" | tee $(results.repo_name.path)
-        cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.org_id.path)
-        cat cert_project | jq '.container.github_usernames[]' | tr '\n' ' ' | tr -d '"' | grep . | tr -d "\n" | tee $(results.github_usernames.path)
-        cat cert_project | jq '.operator_distribution' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.operator_distribution.path)
+        cat $PROJECT_DATA_PATH | jq '.container.isv_pid' | tr -d '"' | grep . | tr -d "\n" | tee $(results.isv_pid.path)
+        cat $PROJECT_DATA_PATH | jq '.container.repository_name' | tr -d '"' | grep . | tr -d "\n" | tee $(results.repo_name.path)
+        cat $PROJECT_DATA_PATH | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.org_id.path)
+        cat $PROJECT_DATA_PATH | jq '.container.github_usernames[]' | tr '\n' ' ' | tr -d '"' | grep . | tr -d "\n" | tee $(results.github_usernames.path)
+        cat $PROJECT_DATA_PATH | jq '.operator_distribution' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.operator_distribution.path)

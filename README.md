@@ -111,6 +111,7 @@ tkn pipeline start operator-hosted-pipeline \
   --param ci_min_version=0.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=prow-kubeconfig,secret=prow-kubeconfig \
@@ -149,6 +150,7 @@ tkn pipeline start operator-release-pipeline \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
   --param is_latest=true \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=results,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=kerberos-keytab,secret=kerberos-keytab \

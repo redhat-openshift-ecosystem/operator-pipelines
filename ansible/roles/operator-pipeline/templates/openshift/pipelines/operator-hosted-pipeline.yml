@@ -40,10 +40,15 @@ spec:
     - name: ssh-dir
       optional: true
     - name: registry-credentials
+    - name: registry-credentials-all
+      description: Registry access tokens that contain user provided tokens + tokens
+        that are provided through Red Hat Connect
     - name: pyxis-ssl-credentials
     - name: prow-kubeconfig
     - name: hydra-credentials
     - name: preflight-decryption-key
+    - name: gpg-key
+      description: GPG private keyt tha decrypts secrets partner's data
   tasks:
     # Set a pending GitHub status check first to provide the user with immeditate feedback.
     - name: set-github-status-pending
@@ -166,6 +171,28 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: results
+          workspace: results
+
+    # Merge user's registry tokens with the internal SA tokens that have
+    # access to internal registry
+    - name: merge-registry-credentials
+      runAfter:
+        - get-cert-project-related-data
+      taskRef:
+        name: merge-registry-credentials
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: registry-credentials-all
+          workspace: registry-credentials-all
+        - name: registry-credentials
+          workspace: registry-credentials
+        - name: gpg-key
+          workspace: gpg-key
+        - name: project-data
+          workspace: results
 
     # Validate submission
     - name: submission-validation
@@ -291,6 +318,7 @@ spec:
     - name: digest-pinning
       runAfter:
         - reserve-operator-name
+        - merge-registry-credentials
       taskRef:
         name: digest-pinning
       params:
@@ -302,6 +330,8 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: registry-credentials
+          workspace: registry-credentials-all
 
     - name: verify-pinned-digest
       runAfter:
@@ -402,7 +432,7 @@ spec:
           workspace: repository
           subPath: src
         - name: credentials
-          workspace: registry-credentials
+          workspace: registry-credentials-all
 
     # Index image contains a record of bundle images from which
     # manifests could be extract in order to install an operator.
@@ -423,7 +453,7 @@ spec:
           workspace: repository
           subPath: index
         - name: credentials
-          workspace: registry-credentials
+          workspace: registry-credentials-all
 
     - name: build-index
       runAfter:
@@ -443,7 +473,7 @@ spec:
           workspace: repository
           subPath: src
         - name: credentials
-          workspace: registry-credentials
+          workspace: registry-credentials-all
 
     # Try to retrieve preflight tests results
     # (they can run on premise)

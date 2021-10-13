@@ -81,6 +81,14 @@
                           resources:
                             requests:
                               storage: 5Gi
+                    - name: results
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi
                     - name: image-data
                       volumeClaimTemplate:
                         spec:
