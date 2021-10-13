@@ -680,7 +680,7 @@ spec:
       when:
         - input: $(tasks.status)
           operator: notin
-          values: ["Succeded", "Completed"]
+          values: ["Succeeded", "Completed"]
       taskRef:
         name: github-add-comment
       params:
