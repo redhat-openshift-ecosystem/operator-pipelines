@@ -15,7 +15,6 @@ spec:
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: token
   workspaces:
-    - name: github-bot-token
     - name: source
   results:
     - name: bool_merge

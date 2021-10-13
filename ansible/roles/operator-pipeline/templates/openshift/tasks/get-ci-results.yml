@@ -26,6 +26,9 @@ spec:
   results:
     - name: test_result_id
     - name: preflight_results
+      description: |
+        Relative file path, from the root of the results workspace,
+        where the JSON formatted results are stored.
   workspaces:
     - name: results
     - name: pyxis-ssl-credentials
@@ -68,4 +71,4 @@ spec:
           --verbose
 
         cat test_result_id | tee $(results.test_result_id.path)
-        cat test_results.json | tee $(results.preflight_results.path)
+        echo -n "test_results.json" > $(results.preflight_results.path)

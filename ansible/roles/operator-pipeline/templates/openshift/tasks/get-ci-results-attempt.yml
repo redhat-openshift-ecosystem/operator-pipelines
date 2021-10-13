@@ -20,6 +20,9 @@ spec:
   results:
     - name: preflight_results_exists
     - name: preflight_results
+      description: |
+        Relative file path, from the root of the results workspace,
+        where the JSON formatted results are stored.
     - name: test_result_id
   workspaces:
     - name: results
@@ -60,15 +63,18 @@ spec:
     - name: indicate-if-results-exists
       image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
       workingDir: $(workspaces.results.path)
+      env:
+        - name: RESULTS_FILE
+          value: test_results.json
       script: |
         #! /usr/bin/env bash
 
-        if [ -f "test_results.json" ]; then
-          echo "Results exists"
+        if [ -f $RESULTS_FILE ]; then
+          echo "Results exist"
           echo -n "true" | tee $(results.preflight_results_exists.path)
-          cat test_results.json | tee $(results.preflight_results.path)
+          echo -n "$RESULTS_FILE" | tee $(results.preflight_results.path)
         else
-          echo "Results doesn't exists"
+          echo "Results do not exist"
           echo -n "false" | tee $(results.preflight_results_exists.path)
           echo -n "none" | tee $(results.preflight_results.path)
         fi
