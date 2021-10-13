@@ -14,6 +14,8 @@ spec:
       description: Git repository HEAD commit
     - name: git_pr_title
       description: title of the pull request with operator submission
+    - name: git_pr_url
+      description: URL to the pull request
     - name: is_latest
       description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: registry
@@ -118,6 +120,22 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+
+    - name: create-support-link-for-pr
+      runAfter:
+        - set-env
+        - certification-project-check
+      taskRef:
+        name: create-support-link-for-pr
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: connect_url
+          value: $(tasks.set-env.results.connect_url)
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pull_request_url
+          value: "$(params.git_pr_url)"
 
     # Get the bundle versions to build index
     - name: get-supported-versions
@@ -374,6 +392,24 @@ spec:
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+
+    # In the event of a failure, comment with the support link on the github PR
+    - name: github-add-comment
+      when:
+        - input: $(tasks.status)
+          operator: notin
+          values: ["Succeeded", "Completed"]
+      taskRef:
+        name: github-add-comment
+      params:
+        - name: REQUEST_URL
+          value: "$(params.git_pr_url)"
+        - name: COMMENT_OR_FILE
+          value: "There were errors while publishing your Operator bundle. You can use [this support case]($(tasks.create-support-link-for-pr.results.comment)) to contact the Red Hat certification team for review."
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: "$(params.github_token_secret_name)"
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: "$(params.github_token_secret_key)"
 
     # Updates certification status to "Published"
     - name: update-cert-project-status
