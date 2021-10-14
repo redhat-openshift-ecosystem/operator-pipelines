@@ -96,6 +96,7 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_username=foo@redhat.com \
   --param git_commit=0aeff5f71e4fc2d4990474780b56d9312554da5a \
+  --param git_base_branch=main \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
   --param env=production \
   --param preflight_min_version=0.0.0 \

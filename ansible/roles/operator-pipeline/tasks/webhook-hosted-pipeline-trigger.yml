@@ -34,6 +34,8 @@
                 value: $(body.pull_request.head.user.login)
               - name: git_commit
                 value: $(body.pull_request.head.sha)
+              - name: git_base_branch
+                value: $(body.pull_request.base.ref)
               - name: pr_head_label
                 value: $(body.pull_request.head.label)
               - name: env
@@ -65,6 +67,7 @@
               - name: git_repo_url
               - name: git_username
               - name: git_commit
+              - name: git_base_branch
               - name: pr_head_label
               - name: env
               - name: preflight_min_version
@@ -90,6 +93,8 @@
                       value: $(tt.params.git_repo_url)
                     - name: git_username
                       value: $(tt.params.git_username)
+                    - name: git_base_branch
+                      value: $(tt.params.git_base_branch)
                     - name: pr_head_label
                       value: $(tt.params.pr_head_label)
                     - name: env
