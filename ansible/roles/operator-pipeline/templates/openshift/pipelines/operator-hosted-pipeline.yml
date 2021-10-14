@@ -207,6 +207,8 @@ spec:
           value: $(params.git_pr_title)
         - name: git_pr_url
           value: $(params.git_pr_url)
+        - name: git_repo_url
+          value: $(params.git_repo_url)
         - name: pyxis_url
           value: $(tasks.set-env.results.pyxis_url)
         - name: git_username

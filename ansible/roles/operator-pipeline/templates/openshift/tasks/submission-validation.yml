@@ -9,6 +9,7 @@ spec:
     - name: git_username
     - name: git_pr_title
     - name: git_pr_url
+    - name: git_repo_url
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers
     - name: github_usernames
@@ -27,6 +28,11 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        # Parse the org plus repo from the URL.
+        # awk grabs everything after "github.com/"
+        # cut removes any potential trailing extension like ".git"
+        REPO=$(echo "$(params.git_repo_url)" | awk -F "github.com/" '{print $2}' | cut -d "." -f 1)
+
         # 1. Verify via regex if PR title follows convention
         # 2. Verify, that new version is added and no existing one modified
         # 3. Verify, if the user which created the PR is allowed to
@@ -34,7 +40,7 @@ spec:
         # 4. Verify that there is no other open PRs for this operator
         verify-submission \
           --pr-title "$(params.git_pr_title)" \
-          --available-repositories redhat-openshift-ecosystem/operator-pipelines-test \
+          --available-repositories $REPO \
           --pr-url $(params.git_pr_url) \
           --git-username $(params.git_username) \
           --verbose \
