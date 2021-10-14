@@ -48,7 +48,7 @@ spec:
         fi
 
         echo "Setting github status of commit $(params.commit_sha) to $(params.state)"
- 
+
         set-github-status \
           --git-repo-url "$(params.git_repo_url)" \
           --commit-sha "$(params.commit_sha)" \
