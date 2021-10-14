@@ -14,6 +14,8 @@ spec:
     - name: git_repo_url
     - name: git_username
     - name: git_commit
+    - name: git_base_branch
+      description: Name of the base branch. e.g. "main"
     - name: pr_head_label
     - name: env
       description: Which environment to run in. Can be one of [dev, qa, stage, production]
@@ -375,6 +377,8 @@ spec:
           value: $(params.pr_head_label)
         - name: git_repo_url
           value: $(params.git_repo_url)
+        - name: base_branch
+          value: $(params.git_base_branch)
 
     # Query Hydra API for status of the pre-certification checklist
     - name: query-publishing-checklist
