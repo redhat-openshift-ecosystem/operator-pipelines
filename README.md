@@ -26,10 +26,6 @@ If tests pass a CI pipeline submits a PR for full operator certification workflo
 ```bash
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-ci-pipeline.yml
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
-
-# Install external dependencies
-oc apply -f  https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml
-oc apply -f  https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
 ```
 
 ### Execution
@@ -86,11 +82,6 @@ It is triggered by creating the submission pull request, and successfully comple
 ```bash
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-hosted-pipeline.yml
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
-
-# Install external dependencies
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/github-add-comment/0.4/github-add-comment.yaml
 ```
 
 ### Execution
@@ -133,9 +124,6 @@ once the bundle has been distributed to all relevant Operator catalogs and appea
 ```bash
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-release-pipeline.yml
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
-
-# Install external dependencies
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
 ```
 
 ### Execution
