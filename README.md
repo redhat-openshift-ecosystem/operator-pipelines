@@ -26,10 +26,6 @@ If tests pass a CI pipeline submits a PR for full operator certification workflo
 ```bash
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-ci-pipeline.yml
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
-
-# Install external dependencies
-oc apply -f  https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml
-oc apply -f  https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
 ```
 
 ### Execution
@@ -86,11 +82,6 @@ It is triggered by creating the submission pull request, and successfully comple
 ```bash
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-hosted-pipeline.yml
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
-
-# Install external dependencies
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/yaml-lint/0.1/yaml-lint.yaml
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/github-add-comment/0.4/github-add-comment.yaml
 ```
 
 ### Execution
@@ -111,6 +102,7 @@ tkn pipeline start operator-hosted-pipeline \
   --param ci_min_version=0.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=prow-kubeconfig,secret=prow-kubeconfig \
@@ -133,9 +125,6 @@ once the bundle has been distributed to all relevant Operator catalogs and appea
 ```bash
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-release-pipeline.yml
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
-
-# Install external dependencies
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.4/git-clone.yaml
 ```
 
 ### Execution
@@ -149,6 +138,7 @@ tkn pipeline start operator-release-pipeline \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
   --param is_latest=true \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=results,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=kerberos-keytab,secret=kerberos-keytab \

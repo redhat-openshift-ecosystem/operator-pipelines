@@ -52,6 +52,8 @@
 
 - name: Create Operator pipeline registry token secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -71,6 +73,8 @@
 
 - name: Create Operator pipeline github bot token secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -90,6 +94,8 @@
 
 - name: Create Operator pipeline github webhook secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -109,6 +115,8 @@
 
 - name: Create Operator pipeline kerberos keytab secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -128,6 +136,8 @@
 
 - name: Create Operator pipeline IIB quay credentials secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -148,6 +158,8 @@
 
 - name: Create OCP cluster Kubeconfig secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -167,6 +179,8 @@
 
 - name: Create Prow cluster Kubeconfig secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -186,6 +200,8 @@
 
 - name: Create preflight decryption key secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -206,6 +222,8 @@
 
 - name: Create OCP cluster Hydra credentials secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -224,7 +242,31 @@
         username: "{{ lookup('file', operator_pipeline_hydra_username_local_path, rstrip=False) | b64encode }}"
         password: "{{ lookup('file', operator_pipeline_hydra_password_local_path, rstrip=False) | b64encode }}"
 
+- name: Create Operator pipeline gpg secret key
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: isv-gpg-key
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        exd-guild-isv.key: "{{ lookup('file', operator_pipeline_exd_guild_isv_key_path, rstrip=False) | b64encode }}"
+        exd-guild-isv.passphrase: "{{ lookup('file', operator_pipeline_exd_guild_isv_passphrase_path, rstrip=False) | b64encode }}"
+
 - name: Deploy pipeline tasks
+  tags:
+    - tekton-task
   k8s:
     state: present
     apply: yes
@@ -234,6 +276,8 @@
     - ../templates/openshift/tasks/*
 
 - name: Deploy pipelines
+  tags:
+    - tekton-pipeline
   k8s:
     state: present
     apply: yes

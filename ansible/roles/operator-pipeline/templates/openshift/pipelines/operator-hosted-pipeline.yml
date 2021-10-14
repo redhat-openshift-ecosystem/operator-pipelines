@@ -40,13 +40,42 @@ spec:
     - name: ssh-dir
       optional: true
     - name: registry-credentials
+    - name: registry-credentials-all
+      description: Registry access tokens that contain user provided tokens + tokens
+        that are provided through Red Hat Connect
     - name: pyxis-ssl-credentials
     - name: prow-kubeconfig
     - name: hydra-credentials
     - name: preflight-decryption-key
+    - name: gpg-key
+      description: GPG private keyt tha decrypts secrets partner's data
   tasks:
+    # Set a pending GitHub status check first to provide the user with immeditate feedback.
+    - name: set-github-status-pending
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Certifying the Operator bundle."
+        - name: state
+          value: pending
+        - name: context
+          value: "operator/test"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # Set environment
     - name: set-env
+      runAfter:
+        - set-github-status-pending
       taskRef:
         name: set-env
         kind: Task
@@ -142,6 +171,28 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: results
+          workspace: results
+
+    # Merge user's registry tokens with the internal SA tokens that have
+    # access to internal registry
+    - name: merge-registry-credentials
+      runAfter:
+        - get-cert-project-related-data
+      taskRef:
+        name: merge-registry-credentials
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: registry-credentials-all
+          workspace: registry-credentials-all
+        - name: registry-credentials
+          workspace: registry-credentials
+        - name: gpg-key
+          workspace: gpg-key
+        - name: project-data
+          workspace: results
 
     # Validate submission
     - name: submission-validation
@@ -193,34 +244,10 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
-    - name: set-github-status-pending
-      runAfter:
-        - submission-validation
-      taskRef:
-        name: set-github-status
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: git_repo_url
-          value: $(params.git_repo_url)
-        - name: commit_sha
-          value: $(params.git_commit)
-        - name: description
-          value: "Certifying $(tasks.submission-validation.results.operator_name)."
-        - name: state
-          value: pending
-        - name: context
-          value: "operator/test"
-        - name: github_token_secret_name
-          value: "$(params.github_token_secret_name)"
-        - name: github_token_secret_key
-          value: "$(params.github_token_secret_key)"
-
     # reserve operator name
     - name: reserve-operator-name
       runAfter:
         - update-cert-project-status
-        - set-github-status-pending
       taskRef:
         name: reserve-operator-name
       workspaces:
@@ -291,6 +318,7 @@ spec:
     - name: digest-pinning
       runAfter:
         - reserve-operator-name
+        - merge-registry-credentials
       taskRef:
         name: digest-pinning
       params:
@@ -302,6 +330,8 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: registry-credentials
+          workspace: registry-credentials-all
 
     - name: verify-pinned-digest
       runAfter:
@@ -402,7 +432,7 @@ spec:
           workspace: repository
           subPath: src
         - name: credentials
-          workspace: registry-credentials
+          workspace: registry-credentials-all
 
     # Index image contains a record of bundle images from which
     # manifests could be extract in order to install an operator.
@@ -423,7 +453,7 @@ spec:
           workspace: repository
           subPath: index
         - name: credentials
-          workspace: registry-credentials
+          workspace: registry-credentials-all
 
     - name: build-index
       runAfter:
@@ -443,7 +473,7 @@ spec:
           workspace: repository
           subPath: src
         - name: credentials
-          workspace: registry-credentials
+          workspace: registry-credentials-all
 
     # Try to retrieve preflight tests results
     # (they can run on premise)
@@ -709,7 +739,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Certification passed for $(tasks.submission-validation.results.operator_name)."
+          value: "Successfully certified the Operator bundle."
         - name: target_url
           value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
         - name: state
@@ -737,7 +767,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Certification failed for $(tasks.submission-validation.results.operator_name)."
+          value: "Failed to certify the Operator bundle."
         - name: target_url
           value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
         - name: state

@@ -117,6 +117,14 @@
                           resources:
                             requests:
                               storage: 100Mi
+                    - name: registry-credentials-all
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-secret"
@@ -132,6 +140,9 @@
                     - name: hydra-credentials
                       secret:
                         secretName: "hydra-credentials"
+                    - name: gpg-key
+                      secret:
+                        secretName: "isv-gpg-key"
 
     - name: Create Hosted pipeline trigger route
       k8s:
