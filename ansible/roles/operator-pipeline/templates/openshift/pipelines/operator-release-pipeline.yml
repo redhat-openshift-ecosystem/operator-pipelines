@@ -36,6 +36,12 @@ spec:
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: github_bot_token
+    - name: ibm_webhook_token_secret_name
+      description: The name of the Kubernetes Secret that contains the IBM webhook token.
+      default: ibm-webhook-token
+    - name: ibm_webhook_token_secret_key
+      description: The key within the Kubernetes Secret that contains the IBM webhook token.
+      default: ibm-webhook-token
   workspaces:
     - name: repository
     - name: results
@@ -46,7 +52,6 @@ spec:
     - name: registry-credentials
     - name: image-data
     - name: ocp-registry-kubeconfig
-    - name: ibm-webhook-token
 
   tasks:
     # Set a pending GitHub status check first to provide the user with immeditate feedback.
@@ -299,6 +304,10 @@ spec:
           value: "$(tasks.get-bundle-path.results.bundle_path)"
         - name: git_repo_url
           value: $(params.git_repo_url)
+        - name: ibm_webhook_token_secret_name
+          value: "$(params.ibm_webhook_token_secret_name)"
+        - name: ibm_webhook_token_secret_key
+          value: "$(params.ibm_webhook_token_secret_key)"
         - name: package
           value: "$(tasks.operator-validation.results.package_name)"
         - name: pipeline_image
@@ -308,8 +317,6 @@ spec:
         - name: version
           value: "$(tasks.operator-validation.results.bundle_version)"
       workspaces:
-        - name: ibm-webhook-token
-          workspace: ibm-webhook-token
         - name: source
           workspace: repository
           subPath: src
