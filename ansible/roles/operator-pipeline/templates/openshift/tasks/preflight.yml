@@ -61,6 +61,7 @@ spec:
             $HOME/.docker/config.json \
             > $DOCKER_CONFIG/config.json
         fi
+
     - name: check-operator
       image: $(params.base_image)
       workingDir: $(workspaces.output.path)
@@ -89,3 +90,18 @@ spec:
         echo -n $PFLT_LOGFILE | tee $(results.log_output_file.path)
         echo -n results.json | tee $(results.result_output_file.path)
         echo -n $PFLT_ARTIFACTS | tee $(results.artifacts_output_dir.path)
+
+    - name: verify-results
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.output.path)
+      script: |
+        #! /usr/bin/env bash
+        set -ex -o pipefail
+
+        PASSED=$(cat results.json | jq -r '.passed')
+        if [ $PASSED = "false" ]; then
+          echo "Not all preflight tests passed."
+          exit 1
+        fi
+
+        echo "All preflight tests passed."
