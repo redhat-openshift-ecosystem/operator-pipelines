@@ -151,6 +151,11 @@ oc create secret generic ocp-registry-kubeconfig \
   --from-literal kubeconfig=<kubeconfig>
 ```
 
+#### Quay OAuth Token
+A Quay OAuth token is required to set repo visibility to public.
+```bash
+oc create secret generic quay-oauth-token --from-literal token=<token>
+```
 
 ### Only Release pipeline:
 #### Kerberos credentials

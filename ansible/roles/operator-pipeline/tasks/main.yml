@@ -153,8 +153,8 @@
           suffix: "{{ suffix }}"
           env: "{{ env }}"
       data:
-        username: "{{ quay_username | b64encode }}"
-        password: "{{ quay_password | b64encode }}"
+        username: "{{ iib_quay_username | b64encode }}"
+        password: "{{ iib_quay_password | b64encode }}"
 
 - name: Create OCP cluster Kubeconfig secret
   no_log: yes
@@ -263,6 +263,27 @@
       data:
         exd-guild-isv.key: "{{ lookup('file', operator_pipeline_exd_guild_isv_key_path, rstrip=False) | b64encode }}"
         exd-guild-isv.passphrase: "{{ lookup('file', operator_pipeline_exd_guild_isv_passphrase_path, rstrip=False) | b64encode }}"
+
+- name: Create quay OAuth token secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: quay-oauth-token
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        token: "{{ quay_oauth_token | b64encode }}"
 
 - name: Deploy pipeline tasks
   tags:
