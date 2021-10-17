@@ -23,6 +23,7 @@ spec:
     - name: preflight_min_version
     - name: ci_min_version
     - name: registry
+      description: Must be some variety of quay registry.
       default: quay.io
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
@@ -36,6 +37,10 @@ spec:
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: github_bot_token
+    - name: quay_oauth_secret_name
+      default: quay-oauth-token
+    - name: quay_oauth_secret_key
+      default: token
   workspaces:
     - name: repository
     - name: results
@@ -440,6 +445,23 @@ spec:
         - name: credentials
           workspace: registry-credentials-all
 
+    - name: make-bundle-repo-public
+      runAfter:
+        - build-bundle
+      taskRef:
+        name: set-quay-repo-visibility
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: repository
+          value: "$(params.image_namespace)/$(tasks.operator-validation.results.package_name)"
+        - name: visibility
+          value: public
+        - name: oauth_secret_name
+          value: "$(params.quay_oauth_secret_name)"
+        - name: oauth_secret_key
+          value: "$(params.quay_oauth_secret_key)"
+
     # Index image contains a record of bundle images from which
     # manifests could be extract in order to install an operator.
     - name: generate-index
@@ -481,11 +503,29 @@ spec:
         - name: credentials
           workspace: registry-credentials-all
 
+    - name: make-index-repo-public
+      runAfter:
+        - build-index
+      taskRef:
+        name: set-quay-repo-visibility
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: repository
+          value: "$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index"
+        - name: visibility
+          value: public
+        - name: oauth_secret_name
+          value: "$(params.quay_oauth_secret_name)"
+        - name: oauth_secret_key
+          value: "$(params.quay_oauth_secret_key)"
+
     # Try to retrieve preflight tests results
     # (they can run on premise)
     - name: get-ci-results-attempt
       runAfter:
-        - build-index
+        - make-bundle-repo-public
+        - make-index-repo-public
         - content-hash
       taskRef:
         name: get-ci-results-attempt

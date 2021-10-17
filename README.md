@@ -112,6 +112,10 @@ tkn pipeline start operator-hosted-pipeline \
   --showlog
 ```
 
+:warning: Only quay-based registries are supported by the hosted pipeline.
+There are some quay specific tasks for configuring the repositories where
+the bundle and index images are pushed.
+
 
 ## Operator Release pipeline
 The Release pipeline runs after the layers of validation (CI (optionally) and Hosted pipeline).
