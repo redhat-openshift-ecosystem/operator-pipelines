@@ -34,7 +34,6 @@ spec:
               key: $(params.ibm_webhook_token_secret_key)
       script: |
         #! /usr/bin/env bash
-        # Don't use set -x to avoid exposing webhook token
         set -e
 
         marketplace-replication \

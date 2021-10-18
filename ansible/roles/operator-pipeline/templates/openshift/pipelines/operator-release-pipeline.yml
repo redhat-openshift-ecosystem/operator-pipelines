@@ -383,7 +383,6 @@ spec:
     - name: publish-bundle
       runAfter:
         - publish-resources
-        - get-supported-versions
         - trigger-marketplace-replication
       taskRef:
         name: publish-bundle
