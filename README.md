@@ -109,6 +109,7 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=prow-kubeconfig,secret=prow-kubeconfig \
   --workspace name=preflight-decryption-key,secret=preflight-decryption-key \
   --workspace name=hydra-credentials,secret=hydra-credentials \
+  --workspace name=gpg-key,secret=isv-gpg-key \
   --showlog
 ```
 
