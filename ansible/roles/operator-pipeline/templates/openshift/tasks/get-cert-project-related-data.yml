@@ -90,9 +90,27 @@ spec:
             ;;
         esac
 
-        # `grep .` ensures, that pipe fail if jq returns no results
-        cat $PROJECT_DATA_PATH | jq '.container.isv_pid' | tr -d '"' | grep . | tr -d "\n" | tee $(results.isv_pid.path)
-        cat $PROJECT_DATA_PATH | jq '.container.repository_name' | tr -d '"' | grep . | tr -d "\n" | tee $(results.repo_name.path)
-        cat $PROJECT_DATA_PATH | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.org_id.path)
-        cat $PROJECT_DATA_PATH | jq '.container.github_usernames[]' | tr '\n' ' ' | tr -d '"' | grep . | tr -d "\n" | tee $(results.github_usernames.path)
-        cat $PROJECT_DATA_PATH | jq '.operator_distribution' |  tr -d '"' | grep . | tr -d "\n" | tee $(results.operator_distribution.path)
+
+        get_from_cp () {
+          # Function to get the necessary fields from the CertProject
+          FIELD_NAME=$1
+          JQ_PATH=$2
+
+          # `grep .` ensures, that pipe fail if jq returns no results
+          cat $PROJECT_DATA_PATH | jq -re $JQ_PATH | grep . | tr -d "\n" || \
+            { echo " Error while retrieving $FIELD_NAME from the Certification Project- is the value missing?" \
+            && exit 1; }
+        }
+
+        get_from_cp isv_pid '.container.isv_pid' | tee $(results.isv_pid.path)
+        get_from_cp repository_name '.container.repository_name' | tee $(results.repo_name.path)
+        get_from_cp org_id '.org_id' | tee $(results.org_id.path)
+        get_from_cp operator_distribution '.operator_distribution' | tee $(results.operator_distribution.path)
+
+        # Exception, where function cannot be applied-
+        # github usernames have the newline symbol changed to space
+        echo "Retrieving github_usernames from the Certification Project"
+        GITHUB_USERNAMES=$(cat $PROJECT_DATA_PATH | jq -r '.container.github_usernames[]' | tr '\n' ' ' | grep . | tr -d "\n") || \
+            { echo " Error while retrieving github_usernames from the Certification Project- is the value missing?" \
+            && exit 1; }
+        echo -n $GITHUB_USERNAMES | tee $(results.github_usernames.path)
