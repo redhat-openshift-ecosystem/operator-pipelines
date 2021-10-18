@@ -5,7 +5,9 @@ from operatorcert import verify_pr_uniqueness
 
 
 def setup_argparser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Verify if submission is unique in the repository")
+    parser = argparse.ArgumentParser(
+        description="Verify if submission is unique in the repository"
+    )
     parser.add_argument("--pr-url", help="GitHub PR url")
     parser.add_argument(
         "--available-repositories",

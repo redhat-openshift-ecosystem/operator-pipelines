@@ -5,7 +5,9 @@ from operatorcert import validate_user
 
 
 def setup_argparser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Verify if the Github user can submit the bundle")
+    parser = argparse.ArgumentParser(
+        description="Verify if the Github user can submit the bundle"
+    )
     parser.add_argument(
         "--git-username", help="Username of account which submitted the bundle"
     )

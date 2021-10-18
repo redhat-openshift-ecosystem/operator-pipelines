@@ -6,7 +6,9 @@ from operatorcert.utils import store_results
 
 
 def setup_argparser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Verify, if the pull request title complies to regex")
+    parser = argparse.ArgumentParser(
+        description="Verify, if the pull request title complies to regex"
+    )
     parser.add_argument("--pr-title", help="GitHub PR title")
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
