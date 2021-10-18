@@ -1,0 +1,30 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: validate-pr-title
+spec:
+  params:
+    - name: pipeline_image
+    - name: git_pr_title
+  results:
+    - name: operator_name
+    - name: bundle_version
+  workspaces:
+    - name: source
+  steps:
+    - name: submission-validation
+      workingDir: $(workspaces.source.path)
+      image: "$(params.pipeline_image)"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        # Parse PR title to see, whether it complies the regex.
+        # Get the operator name and version from PR title.
+        verify-pr-title \
+          --pr-title "$(params.git_pr_title)" \
+          --verbose
+
+        cat bundle_name | tee $(results.operator_name.path)
+        cat bundle_version | tee $(results.bundle_version.path)

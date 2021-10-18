@@ -113,10 +113,26 @@ spec:
         - name: ssh-directory
           workspace: ssh-dir
 
+    # Verify PR title
+    - name: validate-pr-title
+      runAfter:
+        - checkout
+      taskRef:
+        name: validate-pr-title
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_pr_title
+          value: $(params.git_pr_title)
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Get the bundle path
     - name: get-bundle-path
       runAfter:
-        - checkout
+        - validate-pr-title
       taskRef:
         name: get-bundle-path
       params:
@@ -210,8 +226,6 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: git_pr_title
-          value: $(params.git_pr_title)
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: git_repo_url
@@ -222,6 +236,8 @@ spec:
           value: $(params.git_username)
         - name: github_usernames
           value: "$(tasks.get-cert-project-related-data.results.github_usernames)"
+        - name: operator_name
+          value: "$(tasks.validate-pr-title.results.operator_name)"
       workspaces:
         - name: source
           workspace: repository
@@ -268,7 +284,7 @@ spec:
         - name: association
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: operator_name
-          value: "$(tasks.submission-validation.results.operator_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
@@ -375,9 +391,9 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: operator_name
-          value: "$(tasks.submission-validation.results.operator_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: bundle_version
-          value: "$(tasks.submission-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: pr_head_label
           value: $(params.pr_head_label)
         - name: git_repo_url
@@ -539,9 +555,9 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.submission-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: operator_name
-          value: "$(tasks.submission-validation.results.operator_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_cert_path
           value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
         - name: pyxis_key_path
@@ -641,7 +657,7 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.submission-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: operator_name
           value: "$(tasks.operator-validation.results.package_name)"
         - name: pyxis_cert_path

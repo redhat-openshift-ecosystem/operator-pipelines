@@ -7,17 +7,14 @@ spec:
   params:
     - name: pipeline_image
     - name: git_username
-    - name: git_pr_title
     - name: git_pr_url
     - name: git_repo_url
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers
     - name: github_usernames
       description: List of accounts with permissions allowing operator submission
-  results:
-    - name: cert_project_id
     - name: operator_name
-    - name: bundle_version
+      description: name of the submitted operator
   workspaces:
     - name: source
   steps:
@@ -33,18 +30,16 @@ spec:
         # cut removes any potential trailing extension like ".git"
         REPO=$(echo "$(params.git_repo_url)" | awk -F "github.com/" '{print $2}' | cut -d "." -f 1)
 
-        # 1. Verify via regex if PR title follows convention
-        # 2. Verify, that new version is added and no existing one modified
-        # 3. Verify, if the user which created the PR is allowed to
+        # 1. Verify, if the user which created the PR is allowed to
         # submit the operator
-        # 4. Verify that there is no other open PRs for this operator
-        verify-submission \
-          --pr-title "$(params.git_pr_title)" \
+        verify-pr-user \
+          --git-username $(params.git_username) \
+          --contacts $(params.github_usernames) \
+          --verbose
+
+        # 2. Verify that there is no other open PRs for this operator
+        verify-pr-uniqueness \
           --available-repositories $REPO \
           --pr-url $(params.git_pr_url) \
-          --git-username $(params.git_username) \
-          --verbose \
-          --contacts $(params.github_usernames)
-
-        cat bundle_name | tee $(results.operator_name.path)
-        cat bundle_version | tee $(results.bundle_version.path)
+          --bundle-name $(params.operator_name) \
+          --verbose
