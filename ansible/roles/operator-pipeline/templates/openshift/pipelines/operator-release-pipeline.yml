@@ -297,6 +297,7 @@ spec:
       runAfter:
         - publish-to-ocp-registry
         - get-supported-versions
+        - operator-validation
       taskRef:
         name: trigger-marketplace-replication
       params:
