@@ -35,10 +35,14 @@ def setup_argparser() -> Any:
         required=True,
         help="Location of the operator bundle",
     )
-    parser.add_argument("--git-repo-url", required=True, help="URL of the git repo")
     parser.add_argument("--package", required=True, help="Operator package name")
     parser.add_argument(
         "--ocp-version", required=True, help="OCP versions in the bundle annotations"
+    )
+    parser.add_argument(
+        "--organization",
+        required=True,
+        help="Organization from the project config.yaml, e.g. redhat-marketplace",
     )
     parser.add_argument(
         "--version", required=True, help="Version of the operator bundle"
@@ -49,27 +53,25 @@ def setup_argparser() -> Any:
         help="URL to call the webhook",
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="Turn on SSL verification when triggering IBM webhook",
+    )
     return parser
 
 
 def call_ibm_webhook(args: Any) -> None:
-    # Marketplace repos:
-    # https://github.com/redhat-openshift-ecosystem/redhat-marketplace-operators-preprod/
-    # https://github.com/redhat-openshift-ecosystem/redhat-marketplace-operators/
-    marketplace_repo_regex = re.compile(
-        ".*github\.com\/redhat-openshift-ecosystem\/redhat-marketplace-operators*"
-    )
-    if not marketplace_repo_regex.match(args.git_repo_url):
+    if args.organization == "redhat-marketplace":
         LOGGER.info(
-            f"{args.git_repo_url} is not a redhat-marketplace repo. Skipping "
-            f"marketplace replication."
+            "Project organization is redhat-marketplace. Proceeding with calling IBM "
+            "webhook to trigger marketplace replication."
         )
-        return
     else:
         LOGGER.info(
-            f"{args.git_repo_url} is a redhat-marketplace repo. Proceeding with calling"
-            f" IBM webhook to trigger marketplace replication."
+            "Not a redhat-marketplace project. Skipping marketplace replication."
         )
+        return
 
     token = os.environ.get("IBM_WEBHOOK_TOKEN")
     if not token:
@@ -87,7 +89,7 @@ def call_ibm_webhook(args: Any) -> None:
     bundle_data = {
         "package": args.package,
         "ocp_version": args.ocp_version,
-        "organization": "redhat-marketplace",
+        "organization": args.organization,
         "related_images": related_images,
         "version": args.version,
     }
@@ -106,7 +108,7 @@ def call_ibm_webhook(args: Any) -> None:
             server_path_prefix="",
             # TODO: Currently, the endpoint in insecure in the preprod environments.
             # When the production endpoint will be ready, we should be able to use it securely without additional cert.
-            verify=False,
+            verify=args.verify,
         )
         LOGGER.debug("Webhook response: %s", response)
     except TwirpServerException as e:
