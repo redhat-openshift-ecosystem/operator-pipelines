@@ -7,8 +7,6 @@ spec:
   params:
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
-    - name: git_repo_url
-      description: ssh address of GitHub repository
     - name: ibm_webhook_token_secret_name
       description: The name of the Kubernetes Secret that contains the IBM webhook token.
     - name: ibm_webhook_token_secret_key
@@ -18,6 +16,8 @@ spec:
     - name: pipeline_image
     - name: ocp_version
       description: OCP versions in the bundle annotations
+    - name: organization
+      description: Organization from the project config.yaml, e.g. redhat-marketplace
     - name: version
       description: Version of the operator bundle
   workspaces:
@@ -38,8 +38,8 @@ spec:
 
         marketplace-replication \
           --bundle-path "$(params.bundle_path)" \
-          --git-repo-url "$(params.git_repo_url)" \
           --package "$(params.package)" \
           --ocp-version "$(params.ocp_version)" \
+          --organization "$(params.organization)" \
           --version "$(params.version)" \
           --verbose

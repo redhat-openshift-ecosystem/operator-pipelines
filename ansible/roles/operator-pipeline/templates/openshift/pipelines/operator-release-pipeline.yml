@@ -303,8 +303,6 @@ spec:
       params:
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
-        - name: git_repo_url
-          value: $(params.git_repo_url)
         - name: ibm_webhook_token_secret_name
           value: "$(params.ibm_webhook_token_secret_name)"
         - name: ibm_webhook_token_secret_key
@@ -315,6 +313,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: ocp_version
           value: "$(tasks.get-supported-versions.results.ocp_version)"
+        - name: organization
+          value: "$(tasks.get-cert-project-related-data.results.organization)"
         - name: version
           value: "$(tasks.operator-validation.results.bundle_version)"
       workspaces:

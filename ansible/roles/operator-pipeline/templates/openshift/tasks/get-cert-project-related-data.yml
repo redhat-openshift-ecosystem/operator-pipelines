@@ -24,6 +24,8 @@ spec:
       description: Repository name assigned to certification project from Red Hat Connect
     - name: operator_distribution
       description: Distribution method of the operator - either connect or marketplace
+    - name: organization
+      description: Organization defined in the project config.yaml - either certified-operator or redhat-marketplace
     - name: org_id
       description: Unique identifier of the organization in Red Hat Connect
     - name: contacts
@@ -67,6 +69,7 @@ spec:
         fi
 
         ORGANIZATION=$(cat config.yaml | yq -r '.organization')
+        echo -n "$ORGANIZATION" | tee $(results.organization.path)
         OPERATOR_DISTRIBUTION=$(cat cert_project | jq '.operator_distribution'| tr -d '"')
         case "$ORGANIZATION" in
           "certified-operators")
