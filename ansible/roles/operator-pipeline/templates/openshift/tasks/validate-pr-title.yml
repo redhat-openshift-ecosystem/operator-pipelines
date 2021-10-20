@@ -10,11 +10,8 @@ spec:
   results:
     - name: operator_name
     - name: bundle_version
-  workspaces:
-    - name: source
   steps:
     - name: submission-validation
-      workingDir: $(workspaces.source.path)
       image: "$(params.pipeline_image)"
       script: |
         #! /usr/bin/env bash
