@@ -826,8 +826,6 @@ spec:
           value: $(params.git_commit)
         - name: description
           value: "Failed to certify the Operator bundle."
-        - name: target_url
-          value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
         - name: state
           value: failure
         - name: context
