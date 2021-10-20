@@ -55,7 +55,7 @@ spec:
     - name: hydra-credentials
     - name: preflight-decryption-key
     - name: gpg-key
-      description: GPG private keyt tha decrypts secrets partner's data
+      description: GPG private key that decrypts secrets partner's data
   tasks:
     # Set a pending GitHub status check first to provide the user with immeditate feedback.
     - name: set-github-status-pending
@@ -124,10 +124,6 @@ spec:
           value: "$(params.pipeline_image)"
         - name: git_pr_title
           value: $(params.git_pr_title)
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
 
     # Get the bundle path
     - name: get-bundle-path
