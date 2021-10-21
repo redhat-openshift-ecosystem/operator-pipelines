@@ -92,7 +92,7 @@ spec:
 
         PROWJOB_ID=${PROWJOB_URL##*/}
 
-        ARTIFACTS_TARBALL_URI="${BASE_URL}periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-claim/${PROWJOB_ID}/artifacts/preflight-common-claim/operator-pipelines-preflight-common-crypt/artifacts/preflight.tar.gz.asc"
+        ARTIFACTS_TARBALL_URI="${BASE_URL}periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-claim/${PROWJOB_ID}/artifacts/preflight-common-claim/operator-pipelines-preflight-common-encrypt/artifacts/preflight.tar.gz.asc"
 
         curl -sLO "${ARTIFACTS_TARBALL_URI}"
 
@@ -107,8 +107,6 @@ spec:
         }'|tr -d '[:space:]'`":6: | gpg --import-ownertrust 1> /dev/null
 
         gpg -d preflight.tar.gz.asc | tar -xzf -
-
-        ls -lha
 
         mv artifacts/results.json .
 
