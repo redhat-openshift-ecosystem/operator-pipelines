@@ -19,8 +19,8 @@ spec:
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
     - name: env
-      description: Which environment to run in. Can be one of [dev, qa, stage, production]
-      default: "production"
+      description: Which environment to run in. Can be one of [dev, qa, stage, prod]
+      default: "prod"
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.

@@ -7,7 +7,7 @@ spec:
   params:
     - name: pipeline_image
     - name: env
-      description: Enviroment. One of [dev, qa, stage, production]
+      description: Enviroment. One of [dev, qa, stage, prod]
     - name: type
       description: Connect case type.
       default: "CERT"
@@ -35,7 +35,7 @@ spec:
 
         # select the correct connect instance
         URL_ENV="connect"
-        if [[ $LINK_ENV != "production" ]]; then
+        if [[ $LINK_ENV != "prod" ]]; then
             URL_ENV="$URL_ENV.$LINK_ENV"
         fi
 

@@ -20,7 +20,7 @@ spec:
       description: Operator distribution method. Can be one of [connect, marketplace]
     - name: environment
       description: |
-        Which environment the pipeline is running in. Can be one of [dev, qa, stage, production]
+        Which environment the pipeline is running in. Can be one of [dev, qa, stage, prod]
   results:
     - name: status
       description: Indicates a status of publishing a bundle to an index
@@ -51,7 +51,7 @@ spec:
         # select the correct index
 
         case "$(params.environment)" in
-            production)
+            prod)
                 case $DIST_METHOD in
                     connect)
                       FROM_INDEX="quay.io/redhat/redhat----certified-operator-index"

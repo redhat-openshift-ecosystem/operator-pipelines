@@ -16,7 +16,7 @@ spec:
     - name: pyxis_key_path
       default: ""
     - name: environment
-      default: production
+      default: prod
       description: Environment where the pipeline runs
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
