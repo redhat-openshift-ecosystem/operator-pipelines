@@ -31,7 +31,7 @@ def setup_argparser() -> Any:
     parser.add_argument(
         "--environment",
         help="Environment where a tool runs",
-        choices=["production", "stage", "dev", "qa"],
+        choices=["prod", "stage", "dev", "qa"],
         default="dev",
     )
 

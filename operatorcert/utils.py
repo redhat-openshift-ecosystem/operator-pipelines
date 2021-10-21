@@ -59,7 +59,7 @@ def get_registry_for_env(environment: str) -> str:
         str: Connect registry for current
     """
     env_to_registry = {
-        "production": "registry.connect.redhat.com",
+        "prod": "registry.connect.redhat.com",
         "stage": "registry.connect.stage.redhat.com",
         "qa": "registry.connect.qa.redhat.com",
         "dev": "registry.connect.dev.redhat.com",
