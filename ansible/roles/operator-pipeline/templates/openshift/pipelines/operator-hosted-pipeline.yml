@@ -18,8 +18,8 @@ spec:
       description: Name of the base branch. e.g. "main"
     - name: pr_head_label
     - name: env
-      description: Which environment to run in. Can be one of [dev, qa, stage, production]
-      default: "production"
+      description: Which environment to run in. Can be one of [dev, qa, stage, prod]
+      default: "prod"
     - name: preflight_min_version
     - name: ci_min_version
     - name: registry

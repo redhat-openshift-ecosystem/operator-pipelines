@@ -25,8 +25,8 @@ spec:
       description: The namespace/organization where images from Hosted pipeline are stored.
       default: $(context.pipelineRun.namespace)
     - name: env
-      description: Which environment to run in. Can be one of [dev, qa, stage, production]
-      default: "production"
+      description: Which environment to run in. Can be one of [dev, qa, stage, prod]
+      default: "prod"
     - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:latest"

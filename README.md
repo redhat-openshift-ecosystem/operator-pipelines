@@ -36,7 +36,7 @@ tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
-  --param env=production \
+  --param env=prod \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=kubeconfig,secret=kubeconfig \
   --workspace name=ssh-dir,secret=github-ssh-credentials \
@@ -49,7 +49,7 @@ tkn pipeline start operator-ci-pipeline \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
-  --param env=production \
+  --param env=prod \
   --param registry=quay.io \
   --param image_namespace=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
@@ -98,7 +98,7 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_commit=0aeff5f71e4fc2d4990474780b56d9312554da5a \
   --param git_base_branch=main \
   --param pr_head_label=MarcinGinszt:test-PR-ok \
-  --param env=production \
+  --param env=prod \
   --param preflight_min_version=0.0.0 \
   --param ci_min_version=0.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \

@@ -6,7 +6,7 @@ metadata:
 spec:
   params:
     - name: env
-      description: Environment. One of [dev, qa, stage, production]
+      description: Environment. One of [dev, qa, stage, prod]
     - name: access_type
       description: Pyxis access type. One of [internal, external]
   results:
@@ -34,7 +34,7 @@ spec:
         fi
 
         case $ENV in
-            production)
+            prod)
                 case $ACCESS_TYPE in
                     internal)
                     PYXIS_URL="https://pyxis.engineering.redhat.com"
