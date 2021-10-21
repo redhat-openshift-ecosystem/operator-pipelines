@@ -14,7 +14,9 @@ spec:
     - name: max_supported_index
       description: Pull spec for the index corresponding to the max OCP version
     - name: indices
-      description: All known supported OCP indices
+      description: All known supported OCP indices paths
+    - name: indices_ocp_versions
+      description: All known supported OCP indices' OCP versions
     - name: max_version_indices
       description: Latest known supported OCP indices
     - name: ocp_version
@@ -47,6 +49,11 @@ spec:
           | jq -r '[.indices[].path]' \
           | tr -d '\n\r' \
           | tee $(results.indices.path)
+
+        echo $VERSION_INFO \
+          | jq -r '[.indices[].ocp_version]' \
+          | tr -d '\n\r' \
+          | tee $(results.indices_ocp_versions.path)
 
         echo $VERSION_INFO \
           | jq -r '.max_version_index.path' \
