@@ -168,6 +168,20 @@ spec:
           workspace: pipeline
           subPath: src
 
+    - name: check-ocp-cluster-version
+      runAfter:
+        - get-supported-versions
+      taskRef:
+        name: check-ocp-cluster-version
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: indices_ocp_versions
+          value: "$(tasks.get-supported-versions.results.indices_ocp_versions)"
+      workspaces:
+        - name: kubeconfig
+          workspace: kubeconfig
+
     - name: certification-project-check
       runAfter:
         - commit-pinned-digest
@@ -243,7 +257,7 @@ spec:
     - name: generate-index
       runAfter:
         - build-bundle
-        - get-supported-versions
+        - check-ocp-cluster-version
       taskRef:
         name: generate-index
       params:
