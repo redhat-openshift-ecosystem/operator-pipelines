@@ -10,6 +10,7 @@ In local environment, the Red Hat CodeReady Containers (CRC) can be used as one.
 3. Install the [tkn](https://console-openshift-console.apps-crc.testing/command-line-tools) CLI for your cluster version
 
 ## Initial Setup
+
 The following steps assume you have access to a local CRC test cluster and have
 logged in via the `oc` CLI (as developer).
 
@@ -25,7 +26,19 @@ crc console --credentials
 oc new-project playground
 ```
 
-3. Create pipelines and tasks as specified in the [README](../README.md)
+3. Grant the `privileged` SCC to the default `pipeline` service account.
+
+The `buildah` task requires the `privileged` security context constraint in order to call
+`newuidmap`/`newgidmap`. This is only necessary because `runAsUser:0` is defined in
+`templates/crc-pod-template.yml`.
+
+```bash
+oc adm policy add-scc-to-user privileged -z pipeline
+```
+
+4. Create pipelines and tasks as specified in the [README](../README.md)
+
+## Running a Pipeline
 
 > :warning: It may be necessary to pass the following `tkn` CLI arg to avoid permission issues with the default CRC PersistentVolumes.
 
