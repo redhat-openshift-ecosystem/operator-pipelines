@@ -30,6 +30,8 @@
                 value: $(body.pull_request.html_url)
               - name: env
                 value: "{{ env }}"
+              - name: pipeline_image
+                value: "{{ operator_pipeline_image_pull_spec }}"
     - name: Create Release pipeline Trigger Template
       k8s:
         state: present
@@ -51,6 +53,7 @@
               - name: git_pr_url
               - name: is_latest
               - name: env
+              - name: pipeline_image
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
@@ -72,6 +75,8 @@
                       value: "true"
                     - name: env
                       value: $(tt.params.env)
+                    - name: pipeline_image
+                      value: $(tt.params.pipeline_image)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
