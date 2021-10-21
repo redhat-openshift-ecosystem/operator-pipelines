@@ -6,6 +6,10 @@ suffix: "{{ env }}"
 preflight_min_version: 0.0.0
 ci_min_version: 0.0.0
 
+operator_pipeline_image_repo: quay.io/redhat-isv/operator-pipelines-images
+operator_pipeline_image_tag: latest
+operator_pipeline_image_pull_spec: "{{ operator_pipeline_image_repo }}:{{ operator_pipeline_image_tag }}"
+
 ##### Secrets locations
 operator_pipeline_private_key_local_path: ../../vaults/{{ env }}/operator-pipeline.key
 operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipeline.pem

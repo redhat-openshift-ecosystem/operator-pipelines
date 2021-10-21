@@ -40,7 +40,7 @@ spec:
       default: "false"
     - name: pipeline_image
       description: An image of operator-pipeline-images.
-      default: "quay.io/redhat-isv/operator-pipelines-images:latest"
+      default: "quay.io/redhat-isv/operator-pipelines-images:v1.0.3"
   workspaces:
     - name: pipeline
     - name: kubeconfig
