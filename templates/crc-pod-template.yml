@@ -8,4 +8,3 @@
 #   - https://github.com/code-ready/crc/issues/1203
 securityContext:
   runAsUser: 0
-  fsGroup: 0
