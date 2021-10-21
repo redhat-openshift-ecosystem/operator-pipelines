@@ -7,8 +7,8 @@ spec:
   params:
     - name: git_repo_url
       description: ssh address of GitHub repository
-    - name: git_revision
-      description: git revision used to check out project
+    - name: git_base_branch
+      description: Name of the base branch in the pull request. e.g. "main"
       default: "main"
     - name: git_commit
       description: Git repository HEAD commit
@@ -41,7 +41,7 @@ spec:
       default: ibm-webhook-token
     - name: ibm_webhook_token_secret_key
       description: The key within the Kubernetes Secret that contains the IBM webhook token.
-      default: ibm-webhook-token
+      default: token
   workspaces:
     - name: repository
     - name: results
@@ -100,7 +100,7 @@ spec:
         - name: url
           value: $(params.git_repo_url)
         - name: revision
-          value: $(params.git_revision)
+          value: $(params.git_base_branch)
         - name: gitInitImage
           value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
       workspaces:
