@@ -28,6 +28,7 @@ RUN dnf update -y && \
     krb5-workstation \
     yamllint \
     openssl-devel \
+    origin-clients \
     pinentry \
     pip \
     python3-devel && \
