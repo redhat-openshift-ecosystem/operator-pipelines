@@ -148,27 +148,3 @@
                     - name: gpg-key
                       secret:
                         secretName: "isv-gpg-key"
-
-    - name: Create Hosted pipeline trigger route
-      k8s:
-        state: present
-        namespace: "{{ oc_namespace }}"
-        definition:
-          apiVersion: route.openshift.io/v1
-          kind: Route
-          metadata:
-            labels:
-              eventlistener: operator-hosted-pipeline-github-listener
-              app: operator-pipeline
-              suffix: "{{ suffix }}"
-              env: "{{ env }}"
-            name: operator-hosted-pipeline
-          spec:
-            port:
-              targetPort: http-listener
-            tls:
-              termination: edge
-            to:
-              kind: Service
-              # el- prefix means, that the service was created by EventListener.
-              name: el-operator-hosted-pipeline-github-listener
