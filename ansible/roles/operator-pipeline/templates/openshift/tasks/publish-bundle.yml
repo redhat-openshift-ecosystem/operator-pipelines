@@ -88,11 +88,11 @@ spec:
 
         INDICES="$(echo $(params.bundle_versions) | tr -d '[,]')"
 
+        # DO NOT use `--verbose` to avoid auth headers appearing in logs
         index \
           --iib-url "$(params.iib_url)" \
           --from-index $FROM_INDEX \
           --indices $INDICES \
-          --bundle-pullspec "$(params.bundle_pullspec)" \
-          --verbose
+          --bundle-pullspec "$(params.bundle_pullspec)"
 
         echo -n "success" | tee "$(results.status.path)"
