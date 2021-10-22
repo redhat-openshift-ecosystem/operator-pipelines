@@ -36,5 +36,5 @@ spec:
           --pyxis-url $(params.pyxis_url) \
           --org-id $(params.org_id)
 
-        # `grep .` ensures, that pipe fail if jq returns no results
-        cat vendor | jq '.label' | tr -d '"' | grep . | tee $(results.vendor_label.path)
+        # `xargs echo -n` removes the trailing newline
+        cat vendor | jq -r '.label' | xargs echo -n > $(results.vendor_label.path)

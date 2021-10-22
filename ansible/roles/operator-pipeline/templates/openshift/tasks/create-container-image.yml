@@ -16,8 +16,8 @@ spec:
       default: https://catalog.redhat.com/api/containers/
     - name: isv_pid
       description: isv_pid of the certification project from Red Hat Connect
-    - name: repository_name
-      description: Repository name assigned to certification project from Red Hat Connect
+    - name: repository
+      description: Repository path, including namespace, assigned to certification project from Red Hat Connect
     - name: container_digest
       description: imagestream container_digest
     - name: bundle_version
@@ -42,7 +42,7 @@ spec:
         - name: ISV_PID
           value: $(params.isv_pid)
         - name: REPOSITORY
-          value: $(params.repository_name)
+          value: $(params.repository)
         - name: CONTAINER_DIGEST
           value: $(params.container_digest)
         - name: BUNDLE_VERSION
