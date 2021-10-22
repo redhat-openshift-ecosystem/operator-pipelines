@@ -18,7 +18,7 @@ spec:
         set -xe
 
         KUBECONFIG=$(workspaces.kubeconfig.path)/kubeconfig
-        CLUSTER_VERSION=$(oc get clusterversion -o jsonpath="{.items[0].spec.desiredUpdate.version}" --kubeconfig $KUBECONFIG)
+        CLUSTER_VERSION=$(oc get clusterversion -o jsonpath="{.items[0].status.desired.version}" --kubeconfig $KUBECONFIG)
         # Grab only the major and minor version for comparison
         CLUSTER_VERSION=$(echo $CLUSTER_VERSION | cut -d. -f1,2)
         # parse indices into a list of strings with OCP versions
