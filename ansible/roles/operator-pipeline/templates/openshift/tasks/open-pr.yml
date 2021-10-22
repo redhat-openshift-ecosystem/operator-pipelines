@@ -48,7 +48,7 @@ spec:
               key: GITHUB_TOKEN
       script: |
         #! /usr/bin/env bash
-        set -xe
+        set -xe -o pipefail
 
         TITLE="operator $(params.package_name) ($(params.bundle_version))"
 

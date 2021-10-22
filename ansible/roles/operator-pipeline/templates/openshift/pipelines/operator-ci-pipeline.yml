@@ -14,7 +14,7 @@ spec:
       default: "no-reply@redhat.com"
     - name: upstream_repo_name
       default: ""
-      description: Upstream repository name where the pull request will be open
+      description: Upstream repository where the pull request will be opened (namespace/name)
     - name: bundle_path
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
