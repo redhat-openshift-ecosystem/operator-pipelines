@@ -809,12 +809,18 @@ spec:
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
 
-    # Set the github status to failure if the pipeline didn't pass
-    - name: set-github-status-failure
+    # Set the github status to failure with details link if the pipeline didn't pass.
+    - name: set-github-status-failure-with-link
       when:
         - input: "$(tasks.status)"
           operator: notin
-          values: ["Succeeded", "Completed"]
+          values:
+            - Succeeded
+            - Completed
+        - input: "$(tasks.certification-project-check.status)"
+          operator: in
+          values:
+            - Succeeded
       taskRef:
         name: set-github-status
       params:
@@ -828,6 +834,41 @@ spec:
           value: "Failed to certify the Operator bundle."
         - name: target_url
           value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
+        - name: state
+          value: failure
+        - name: context
+          value: "operator/test"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
+    # Set the github status to failure without details link if the pipeline didn't pass.
+    # The "Details" link on the GitHub status cannot be generated without a success from
+    # the certification-project-check PipelineTask. This ensures the status is always set
+    # to false regardless where the failure occurred.
+    - name: set-github-status-failure-without-link
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values:
+            - Succeeded
+            - Completed
+        - input: "$(tasks.certification-project-check.status)"
+          operator: notin
+          values:
+            - Succeeded
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Failed to certify the Operator bundle."
         - name: state
           value: failure
         - name: context
