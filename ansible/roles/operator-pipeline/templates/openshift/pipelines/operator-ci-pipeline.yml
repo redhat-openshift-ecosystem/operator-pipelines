@@ -312,6 +312,8 @@ spec:
           value: "$(params.preflight_namespace)"
         - name: service_account
           value: "$(params.preflight_service_account)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
       workspaces:
         - name: output
           workspace: pipeline
