@@ -40,6 +40,7 @@ tkn pipeline start operator-ci-pipeline \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=kubeconfig,secret=kubeconfig \
   --workspace name=ssh-dir,secret=github-ssh-credentials \
+  --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
 ```
 If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:
@@ -57,6 +58,20 @@ tkn pipeline start operator-ci-pipeline \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
+```
+
+To enable opening the PR and uploading the pipeline logs (visible to logs owner in Red Hat Ecosystem Catalog),
+pass the following argument:
+
+```bash
+    --param submit=true
+```
+
+To open the PR with submission, upstream repository name
+must be supplied (eg. test-org/test-repo):
+
+```bash
+    --param upstream_repo_name=<repository_name>
 ```
 
 To enable digest pinning, pass the following arguments:

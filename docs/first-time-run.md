@@ -92,6 +92,14 @@ KUBECONFIG=kubeconfig oc login -u <username> -p <password>
 oc create secret generic kubeconfig --from-file=kubeconfig=kubeconfig
 ```
 
+#### GitHub API token
+To automatically open the PR with submission, pipeline must authenticate to GitHub. 
+Secret containing api token should be created.
+
+```bash
+oc create secret generic github-api-token --from-literal GITHUB_TOKEN=< GITHUB TOKEN >
+```
+
 ### Only Hosted pipeline:
 #### Container API access
 The hosted pipeline communicates with internal Container API that requires cert + key.
