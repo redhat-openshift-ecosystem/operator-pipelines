@@ -7,7 +7,7 @@ spec:
   params:
     - name: pipeline_image
     - name: base_image
-      default: quay.io/redhat-isv/preflight-test@sha256:2c26d7d8835b75088b1c29fa764d453b2f47dd7af530eb87a986766045693d2a
+      default: quay.io/redhat-isv/preflight-test@sha256:32913b06f0e57eb7109371ad6d595dfdee6357f8a7b4b4fca7757658478159c2
       description: Preflight image used
     - name: package_name
       description: Package name for the Operator under test
@@ -26,6 +26,8 @@ spec:
     - name: log_level
       description: Preflight logging level
       default: trace
+    - name: cert_project_id
+      description: Certification project id
 
   results:
     - name: log_output_file
@@ -78,6 +80,8 @@ spec:
           value: artifacts
         - name: PFLT_LOGLEVEL
           value: $(params.log_level)
+        - name: PFLT_CERTPROJECTID
+          value: $(params.cert_project_id)
         - name: PFLT_DOCKERCONFIG
           value: $(workspaces.output.path)/preflight-docker-config.json
         - name: KUBECONFIG
