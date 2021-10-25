@@ -82,8 +82,8 @@ def open_pr(
     Args:
         github_api_url (str): Github API URL
         repo_name (str): Repository name where the PR will be open
-        head (str): Current git head that's used as a source for the PR
-        base (str): A targer branch
+        head (str): A target branch
+        base (str): Current git head that's used as a source for the PR
         title (str): Pull request title
         body (str): Pull request body
 
@@ -154,12 +154,12 @@ def main() -> None:
     logging.basicConfig(level=log_level)
 
     pr_body = get_pr_body(args)
-    head = get_head(args.git_repo_url, args.source_branch)
+    head = get_head(args.git_repo_url, args.target_branch)
     response = open_pr(
         args.github_api_url,
         args.git_upstream_repo_name,
         head,
-        args.target_branch,
+        args.source_branch,
         args.title,
         pr_body,
     )
