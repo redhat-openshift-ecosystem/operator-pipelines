@@ -18,6 +18,8 @@ spec:
       description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: bundle_version
       description: Operator bundle version.
+    - name: connect_registry
+      description: Container registry or proxy from which the published bundle will be pulled
   workspaces:
     - name: ocp-registry-kubeconfig
       description: Kubeconfig for service account allowing connection with cluster that contains the ocp registries
@@ -38,20 +40,19 @@ spec:
         # This task authenticates to registry with the credentials associated with service account
 
         # trim the whitespaces from the params
-        PROJECT_NAME=$(echo "$(params.vendor_label)" | xargs)
-        IMAGESTREAM_NAME=$(echo "$(params.repository_name)" | xargs)
-        TAG=$(echo "$(params.bundle_version)" | xargs)
-        DIST_METHOD=$(echo "$(params.dist_method)" | xargs)
-        IS_LATEST=$(echo "$(params.is_latest)" | xargs)
+        PROJECT_NAME=$(echo "$(params.vendor_label)" | xargs echo -n)
+        IMAGESTREAM_NAME=$(echo "$(params.repository_name)" | xargs echo -n)
+        TAG=$(echo "$(params.bundle_version)" | xargs echo -n)
+        DIST_METHOD=$(echo "$(params.dist_method)" | xargs echo -n)
+        IS_LATEST=$(echo "$(params.is_latest)" | xargs echo -n)
+        CONNECT_REGISTRY=$(echo "$(params.connect_registry)" | xargs echo -n)
 
         IMAGE=$(params.image)
 
         ROLE_NAME=$(echo ${PROJECT_NAME}-pull)
 
-        ## (create new openshift project AND grant permissions for SA) OR if it already exists- use existing project
-        oc new-project $PROJECT_NAME && \
-        oc policy add-role-to-user edit -z pipeline -n $PROJECT_NAME || \
-        oc project $PROJECT_NAME
+        ## Create new openshift project OR if it already exists- use existing project
+        oc new-project $PROJECT_NAME || oc project $PROJECT_NAME
 
         ## Get the Imagestream OR if it doesn't exists- (create it AND annotate it)
         oc get imagestream $IMAGESTREAM_NAME || \
@@ -119,5 +120,6 @@ spec:
 
         ### Results
         ## Get the container digest
-        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath='{.image.dockerImageMetadata.Id}' | tr -d '"' | tee $(results.container_digest.path)
-        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath='{.image.dockerImageReference}' | tr -d '"' | tee $(results.image_pullspec.path)
+        DIGEST=$(oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath='{.image.metadata.name}')
+        echo -n $DIGEST > $(results.container_digest.path)
+        echo -n "${CONNECT_REGISTRY}/${PROJECT_NAME}/${IMAGESTREAM_NAME}@${DIGEST}" > $(results.image_pullspec.path)

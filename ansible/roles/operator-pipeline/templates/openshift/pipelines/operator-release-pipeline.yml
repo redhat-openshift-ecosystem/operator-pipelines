@@ -288,6 +288,8 @@ spec:
           value: "$(params.is_latest)"
         - name: bundle_version
           value: "$(tasks.operator-validation.results.bundle_version)"
+        - name: connect_registry
+          value: "$(tasks.set-env.results.connect_registry)"
       workspaces:
         - name: ocp-registry-kubeconfig
           workspace: ocp-registry-kubeconfig
@@ -334,8 +336,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: isv_pid
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
-        - name: repository_name
-          value: "$(tasks.get-cert-project-related-data.results.repo_name)"
+        - name: repository
+          value: "$(tasks.get-vendor-related-data.results.vendor_label)/$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: container_digest
           value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
         - name: pyxis_url
