@@ -8,3 +8,6 @@ operator_pipeline_image_tag: "v1.0.4"
 
 # how many of newest pipelineruns should be preserved on cleanup?
 preserve_after_cleanup: "10"
+
+operator_pipeline_hydra_username_local_path: ../../vaults/prod/hydra-username
+operator_pipeline_hydra_password_local_path: ../../vaults/prod/hydra-password
