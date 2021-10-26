@@ -397,23 +397,6 @@ spec:
         - name: base_branch
           value: $(params.git_base_branch)
 
-    # Query Hydra API for status of the pre-certification checklist
-    - name: query-publishing-checklist
-      runAfter:
-        - reserve-operator-name
-      taskRef:
-        name: query-publishing-checklist
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: connect_url
-          value: "$(tasks.set-env.results.connect_url)"
-      workspaces:
-        - name: hydra-credentials
-          workspace: hydra-credentials
-
     # Build images- bundle and index and push them to registry.
     # Those steps are also a part of the CI pipeline.
     - name: dockerfile-creation
@@ -423,7 +406,6 @@ spec:
         - yaml-lint
         - verify-pinned-digest
         - verify-changed-directories
-        - query-publishing-checklist
       taskRef:
         name: dockerfile-creation
       params:
@@ -631,6 +613,23 @@ spec:
           subPath: preflight-trigger
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
+
+    # Query Hydra API for status of the pre-certification checklist
+    - name: query-publishing-checklist
+      runAfter:
+        - upload-artifacts
+      taskRef:
+        name: query-publishing-checklist
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: connect_url
+          value: "$(tasks.set-env.results.connect_url)"
+      workspaces:
+        - name: hydra-credentials
+          workspace: hydra-credentials
 
     - name: get-ci-results
       runAfter:
