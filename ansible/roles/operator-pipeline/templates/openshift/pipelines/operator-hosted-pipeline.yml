@@ -181,9 +181,9 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
@@ -256,9 +256,9 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
         - name: current_certification_status
           value: "$(tasks.get-cert-project-related-data.results.current_certification_status)"
       workspaces:
@@ -284,9 +284,9 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
 
     # additional checks
     - name: operator-validation
@@ -555,9 +555,9 @@ spec:
         - name: operator_name
           value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: results
           workspace: results
@@ -622,9 +622,9 @@ spec:
         - name: connect_url
           value: "$(tasks.set-env.results.connect_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: source
           workspace: repository
@@ -657,9 +657,9 @@ spec:
         - name: operator_name
           value: "$(tasks.operator-validation.results.package_name)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: results
           workspace: results
@@ -701,9 +701,9 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
         - name: pull_request_url
           value: "$(params.git_pr_url)"
         - name: pull_request_status
@@ -759,9 +759,9 @@ spec:
         - name: pipeline_name
           value: "$(context.pipelineRun.name)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
 
     # In the event of a failure, comment with the support link on the github PR
     - name: github-add-comment
