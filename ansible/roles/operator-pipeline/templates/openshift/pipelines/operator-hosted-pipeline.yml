@@ -48,8 +48,8 @@ spec:
       optional: true
     - name: registry-credentials
     - name: registry-credentials-all
-      description: Registry access tokens that contain user provided tokens + tokens
-        that are provided through Red Hat Connect
+      description: Storage space for the result of merging certification project and
+        pipeline service account registry tokens.
     - name: pyxis-ssl-credentials
     - name: prow-kubeconfig
     - name: hydra-credentials
@@ -193,8 +193,13 @@ spec:
         - name: results
           workspace: results
 
-    # Merge user's registry tokens with the internal SA tokens that have
-    # access to internal registry
+    # Merge user's registry tokens with service account credentials
+    # used elsewhere by this pipeline.
+    #
+    # NOTE: The project credentials will always "win" if there is a
+    # matching registry entry in the registry-credentials workspace.
+    # For example, if the partner provides credentials to quay.io,
+    # our credentials for that registry will be omitted.
     - name: merge-registry-credentials
       runAfter:
         - get-cert-project-related-data
@@ -437,7 +442,8 @@ spec:
           workspace: repository
           subPath: src
         - name: credentials
-          workspace: registry-credentials-all
+          # Do not use registry-credentials-all. Project creds may replace quay.io push creds.
+          workspace: registry-credentials
 
     - name: make-bundle-repo-public
       runAfter:
@@ -475,7 +481,8 @@ spec:
           workspace: repository
           subPath: index
         - name: credentials
-          workspace: registry-credentials-all
+          # Do not use registry-credentials-all. Project creds may replace quay.io push creds.
+          workspace: registry-credentials
 
     - name: build-index
       runAfter:
@@ -495,7 +502,8 @@ spec:
           workspace: repository
           subPath: src
         - name: credentials
-          workspace: registry-credentials-all
+          # Do not use registry-credentials-all. Project creds may replace quay.io push creds.
+          workspace: registry-credentials
 
     - name: make-index-repo-public
       runAfter:
