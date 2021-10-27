@@ -14,19 +14,20 @@ umask 077
 
 NAMESPACE=$1
 ENV=$2
+SECRET=$(dirname "$0")/vaults/custom/secret-vars.yml
+PASSWD_FILE=./vault-password
 
 # execute playbook for given environment
 execute_playbook() {
-    local secret=$(dirname "$0")/vaults/custom/secret-vars.yml
-    if [ ! -f $secret ]; then
-        touch $secret
-        echo "File $secret was not found, empty one was created"
+    if [ ! -f $SECRET ]; then
+        touch $SECRET
+        echo "File $SECRET was not found, empty one was created"
     fi
 
     ansible-playbook -i inventory/operator-pipeline playbooks/deploy.yml \
-        --vault-password-file=$3 \
-        -e "namespace=$1" \
-        -e "env=$2" \
+        --vault-password-file=$PASSWD_FILE \
+        -e "namespace=$NAMESPACE" \
+        -e "env=$ENV" \
         -e "custom=true" \
         -e "ocp_host=`oc whoami --show-server`" \
         -e "ocp_token=`oc whoami -t`" \
@@ -36,31 +37,25 @@ execute_playbook() {
 
 # update token for given environment
 update_token() {
-    local token=$(oc --namespace $1 serviceaccounts get-token operator-pipeline-admin)
-    local secret=$(dirname "$0")/vaults/custom/secret-vars.yml
+    local token=$(oc --namespace $NAMESPACE serviceaccounts get-token operator-pipeline-admin)
 
-    echo "ocp_token: $token" > $secret
-    ansible-vault encrypt $secret --vault-password-file $2 > /dev/null
-    echo "Secret file $secret was updated and encrypted"
+    echo "ocp_token: $token" > $SECRET
+    ansible-vault encrypt $SECRET --vault-password-file $PASSWD_FILE > /dev/null
+    echo "Secret file $SECRET was updated and encrypted"
 
 }
 
 main() {
-
-    local passwd_file=./vault-password
-
-    # Executes the playbook for each env
-    execute_playbook $NAMESPACE $ENV $passwd_file
+    # Executes the playbook
+    execute_playbook
 
     # Asks if the script should update the secret-vars.yml files
     read -p "Service accounts configured for custom namespace ($NAMESPACE). Update secret-vars with tokens? [y/N] " -n 1 -r
     echo
 
-    # Updates the secret-vars.yml files
+    # Updates the secret-vars.yml file
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        for env in $environments; do
-            update_token $env $passwd_file
-        done
+      update_token
     fi
 }
 
