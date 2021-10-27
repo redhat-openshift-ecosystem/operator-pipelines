@@ -3,6 +3,9 @@ ssh-secret.yml
 registry-secret.yml
 kubeconfig
 
+# Custom environment- each has his own
+ansible/vaults/custom/secret-vars.yml
+
 # VSCode project settings
 .vscode/
 
