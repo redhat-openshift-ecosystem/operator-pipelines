@@ -430,9 +430,9 @@ spec:
         - name: pipeline_name
           value: "$(context.pipelineRun.name)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
 
     # In the event of a failure, comment with the support link on the github PR
     - name: github-add-comment
@@ -468,9 +468,9 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
           # The project is always published if this is executing
         - name: new_certification_status
           value: "Published"
