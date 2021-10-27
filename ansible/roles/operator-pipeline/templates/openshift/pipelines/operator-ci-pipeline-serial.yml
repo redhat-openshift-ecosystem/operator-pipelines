@@ -151,6 +151,23 @@ spec:
           workspace: pipeline
           subPath: src
 
+    - name: annotations-validation
+      runAfter:
+        - operator-validation
+      taskRef:
+        name: annotations-validation
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+        - name: package_name
+          value: "$(tasks.operator-validation.results.package_name)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
     - name: get-supported-versions
       runAfter:
         - operator-validation
