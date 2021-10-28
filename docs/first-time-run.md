@@ -1,5 +1,21 @@
+## Quick test environment set-up for developers
 
-## Cluster resources to create
+To quickly setup testing environment to run the pipelines, go to directory `ansible` and use command:
+```bash
+bash init-custom-env.sh $PROJECT $ENVIRONMENT $PASSWD_FILE
+```
+Where:
+- PROJECT is the name of your project in Openshift cluster (eg. `john-playground`),
+where pipeline resources should be installed.
+- ENVIRONMENT indicates, which set of credentials should be used in your testing 
+project, and against which environment pipelines will run.
+Can be one of `dev`, `qa`, `stage` or `prod`.
+- PASSWD_FILE is a name of the file with ansible vault password.
+
+Warning- if some resources were already existing in the $PROJECT, they might conflict during the ansible 
+deployment. Then, they should be removed first.
+
+## Manually creating cluster resources
 
 [Common for all the pipelines](#common-for-all-the-pipelines)
 

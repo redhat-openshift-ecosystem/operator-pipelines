@@ -14,11 +14,11 @@ umask 077
 
 NAMESPACE=$1
 ENV=$2
-SECRET=$(dirname "$0")/vaults/custom/secret-vars.yml
+SECRET=$(dirname "$0")/vaults/custom/ocp-token.yml
 PASSWD_FILE=./vault-password
 
-# execute playbook for given environment
-execute_playbook() {
+# Initialize the environment by creating the service account and giving for it admin permissions
+initialize_environment() {
     if [ ! -f $SECRET ]; then
         touch $SECRET
         echo "File $SECRET was not found, empty one was created"
@@ -35,28 +35,28 @@ execute_playbook() {
         -vvvv
 }
 
-# update token for given environment
+# Get the token of created service account and make it available for further steps
 update_token() {
     local token=$(oc --namespace $NAMESPACE serviceaccounts get-token operator-pipeline-admin)
 
     echo "ocp_token: $token" > $SECRET
     ansible-vault encrypt $SECRET --vault-password-file $PASSWD_FILE > /dev/null
     echo "Secret file $SECRET was updated and encrypted"
+}
 
+# Install all the other resources (pipelines, tasks, secrets etc..)
+execute_playbook() {
+  ansible-playbook -i inventory/operator-pipeline playbooks/deploy.yml \
+    --vault-password-file vault-password \
+    -e "namespace=$NAMESPACE" \
+    -e "env=$ENV" \
+    -e "custom=true"
 }
 
 main() {
-    # Executes the playbook
-    execute_playbook
-
-    # Asks if the script should update the secret-vars.yml files
-    read -p "Service accounts configured for custom namespace ($NAMESPACE). Update secret-vars with tokens? [y/N] " -n 1 -r
-    echo
-
-    # Updates the secret-vars.yml file
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-      update_token
-    fi
+  initialize_environment
+  update_token
+  execute_playbook
 }
 
 main
