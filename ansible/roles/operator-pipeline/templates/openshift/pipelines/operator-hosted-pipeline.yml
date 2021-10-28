@@ -595,6 +595,8 @@ spec:
       workspaces:
         - name: kubeconfig
           workspace: prow-kubeconfig
+        - name: credentials
+          workspace: registry-credentials-all
         - name: gpg-decryption-key
           workspace: preflight-decryption-key
         - name: output
