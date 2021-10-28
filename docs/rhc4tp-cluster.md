@@ -43,10 +43,11 @@ current-context: ${serviceAccount}@${clusterName}
 "
 ```
 
-3.  Grant the service account the permissions to create projects
+3. Grant the service account the permissions to create projects and manage existing ones.
+Permissions are this high as we have to update roles in projects created by other service accounts.
 
 ```bash
-oc adm policy add-cluster-role-to-user self-provisioner -z operator-pipelines -n default
+oc adm policy add-cluster-role-to-user cluster-admin -z operator-pipelines -n default
 ```
 
 4. Create the dockerconfig secret, containing the credentials to registry that stores the images to be published
