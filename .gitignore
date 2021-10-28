@@ -3,9 +3,6 @@ ssh-secret.yml
 registry-secret.yml
 kubeconfig
 
-# Custom environment- each developer has his own
-ansible/vaults/custom/ocp-token.yml
-
 # VSCode project settings
 .vscode/
 
