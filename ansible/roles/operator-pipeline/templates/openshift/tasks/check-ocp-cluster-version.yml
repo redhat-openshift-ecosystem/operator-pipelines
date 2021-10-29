@@ -26,10 +26,10 @@ spec:
 
         for version in $SUPPORTED_VERSIONS; do
           if [ "$version" == "$CLUSTER_VERSION" ]; then
-            echo "$CLUSTER_VERSION is a supported OCP version"
+            echo "The Operator does claim support for the provided cluster version ($CLUSTER_VERSION)."
             exit 0
           fi
         done
 
-        echo "$CLUSTER_VERSION is not a supported OCP version"
+        echo "The Operator does not claim support for the provided cluster version ($CLUSTER_VERSION)."
         exit 1
