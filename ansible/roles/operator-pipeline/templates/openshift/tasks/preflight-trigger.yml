@@ -80,7 +80,7 @@ spec:
       script: |
           #!/usr/bin/env sh
 
-          if [ "$(params.skip)" ]; then
+          if [ "$(params.skip)" == "true" ]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
