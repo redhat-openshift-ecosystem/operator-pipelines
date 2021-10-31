@@ -513,8 +513,8 @@ spec:
           value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(tasks.get-bundle-path.results.bundle_path)"
-        # - name: DOCKERFILE
-        #   value: "Dockerfile.index"
+        - name: DOCKERFILE
+          value: "$(tasks.generate-index.results.index_dockerfile)"
       workspaces:
         - name: source
           workspace: repository
