@@ -518,7 +518,7 @@ spec:
       workspaces:
         - name: source
           workspace: repository
-          subPath: src
+          subPath: index
         - name: credentials
           # Do not use registry-credentials-all. Project creds may replace quay.io push creds.
           workspace: registry-credentials
