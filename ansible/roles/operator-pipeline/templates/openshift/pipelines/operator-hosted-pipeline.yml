@@ -580,6 +580,8 @@ spec:
         kind: Task
         name: preflight-trigger
       params:
+        - name: ocp_version
+          value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
         - name: asset_type
           value: operator
         - name: bundle_index_image
