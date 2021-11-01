@@ -4,7 +4,7 @@ metadata:
   name: preflight-trigger
 spec:
   params:
-    - default: '4.8'
+    - default: '4.9'
       name: ocp_version
       type: string
     - default: trace
