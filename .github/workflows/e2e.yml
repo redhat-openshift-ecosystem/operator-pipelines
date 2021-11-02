@@ -18,6 +18,8 @@ jobs:
         run: |
           # pip install --user openshift
 
+          mkdir $HOME/.kube
+
           cat <<EOF > $HOME/.kube/config
           ${{ secrets.KUBECONFIG }}
           EOF
