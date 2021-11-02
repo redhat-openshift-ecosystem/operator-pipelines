@@ -15,10 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Deploy e2e environment
-        with:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
         run: |
           # pip install --user openshift
+          echo ${{ secrets.KUBECONFIG }} > $HOME/.kube/config
           oc create project test-e2e
           cd ansible
           echo ${{ secrets.VAULT_PASSWORD }} > vault-password
