@@ -24,7 +24,7 @@ initialize_environment() {
 
     ansible-playbook -i inventory/operator-pipeline playbooks/deploy.yml \
         --vault-password-file=$PASSWD_FILE \
-        -e "namespace=$NAMESPACE" \
+        -e "oc_namespace=$NAMESPACE" \
         -e "env=$ENV" \
         -e "custom=true" \
         -e "ocp_host=`oc whoami --show-server`" \
@@ -46,7 +46,7 @@ update_token() {
 execute_playbook() {
   ansible-playbook -i inventory/operator-pipeline playbooks/deploy.yml \
     --vault-password-file vault-password \
-    -e "namespace=$NAMESPACE" \
+    -e "oc_namespace=$NAMESPACE" \
     -e "env=$ENV" \
     -e "custom=true"
 }

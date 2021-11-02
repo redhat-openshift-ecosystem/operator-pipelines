@@ -1,6 +1,6 @@
 ##### General settings
 env: unset
-oc_namespace: "{{ (namespace) if (namespace) is defined else operator-pipeline-(env) }}"
+oc_namespace: "operator-pipeline-{{ env }}"
 service_account_name: operator-pipeline-admin
 suffix: "{{ env }}"
 preflight_min_version: 0.0.0
