@@ -14,7 +14,6 @@ jobs:
       name: dev
     steps:
       - uses: actions/checkout@v1
-      - name: Install dependencies
       - name: Deploy e2e environment
         with:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
@@ -24,4 +23,3 @@ jobs:
           cd ansible
           echo ${{ secrets.VAULT_PASSWORD }} > vault-password
           bash init-custom-env.sh test-e2e qa vault-password
-      - name:
