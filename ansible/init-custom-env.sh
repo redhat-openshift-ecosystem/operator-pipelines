@@ -4,10 +4,8 @@
 #
 # As arguments, it expects environments for which the sa should be created
 #
-# ./init.sh dev stage prod
-#       creates the sa for dev, stage and prod environments
-# ./init.sh
-#       creates the sa for every environment (prod, stage, qa, dev)
+# ./init-custom-env.sh john-playground qa vault-password
+#       creates the pipeline QA resources in oc project john-playground, using file with ansible vault password named vault-password.
 
 set -euo pipefail
 umask 077
