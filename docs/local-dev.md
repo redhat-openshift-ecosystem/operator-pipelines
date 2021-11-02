@@ -1,11 +1,12 @@
 # Local development of the operator-pipelines
 
 Running the Tekton pipelines demands Openshift cluster. 
-In local environment, the Red Hat CodeReady Containers (CRC) can be used as one.
 
 ## Prerequisites
 
-1. Install [CodeReady Containers](https://code-ready.github.io/crc/#installation_gsg)
+1. Optionally, if there is no access to existing Openshift Cluster-
+In local environment, the Red Hat CodeReady Containers (CRC) can be used as one.
+Install [CodeReady Containers](https://code-ready.github.io/crc/#installation_gsg)
 2. Install [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.7/cicd/pipelines/installing-pipelines.html)
 3. Install the [tkn](https://console-openshift-console.apps-crc.testing/command-line-tools) CLI for your cluster version
 
@@ -14,8 +15,14 @@ In local environment, the Red Hat CodeReady Containers (CRC) can be used as one.
 The following steps assume you have access to a local CRC test cluster and have
 logged in via the `oc` CLI (as developer).
 
-1. Login to your cluster with `oc` CLI. Instructions (with  credentials)
-are displayed on the cluster start,  or can be retrieved with 
+1. Login to your cluster with `oc` CLI. 
+
+a). In existing OpenShift Cluster: 
+
+To get the credentials on existing Openshift Cluster, click on your username in
+right top corner, and choose `copy login command`.
+
+b). in CodeReady Containers, use command:
 ```bash
 crc console --credentials
 ```
