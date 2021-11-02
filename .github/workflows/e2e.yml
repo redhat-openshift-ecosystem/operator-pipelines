@@ -24,7 +24,7 @@ jobs:
           ${{ secrets.KUBECONFIG }}
           EOF
 
-          oc create project test-e2e
+          oc new-project test-e2e
           cd ansible
           echo ${{ secrets.VAULT_PASSWORD }} > vault-password
           bash init-custom-env.sh test-e2e qa vault-password
