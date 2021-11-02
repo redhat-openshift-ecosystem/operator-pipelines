@@ -1,0 +1,27 @@
+---
+name: E2E-CI
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+      - ISV-1108-2
+  workflow_dispatch:
+jobs:
+  run-e2e:
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+      - name: Deploy e2e environment
+        with:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        run: |
+          # pip install --user openshift
+          oc create project test-e2e
+          cd ansible
+          echo ${{ secrets.VAULT_PASSWORD }} > vault-password
+          bash init-custom-env.sh test-e2e qa vault-password
+      - name:
