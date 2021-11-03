@@ -30,3 +30,5 @@ operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/commo
 
 operator_pipeline_exd_guild_isv_key_path: ../../vaults/common/exd-guild-isv.key
 operator_pipeline_exd_guild_isv_passphrase_path: ../../vaults/common/exd-guild-isv.passphrase
+
+github_ssh_credentials_path: ../../vaults/common/github-bot-ssh
