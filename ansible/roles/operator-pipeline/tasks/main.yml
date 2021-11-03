@@ -356,3 +356,19 @@
 - include: tasks/webhook-event-listener.yml
 - include: tasks/webhook-hosted-pipeline-trigger.yml
 - include: tasks/webhook-release-pipeline-trigger.yml
+
+# Deploying CI pipeline- with tag "ci", that usually is explicitly included
+# desired only for local dev and for E2E tests
+- name: Deploy CI pipeline
+  block:
+    - name: Deploy CI pipeline
+      k8s:
+        state: present
+        apply: yes
+        namespace: "{{ oc_namespace }}"
+        definition: "{{ lookup('template', '{{ item }}') }}"
+      with_items:
+        - ../templates/openshift/pipelines/operator-ci-pipeline.yml
+
+  tags:
+    - ci
