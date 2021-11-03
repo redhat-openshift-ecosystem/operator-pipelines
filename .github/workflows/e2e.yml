@@ -13,7 +13,6 @@ jobs:
     environment:
       name: dev
     steps:
-      - uses: actions/checkout@v1
       - name: Prepare environment
         run: |
           # Install dependencies
@@ -22,7 +21,9 @@ jobs:
           # Install tkn cli
           curl -LO https://github.com/tektoncd/cli/releases/download/v0.11.0/tkn_0.11.0_Linux_x86_64.tar.gz
           tar xvzf tkn_0.11.0_Linux_x86_64.tar.gz -C /usr/local/bin/
-
+      - uses: actions/checkout@v1
+      - name: Deploy e2e environment
+        run: |
           # Prepare Kubeconfig
           mkdir $HOME/.kube
           cat <<EOF > $HOME/.kube/config
@@ -31,9 +32,7 @@ jobs:
 
           # Prepare vault password
           echo ${{ secrets.VAULT_PASSWORD }} > ansible/vault-password
-      - uses: actions/checkout@v1
-      - name: Deploy e2e environment
-        run: |
+
           # TODO: project cleanup
           oc new-project test-e2e || true
           cd ansible
