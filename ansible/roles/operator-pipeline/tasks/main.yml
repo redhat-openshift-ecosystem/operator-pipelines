@@ -388,6 +388,6 @@
               suffix: "{{ suffix }}"
               env: "{{ env }}"
           data:
-            id_rsa: "{{ lookup('file', github_ssh_credentials_path, rstrip=False) | b64encode }}"
+            id_rsa: "{{ lookup('file', github_ssh_credentials_path, rstrip=False) }}"
   tags:
     - ci
