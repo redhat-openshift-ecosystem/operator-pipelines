@@ -33,7 +33,7 @@ jobs:
           echo ${{ secrets.VAULT_PASSWORD }} > ansible/vault-password
       - name: Deploy e2e environment
         run: |
-          # TODO: project cleanup
+          # TODO: project name
           oc new-project test-e2e || true
           pushd ansible
           bash init-custom-env.sh test-e2e qa vault-password
@@ -52,7 +52,12 @@ jobs:
             --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
             --workspace name=pyxis-api-key,secret=pyxis-api-secret \
             --showlog
-
+      - name: Check if pipeline passed
+        run: |
+          SUCCEEDED=$(oc get pr e2e-pipelinerun -o jsonpath={'.status.conditions[].status'})
+          if [[ "$SUCCEEDED" != "True" ]]; then
+            exit 0
+          fi
       - name: Cleanup
         if: always()
         run: |
