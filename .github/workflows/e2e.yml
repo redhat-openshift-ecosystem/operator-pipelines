@@ -59,8 +59,8 @@ jobs:
           if [[ "$SUCCEEDED" != "True" ]]; then
             exit 1
           fi
-      - name: Cleanup
-        if: always()
-        run: |
-          oc delete project test-e2e
+      #- name: Cleanup
+      #  if: always()
+      #  run: |
+      #    oc delete project test-e2e
 
