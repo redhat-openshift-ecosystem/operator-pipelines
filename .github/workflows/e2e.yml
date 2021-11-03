@@ -37,6 +37,7 @@ jobs:
           oc new-project test-e2e
           cd ansible
           bash init-custom-env.sh test-e2e qa vault-password
+    - uses: actions/checkout@v1
     - name: Run CI pipeline
       run: |
         tkn pipeline start operator-ci-pipeline \
