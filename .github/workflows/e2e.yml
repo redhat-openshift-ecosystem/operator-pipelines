@@ -37,18 +37,18 @@ jobs:
           oc new-project test-e2e
           cd ansible
           bash init-custom-env.sh test-e2e qa vault-password
-    - uses: actions/checkout@v1
-    - name: Run CI pipeline
-      run: |
-        tkn pipeline start operator-ci-pipeline \
-          --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
-          --param git_branch=main \
-          --param bundle_path=operators/kogito-operator/1.6.0-ok \
-          --param env=dev \
-          --param registry=quay.io \
-          --param image_namespace=redhat-isv \
-          --workspace name=pipeline,volumeClaimTemplateFile=../templates/workspace-template.yml \
-          --workspace name=kubeconfig,secret=kubeconfig \
-          --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
-          --workspace name=pyxis-api-key,secret=pyxis-api-secret \
-          --showlog
+      - uses: actions/checkout@v1
+      - name: Run CI pipeline
+        run: |
+          tkn pipeline start operator-ci-pipeline \
+            --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+            --param git_branch=main \
+            --param bundle_path=operators/kogito-operator/1.6.0-ok \
+            --param env=dev \
+            --param registry=quay.io \
+            --param image_namespace=redhat-isv \
+            --workspace name=pipeline,volumeClaimTemplateFile=../templates/workspace-template.yml \
+            --workspace name=kubeconfig,secret=kubeconfig \
+            --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+            --workspace name=pyxis-api-key,secret=pyxis-api-secret \
+            --showlog
