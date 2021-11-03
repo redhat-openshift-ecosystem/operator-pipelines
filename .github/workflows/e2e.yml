@@ -13,6 +13,7 @@ jobs:
     environment:
       name: dev
     steps:
+      - uses: actions/checkout@v1
       - name: Prepare environment
         run: |
           # Install dependencies
@@ -53,7 +54,6 @@ jobs:
 
       - name: Cleanup
         if: always()
-        uses: actions/checkout@v1
         run: |
           oc delete project test-e2e
 
