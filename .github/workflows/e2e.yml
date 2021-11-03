@@ -40,7 +40,8 @@ jobs:
       - uses: actions/checkout@v1
       - name: Run CI pipeline
         run: |
-          tkn pipeline start operator-ci-pipeline \
+          oc project
+          tkn pipeline -n test-e2e start operator-ci-pipeline \
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_branch=main \
             --param bundle_path=operators/kogito-operator/1.6.0-ok \
