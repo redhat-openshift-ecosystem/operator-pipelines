@@ -35,8 +35,9 @@ jobs:
         run: |
           # TODO: project cleanup
           oc new-project test-e2e || true
-          cd ansible
+          pushd ansible
           bash init-custom-env.sh test-e2e qa vault-password
+          popd
       - name: Run CI pipeline
         run: |
           tkn pipeline -n test-e2e start operator-ci-pipeline \
@@ -46,7 +47,7 @@ jobs:
             --param env=dev \
             --param registry=quay.io \
             --param image_namespace=redhat-isv \
-            --workspace name=pipeline,volumeClaimTemplateFile=../templates/workspace-template.yml \
+            --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=kubeconfig,secret=kubeconfig \
             --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
             --workspace name=pyxis-api-key,secret=pyxis-api-secret \
