@@ -55,7 +55,7 @@ jobs:
       - name: Check if pipeline passed
         run: |
           # get second line of second column from output- second column is SUCCEEDED, second line- value
-          SUCCEEDED=$(oc get pr | awk 'FNR==2{print $2}'
+          SUCCEEDED=$(oc get pr | awk 'FNR==2{print $2}')
           if [[ "$SUCCEEDED" != "True" ]]; then
             exit 0
           fi
