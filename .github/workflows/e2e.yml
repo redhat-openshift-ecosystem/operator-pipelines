@@ -34,7 +34,8 @@ jobs:
       - uses: actions/checkout@v1
       - name: Deploy e2e environment
         run: |
-          oc new-project test-e2e
+          # TODO: project cleanup
+          oc new-project test-e2e || true
           cd ansible
           bash init-custom-env.sh test-e2e qa vault-password
       - uses: actions/checkout@v1
