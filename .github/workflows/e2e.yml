@@ -54,7 +54,8 @@ jobs:
             --showlog
       - name: Check if pipeline passed
         run: |
-          SUCCEEDED=$(oc get pr e2e-pipelinerun -o jsonpath={'.status.conditions[].status'})
+          # get second line of second column from output- second column is SUCCEEDED, second line- value
+          SUCCEEDED=$(oc get pr | awk 'FNR==2{print $2}'
           if [[ "$SUCCEEDED" != "True" ]]; then
             exit 0
           fi
