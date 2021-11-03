@@ -21,9 +21,7 @@ jobs:
           # Install tkn cli
           curl -LO https://github.com/tektoncd/cli/releases/download/v0.11.0/tkn_0.11.0_Linux_x86_64.tar.gz
           tar xvzf tkn_0.11.0_Linux_x86_64.tar.gz -C /usr/local/bin/
-      - uses: actions/checkout@v1
-      - name: Deploy e2e environment
-        run: |
+
           # Prepare Kubeconfig
           mkdir $HOME/.kube
           cat <<EOF > $HOME/.kube/config
@@ -32,15 +30,14 @@ jobs:
 
           # Prepare vault password
           echo ${{ secrets.VAULT_PASSWORD }} > ansible/vault-password
-
+      - name: Deploy e2e environment
+        run: |
           # TODO: project cleanup
           oc new-project test-e2e || true
           cd ansible
           bash init-custom-env.sh test-e2e qa vault-password
-      - uses: actions/checkout@v1
       - name: Run CI pipeline
         run: |
-          oc project
           tkn pipeline -n test-e2e start operator-ci-pipeline \
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_branch=main \
@@ -53,3 +50,10 @@ jobs:
             --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
             --workspace name=pyxis-api-key,secret=pyxis-api-secret \
             --showlog
+
+      - name: Cleanup
+        if: always()
+        uses: actions/checkout@v1
+        run: |
+          oc delete project test-e2e
+
