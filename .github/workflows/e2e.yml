@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: dev
+    env:
+      OC_PROJECT: test-e2e-$GITHUB_SHA
     steps:
       - uses: actions/checkout@v1
       - name: Prepare environment
@@ -33,10 +35,9 @@ jobs:
           echo ${{ secrets.VAULT_PASSWORD }} > ansible/vault-password
       - name: Deploy e2e environment
         run: |
-          # TODO: project name
-          oc new-project test-e2e || true
+          oc new-project $OC_PROJECT
           pushd ansible
-          bash init-custom-env.sh test-e2e qa vault-password
+          bash init-custom-env.sh $OC_PROJECT qa vault-password
           popd
       - name: Run CI pipeline
         run: |
@@ -57,8 +58,7 @@ jobs:
           if [[ "$SUCCEEDED" != "True" ]]; then
             exit 1
           fi
-      #- name: Cleanup
-      #  if: always()
-      #  run: |
-      #    oc delete project test-e2e
-
+      - name: Cleanup
+        if: always()
+        run: |
+          oc delete project $OC_PROJECT
