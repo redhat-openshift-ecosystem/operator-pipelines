@@ -40,16 +40,13 @@ jobs:
           popd
       - name: Run CI pipeline
         run: |
-          tkn pipeline -n test-e2e start operator-ci-pipeline \
+          tkn pipeline start operator-ci-pipeline \
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
-            --param git_branch=main \
-            --param bundle_path=operators/kogito-operator/1.6.0-ok \
-            --param env=dev \
-            --param registry=quay.io \
-            --param image_namespace=redhat-isv \
+            --param git_branch=e2e-test-operator \
+            --param bundle_path=operators/test-e2e-operator/0.0.7 \
+            --param env=qa \
             --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=kubeconfig,secret=kubeconfig \
-            --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
             --workspace name=ssh-dir,secret=github-ssh-credentials \
             --workspace name=pyxis-api-key,secret=pyxis-api-secret \
             --showlog

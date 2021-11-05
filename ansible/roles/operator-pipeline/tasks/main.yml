@@ -389,5 +389,25 @@
               env: "{{ env }}"
           data:
             id_rsa: "{{ lookup('file', github_ssh_credentials_path, rstrip=False) | b64encode }}"
+    - name: Create Kubeconfig secret
+      no_log: yes
+      tags:
+        - secrets
+      k8s:
+        state: present
+        force: yes
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: opaque
+          metadata:
+            name: kubeconfig
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          data:
+            kubeconfig: "{{ lookup('file', e2e_kubeconfig_path, rstrip=False) | b64encode }}"
   tags:
     - ci
