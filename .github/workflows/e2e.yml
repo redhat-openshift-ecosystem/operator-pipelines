@@ -6,7 +6,6 @@ on:  # yamllint disable-line rule:truthy
     branches:
       - main
       - ISV-1108-2
-  workflow_dispatch:
 jobs:
   run-e2e:
     runs-on: ubuntu-latest
@@ -26,7 +25,9 @@ jobs:
           curl -LO https://github.com/tektoncd/cli/releases/download/v0.11.0/tkn_0.11.0_Linux_x86_64.tar.gz
           tar xvzf tkn_0.11.0_Linux_x86_64.tar.gz -C /usr/local/bin/
 
-          # Prepare Kubeconfig
+          # Prepare Kubeconfig.
+          # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
+          # to create Kubernetes context.
           mkdir $HOME/.kube
           cat <<EOF > $HOME/.kube/config
           ${{ secrets.KUBECONFIG }}
@@ -38,7 +39,7 @@ jobs:
         run: |
           oc new-project $OC_PROJECT
           pushd ansible
-          bash init-custom-env.sh $OC_PROJECT qa vault-password
+          bash init-custom-env.sh $OC_PROJECT stage vault-password
           popd
       - name: Run CI pipeline
         run: |
@@ -46,7 +47,7 @@ jobs:
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_branch=e2e-test-operator \
             --param bundle_path=operators/test-e2e-operator/0.0.7 \
-            --param env=qa \
+            --param env=stage \
             --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=kubeconfig,secret=kubeconfig \
             --workspace name=ssh-dir,secret=github-ssh-credentials \

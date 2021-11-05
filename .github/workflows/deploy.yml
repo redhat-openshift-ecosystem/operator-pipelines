@@ -2,9 +2,9 @@
 name: Deployment
 
 on:  # yamllint disable-line rule:truthy
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["E2E-CI"]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
