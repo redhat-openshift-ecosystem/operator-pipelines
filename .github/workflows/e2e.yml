@@ -5,7 +5,7 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
-      - ISV-1108-2
+  workflow_dispatch:
 jobs:
   run-e2e:
     runs-on: ubuntu-latest
