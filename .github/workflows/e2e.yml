@@ -12,9 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: dev
-    env:
-      OC_PROJECT: test-e2e-$GITHUB_SHA
     steps:
+      - name: Set environmental variables
+        run: |
+          echo "OC_PROJECT=test-e2e-$GITHUB_SHA" >> $GITHUB_ENV
       - uses: actions/checkout@v1
       - name: Prepare environment
         run: |
