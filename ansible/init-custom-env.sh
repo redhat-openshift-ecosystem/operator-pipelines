@@ -52,21 +52,22 @@ execute_playbook() {
 }
 
 pull_parent_index() {
- # Must be run once before certifying against the certified catalog.
-oc import-image certified-operator-index \
-  --from=registry.redhat.io/redhat/certified-operator-index \
-  --reference-policy local \
-  --scheduled \
-  --confirm \
-  --all
+  oc project $NAMESPACE
+  # Must be run once before certifying against the certified catalog.
+  oc import-image certified-operator-index \
+    --from=registry.redhat.io/redhat/certified-operator-index \
+    --reference-policy local \
+    --scheduled \
+    --confirm \
+    --all
 
-# Must be run once before certifying against the Red Hat Martketplace catalog.
-oc import-image redhat-marketplace-index \
-  --from=registry.redhat.io/redhat/redhat-marketplace-index \
-  --reference-policy local \
-  --scheduled \
-  --confirm \
-  --all
+  # Must be run once before certifying against the Red Hat Martketplace catalog.
+  oc import-image redhat-marketplace-index \
+    --from=registry.redhat.io/redhat/redhat-marketplace-index \
+    --reference-policy local \
+    --scheduled \
+    --confirm \
+    --all
 }
 
 main() {
