@@ -87,7 +87,7 @@ spec:
           oc create rolebinding $ROLE_NAME --role=$ROLE_NAME \
             --serviceaccount connect:rhmp-sa \
             --serviceaccount connect:bpmsa
-        else:
+        else
           echo "Error: wrong distribution method ${DIST_METHOD}"
           exit 1
         fi
