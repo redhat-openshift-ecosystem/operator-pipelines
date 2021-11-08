@@ -120,10 +120,26 @@ spec:
         - name: git_pr_title
           value: $(params.git_pr_title)
 
+    # Verify the bundle path exists
+    - name: bundle-path-validation
+      runAfter:
+        - get-bundle-path
+      taskRef:
+        name: bundle-path-validation
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Compute a hash of the content so pipeline logs can be uploaded with it
     - name: content-hash
       runAfter:
-        - get-bundle-path
+        - bundle-path-validation
       taskRef:
         name: content-hash
       params:
@@ -139,7 +155,7 @@ spec:
     # Get cert project id
     - name: certification-project-check
       runAfter:
-        - get-bundle-path
+        - bundle-path-validation
       taskRef:
         name: certification-project-check
       params:
@@ -154,7 +170,6 @@ spec:
 
     - name: create-support-link-for-pr
       runAfter:
-        - set-env
         - certification-project-check
       taskRef:
         name: create-support-link-for-pr
@@ -171,7 +186,7 @@ spec:
     # Get the bundle versions to build index
     - name: get-supported-versions
       runAfter:
-        - get-bundle-path
+        - bundle-path-validation
       taskRef:
         name: get-supported-versions
       params:
@@ -179,26 +194,6 @@ spec:
           value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
-    # This task is needed only because of it's second step, which
-    # parses the bundle path and returns the package_name and bundle_version.
-    # TODO: split this task
-    - name: operator-validation
-      runAfter:
-        - get-bundle-path
-      taskRef:
-        name: operator-validation
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:
         - name: source
           workspace: repository
@@ -252,13 +247,13 @@ spec:
 
     - name: inspect-image
       runAfter:
-        - operator-validation
+        - bundle-path-validation
       taskRef:
         name: inspect-image
         kind: Task
       params:
         - name: image
-          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
         - name: registry
           value: $(params.registry)
       workspaces:
@@ -287,7 +282,7 @@ spec:
         - name: is_latest
           value: "$(params.is_latest)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: connect_registry
           value: "$(tasks.set-env.results.connect_registry)"
       workspaces:
@@ -299,7 +294,7 @@ spec:
       runAfter:
         - publish-to-ocp-registry
         - get-supported-versions
-        - operator-validation
+        - bundle-path-validation
       taskRef:
         name: trigger-marketplace-replication
       params:
@@ -310,7 +305,7 @@ spec:
         - name: ibm_webhook_token_secret_key
           value: "$(params.ibm_webhook_token_secret_key)"
         - name: package
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: ocp_version
@@ -318,7 +313,7 @@ spec:
         - name: organization
           value: "$(tasks.get-cert-project-related-data.results.organization)"
         - name: version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
       workspaces:
         - name: source
           workspace: repository
@@ -347,7 +342,7 @@ spec:
         - name: pyxis_key_path
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: is_latest
           value: "$(params.is_latest)"
       workspaces:
@@ -407,7 +402,9 @@ spec:
 
   finally:
 
-    # Upload the logs of this pipeline
+    # Upload the logs of this pipeline.
+    # Dependencies on other task results should be minimized. If any
+    # of those tasks fail, it'll prevent this task from executing.
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
@@ -422,9 +419,9 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
