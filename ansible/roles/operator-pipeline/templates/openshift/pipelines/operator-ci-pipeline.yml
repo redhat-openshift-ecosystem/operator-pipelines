@@ -81,9 +81,25 @@ spec:
         - name: ssh-directory
           workspace: ssh-dir
 
-    - name: digest-pinning
+    # Verify the bundle path exists
+    - name: bundle-path-validation
       runAfter:
         - checkout
+      taskRef:
+        name: bundle-path-validation
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: digest-pinning
+      runAfter:
+        - bundle-path-validation
       taskRef:
         name: digest-pinning
       params:
@@ -136,26 +152,9 @@ spec:
           workspace: pipeline
           subPath: src
 
-    - name: operator-validation
-      runAfter:
-        - commit-pinned-digest
-      taskRef:
-        name: operator-validation
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(params.bundle_path)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
-
     - name: annotations-validation
       runAfter:
-        - operator-validation
+        - commit-pinned-digest
       taskRef:
         name: annotations-validation
       params:
@@ -164,7 +163,7 @@ spec:
         - name: bundle_path
           value: "$(params.bundle_path)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -231,7 +230,7 @@ spec:
 
     - name: dockerfile-creation
       runAfter:
-        - operator-validation
+        - annotations-validation
         - yaml-lint
         - certification-project-check
       taskRef:
@@ -259,7 +258,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
       workspaces:
@@ -299,7 +298,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-index:$(tasks.bundle-path-validation.results.bundle_version)"
         - name: DOCKERFILE
           value: "$(tasks.generate-index.results.index_dockerfile)"
       workspaces:
@@ -318,9 +317,9 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: bundle_index_image
           value: *bundleIndexImage
         - name: bundle_image
@@ -365,9 +364,9 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:
@@ -400,9 +399,9 @@ spec:
         - name: test_result_url
           value: "$(tasks.upload-artifacts.results.result_url)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: certification_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
       workspaces:
@@ -430,9 +429,9 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name

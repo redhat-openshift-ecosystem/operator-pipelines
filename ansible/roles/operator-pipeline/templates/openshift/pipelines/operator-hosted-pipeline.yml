@@ -135,10 +135,26 @@ spec:
         - name: git_pr_title
           value: $(params.git_pr_title)
 
+    # Verify the bundle path exists
+    - name: bundle-path-validation
+      runAfter:
+        - get-bundle-path
+      taskRef:
+        name: bundle-path-validation
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Get cert project id
     - name: certification-project-check
       runAfter:
-        - get-bundle-path
+        - bundle-path-validation
       taskRef:
         name: certification-project-check
       params:
@@ -153,7 +169,6 @@ spec:
 
     - name: create-support-link-for-pr
       runAfter:
-        - set-env
         - certification-project-check
       taskRef:
         name: create-support-link-for-pr
@@ -293,27 +308,9 @@ spec:
         - name: pyxis_key_path
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
 
-    # additional checks
-    - name: operator-validation
-      runAfter:
-        - reserve-operator-name
-      taskRef:
-        name: operator-validation
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
     - name: annotations-validation
       runAfter:
-        - operator-validation
+        - reserve-operator-name
       taskRef:
         name: annotations-validation
       params:
@@ -322,7 +319,7 @@ spec:
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
       workspaces:
         - name: source
           workspace: repository
@@ -387,7 +384,7 @@ spec:
 
     - name: content-hash
       runAfter:
-        - get-bundle-path
+        - bundle-path-validation
       taskRef:
         name: content-hash
       params:
@@ -423,7 +420,6 @@ spec:
     # Those steps are also a part of the CI pipeline.
     - name: dockerfile-creation
       runAfter:
-        - operator-validation
         - annotations-validation
         - get-supported-versions
         - yaml-lint
@@ -452,7 +448,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name):$(tasks.validate-pr-title.results.bundle_version)"
         - name: CONTEXT
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -472,7 +468,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: repository
-          value: "$(params.image_namespace)/$(tasks.operator-validation.results.package_name)"
+          value: "$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)"
         - name: visibility
           value: public
         - name: oauth_secret_name
@@ -510,7 +506,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index:$(tasks.validate-pr-title.results.bundle_version)"
         - name: DOCKERFILE
           value: "$(tasks.generate-index.results.index_dockerfile)"
       workspaces:
@@ -530,7 +526,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: repository
-          value: "$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index"
+          value: "$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index"
         - name: visibility
           value: public
         - name: oauth_secret_name
@@ -586,10 +582,10 @@ spec:
           value: operator
         - name: bundle_index_image
           value: >-
-            $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)
+            $(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index:$(tasks.validate-pr-title.results.bundle_version)
         - name: bundle_image
           value: >-
-            $(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)
+            $(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name):$(tasks.validate-pr-title.results.bundle_version)
         - name: skip
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
       workspaces:
@@ -624,9 +620,9 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: connect_url
@@ -665,7 +661,7 @@ spec:
         - name: bundle_version
           value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: operator_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_cert_path
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
@@ -764,7 +760,9 @@ spec:
 
   finally:
 
-    # Upload the logs of this pipeline
+    # Upload the logs of this pipeline.
+    # Dependencies on other task results should be minimized. If any
+    # of those tasks fail, it'll prevent this task from executing.
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
@@ -779,9 +777,9 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
