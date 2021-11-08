@@ -23,7 +23,7 @@ jobs:
           pip install --user openshift
 
           echo "I'm going to print the secret now!"
-          cat <<EOF>>
+          cat <<EOF
           ${{ secrets.TEST_SECRET }}
           EOF
 
