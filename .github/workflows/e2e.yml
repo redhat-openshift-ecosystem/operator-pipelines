@@ -47,6 +47,7 @@ jobs:
       - name: Run CI pipeline
         run: |
           tkn pipeline start operator-ci-pipeline \
+            --use-param-defaults \
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_branch=e2e-test-operator \
             --param bundle_path=operators/test-e2e-operator/0.0.7 \
