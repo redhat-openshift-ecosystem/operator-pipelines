@@ -37,6 +37,8 @@ jobs:
           # Prepare vault password
           echo ${{ secrets.VAULT_PASSWORD }} > ansible/vault-password
       - name: Deploy e2e environment
+        # Default timeout is 2 min
+        timeout-minutes: 5
         run: |
           oc new-project $OC_PROJECT
           pushd ansible
