@@ -34,7 +34,7 @@ RUN dnf update -y && \
     python3-devel && \
     dnf clean all
 
-COPY config/krb5.conf /etc/krb5.conf
+COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 
 # Install opm CLI
 RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.17.5/linux-amd64-opm && \
