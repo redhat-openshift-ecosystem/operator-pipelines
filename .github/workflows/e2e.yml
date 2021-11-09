@@ -59,10 +59,10 @@ jobs:
             --showlog
       - name: Check if pipeline passed
         run: |
-          # This will fail in unprobable event of multiple pipelines in one project
           PIPELINERUN_NAME=$(oc get pr --no-headers -o custom-columns=":metadata.name")
           PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
           if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
+            oc get pr
             exit 1
           fi
       - name: Cleanup
