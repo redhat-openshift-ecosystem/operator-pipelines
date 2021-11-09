@@ -25,7 +25,7 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
     args.cert_project_id = "123123"
 
     mock_b64.return_value = b"a"
-    filename = "tests/data/preflight.log"
+    filename = "operator-pipeline-images/tests/data/preflight.log"
     upload_artifacts.upload_artifact(args, filename, 1)
 
     mock_post.assert_called_once_with(
