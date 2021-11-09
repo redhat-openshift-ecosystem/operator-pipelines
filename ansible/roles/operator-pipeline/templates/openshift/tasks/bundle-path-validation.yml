@@ -2,15 +2,12 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: operator-validation
+  name: bundle-path-validation
 spec:
   params:
     - name: pipeline_image
     - name: bundle_path
-      description: path indicating the location of the certified bundle within the repository
-    - name: pyxis_url
-      description: URL of the Pyxis- API for accessing container metadata.
-      default: https://catalog.redhat.com/api/containers/
+      description: path indicating the location of the Operator bundle within the repository
   results:
     - name: package_name
       description: Operator package name
