@@ -1,0 +1,71 @@
+---
+name: E2E-CI
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+jobs:
+  run-e2e:
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    steps:
+      - name: Set environmental variables
+        run: |
+          echo "OC_PROJECT=test-e2e-$GITHUB_SHA" >> $GITHUB_ENV
+      - uses: actions/checkout@v1
+      - name: Prepare environment
+        run: |
+          # Install dependencies
+          pip install --user openshift
+
+          # Install tkn cli
+          curl -LO https://github.com/tektoncd/cli/releases/download/v0.21.0/tkn_0.21.0_Linux_x86_64.tar.gz
+          tar xvzf tkn_0.21.0_Linux_x86_64.tar.gz -C /usr/local/bin/
+
+          # Prepare Kubeconfig.
+          # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
+          # to create Kubernetes context.
+          mkdir $HOME/.kube
+          cat <<EOF > $HOME/.kube/config
+          ${{ secrets.KUBECONFIG }}
+          EOF
+
+          # Prepare vault password
+          echo ${{ secrets.VAULT_PASSWORD }} > ansible/vault-password
+      - name: Deploy e2e environment
+        # Default timeout is 2 min
+        timeout-minutes: 5
+        run: |
+          oc new-project $OC_PROJECT
+          pushd ansible
+          bash init-custom-env.sh $OC_PROJECT stage vault-password
+          popd
+      - name: Run CI pipeline
+        run: |
+          tkn pipeline start operator-ci-pipeline \
+            --use-param-defaults \
+            --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+            --param git_branch=e2e-test-operator \
+            --param bundle_path=operators/test-e2e-operator/0.0.7 \
+            --param env=stage \
+            --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
+            --workspace name=kubeconfig,secret=kubeconfig \
+            --workspace name=ssh-dir,secret=github-ssh-credentials \
+            --workspace name=pyxis-api-key,secret=pyxis-api-secret \
+            --showlog
+      - name: Check if pipeline passed
+        run: |
+          PIPELINERUN_NAME=$(oc get pr --no-headers -o custom-columns=":metadata.name")
+          PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
+          if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
+            oc get pr
+            exit 1
+          fi
+      - name: Cleanup
+        if: always()
+        run: |
+          oc delete project $OC_PROJECT

@@ -45,7 +45,6 @@ spec:
 
         if [ "$(params.enabled)" != "true" ]; then
           echo "Digest pinning is not enabled"
-          echo -n "false" | tee $(results.dirty_flag.path)
           exit 0
         fi
 
@@ -63,6 +62,13 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
+
+        if [ "$(params.enabled)" != "true" ]; then
+          echo "Digest pinning is not enabled"
+          echo -n "false" | tee $(results.dirty_flag.path)
+          exit 0
+        fi
+
         cat replacements.json
         REPLACEMENT_COUNT=$(jq length replacements.json)
 
