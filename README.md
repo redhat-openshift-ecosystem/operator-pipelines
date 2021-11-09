@@ -33,6 +33,7 @@ If using the default internal registry, the CI pipeline can be triggered using t
 
 ```bash
 tkn pipeline start operator-ci-pipeline \
+  --use-param-defaults \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
@@ -47,6 +48,7 @@ If using an external registry, the CI pipeline can be triggered using the tkn CL
 
 ```bash
 tkn pipeline start operator-ci-pipeline \
+  --use-param-defaults \
   --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
@@ -104,6 +106,7 @@ The hosted pipeline can be triggered using the tkn CLI like so:
 
 ```bash
 tkn pipeline start operator-hosted-pipeline \
+  --use-param-defaults \
   --param git_pr_branch=test-PR-ok \
   --param git_pr_title="operator kogito-operator (1.6.1-ok)" \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
@@ -153,6 +156,7 @@ The release pipeline can be triggered using the tkn CLI like so:
 
 ```bash
 tkn pipeline start operator-release-pipeline \
+  --use-param-defaults \
   --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_commit=3ffff387caac0a5b475f44c4a54fb45eebb8dd8e \
   --param git_pr_title="operator kogito-operator (1.6.1-ok)" \

@@ -27,6 +27,7 @@ jobs:
           options: |
             --inventory inventory/operator-pipeline
             --extra-vars env=dev
+            --skip-tags ci
             --verbose
 
   deploy-qa:
@@ -48,6 +49,7 @@ jobs:
           options: |
             --inventory inventory/operator-pipeline
             --extra-vars env=qa
+            --skip-tags ci
             --verbose
 
   deploy-stage:
@@ -72,6 +74,7 @@ jobs:
           options: |
             --inventory inventory/operator-pipeline
             --extra-vars env=stage
+            --skip-tags ci
             --verbose
 
   deploy-prod:
@@ -95,4 +98,5 @@ jobs:
           options: |
             --inventory inventory/operator-pipeline
             --extra-vars env=prod
+            --skip-tags ci
             --verbose
