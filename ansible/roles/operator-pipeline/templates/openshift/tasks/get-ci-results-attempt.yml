@@ -71,7 +71,8 @@ spec:
 
         if [ -f $RESULTS_FILE ]; then
           echo "Results exist"
-          echo -n "true" | tee $(results.preflight_results_exists.path)
+          CHECK_RESULTS=$(cat $RESULTS_FILE | jq -r '.passed')
+          echo -n "$CHECK_RESULTS" | tee $(results.preflight_results_exists.path)
           echo -n "$RESULTS_FILE" | tee $(results.preflight_results.path)
         else
           echo "Results do not exist"
