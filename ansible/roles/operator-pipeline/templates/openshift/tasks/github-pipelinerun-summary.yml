@@ -1,0 +1,139 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: github-pipelinerun-summary
+spec:
+  description: >-
+    This task adds a PipelineRun summary comment to a GitHub pull request.
+  workspaces:
+    - name: output
+      description: Scratch space and storage for the comment
+
+  params:
+    - name: github_host_url
+      description: |
+        The GitHub host, adjust this if you run a GitHub enteprise.
+      default: "api.github.com"
+
+    - name: api_path_prefix
+      description: |
+        The API path prefix, GitHub Enterprise has a prefix e.g. /api/v3
+      default: ""
+
+    - name: request_url
+      description: |
+        The GitHub issue or pull request URL where we want to add a new
+        comment.
+
+    - name: github_token_secret_name
+      description: |
+        The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+
+    - name: github_token_secret_key
+      description: |
+        The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+
+    - name: pipelinerun
+      description: The name of the PipelineRun to summarize.
+
+    - name: pipeline_image
+      description: The common pipeline image.
+
+    - name: comment_suffix
+      description: A comment to append to the end of the summary
+      default: ""
+
+  steps:
+    - name: gather-info
+      workingDir: $(workspaces.output.path)
+      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        PR_NAME="$(params.pipelinerun)"
+        mkdir $PR_NAME
+
+        echo "Getting PipelineRun details"
+        tkn pipelinerun describe $PR_NAME -o json > $PR_NAME/pipelinerun.json
+
+        echo "Getting TaskRun details"
+        tkn taskrun list \
+          --label 'tekton.dev/pipelineRun'=="$PR_NAME" \
+          -o jsonpath='{.items}' \
+          > $PR_NAME/taskruns.json
+
+        chmod -R 777 $PR_NAME
+
+    - name: build-comment
+      workingDir: $(workspaces.output.path)
+      image: "$(params.pipeline_image)"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        PR_NAME="$(params.pipelinerun)"
+
+        pipelinerun-summary $PR_NAME/pipelinerun.json $PR_NAME/taskruns.json \
+          > $PR_NAME/comment.md
+
+        if [ ! -z "$(params.comment_suffix)" ]; then
+          echo "$(params.comment_suffix)" >> $PR_NAME/comment.md
+        fi
+
+    - name: post-comment
+      workingDir: $(workspaces.output.path)
+      env:
+        - name: GITHUBTOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      image: registry.access.redhat.com/ubi8/ubi-minimal:8.2
+      # TODO: Store this script elsewhere
+      # https://issues.redhat.com/browse/ISV-1386
+      script: |
+        #!/usr/libexec/platform-python
+        import json
+        import os
+        import sys
+        import http.client
+        import urllib.parse
+
+        split_url = urllib.parse.urlparse(
+            "$(params.request_url)").path.split("/")
+
+        # This will convert https://github.com/foo/bar/pull/202 to
+        # api url path /repos/foo/issues/
+        api_url = "{base}/repos/{package}/issues/{id}".format(
+          base="", package="/".join(split_url[1:3]), id=split_url[-1])
+
+        with open("$(params.pipelinerun)/comment.md") as fh:
+          data = {"body": fh.read()}
+
+        conn = http.client.HTTPSConnection("$(params.github_host_url)")
+
+        method = "POST"
+        target_url = api_url + "/comments"
+
+        print("Sending this data to GitHub with {}: ".format(method))
+        print(data)
+        r = conn.request(
+            method,
+            target_url,
+            body=json.dumps(data),
+            headers={
+                "User-Agent": "TektonCD, the peaceful cat",
+                "Authorization": "Bearer " + os.environ["GITHUBTOKEN"],
+            })
+        resp = conn.getresponse()
+
+        if not str(resp.status).startswith("2"):
+            print("Error: %d" % (resp.status))
+            print(resp.read())
+            sys.exit(1)
+        else:
+            print("A GitHub comment has been added to $(params.request_url)")
