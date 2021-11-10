@@ -28,7 +28,7 @@ jobs:
           image: operator-pipelines-images
           tags: latest ${{ github.sha }}
           dockerfiles: |
-            ./Dockerfile
+            ./operator-pipeline-images/Dockerfile
 
       - name: Push To quay.io
         id: push-to-quay

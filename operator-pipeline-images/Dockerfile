@@ -45,7 +45,7 @@ RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
 WORKDIR /home/user
 
-COPY . ./
+COPY ./operator-pipeline-images ./
 
 RUN pip3 install .
 
