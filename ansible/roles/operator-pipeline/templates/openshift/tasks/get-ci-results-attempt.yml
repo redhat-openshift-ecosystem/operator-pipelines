@@ -61,7 +61,7 @@ spec:
         cat test_result_id | tee $(results.test_result_id.path)
 
     - name: indicate-if-results-exists
-      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.results.path)
       env:
         - name: RESULTS_FILE
@@ -72,6 +72,10 @@ spec:
         if [ -f $RESULTS_FILE ]; then
           echo "Results exist"
           CHECK_RESULTS=$(cat $RESULTS_FILE | jq -r '.passed')
+          if [ $CHECK_RESULTS = "false" ]; then
+            echo "Not all preflight tests passed."
+          fi
+          echo "All preflight tests passed successfully."
           echo -n "$CHECK_RESULTS" | tee $(results.preflight_results_exists.path)
           echo -n "$RESULTS_FILE" | tee $(results.preflight_results.path)
         else
