@@ -1,0 +1,2316 @@
+[
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{},\"name\":\"github-add-pipelinerun-summary-comment\",\"namespace\":\"amisstea\"},\"spec\":{\"description\":\"This task adds a PipelineRun summary comment to a GitHub pull request.\",\"params\":[{\"default\":\"api.github.com\",\"description\":\"The GitHub host, adjust this if you run a GitHub enteprise.\\n\",\"name\":\"github_host_url\"},{\"default\":\"\",\"description\":\"The API path prefix, GitHub Enterprise has a prefix e.g. /api/v3\\n\",\"name\":\"api_path_prefix\"},{\"description\":\"The GitHub issue or pull request URL where we want to add a new\\ncomment.\\n\",\"name\":\"request_url\"},{\"default\":\"github\",\"description\":\"The name of the Kubernetes Secret that contains the GitHub token.\\n\",\"name\":\"github_token_secret_name\"},{\"default\":\"token\",\"description\":\"The key within the Kubernetes Secret that contains the GitHub token.\\n\",\"name\":\"github_token_secret_key\"},{\"description\":\"The name of the PipelineRun to summarize.\",\"name\":\"pipelinerun\"},{\"description\":\"The common pipeline image.\",\"name\":\"pipeline_image\"},{\"default\":\"\",\"description\":\"A comment to append to the end of the summary\",\"name\":\"comment_suffix\"}],\"steps\":[{\"image\":\"registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49\",\"name\":\"gather-info\",\"script\":\"#! /usr/bin/env bash\\nset -xe\\n\\nPR_NAME=\\\"$(params.pipelinerun)\\\"\\nmkdir $PR_NAME\\n\\necho \\\"Getting PipelineRun details\\\"\\ntkn pipelinerun describe $PR_NAME -o json \\u003e $PR_NAME/pipelinerun.json\\n\\necho \\\"Getting TaskRun details\\\"\\ntkn taskrun list \\\\\\n  --label 'tekton.dev/pipelineRun'==\\\"$PR_NAME\\\" \\\\\\n  -o jsonpath='{.items}' \\\\\\n  \\u003e $PR_NAME/taskruns.json\\n\\nchmod -R 777 $PR_NAME\\n\",\"workingDir\":\"$(workspaces.output.path)\"},{\"image\":\"$(params.pipeline_image)\",\"name\":\"build-comment\",\"script\":\"#! /usr/bin/env bash\\nset -xe\\n\\nPR_NAME=\\\"$(params.pipelinerun)\\\"\\n\\npipelinerun-summary $PR_NAME/pipelinerun.json $PR_NAME/taskruns.json \\\\\\n  \\u003e $PR_NAME/comment.md\\n\\nif [ ! -z \\\"$(params.comment_suffix)\\\" ]; then\\n  echo \\\"$(params.comment_suffix)\\\" \\u003e\\u003e $PR_NAME/comment.md\\nfi\\n\",\"workingDir\":\"$(workspaces.output.path)\"},{\"env\":[{\"name\":\"GITHUBTOKEN\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"$(params.github_token_secret_key)\",\"name\":\"$(params.github_token_secret_name)\"}}}],\"image\":\"registry.access.redhat.com/ubi8/ubi-minimal:8.2\",\"name\":\"post-comment\",\"script\":\"#!/usr/libexec/platform-python\\nimport json\\nimport os\\nimport sys\\nimport http.client\\nimport urllib.parse\\n\\nsplit_url = urllib.parse.urlparse(\\n    \\\"$(params.request_url)\\\").path.split(\\\"/\\\")\\n\\n# This will convert https://github.com/foo/bar/pull/202 to\\n# api url path /repos/foo/issues/\\napi_url = \\\"{base}/repos/{package}/issues/{id}\\\".format(\\n  base=\\\"\\\", package=\\\"/\\\".join(split_url[1:3]), id=split_url[-1])\\n\\nwith open(\\\"$(params.pipelinerun)/comment.md\\\") as fh:\\n  data = {\\\"body\\\": fh.read()}\\n\\nconn = http.client.HTTPSConnection(\\\"$(params.github_host_url)\\\")\\n\\nmethod = \\\"POST\\\"\\ntarget_url = api_url + \\\"/comments\\\"\\n\\nprint(\\\"Sending this data to GitHub with {}: \\\".format(method))\\nprint(data)\\nr = conn.request(\\n    method,\\n    target_url,\\n    body=json.dumps(data),\\n    headers={\\n        \\\"User-Agent\\\": \\\"TektonCD, the peaceful cat\\\",\\n        \\\"Authorization\\\": \\\"Bearer \\\" + os.environ[\\\"GITHUBTOKEN\\\"],\\n    })\\nresp = conn.getresponse()\\n\\nif not str(resp.status).startswith(\\\"2\\\"):\\n    print(\\\"Error: %d\\\" % (resp.status))\\n    print(resp.read())\\n    sys.exit(1)\\nelse:\\n    print(\\\"A GitHub comment has been added to $(params.request_url)\\\")\\n\",\"workingDir\":\"$(workspaces.output.path)\"}],\"workspaces\":[{\"description\":\"Scratch space and storage for the comment\",\"name\":\"output\"}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3"
+      },
+      "creationTimestamp": "2021-11-10T18:40:07Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "github-add-summary-comment",
+        "tekton.dev/task": "github-add-pipelinerun-summary-comment"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {},
+              "f:workspaces": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:description": {},
+                "f:params": {},
+                "f:steps": {},
+                "f:workspaces": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:40:35Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-github-add-summary-com-bbrfv",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201691777",
+      "uid": "afd342d0-4ba7-4d1f-ab89-a4d4786c0d21"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "pipeline_image",
+          "value": "quay.io/amisstea/operator-pipelines-images:latest"
+        },
+        {
+          "name": "request_url",
+          "value": "https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/51"
+        },
+        {
+          "name": "github_token_secret_name",
+          "value": "github-bot-token"
+        },
+        {
+          "name": "github_token_secret_key",
+          "value": "github_bot_token"
+        },
+        {
+          "name": "pipelinerun",
+          "value": "operator-hosted-pipeline-run-bvjls"
+        },
+        {
+          "name": "comment_suffix",
+          "value": "\n## Troubleshooting\n\nPlease refer to the [troubleshooting guide](https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/troubleshooting.md).\n"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "github-add-pipelinerun-summary-comment"
+      },
+      "timeout": "1h0m0s",
+      "workspaces": [
+        {
+          "name": "output",
+          "persistentVolumeClaim": {
+            "claimName": "pvc-e23c08fa86"
+          },
+          "subPath": "summary"
+        }
+      ]
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:40:35Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:40:35Z",
+          "message": "All Steps have completed executing",
+          "reason": "Unknown",
+          "status": "False",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-github-add-summary-com-wbdpt",
+      "startTime": "2021-11-10T18:40:08Z",
+      "steps": [
+        {
+          "container": "step-gather-info",
+          "imageID": "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:4e548e1dcd98031563f5c4208edd552ff09cb635e5b519ce8166c8debdda73b9",
+          "name": "gather-info",
+          "terminated": {
+            "containerID": "cri-o://712c79de24855d303e4a4d5ca8eb3d17d066ef4cec4ec7294be8ebb7c1bde80d",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:40:33Z",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:40:32Z"
+          }
+        },
+        {
+          "container": "step-build-comment",
+          "imageID": "quay.io/amisstea/operator-pipelines-images@sha256:01e4902f75eac486608082a3b3d6419a675c841aef25221dbc2a3f135dc16923",
+          "name": "build-comment",
+          "terminated": {
+            "containerID": "cri-o://5e9d8461dc283ac570abf0d3e7681f286eee0f6f747005f88cdbe24d639ce524",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:40:33Z",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:40:33Z"
+          }
+        },
+        {
+          "container": "step-post-comment",
+          "imageID": "registry.access.redhat.com/ubi8/ubi-minimal@sha256:5cfbaf45ca96806917830c183e9f37df2e913b187aadb32e89fd83fa455ebaa6",
+          "name": "post-comment",
+          "terminated": {
+            "containerID": "cri-o://5febfc5c971a93c43dd795864ee8815286123e4d96981584b98c1228313c2e4c",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:40:34Z",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:40:33Z"
+          }
+        }
+      ],
+      "taskSpec": {
+        "description": "This task adds a PipelineRun summary comment to a GitHub pull request.",
+        "params": [
+          {
+            "default": "api.github.com",
+            "description": "The GitHub host, adjust this if you run a GitHub enteprise.\n",
+            "name": "github_host_url",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "The API path prefix, GitHub Enterprise has a prefix e.g. /api/v3\n",
+            "name": "api_path_prefix",
+            "type": "string"
+          },
+          {
+            "description": "The GitHub issue or pull request URL where we want to add a new\ncomment.\n",
+            "name": "request_url",
+            "type": "string"
+          },
+          {
+            "default": "github",
+            "description": "The name of the Kubernetes Secret that contains the GitHub token.\n",
+            "name": "github_token_secret_name",
+            "type": "string"
+          },
+          {
+            "default": "token",
+            "description": "The key within the Kubernetes Secret that contains the GitHub token.\n",
+            "name": "github_token_secret_key",
+            "type": "string"
+          },
+          {
+            "description": "The name of the PipelineRun to summarize.",
+            "name": "pipelinerun",
+            "type": "string"
+          },
+          {
+            "description": "The common pipeline image.",
+            "name": "pipeline_image",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "A comment to append to the end of the summary",
+            "name": "comment_suffix",
+            "type": "string"
+          }
+        ],
+        "steps": [
+          {
+            "image": "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49",
+            "name": "gather-info",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\nset -xe\n\nPR_NAME=\"$(params.pipelinerun)\"\nmkdir $PR_NAME\n\necho \"Getting PipelineRun details\"\ntkn pipelinerun describe $PR_NAME -o json > $PR_NAME/pipelinerun.json\n\necho \"Getting TaskRun details\"\ntkn taskrun list \\\n  --label 'tekton.dev/pipelineRun'==\"$PR_NAME\" \\\n  -o jsonpath='{.items}' \\\n  > $PR_NAME/taskruns.json\n\nchmod -R 777 $PR_NAME\n",
+            "workingDir": "$(workspaces.output.path)"
+          },
+          {
+            "image": "$(params.pipeline_image)",
+            "name": "build-comment",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\nset -xe\n\nPR_NAME=\"$(params.pipelinerun)\"\n\npipelinerun-summary $PR_NAME/pipelinerun.json $PR_NAME/taskruns.json \\\n  > $PR_NAME/comment.md\n\nif [ ! -z \"$(params.comment_suffix)\" ]; then\n  echo \"$(params.comment_suffix)\" >> $PR_NAME/comment.md\nfi\n",
+            "workingDir": "$(workspaces.output.path)"
+          },
+          {
+            "env": [
+              {
+                "name": "GITHUBTOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "$(params.github_token_secret_key)",
+                    "name": "$(params.github_token_secret_name)"
+                  }
+                }
+              }
+            ],
+            "image": "registry.access.redhat.com/ubi8/ubi-minimal:8.2",
+            "name": "post-comment",
+            "resources": {},
+            "script": "#!/usr/libexec/platform-python\nimport json\nimport os\nimport sys\nimport http.client\nimport urllib.parse\n\nsplit_url = urllib.parse.urlparse(\n    \"$(params.request_url)\").path.split(\"/\")\n\n# This will convert https://github.com/foo/bar/pull/202 to\n# api url path /repos/foo/issues/\napi_url = \"{base}/repos/{package}/issues/{id}\".format(\n  base=\"\", package=\"/\".join(split_url[1:3]), id=split_url[-1])\n\nwith open(\"$(params.pipelinerun)/comment.md\") as fh:\n  data = {\"body\": fh.read()}\n\nconn = http.client.HTTPSConnection(\"$(params.github_host_url)\")\n\nmethod = \"POST\"\ntarget_url = api_url + \"/comments\"\n\nprint(\"Sending this data to GitHub with {}: \".format(method))\nprint(data)\nr = conn.request(\n    method,\n    target_url,\n    body=json.dumps(data),\n    headers={\n        \"User-Agent\": \"TektonCD, the peaceful cat\",\n        \"Authorization\": \"Bearer \" + os.environ[\"GITHUBTOKEN\"],\n    })\nresp = conn.getresponse()\n\nif not str(resp.status).startswith(\"2\"):\n    print(\"Error: %d\" % (resp.status))\n    print(resp.read())\n    sys.exit(1)\nelse:\n    print(\"A GitHub comment has been added to $(params.request_url)\")\n",
+            "workingDir": "$(workspaces.output.path)"
+          }
+        ],
+        "workspaces": [
+          {
+            "description": "Scratch space and storage for the comment",
+            "name": "output"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{},\"name\":\"set-github-status\",\"namespace\":\"amisstea\"},\"spec\":{\"params\":[{\"name\":\"pipeline_image\"},{\"name\":\"git_repo_url\"},{\"description\":\"SHA of the commit to set the status for.\",\"name\":\"commit_sha\"},{\"description\":\"Description attached to the github status.\",\"name\":\"description\"},{\"description\":\"The github status to set for the given commit.\",\"name\":\"state\"},{\"description\":\"Context attached to the github status.\",\"name\":\"context\"},{\"default\":\"\",\"description\":\"URL to more details about the status.\",\"name\":\"target_url\"},{\"default\":\"false\",\"description\":\"Flag to skip the setting of github status.\",\"name\":\"skip\"},{\"default\":\"github\",\"description\":\"The name of the Kubernetes Secret that contains the GitHub token.\",\"name\":\"github_token_secret_name\"},{\"default\":\"token\",\"description\":\"The key within the Kubernetes Secret that contains the GitHub token.\",\"name\":\"github_token_secret_key\"}],\"steps\":[{\"env\":[{\"name\":\"GITHUB_TOKEN\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"$(params.github_token_secret_key)\",\"name\":\"$(params.github_token_secret_name)\"}}}],\"image\":\"$(params.pipeline_image)\",\"name\":\"set-github-status\",\"script\":\"#! /usr/bin/env bash\\n# Don't use set -x to avoid exposing github token\\nset -e\\n\\nif [ $(params.skip) == \\\"true\\\" ]; then\\n  echo \\\"Skipping setting github status\\\"\\n  exit 0\\nfi\\n\\necho \\\"Setting github status of commit $(params.commit_sha) to $(params.state)\\\"\\n\\nset-github-status \\\\\\n  --git-repo-url \\\"$(params.git_repo_url)\\\" \\\\\\n  --commit-sha \\\"$(params.commit_sha)\\\" \\\\\\n  --status \\\"$(params.state)\\\" \\\\\\n  --context \\\"$(params.context)\\\" \\\\\\n  --description \\\"$(params.description)\\\" \\\\\\n  --target-url \\\"$(params.target_url)\\\"\\n\"}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3"
+      },
+      "creationTimestamp": "2021-11-10T18:40:07Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "set-github-status-failure-without-link",
+        "tekton.dev/task": "set-github-status"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:params": {},
+                "f:steps": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:40:14Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-set-github-status-fail-djbgg",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201691343",
+      "uid": "f6a7b489-7d9f-4b3c-9d6d-7d677917bef4"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "pipeline_image",
+          "value": "quay.io/amisstea/operator-pipelines-images:latest"
+        },
+        {
+          "name": "git_repo_url",
+          "value": "https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git"
+        },
+        {
+          "name": "commit_sha",
+          "value": "b991e252da91df5429e9b2b26d6f88d681a8f754"
+        },
+        {
+          "name": "description",
+          "value": "Failed to certify the Operator bundle."
+        },
+        {
+          "name": "state",
+          "value": "failure"
+        },
+        {
+          "name": "context",
+          "value": "operator/test"
+        },
+        {
+          "name": "github_token_secret_name",
+          "value": "github-bot-token"
+        },
+        {
+          "name": "github_token_secret_key",
+          "value": "github_bot_token"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "set-github-status"
+      },
+      "timeout": "1h0m0s"
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:40:14Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:40:14Z",
+          "message": "All Steps have completed executing",
+          "reason": "Succeeded",
+          "status": "True",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-set-github-status-fail-5tzw9",
+      "startTime": "2021-11-10T18:40:07Z",
+      "steps": [
+        {
+          "container": "step-set-github-status",
+          "imageID": "quay.io/amisstea/operator-pipelines-images@sha256:01e4902f75eac486608082a3b3d6419a675c841aef25221dbc2a3f135dc16923",
+          "name": "set-github-status",
+          "terminated": {
+            "containerID": "cri-o://0386da56b1abacdeb888fcf85babe6f6830bad3d7c95597c0114542a276bdca4",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:40:14Z",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:40:14Z"
+          }
+        }
+      ],
+      "taskSpec": {
+        "params": [
+          {
+            "name": "pipeline_image",
+            "type": "string"
+          },
+          {
+            "name": "git_repo_url",
+            "type": "string"
+          },
+          {
+            "description": "SHA of the commit to set the status for.",
+            "name": "commit_sha",
+            "type": "string"
+          },
+          {
+            "description": "Description attached to the github status.",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "description": "The github status to set for the given commit.",
+            "name": "state",
+            "type": "string"
+          },
+          {
+            "description": "Context attached to the github status.",
+            "name": "context",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "URL to more details about the status.",
+            "name": "target_url",
+            "type": "string"
+          },
+          {
+            "default": "false",
+            "description": "Flag to skip the setting of github status.",
+            "name": "skip",
+            "type": "string"
+          },
+          {
+            "default": "github",
+            "description": "The name of the Kubernetes Secret that contains the GitHub token.",
+            "name": "github_token_secret_name",
+            "type": "string"
+          },
+          {
+            "default": "token",
+            "description": "The key within the Kubernetes Secret that contains the GitHub token.",
+            "name": "github_token_secret_key",
+            "type": "string"
+          }
+        ],
+        "steps": [
+          {
+            "env": [
+              {
+                "name": "GITHUB_TOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "$(params.github_token_secret_key)",
+                    "name": "$(params.github_token_secret_name)"
+                  }
+                }
+              }
+            ],
+            "image": "$(params.pipeline_image)",
+            "name": "set-github-status",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\n# Don't use set -x to avoid exposing github token\nset -e\n\nif [ $(params.skip) == \"true\" ]; then\n  echo \"Skipping setting github status\"\n  exit 0\nfi\n\necho \"Setting github status of commit $(params.commit_sha) to $(params.state)\"\n\nset-github-status \\\n  --git-repo-url \"$(params.git_repo_url)\" \\\n  --commit-sha \"$(params.commit_sha)\" \\\n  --status \"$(params.state)\" \\\n  --context \"$(params.context)\" \\\n  --description \"$(params.description)\" \\\n  --target-url \"$(params.target_url)\"\n"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{},\"name\":\"content-hash\",\"namespace\":\"amisstea\"},\"spec\":{\"params\":[{\"name\":\"pipeline_image\"},{\"name\":\"bundle_path\"}],\"results\":[{\"name\":\"md5sum\"}],\"steps\":[{\"image\":\"$(params.pipeline_image)\",\"name\":\"compute-md5sum\",\"script\":\"#! /usr/bin/env bash\\nset -xe\\necho \\\"Compute md5hash of bundle content...\\\"\\n\\nfind $(params.bundle_path) -not -name \\\"Dockerfile\\\" -type f | \\\\\\n  tr '\\\\n' '\\\\0' | \\\\\\n  xargs -r0 -I {} md5sum \\\"{}\\\" | \\\\\\n  sort \\u003e\\u003e hashes.txt\\n\\ncat hashes.txt\\n\\nmd5sum hashes.txt | awk '{ print $1 }' | tr -d $'\\\\n' | tee $(results.md5sum.path)\\n\",\"workingDir\":\"$(workspaces.source.path)\"}],\"workspaces\":[{\"name\":\"source\"}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3"
+      },
+      "creationTimestamp": "2021-11-10T18:39:46Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "content-hash",
+        "tekton.dev/task": "content-hash"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {},
+              "f:workspaces": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskResults": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:params": {},
+                "f:results": {},
+                "f:steps": {},
+                "f:workspaces": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:40:03Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-content-hash-8584b",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201691034",
+      "uid": "42ccf7dd-3298-4640-b922-0cd6a7adfe04"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "pipeline_image",
+          "value": "quay.io/amisstea/operator-pipelines-images:latest"
+        },
+        {
+          "name": "bundle_path",
+          "value": "operators/nxrm-operator-amisstea/0.0.1"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "content-hash"
+      },
+      "timeout": "1h0m0s",
+      "workspaces": [
+        {
+          "name": "source",
+          "persistentVolumeClaim": {
+            "claimName": "pvc-5cae1cb924"
+          },
+          "subPath": "src"
+        }
+      ]
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:40:03Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:40:03Z",
+          "message": "All Steps have completed executing",
+          "reason": "Succeeded",
+          "status": "True",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-content-hash-8584b-pod-978mf",
+      "startTime": "2021-11-10T18:39:46Z",
+      "steps": [
+        {
+          "container": "step-compute-md5sum",
+          "imageID": "quay.io/amisstea/operator-pipelines-images@sha256:01e4902f75eac486608082a3b3d6419a675c841aef25221dbc2a3f135dc16923",
+          "name": "compute-md5sum",
+          "terminated": {
+            "containerID": "cri-o://2c50afe1942e439ac6438dae94130f1d8f7c23dc8a7b531d89512fc1c89fd856",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:40:03Z",
+            "message": "[{\"key\":\"md5sum\",\"value\":\"ce5334847963485e5b56e9c5e53154c4\",\"type\":\"TaskRunResult\"}]",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:40:03Z"
+          }
+        }
+      ],
+      "taskResults": [
+        {
+          "name": "md5sum",
+          "value": "ce5334847963485e5b56e9c5e53154c4"
+        }
+      ],
+      "taskSpec": {
+        "params": [
+          {
+            "name": "pipeline_image",
+            "type": "string"
+          },
+          {
+            "name": "bundle_path",
+            "type": "string"
+          }
+        ],
+        "results": [
+          {
+            "description": "",
+            "name": "md5sum"
+          }
+        ],
+        "steps": [
+          {
+            "image": "$(params.pipeline_image)",
+            "name": "compute-md5sum",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\nset -xe\necho \"Compute md5hash of bundle content...\"\n\nfind $(params.bundle_path) -not -name \"Dockerfile\" -type f | \\\n  tr '\\n' '\\0' | \\\n  xargs -r0 -I {} md5sum \"{}\" | \\\n  sort >> hashes.txt\n\ncat hashes.txt\n\nmd5sum hashes.txt | awk '{ print $1 }' | tr -d $'\\n' | tee $(results.md5sum.path)\n",
+            "workingDir": "$(workspaces.source.path)"
+          }
+        ],
+        "workspaces": [
+          {
+            "name": "source"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{\"redhat.com/support\":\"This is a intended to be a helpful support message.\\n\\n***Troubleshooting Tips***\\n\\n1. Have you tried X?\\n2. Have you tried Y?\\n\"},\"name\":\"certification-project-check\",\"namespace\":\"amisstea\"},\"spec\":{\"params\":[{\"name\":\"pipeline_image\"},{\"description\":\"path indicating the location of the certified bundle within the repository\",\"name\":\"bundle_path\"}],\"results\":[{\"description\":\"Identifier of certification project from Red Hat Connect\",\"name\":\"certification_project_id\"}],\"steps\":[{\"image\":\"$(params.pipeline_image)\",\"name\":\"certification-project-check\",\"script\":\"#! /usr/bin/env bash\\necho \\\"Checking availability of cert project identifier\\\"\\nexit 1\\n\\nPKG_PATH=$(dirname $(realpath $(params.bundle_path)))\\n\\nCI_FILE_PATH=\\\"$PKG_PATH/ci.yaml\\\"\\n\\nCERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id')\\n\\nif [ -z $CERT_PROJECT_ID ]; then\\n  echo \\\"Certification project ID is missing in ci.yaml file (cert_project_id)\\\"\\n  exit 1\\nfi\\n\\necho -n $CERT_PROJECT_ID | tee $(results.certification_project_id.path)\\n\",\"workingDir\":\"$(workspaces.source.path)\"}],\"workspaces\":[{\"name\":\"source\"}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3",
+        "redhat.com/support": "This is a intended to be a helpful support message.\n\n***Troubleshooting Tips***\n\n1. Have you tried X?\n2. Have you tried Y?\n"
+      },
+      "creationTimestamp": "2021-11-10T18:39:46Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "certification-project-check",
+        "tekton.dev/task": "certification-project-check"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {},
+                "f:redhat.com/support": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {},
+              "f:workspaces": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:params": {},
+                "f:results": {},
+                "f:steps": {},
+                "f:workspaces": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:40:03Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-certification-project--22lbc",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201691032",
+      "uid": "4a1d6d79-494e-41d9-8e29-c3a90eae9c3e"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "pipeline_image",
+          "value": "quay.io/amisstea/operator-pipelines-images:latest"
+        },
+        {
+          "name": "bundle_path",
+          "value": "operators/nxrm-operator-amisstea/0.0.1"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "certification-project-check"
+      },
+      "timeout": "1h0m0s",
+      "workspaces": [
+        {
+          "name": "source",
+          "persistentVolumeClaim": {
+            "claimName": "pvc-5cae1cb924"
+          },
+          "subPath": "src"
+        }
+      ]
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:40:03Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:40:03Z",
+          "message": "\"step-certification-project-check\" exited with code 1 (image: \"quay.io/amisstea/operator-pipelines-images@sha256:01e4902f75eac486608082a3b3d6419a675c841aef25221dbc2a3f135dc16923\"); for logs run: kubectl -n amisstea logs operator-hosted-pipeline-run-bvjls-certification-project--dx5rc -c step-certification-project-check\n",
+          "reason": "Failed",
+          "status": "False",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-certification-project--dx5rc",
+      "startTime": "2021-11-10T18:39:46Z",
+      "steps": [
+        {
+          "container": "step-certification-project-check",
+          "imageID": "quay.io/amisstea/operator-pipelines-images@sha256:01e4902f75eac486608082a3b3d6419a675c841aef25221dbc2a3f135dc16923",
+          "name": "certification-project-check",
+          "terminated": {
+            "containerID": "cri-o://cfd7efaf7a1a566c8315257a778e0ed31d0528622bd4e266115d2f5ba8e37238",
+            "exitCode": 1,
+            "finishedAt": "2021-11-10T18:40:02Z",
+            "reason": "Error",
+            "startedAt": "2021-11-10T18:40:02Z"
+          }
+        }
+      ],
+      "taskSpec": {
+        "params": [
+          {
+            "name": "pipeline_image",
+            "type": "string"
+          },
+          {
+            "description": "path indicating the location of the certified bundle within the repository",
+            "name": "bundle_path",
+            "type": "string"
+          }
+        ],
+        "results": [
+          {
+            "description": "Identifier of certification project from Red Hat Connect",
+            "name": "certification_project_id"
+          }
+        ],
+        "steps": [
+          {
+            "image": "$(params.pipeline_image)",
+            "name": "certification-project-check",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\necho \"Checking availability of cert project identifier\"\nexit 1\n\nPKG_PATH=$(dirname $(realpath $(params.bundle_path)))\n\nCI_FILE_PATH=\"$PKG_PATH/ci.yaml\"\n\nCERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id')\n\nif [ -z $CERT_PROJECT_ID ]; then\n  echo \"Certification project ID is missing in ci.yaml file (cert_project_id)\"\n  exit 1\nfi\n\necho -n $CERT_PROJECT_ID | tee $(results.certification_project_id.path)\n",
+            "workingDir": "$(workspaces.source.path)"
+          }
+        ],
+        "workspaces": [
+          {
+            "name": "source"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{},\"name\":\"bundle-path-validation\",\"namespace\":\"amisstea\"},\"spec\":{\"params\":[{\"name\":\"pipeline_image\"},{\"description\":\"path indicating the location of the Operator bundle within the repository\",\"name\":\"bundle_path\"}],\"results\":[{\"description\":\"Operator package name\",\"name\":\"package_name\"},{\"description\":\"Operator bundle version\",\"name\":\"bundle_version\"}],\"steps\":[{\"image\":\"$(params.pipeline_image)\",\"name\":\"bundle-parse\",\"script\":\"#! /usr/bin/env bash\\nset -xe\\n\\nBUNDLE_PATH=$(realpath $(params.bundle_path))\\n\\necho -n $BUNDLE_PATH | rev | cut -d '/' -f 2 | tr -d $'\\\\n' | rev | tee $(results.package_name.path)\\necho -n $BUNDLE_PATH | rev | cut -d '/' -f 1 | tr -d $'\\\\n' | rev | tee $(results.bundle_version.path)\\n\",\"workingDir\":\"$(workspaces.source.path)\"}],\"workspaces\":[{\"name\":\"source\"}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3"
+      },
+      "creationTimestamp": "2021-11-10T18:39:29Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "bundle-path-validation",
+        "tekton.dev/task": "bundle-path-validation"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {},
+              "f:workspaces": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskResults": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:params": {},
+                "f:results": {},
+                "f:steps": {},
+                "f:workspaces": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:39:43Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-bundle-path-validation-jfzk2",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201690413",
+      "uid": "7bf3032c-f4d1-4071-93bc-1296cbedbebb"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "pipeline_image",
+          "value": "quay.io/amisstea/operator-pipelines-images:latest"
+        },
+        {
+          "name": "bundle_path",
+          "value": "operators/nxrm-operator-amisstea/0.0.1"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "bundle-path-validation"
+      },
+      "timeout": "1h0m0s",
+      "workspaces": [
+        {
+          "name": "source",
+          "persistentVolumeClaim": {
+            "claimName": "pvc-5cae1cb924"
+          },
+          "subPath": "src"
+        }
+      ]
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:39:43Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:39:43Z",
+          "message": "All Steps have completed executing",
+          "reason": "Succeeded",
+          "status": "True",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-bundle-path-validation-cfk64",
+      "startTime": "2021-11-10T18:39:29Z",
+      "steps": [
+        {
+          "container": "step-bundle-parse",
+          "imageID": "quay.io/amisstea/operator-pipelines-images@sha256:01e4902f75eac486608082a3b3d6419a675c841aef25221dbc2a3f135dc16923",
+          "name": "bundle-parse",
+          "terminated": {
+            "containerID": "cri-o://f141521e72fecfa13c640021cb48c4ec89a8a2ab3b9cef4047e0913fd088ac21",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:39:42Z",
+            "message": "[{\"key\":\"bundle_version\",\"value\":\"0.0.1\",\"type\":\"TaskRunResult\"},{\"key\":\"package_name\",\"value\":\"nxrm-operator-amisstea\",\"type\":\"TaskRunResult\"}]",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:39:42Z"
+          }
+        }
+      ],
+      "taskResults": [
+        {
+          "name": "bundle_version",
+          "value": "0.0.1"
+        },
+        {
+          "name": "package_name",
+          "value": "nxrm-operator-amisstea"
+        }
+      ],
+      "taskSpec": {
+        "params": [
+          {
+            "name": "pipeline_image",
+            "type": "string"
+          },
+          {
+            "description": "path indicating the location of the Operator bundle within the repository",
+            "name": "bundle_path",
+            "type": "string"
+          }
+        ],
+        "results": [
+          {
+            "description": "Operator package name",
+            "name": "package_name"
+          },
+          {
+            "description": "Operator bundle version",
+            "name": "bundle_version"
+          }
+        ],
+        "steps": [
+          {
+            "image": "$(params.pipeline_image)",
+            "name": "bundle-parse",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\nset -xe\n\nBUNDLE_PATH=$(realpath $(params.bundle_path))\n\necho -n $BUNDLE_PATH | rev | cut -d '/' -f 2 | tr -d $'\\n' | rev | tee $(results.package_name.path)\necho -n $BUNDLE_PATH | rev | cut -d '/' -f 1 | tr -d $'\\n' | rev | tee $(results.bundle_version.path)\n",
+            "workingDir": "$(workspaces.source.path)"
+          }
+        ],
+        "workspaces": [
+          {
+            "name": "source"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{},\"name\":\"get-bundle-path\",\"namespace\":\"amisstea\"},\"spec\":{\"params\":[{\"name\":\"git_pr_title\"}],\"results\":[{\"name\":\"bundle_path\"}],\"steps\":[{\"env\":[{\"name\":\"PR_TITLE\",\"value\":\"$(params.git_pr_title)\"}],\"image\":\"registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe\",\"name\":\"get-bundle-path\",\"script\":\"#! /usr/bin/env bash\\nset -xe\\n\\n# remove \\\"operator \\\" prefix\\nOPERATOR_NAME_AND_VERSION=${PR_TITLE#operator }\\n\\n# remove brackets in version, and concatenate name and version with slash\\nBUNDLE_PATH=$(echo $OPERATOR_NAME_AND_VERSION | tr -d \\\"()\\\" | tr \\\" \\\" \\\"/\\\")\\n\\nBUNDLE_PATH=$(echo operators/$BUNDLE_PATH)\\n\\necho -n $BUNDLE_PATH | tee $(results.bundle_path.path)\\n\"}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3"
+      },
+      "creationTimestamp": "2021-11-10T18:39:19Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "get-bundle-path",
+        "tekton.dev/task": "get-bundle-path"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskResults": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:params": {},
+                "f:results": {},
+                "f:steps": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:39:27Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-get-bundle-path-bbltz",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201690051",
+      "uid": "02bd16a9-2e2a-41ca-a4f1-4d38eb884f9c"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "git_pr_title",
+          "value": "operator nxrm-operator-amisstea (0.0.1)"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "get-bundle-path"
+      },
+      "timeout": "1h0m0s"
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:39:27Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:39:27Z",
+          "message": "All Steps have completed executing",
+          "reason": "Succeeded",
+          "status": "True",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-get-bundle-path-bbltz--t96kx",
+      "startTime": "2021-11-10T18:39:19Z",
+      "steps": [
+        {
+          "container": "step-get-bundle-path",
+          "imageID": "registry.access.redhat.com/ubi8-minimal@sha256:27a3683c44e97432453ad25bf4a64d040e2c82cfe0e0b36ebf1d74d68e22b1c6",
+          "name": "get-bundle-path",
+          "terminated": {
+            "containerID": "cri-o://07252daaeaa952971421644f3be562066dbc24ac2ea04997468119840538285b",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:39:26Z",
+            "message": "[{\"key\":\"bundle_path\",\"value\":\"operators/nxrm-operator-amisstea/0.0.1\",\"type\":\"TaskRunResult\"}]",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:39:26Z"
+          }
+        }
+      ],
+      "taskResults": [
+        {
+          "name": "bundle_path",
+          "value": "operators/nxrm-operator-amisstea/0.0.1"
+        }
+      ],
+      "taskSpec": {
+        "params": [
+          {
+            "name": "git_pr_title",
+            "type": "string"
+          }
+        ],
+        "results": [
+          {
+            "description": "",
+            "name": "bundle_path"
+          }
+        ],
+        "steps": [
+          {
+            "env": [
+              {
+                "name": "PR_TITLE",
+                "value": "$(params.git_pr_title)"
+              }
+            ],
+            "image": "registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe",
+            "name": "get-bundle-path",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\nset -xe\n\n# remove \"operator \" prefix\nOPERATOR_NAME_AND_VERSION=${PR_TITLE#operator }\n\n# remove brackets in version, and concatenate name and version with slash\nBUNDLE_PATH=$(echo $OPERATOR_NAME_AND_VERSION | tr -d \"()\" | tr \" \" \"/\")\n\nBUNDLE_PATH=$(echo operators/$BUNDLE_PATH)\n\necho -n $BUNDLE_PATH | tee $(results.bundle_path.path)\n"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{},\"name\":\"validate-pr-title\",\"namespace\":\"amisstea\"},\"spec\":{\"params\":[{\"name\":\"pipeline_image\"},{\"name\":\"git_pr_title\"}],\"results\":[{\"name\":\"operator_name\"},{\"name\":\"bundle_version\"}],\"steps\":[{\"image\":\"$(params.pipeline_image)\",\"name\":\"submission-validation\",\"script\":\"#! /usr/bin/env bash\\nset -xe\\n\\n# Parse PR title to see, whether it complies the regex.\\n# Get the operator name and version from PR title.\\nverify-pr-title \\\\\\n  --pr-title \\\"$(params.git_pr_title)\\\" \\\\\\n  --verbose\\n\\ncat bundle_name | tee $(results.operator_name.path)\\ncat bundle_version | tee $(results.bundle_version.path)\\n\"}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3"
+      },
+      "creationTimestamp": "2021-11-10T18:39:09Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "validate-pr-title",
+        "tekton.dev/task": "validate-pr-title"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskResults": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:params": {},
+                "f:results": {},
+                "f:steps": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:39:17Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-validate-pr-title-5d9cm",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201689824",
+      "uid": "e01acb5b-16b3-458e-8ec9-d866b3530018"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "pipeline_image",
+          "value": "quay.io/amisstea/operator-pipelines-images:latest"
+        },
+        {
+          "name": "git_pr_title",
+          "value": "operator nxrm-operator-amisstea (0.0.1)"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "validate-pr-title"
+      },
+      "timeout": "1h0m0s"
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:39:16Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:39:16Z",
+          "message": "All Steps have completed executing",
+          "reason": "Succeeded",
+          "status": "True",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-validate-pr-title-5d9c-4zfsw",
+      "startTime": "2021-11-10T18:39:10Z",
+      "steps": [
+        {
+          "container": "step-submission-validation",
+          "imageID": "quay.io/amisstea/operator-pipelines-images@sha256:01e4902f75eac486608082a3b3d6419a675c841aef25221dbc2a3f135dc16923",
+          "name": "submission-validation",
+          "terminated": {
+            "containerID": "cri-o://b16506567c19ec4c53bf10fdc3f2031fed7c5ff7048413c1bfdfdefed9b642b9",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:39:16Z",
+            "message": "[{\"key\":\"bundle_version\",\"value\":\"0.0.1\",\"type\":\"TaskRunResult\"},{\"key\":\"operator_name\",\"value\":\"nxrm-operator-amisstea\",\"type\":\"TaskRunResult\"}]",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:39:16Z"
+          }
+        }
+      ],
+      "taskResults": [
+        {
+          "name": "bundle_version",
+          "value": "0.0.1"
+        },
+        {
+          "name": "operator_name",
+          "value": "nxrm-operator-amisstea"
+        }
+      ],
+      "taskSpec": {
+        "params": [
+          {
+            "name": "pipeline_image",
+            "type": "string"
+          },
+          {
+            "name": "git_pr_title",
+            "type": "string"
+          }
+        ],
+        "results": [
+          {
+            "description": "",
+            "name": "operator_name"
+          },
+          {
+            "description": "",
+            "name": "bundle_version"
+          }
+        ],
+        "steps": [
+          {
+            "image": "$(params.pipeline_image)",
+            "name": "submission-validation",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\nset -xe\n\n# Parse PR title to see, whether it complies the regex.\n# Get the operator name and version from PR title.\nverify-pr-title \\\n  --pr-title \"$(params.git_pr_title)\" \\\n  --verbose\n\ncat bundle_name | tee $(results.operator_name.path)\ncat bundle_version | tee $(results.bundle_version.path)\n"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{\"tekton.dev/categories\":\"Git\",\"tekton.dev/displayName\":\"git clone\",\"tekton.dev/pipelines.minVersion\":\"0.21.0\",\"tekton.dev/tags\":\"git\"},\"labels\":{\"app.kubernetes.io/version\":\"0.4\"},\"name\":\"git-clone\",\"namespace\":\"amisstea\"},\"spec\":{\"description\":\"These Tasks are Git tasks to work with repositories used by other tasks in your Pipeline.\\nThe git-clone Task will clone a repo from the provided url into the output Workspace. By default the repo will be cloned into the root of your Workspace. You can clone into a subdirectory by setting this Task's subdirectory param. This Task also supports sparse checkouts. To perform a sparse checkout, pass a list of comma separated directory patterns to this Task's sparseCheckoutDirectories param.\",\"params\":[{\"description\":\"Repository URL to clone from.\",\"name\":\"url\",\"type\":\"string\"},{\"default\":\"\",\"description\":\"Revision to checkout. (branch, tag, sha, ref, etc...)\",\"name\":\"revision\",\"type\":\"string\"},{\"default\":\"\",\"description\":\"Refspec to fetch before checking out revision.\",\"name\":\"refspec\"},{\"default\":\"true\",\"description\":\"Initialize and fetch git submodules.\",\"name\":\"submodules\",\"type\":\"string\"},{\"default\":\"1\",\"description\":\"Perform a shallow clone, fetching only the most recent N commits.\",\"name\":\"depth\",\"type\":\"string\"},{\"default\":\"true\",\"description\":\"Set the `http.sslVerify` global git config. Setting this to `false` is not advised unless you are sure that you trust your git remote.\",\"name\":\"sslVerify\",\"type\":\"string\"},{\"default\":\"\",\"description\":\"Subdirectory inside the `output` Workspace to clone the repo into.\",\"name\":\"subdirectory\",\"type\":\"string\"},{\"default\":\"\",\"description\":\"Define the directory patterns to match or exclude when performing a sparse checkout.\",\"name\":\"sparseCheckoutDirectories\",\"type\":\"string\"},{\"default\":\"true\",\"description\":\"Clean out the contents of the destination directory if it already exists before cloning.\",\"name\":\"deleteExisting\",\"type\":\"string\"},{\"default\":\"\",\"description\":\"HTTP proxy server for non-SSL requests.\",\"name\":\"httpProxy\",\"type\":\"string\"},{\"default\":\"\",\"description\":\"HTTPS proxy server for SSL requests.\",\"name\":\"httpsProxy\",\"type\":\"string\"},{\"default\":\"\",\"description\":\"Opt out of proxying HTTP/HTTPS requests.\",\"name\":\"noProxy\",\"type\":\"string\"},{\"default\":\"true\",\"description\":\"Log the commands that are executed during `git-clone`'s operation.\",\"name\":\"verbose\",\"type\":\"string\"},{\"default\":\"gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0\",\"description\":\"The image providing the git-init binary that this Task runs.\",\"name\":\"gitInitImage\",\"type\":\"string\"},{\"default\":\"/tekton/home\",\"description\":\"Absolute path to the user's home directory. Set this explicitly if you are running the image as a non-root user or have overridden\\nthe gitInitImage param with an image containing custom user configuration.\\n\",\"name\":\"userHome\",\"type\":\"string\"}],\"results\":[{\"description\":\"The precise commit SHA that was fetched by this Task.\",\"name\":\"commit\"},{\"description\":\"The precise URL that was fetched by this Task.\",\"name\":\"url\"}],\"steps\":[{\"env\":[{\"name\":\"HOME\",\"value\":\"$(params.userHome)\"},{\"name\":\"PARAM_URL\",\"value\":\"$(params.url)\"},{\"name\":\"PARAM_REVISION\",\"value\":\"$(params.revision)\"},{\"name\":\"PARAM_REFSPEC\",\"value\":\"$(params.refspec)\"},{\"name\":\"PARAM_SUBMODULES\",\"value\":\"$(params.submodules)\"},{\"name\":\"PARAM_DEPTH\",\"value\":\"$(params.depth)\"},{\"name\":\"PARAM_SSL_VERIFY\",\"value\":\"$(params.sslVerify)\"},{\"name\":\"PARAM_SUBDIRECTORY\",\"value\":\"$(params.subdirectory)\"},{\"name\":\"PARAM_DELETE_EXISTING\",\"value\":\"$(params.deleteExisting)\"},{\"name\":\"PARAM_HTTP_PROXY\",\"value\":\"$(params.httpProxy)\"},{\"name\":\"PARAM_HTTPS_PROXY\",\"value\":\"$(params.httpsProxy)\"},{\"name\":\"PARAM_NO_PROXY\",\"value\":\"$(params.noProxy)\"},{\"name\":\"PARAM_VERBOSE\",\"value\":\"$(params.verbose)\"},{\"name\":\"PARAM_SPARSE_CHECKOUT_DIRECTORIES\",\"value\":\"$(params.sparseCheckoutDirectories)\"},{\"name\":\"PARAM_USER_HOME\",\"value\":\"$(params.userHome)\"},{\"name\":\"WORKSPACE_OUTPUT_PATH\",\"value\":\"$(workspaces.output.path)\"},{\"name\":\"WORKSPACE_SSH_DIRECTORY_BOUND\",\"value\":\"$(workspaces.ssh-directory.bound)\"},{\"name\":\"WORKSPACE_SSH_DIRECTORY_PATH\",\"value\":\"$(workspaces.ssh-directory.path)\"},{\"name\":\"WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND\",\"value\":\"$(workspaces.basic-auth.bound)\"},{\"name\":\"WORKSPACE_BASIC_AUTH_DIRECTORY_PATH\",\"value\":\"$(workspaces.basic-auth.path)\"}],\"image\":\"$(params.gitInitImage)\",\"name\":\"clone\",\"script\":\"#!/usr/bin/env sh\\nset -eu\\n\\nif [ \\\"${PARAM_VERBOSE}\\\" = \\\"true\\\" ] ; then\\n  set -x\\nfi\\n\\nif [ \\\"${WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND}\\\" = \\\"true\\\" ] ; then\\n  cp \\\"${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.git-credentials\\\" \\\"${PARAM_USER_HOME}/.git-credentials\\\"\\n  cp \\\"${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.gitconfig\\\" \\\"${PARAM_USER_HOME}/.gitconfig\\\"\\n  chmod 400 \\\"${PARAM_USER_HOME}/.git-credentials\\\"\\n  chmod 400 \\\"${PARAM_USER_HOME}/.gitconfig\\\"\\nfi\\n\\nif [ \\\"${WORKSPACE_SSH_DIRECTORY_BOUND}\\\" = \\\"true\\\" ] ; then\\n  cp -R \\\"${WORKSPACE_SSH_DIRECTORY_PATH}\\\" \\\"${PARAM_USER_HOME}\\\"/.ssh\\n  chmod 700 \\\"${PARAM_USER_HOME}\\\"/.ssh\\n  chmod -R 400 \\\"${PARAM_USER_HOME}\\\"/.ssh/*\\nfi\\n\\nCHECKOUT_DIR=\\\"${WORKSPACE_OUTPUT_PATH}/${PARAM_SUBDIRECTORY}\\\"\\n\\ncleandir() {\\n  # Delete any existing contents of the repo directory if it exists.\\n  #\\n  # We don't just \\\"rm -rf ${CHECKOUT_DIR}\\\" because ${CHECKOUT_DIR} might be \\\"/\\\"\\n  # or the root of a mounted volume.\\n  if [ -d \\\"${CHECKOUT_DIR}\\\" ] ; then\\n    # Delete non-hidden files and directories\\n    rm -rf \\\"${CHECKOUT_DIR:?}\\\"/*\\n    # Delete files and directories starting with . but excluding ..\\n    rm -rf \\\"${CHECKOUT_DIR}\\\"/.[!.]*\\n    # Delete files and directories starting with .. plus any other character\\n    rm -rf \\\"${CHECKOUT_DIR}\\\"/..?*\\n  fi\\n}\\n\\nif [ \\\"${PARAM_DELETE_EXISTING}\\\" = \\\"true\\\" ] ; then\\n  cleandir\\nfi\\n\\ntest -z \\\"${PARAM_HTTP_PROXY}\\\" || export HTTP_PROXY=\\\"${PARAM_HTTP_PROXY}\\\"\\ntest -z \\\"${PARAM_HTTPS_PROXY}\\\" || export HTTPS_PROXY=\\\"${PARAM_HTTPS_PROXY}\\\"\\ntest -z \\\"${PARAM_NO_PROXY}\\\" || export NO_PROXY=\\\"${PARAM_NO_PROXY}\\\"\\n\\n/ko-app/git-init \\\\\\n  -url=\\\"${PARAM_URL}\\\" \\\\\\n  -revision=\\\"${PARAM_REVISION}\\\" \\\\\\n  -refspec=\\\"${PARAM_REFSPEC}\\\" \\\\\\n  -path=\\\"${CHECKOUT_DIR}\\\" \\\\\\n  -sslVerify=\\\"${PARAM_SSL_VERIFY}\\\" \\\\\\n  -submodules=\\\"${PARAM_SUBMODULES}\\\" \\\\\\n  -depth=\\\"${PARAM_DEPTH}\\\" \\\\\\n  -sparseCheckoutDirectories=\\\"${PARAM_SPARSE_CHECKOUT_DIRECTORIES}\\\"\\ncd \\\"${CHECKOUT_DIR}\\\"\\nRESULT_SHA=\\\"$(git rev-parse HEAD)\\\"\\nEXIT_CODE=\\\"$?\\\"\\nif [ \\\"${EXIT_CODE}\\\" != 0 ] ; then\\n  exit \\\"${EXIT_CODE}\\\"\\nfi\\nprintf \\\"%s\\\" \\\"${RESULT_SHA}\\\" \\u003e \\\"$(results.commit.path)\\\"\\nprintf \\\"%s\\\" \\\"${PARAM_URL}\\\" \\u003e \\\"$(results.url.path)\\\"\\n\"}],\"workspaces\":[{\"description\":\"The git repo will be cloned onto the volume backing this Workspace.\",\"name\":\"output\"},{\"description\":\"A .ssh directory with private key, known_hosts, config, etc. Copied to\\nthe user's home before git commands are executed. Used to authenticate\\nwith the git remote when performing the clone. Binding a Secret to this\\nWorkspace is strongly recommended over other volume types.\\n\",\"name\":\"ssh-directory\",\"optional\":true},{\"description\":\"A Workspace containing a .gitconfig and .git-credentials file. These\\nwill be copied to the user's home before any git commands are run. Any\\nother files in this Workspace are ignored. It is strongly recommended\\nto use ssh-directory over basic-auth whenever possible and to bind a\\nSecret to this Workspace over other volume types.\\n\",\"name\":\"basic-auth\",\"optional\":true}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3",
+        "tekton.dev/categories": "Git",
+        "tekton.dev/displayName": "git clone",
+        "tekton.dev/pipelines.minVersion": "0.21.0",
+        "tekton.dev/tags": "git"
+      },
+      "creationTimestamp": "2021-11-10T18:38:35Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "app.kubernetes.io/version": "0.4",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "checkout",
+        "tekton.dev/task": "git-clone"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {},
+                "f:tekton.dev/categories": {},
+                "f:tekton.dev/displayName": {},
+                "f:tekton.dev/pipelines.minVersion": {},
+                "f:tekton.dev/tags": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:app.kubernetes.io/version": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {},
+              "f:workspaces": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskResults": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:description": {},
+                "f:params": {},
+                "f:results": {},
+                "f:steps": {},
+                "f:workspaces": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:39:05Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-checkout-qwr4v",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201689581",
+      "uid": "2edf27f9-3530-441e-9412-ac4ad71b6929"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "url",
+          "value": "https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git"
+        },
+        {
+          "name": "revision",
+          "value": "nxrm-operator-amisstea"
+        },
+        {
+          "name": "gitInitImage",
+          "value": "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "git-clone"
+      },
+      "timeout": "1h0m0s",
+      "workspaces": [
+        {
+          "name": "output",
+          "persistentVolumeClaim": {
+            "claimName": "pvc-5cae1cb924"
+          },
+          "subPath": "src"
+        }
+      ]
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:39:05Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:39:05Z",
+          "message": "All Steps have completed executing",
+          "reason": "Succeeded",
+          "status": "True",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-checkout-qwr4v-pod-2cnq5",
+      "startTime": "2021-11-10T18:38:35Z",
+      "steps": [
+        {
+          "container": "step-clone",
+          "imageID": "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:1823148105cd1856c829091a55d9dcd95587644719a922f516155e233432e34e",
+          "name": "clone",
+          "terminated": {
+            "containerID": "cri-o://ba4725b22194528175d812d4c320b9cc183c51550ea3907ab4a7268267cf7615",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:39:05Z",
+            "message": "[{\"key\":\"commit\",\"value\":\"b991e252da91df5429e9b2b26d6f88d681a8f754\",\"type\":\"TaskRunResult\"},{\"key\":\"url\",\"value\":\"https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git\",\"type\":\"TaskRunResult\"}]",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:39:05Z"
+          }
+        }
+      ],
+      "taskResults": [
+        {
+          "name": "commit",
+          "value": "b991e252da91df5429e9b2b26d6f88d681a8f754"
+        },
+        {
+          "name": "url",
+          "value": "https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git"
+        }
+      ],
+      "taskSpec": {
+        "description": "These Tasks are Git tasks to work with repositories used by other tasks in your Pipeline.\nThe git-clone Task will clone a repo from the provided url into the output Workspace. By default the repo will be cloned into the root of your Workspace. You can clone into a subdirectory by setting this Task's subdirectory param. This Task also supports sparse checkouts. To perform a sparse checkout, pass a list of comma separated directory patterns to this Task's sparseCheckoutDirectories param.",
+        "params": [
+          {
+            "description": "Repository URL to clone from.",
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Revision to checkout. (branch, tag, sha, ref, etc...)",
+            "name": "revision",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Refspec to fetch before checking out revision.",
+            "name": "refspec",
+            "type": "string"
+          },
+          {
+            "default": "true",
+            "description": "Initialize and fetch git submodules.",
+            "name": "submodules",
+            "type": "string"
+          },
+          {
+            "default": "1",
+            "description": "Perform a shallow clone, fetching only the most recent N commits.",
+            "name": "depth",
+            "type": "string"
+          },
+          {
+            "default": "true",
+            "description": "Set the `http.sslVerify` global git config. Setting this to `false` is not advised unless you are sure that you trust your git remote.",
+            "name": "sslVerify",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Subdirectory inside the `output` Workspace to clone the repo into.",
+            "name": "subdirectory",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Define the directory patterns to match or exclude when performing a sparse checkout.",
+            "name": "sparseCheckoutDirectories",
+            "type": "string"
+          },
+          {
+            "default": "true",
+            "description": "Clean out the contents of the destination directory if it already exists before cloning.",
+            "name": "deleteExisting",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "HTTP proxy server for non-SSL requests.",
+            "name": "httpProxy",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "HTTPS proxy server for SSL requests.",
+            "name": "httpsProxy",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Opt out of proxying HTTP/HTTPS requests.",
+            "name": "noProxy",
+            "type": "string"
+          },
+          {
+            "default": "true",
+            "description": "Log the commands that are executed during `git-clone`'s operation.",
+            "name": "verbose",
+            "type": "string"
+          },
+          {
+            "default": "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0",
+            "description": "The image providing the git-init binary that this Task runs.",
+            "name": "gitInitImage",
+            "type": "string"
+          },
+          {
+            "default": "/tekton/home",
+            "description": "Absolute path to the user's home directory. Set this explicitly if you are running the image as a non-root user or have overridden\nthe gitInitImage param with an image containing custom user configuration.\n",
+            "name": "userHome",
+            "type": "string"
+          }
+        ],
+        "results": [
+          {
+            "description": "The precise commit SHA that was fetched by this Task.",
+            "name": "commit"
+          },
+          {
+            "description": "The precise URL that was fetched by this Task.",
+            "name": "url"
+          }
+        ],
+        "steps": [
+          {
+            "env": [
+              {
+                "name": "HOME",
+                "value": "$(params.userHome)"
+              },
+              {
+                "name": "PARAM_URL",
+                "value": "$(params.url)"
+              },
+              {
+                "name": "PARAM_REVISION",
+                "value": "$(params.revision)"
+              },
+              {
+                "name": "PARAM_REFSPEC",
+                "value": "$(params.refspec)"
+              },
+              {
+                "name": "PARAM_SUBMODULES",
+                "value": "$(params.submodules)"
+              },
+              {
+                "name": "PARAM_DEPTH",
+                "value": "$(params.depth)"
+              },
+              {
+                "name": "PARAM_SSL_VERIFY",
+                "value": "$(params.sslVerify)"
+              },
+              {
+                "name": "PARAM_SUBDIRECTORY",
+                "value": "$(params.subdirectory)"
+              },
+              {
+                "name": "PARAM_DELETE_EXISTING",
+                "value": "$(params.deleteExisting)"
+              },
+              {
+                "name": "PARAM_HTTP_PROXY",
+                "value": "$(params.httpProxy)"
+              },
+              {
+                "name": "PARAM_HTTPS_PROXY",
+                "value": "$(params.httpsProxy)"
+              },
+              {
+                "name": "PARAM_NO_PROXY",
+                "value": "$(params.noProxy)"
+              },
+              {
+                "name": "PARAM_VERBOSE",
+                "value": "$(params.verbose)"
+              },
+              {
+                "name": "PARAM_SPARSE_CHECKOUT_DIRECTORIES",
+                "value": "$(params.sparseCheckoutDirectories)"
+              },
+              {
+                "name": "PARAM_USER_HOME",
+                "value": "$(params.userHome)"
+              },
+              {
+                "name": "WORKSPACE_OUTPUT_PATH",
+                "value": "$(workspaces.output.path)"
+              },
+              {
+                "name": "WORKSPACE_SSH_DIRECTORY_BOUND",
+                "value": "$(workspaces.ssh-directory.bound)"
+              },
+              {
+                "name": "WORKSPACE_SSH_DIRECTORY_PATH",
+                "value": "$(workspaces.ssh-directory.path)"
+              },
+              {
+                "name": "WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND",
+                "value": "$(workspaces.basic-auth.bound)"
+              },
+              {
+                "name": "WORKSPACE_BASIC_AUTH_DIRECTORY_PATH",
+                "value": "$(workspaces.basic-auth.path)"
+              }
+            ],
+            "image": "$(params.gitInitImage)",
+            "name": "clone",
+            "resources": {},
+            "script": "#!/usr/bin/env sh\nset -eu\n\nif [ \"${PARAM_VERBOSE}\" = \"true\" ] ; then\n  set -x\nfi\n\nif [ \"${WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND}\" = \"true\" ] ; then\n  cp \"${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.git-credentials\" \"${PARAM_USER_HOME}/.git-credentials\"\n  cp \"${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.gitconfig\" \"${PARAM_USER_HOME}/.gitconfig\"\n  chmod 400 \"${PARAM_USER_HOME}/.git-credentials\"\n  chmod 400 \"${PARAM_USER_HOME}/.gitconfig\"\nfi\n\nif [ \"${WORKSPACE_SSH_DIRECTORY_BOUND}\" = \"true\" ] ; then\n  cp -R \"${WORKSPACE_SSH_DIRECTORY_PATH}\" \"${PARAM_USER_HOME}\"/.ssh\n  chmod 700 \"${PARAM_USER_HOME}\"/.ssh\n  chmod -R 400 \"${PARAM_USER_HOME}\"/.ssh/*\nfi\n\nCHECKOUT_DIR=\"${WORKSPACE_OUTPUT_PATH}/${PARAM_SUBDIRECTORY}\"\n\ncleandir() {\n  # Delete any existing contents of the repo directory if it exists.\n  #\n  # We don't just \"rm -rf ${CHECKOUT_DIR}\" because ${CHECKOUT_DIR} might be \"/\"\n  # or the root of a mounted volume.\n  if [ -d \"${CHECKOUT_DIR}\" ] ; then\n    # Delete non-hidden files and directories\n    rm -rf \"${CHECKOUT_DIR:?}\"/*\n    # Delete files and directories starting with . but excluding ..\n    rm -rf \"${CHECKOUT_DIR}\"/.[!.]*\n    # Delete files and directories starting with .. plus any other character\n    rm -rf \"${CHECKOUT_DIR}\"/..?*\n  fi\n}\n\nif [ \"${PARAM_DELETE_EXISTING}\" = \"true\" ] ; then\n  cleandir\nfi\n\ntest -z \"${PARAM_HTTP_PROXY}\" || export HTTP_PROXY=\"${PARAM_HTTP_PROXY}\"\ntest -z \"${PARAM_HTTPS_PROXY}\" || export HTTPS_PROXY=\"${PARAM_HTTPS_PROXY}\"\ntest -z \"${PARAM_NO_PROXY}\" || export NO_PROXY=\"${PARAM_NO_PROXY}\"\n\n/ko-app/git-init \\\n  -url=\"${PARAM_URL}\" \\\n  -revision=\"${PARAM_REVISION}\" \\\n  -refspec=\"${PARAM_REFSPEC}\" \\\n  -path=\"${CHECKOUT_DIR}\" \\\n  -sslVerify=\"${PARAM_SSL_VERIFY}\" \\\n  -submodules=\"${PARAM_SUBMODULES}\" \\\n  -depth=\"${PARAM_DEPTH}\" \\\n  -sparseCheckoutDirectories=\"${PARAM_SPARSE_CHECKOUT_DIRECTORIES}\"\ncd \"${CHECKOUT_DIR}\"\nRESULT_SHA=\"$(git rev-parse HEAD)\"\nEXIT_CODE=\"$?\"\nif [ \"${EXIT_CODE}\" != 0 ] ; then\n  exit \"${EXIT_CODE}\"\nfi\nprintf \"%s\" \"${RESULT_SHA}\" > \"$(results.commit.path)\"\nprintf \"%s\" \"${PARAM_URL}\" > \"$(results.url.path)\"\n"
+          }
+        ],
+        "workspaces": [
+          {
+            "description": "The git repo will be cloned onto the volume backing this Workspace.",
+            "name": "output"
+          },
+          {
+            "description": "A .ssh directory with private key, known_hosts, config, etc. Copied to\nthe user's home before git commands are executed. Used to authenticate\nwith the git remote when performing the clone. Binding a Secret to this\nWorkspace is strongly recommended over other volume types.\n",
+            "name": "ssh-directory",
+            "optional": true
+          },
+          {
+            "description": "A Workspace containing a .gitconfig and .git-credentials file. These\nwill be copied to the user's home before any git commands are run. Any\nother files in this Workspace are ignored. It is strongly recommended\nto use ssh-directory over basic-auth whenever possible and to bind a\nSecret to this Workspace over other volume types.\n",
+            "name": "basic-auth",
+            "optional": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{},\"name\":\"set-env\",\"namespace\":\"amisstea\"},\"spec\":{\"params\":[{\"description\":\"Environment. One of [dev, qa, stage, prod]\",\"name\":\"env\"},{\"description\":\"Pyxis access type. One of [internal, external]\",\"name\":\"access_type\"}],\"results\":[{\"description\":\"Container API URL based for selected environment\",\"name\":\"pyxis_url\"},{\"description\":\"Target branch for submitted PR in upstream repository\",\"name\":\"target_branch\"},{\"description\":\"Connect SPA URL based on selected environment\",\"name\":\"connect_url\"},{\"description\":\"Connect container registry proxy based on selected environment\",\"name\":\"connect_registry\"},{\"description\":\"IIB URL based on selected environment\",\"name\":\"iib_url\"}],\"steps\":[{\"image\":\"registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe\",\"name\":\"set-env\",\"script\":\"#! /usr/bin/env bash\\nset -ex\\n\\nENV=\\\"$(params.env)\\\"\\nACCESS_TYPE=\\\"$(params.access_type)\\\"\\n\\nif ! [[ \\\"$ACCESS_TYPE\\\" =~ ^(internal|external)$ ]]; then\\n    echo \\\"Unknown access type.\\\"\\n    exit 1\\nfi\\n\\ncase $ENV in\\n    prod)\\n        case $ACCESS_TYPE in\\n            internal)\\n            PYXIS_URL=\\\"https://pyxis.engineering.redhat.com\\\"\\n            ;;\\n            external)\\n            PYXIS_URL=\\\"https://catalog.redhat.com/api/containers/\\\"\\n            ;;\\n        esac\\n        TARGET_BRANCH=\\\"main\\\"\\n        CONNECT_URL=\\\"https://connect.redhat.com\\\"\\n        CONNECT_REGISTRY=\\\"registry.connect.redhat.com\\\"\\n        IIB_URL=\\\"https://iib.engineering.redhat.com\\\"\\n    ;;\\n    stage)\\n        case $ACCESS_TYPE in\\n            internal)\\n            PYXIS_URL=\\\"https://pyxis.isv.stage.engineering.redhat.com\\\"\\n            ;;\\n            external)\\n            PYXIS_URL=\\\"https://pyxis-isv-stage.api.redhat.com\\\"\\n            ;;\\n        esac\\n        TARGET_BRANCH=\\\"stage\\\"\\n        CONNECT_URL=\\\"https://connect.stage.redhat.com\\\"\\n        CONNECT_REGISTRY=\\\"registry.connect.stage.redhat.com\\\"\\n        IIB_URL=\\\"https://iib.stage.engineering.redhat.com\\\"\\n    ;;\\n    qa)\\n        case $ACCESS_TYPE in\\n            internal)\\n            PYXIS_URL=\\\"https://pyxis.isv.qa.engineering.redhat.com\\\"\\n            ;;\\n            external)\\n            PYXIS_URL=\\\"https://pyxis-isv-qa.api.redhat.com\\\"\\n            ;;\\n        esac\\n        TARGET_BRANCH=\\\"qa\\\"\\n        CONNECT_URL=\\\"https://connect.qa.redhat.com\\\"\\n        CONNECT_REGISTRY=\\\"registry.connect.qa.redhat.com\\\"\\n        IIB_URL=\\\"https://iib.stage.engineering.redhat.com\\\"\\n    ;;\\n    dev)\\n        case $ACCESS_TYPE in\\n            internal)\\n            PYXIS_URL=\\\"https://pyxis.isv.dev.engineering.redhat.com\\\"\\n            ;;\\n            external)\\n            PYXIS_URL=\\\"https://pyxis-isv-dev.api.redhat.com\\\"\\n            ;;\\n        esac\\n        TARGET_BRANCH=\\\"dev\\\"\\n        CONNECT_URL=\\\"https://connect.dev.redhat.com\\\"\\n        CONNECT_REGISTRY=\\\"registry.connect.dev.redhat.com\\\"\\n        IIB_URL=\\\"https://iib.stage.engineering.redhat.com\\\"\\n    ;;\\n    *)\\n        echo \\\"Unknown environment.\\\"\\n        exit 1\\n        ;;\\nesac\\n\\necho -n $PYXIS_URL | tee $(results.pyxis_url.path)\\necho -n $TARGET_BRANCH | tee $(results.target_branch.path)\\necho -n $CONNECT_URL | tee $(results.connect_url.path)\\necho -n $CONNECT_REGISTRY | tee $(results.connect_registry.path)\\necho -n $IIB_URL | tee $(results.iib_url.path)\\n\"}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3"
+      },
+      "creationTimestamp": "2021-11-10T18:38:23Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "set-env",
+        "tekton.dev/task": "set-env"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskResults": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:params": {},
+                "f:results": {},
+                "f:steps": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:38:31Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-set-env-7zrjr",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201688873",
+      "uid": "9ad50045-4bbb-4d1a-b94f-b23891a97774"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "env",
+          "value": "dev"
+        },
+        {
+          "name": "access_type",
+          "value": "internal"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "set-env"
+      },
+      "timeout": "1h0m0s"
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:38:31Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:38:31Z",
+          "message": "All Steps have completed executing",
+          "reason": "Succeeded",
+          "status": "True",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-set-env-7zrjr-pod-xd7xz",
+      "startTime": "2021-11-10T18:38:23Z",
+      "steps": [
+        {
+          "container": "step-set-env",
+          "imageID": "registry.access.redhat.com/ubi8-minimal@sha256:27a3683c44e97432453ad25bf4a64d040e2c82cfe0e0b36ebf1d74d68e22b1c6",
+          "name": "set-env",
+          "terminated": {
+            "containerID": "cri-o://2c1d8dc44f6f3196bf0c9acf1d039221b512d8fb74729adf275ebdf81e11b33a",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:38:30Z",
+            "message": "[{\"key\":\"connect_registry\",\"value\":\"registry.connect.dev.redhat.com\",\"type\":\"TaskRunResult\"},{\"key\":\"connect_url\",\"value\":\"https://connect.dev.redhat.com\",\"type\":\"TaskRunResult\"},{\"key\":\"iib_url\",\"value\":\"https://iib.stage.engineering.redhat.com\",\"type\":\"TaskRunResult\"},{\"key\":\"pyxis_url\",\"value\":\"https://pyxis.isv.dev.engineering.redhat.com\",\"type\":\"TaskRunResult\"},{\"key\":\"target_branch\",\"value\":\"dev\",\"type\":\"TaskRunResult\"}]",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:38:30Z"
+          }
+        }
+      ],
+      "taskResults": [
+        {
+          "name": "connect_registry",
+          "value": "registry.connect.dev.redhat.com"
+        },
+        {
+          "name": "connect_url",
+          "value": "https://connect.dev.redhat.com"
+        },
+        {
+          "name": "iib_url",
+          "value": "https://iib.stage.engineering.redhat.com"
+        },
+        {
+          "name": "pyxis_url",
+          "value": "https://pyxis.isv.dev.engineering.redhat.com"
+        },
+        {
+          "name": "target_branch",
+          "value": "dev"
+        }
+      ],
+      "taskSpec": {
+        "params": [
+          {
+            "description": "Environment. One of [dev, qa, stage, prod]",
+            "name": "env",
+            "type": "string"
+          },
+          {
+            "description": "Pyxis access type. One of [internal, external]",
+            "name": "access_type",
+            "type": "string"
+          }
+        ],
+        "results": [
+          {
+            "description": "Container API URL based for selected environment",
+            "name": "pyxis_url"
+          },
+          {
+            "description": "Target branch for submitted PR in upstream repository",
+            "name": "target_branch"
+          },
+          {
+            "description": "Connect SPA URL based on selected environment",
+            "name": "connect_url"
+          },
+          {
+            "description": "Connect container registry proxy based on selected environment",
+            "name": "connect_registry"
+          },
+          {
+            "description": "IIB URL based on selected environment",
+            "name": "iib_url"
+          }
+        ],
+        "steps": [
+          {
+            "image": "registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe",
+            "name": "set-env",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\nset -ex\n\nENV=\"$(params.env)\"\nACCESS_TYPE=\"$(params.access_type)\"\n\nif ! [[ \"$ACCESS_TYPE\" =~ ^(internal|external)$ ]]; then\n    echo \"Unknown access type.\"\n    exit 1\nfi\n\ncase $ENV in\n    prod)\n        case $ACCESS_TYPE in\n            internal)\n            PYXIS_URL=\"https://pyxis.engineering.redhat.com\"\n            ;;\n            external)\n            PYXIS_URL=\"https://catalog.redhat.com/api/containers/\"\n            ;;\n        esac\n        TARGET_BRANCH=\"main\"\n        CONNECT_URL=\"https://connect.redhat.com\"\n        CONNECT_REGISTRY=\"registry.connect.redhat.com\"\n        IIB_URL=\"https://iib.engineering.redhat.com\"\n    ;;\n    stage)\n        case $ACCESS_TYPE in\n            internal)\n            PYXIS_URL=\"https://pyxis.isv.stage.engineering.redhat.com\"\n            ;;\n            external)\n            PYXIS_URL=\"https://pyxis-isv-stage.api.redhat.com\"\n            ;;\n        esac\n        TARGET_BRANCH=\"stage\"\n        CONNECT_URL=\"https://connect.stage.redhat.com\"\n        CONNECT_REGISTRY=\"registry.connect.stage.redhat.com\"\n        IIB_URL=\"https://iib.stage.engineering.redhat.com\"\n    ;;\n    qa)\n        case $ACCESS_TYPE in\n            internal)\n            PYXIS_URL=\"https://pyxis.isv.qa.engineering.redhat.com\"\n            ;;\n            external)\n            PYXIS_URL=\"https://pyxis-isv-qa.api.redhat.com\"\n            ;;\n        esac\n        TARGET_BRANCH=\"qa\"\n        CONNECT_URL=\"https://connect.qa.redhat.com\"\n        CONNECT_REGISTRY=\"registry.connect.qa.redhat.com\"\n        IIB_URL=\"https://iib.stage.engineering.redhat.com\"\n    ;;\n    dev)\n        case $ACCESS_TYPE in\n            internal)\n            PYXIS_URL=\"https://pyxis.isv.dev.engineering.redhat.com\"\n            ;;\n            external)\n            PYXIS_URL=\"https://pyxis-isv-dev.api.redhat.com\"\n            ;;\n        esac\n        TARGET_BRANCH=\"dev\"\n        CONNECT_URL=\"https://connect.dev.redhat.com\"\n        CONNECT_REGISTRY=\"registry.connect.dev.redhat.com\"\n        IIB_URL=\"https://iib.stage.engineering.redhat.com\"\n    ;;\n    *)\n        echo \"Unknown environment.\"\n        exit 1\n        ;;\nesac\n\necho -n $PYXIS_URL | tee $(results.pyxis_url.path)\necho -n $TARGET_BRANCH | tee $(results.target_branch.path)\necho -n $CONNECT_URL | tee $(results.connect_url.path)\necho -n $CONNECT_REGISTRY | tee $(results.connect_registry.path)\necho -n $IIB_URL | tee $(results.iib_url.path)\n"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "tekton.dev/v1beta1",
+    "kind": "TaskRun",
+    "metadata": {
+      "annotations": {
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"tekton.dev/v1beta1\",\"kind\":\"Task\",\"metadata\":{\"annotations\":{},\"name\":\"set-github-status\",\"namespace\":\"amisstea\"},\"spec\":{\"params\":[{\"name\":\"pipeline_image\"},{\"name\":\"git_repo_url\"},{\"description\":\"SHA of the commit to set the status for.\",\"name\":\"commit_sha\"},{\"description\":\"Description attached to the github status.\",\"name\":\"description\"},{\"description\":\"The github status to set for the given commit.\",\"name\":\"state\"},{\"description\":\"Context attached to the github status.\",\"name\":\"context\"},{\"default\":\"\",\"description\":\"URL to more details about the status.\",\"name\":\"target_url\"},{\"default\":\"false\",\"description\":\"Flag to skip the setting of github status.\",\"name\":\"skip\"},{\"default\":\"github\",\"description\":\"The name of the Kubernetes Secret that contains the GitHub token.\",\"name\":\"github_token_secret_name\"},{\"default\":\"token\",\"description\":\"The key within the Kubernetes Secret that contains the GitHub token.\",\"name\":\"github_token_secret_key\"}],\"steps\":[{\"env\":[{\"name\":\"GITHUB_TOKEN\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"$(params.github_token_secret_key)\",\"name\":\"$(params.github_token_secret_name)\"}}}],\"image\":\"$(params.pipeline_image)\",\"name\":\"set-github-status\",\"script\":\"#! /usr/bin/env bash\\n# Don't use set -x to avoid exposing github token\\nset -e\\n\\nif [ $(params.skip) == \\\"true\\\" ]; then\\n  echo \\\"Skipping setting github status\\\"\\n  exit 0\\nfi\\n\\necho \\\"Setting github status of commit $(params.commit_sha) to $(params.state)\\\"\\n\\nset-github-status \\\\\\n  --git-repo-url \\\"$(params.git_repo_url)\\\" \\\\\\n  --commit-sha \\\"$(params.commit_sha)\\\" \\\\\\n  --status \\\"$(params.state)\\\" \\\\\\n  --context \\\"$(params.context)\\\" \\\\\\n  --description \\\"$(params.description)\\\" \\\\\\n  --target-url \\\"$(params.target_url)\\\"\\n\"}]}}\n",
+        "pipeline.tekton.dev/release": "v0.24.3"
+      },
+      "creationTimestamp": "2021-11-10T18:38:11Z",
+      "generation": 1,
+      "labels": {
+        "app.kubernetes.io/managed-by": "tekton-pipelines",
+        "tekton.dev/pipeline": "operator-hosted-pipeline",
+        "tekton.dev/pipelineRun": "operator-hosted-pipeline-run-bvjls",
+        "tekton.dev/pipelineTask": "set-github-status-pending",
+        "tekton.dev/task": "set-github-status"
+      },
+      "managedFields": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:kubectl.kubernetes.io/last-applied-configuration": {},
+                "f:pipeline.tekton.dev/release": {}
+              },
+              "f:labels": {
+                ".": {},
+                "f:tekton.dev/pipeline": {},
+                "f:tekton.dev/pipelineRun": {},
+                "f:tekton.dev/pipelineTask": {},
+                "f:tekton.dev/task": {}
+              },
+              "f:ownerReferences": {
+                ".": {},
+                "k:{\"uid\":\"c1298eee-b1d0-4ade-a21c-33e2f83f1d11\"}": {
+                  ".": {},
+                  "f:apiVersion": {},
+                  "f:blockOwnerDeletion": {},
+                  "f:controller": {},
+                  "f:kind": {},
+                  "f:name": {},
+                  "f:uid": {}
+                }
+              }
+            },
+            "f:spec": {
+              ".": {},
+              "f:params": {},
+              "f:resources": {},
+              "f:serviceAccountName": {},
+              "f:taskRef": {
+                ".": {},
+                "f:kind": {},
+                "f:name": {}
+              },
+              "f:timeout": {}
+            },
+            "f:status": {
+              ".": {},
+              "f:completionTime": {},
+              "f:conditions": {},
+              "f:podName": {},
+              "f:startTime": {},
+              "f:steps": {},
+              "f:taskSpec": {
+                ".": {},
+                "f:params": {},
+                "f:steps": {}
+              }
+            }
+          },
+          "manager": "openshift-pipelines-controller",
+          "operation": "Update",
+          "time": "2021-11-10T18:38:19Z"
+        }
+      ],
+      "name": "operator-hosted-pipeline-run-bvjls-set-github-status-pend-kddr7",
+      "namespace": "amisstea",
+      "ownerReferences": [
+        {
+          "apiVersion": "tekton.dev/v1beta1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "PipelineRun",
+          "name": "operator-hosted-pipeline-run-bvjls",
+          "uid": "c1298eee-b1d0-4ade-a21c-33e2f83f1d11"
+        }
+      ],
+      "resourceVersion": "201688611",
+      "uid": "ded38d54-bba3-47c6-bea8-b6397dd18d86"
+    },
+    "spec": {
+      "params": [
+        {
+          "name": "pipeline_image",
+          "value": "quay.io/amisstea/operator-pipelines-images:latest"
+        },
+        {
+          "name": "git_repo_url",
+          "value": "https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git"
+        },
+        {
+          "name": "commit_sha",
+          "value": "b991e252da91df5429e9b2b26d6f88d681a8f754"
+        },
+        {
+          "name": "description",
+          "value": "Certifying the Operator bundle."
+        },
+        {
+          "name": "state",
+          "value": "pending"
+        },
+        {
+          "name": "context",
+          "value": "operator/test"
+        },
+        {
+          "name": "github_token_secret_name",
+          "value": "github-bot-token"
+        },
+        {
+          "name": "github_token_secret_key",
+          "value": "github_bot_token"
+        }
+      ],
+      "resources": {},
+      "serviceAccountName": "pipeline",
+      "taskRef": {
+        "kind": "Task",
+        "name": "set-github-status"
+      },
+      "timeout": "1h0m0s"
+    },
+    "status": {
+      "completionTime": "2021-11-10T18:38:19Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2021-11-10T18:38:19Z",
+          "message": "All Steps have completed executing",
+          "reason": "Succeeded",
+          "status": "True",
+          "type": "Succeeded"
+        }
+      ],
+      "podName": "operator-hosted-pipeline-run-bvjls-set-github-status-pend-7cz7x",
+      "startTime": "2021-11-10T18:38:11Z",
+      "steps": [
+        {
+          "container": "step-set-github-status",
+          "imageID": "quay.io/amisstea/operator-pipelines-images@sha256:01e4902f75eac486608082a3b3d6419a675c841aef25221dbc2a3f135dc16923",
+          "name": "set-github-status",
+          "terminated": {
+            "containerID": "cri-o://ca85db9dd58e27b855138f0427c0f36616831fdd29259952613dde02239d0a86",
+            "exitCode": 0,
+            "finishedAt": "2021-11-10T18:38:18Z",
+            "reason": "Completed",
+            "startedAt": "2021-11-10T18:38:17Z"
+          }
+        }
+      ],
+      "taskSpec": {
+        "params": [
+          {
+            "name": "pipeline_image",
+            "type": "string"
+          },
+          {
+            "name": "git_repo_url",
+            "type": "string"
+          },
+          {
+            "description": "SHA of the commit to set the status for.",
+            "name": "commit_sha",
+            "type": "string"
+          },
+          {
+            "description": "Description attached to the github status.",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "description": "The github status to set for the given commit.",
+            "name": "state",
+            "type": "string"
+          },
+          {
+            "description": "Context attached to the github status.",
+            "name": "context",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "URL to more details about the status.",
+            "name": "target_url",
+            "type": "string"
+          },
+          {
+            "default": "false",
+            "description": "Flag to skip the setting of github status.",
+            "name": "skip",
+            "type": "string"
+          },
+          {
+            "default": "github",
+            "description": "The name of the Kubernetes Secret that contains the GitHub token.",
+            "name": "github_token_secret_name",
+            "type": "string"
+          },
+          {
+            "default": "token",
+            "description": "The key within the Kubernetes Secret that contains the GitHub token.",
+            "name": "github_token_secret_key",
+            "type": "string"
+          }
+        ],
+        "steps": [
+          {
+            "env": [
+              {
+                "name": "GITHUB_TOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "$(params.github_token_secret_key)",
+                    "name": "$(params.github_token_secret_name)"
+                  }
+                }
+              }
+            ],
+            "image": "$(params.pipeline_image)",
+            "name": "set-github-status",
+            "resources": {},
+            "script": "#! /usr/bin/env bash\n# Don't use set -x to avoid exposing github token\nset -e\n\nif [ $(params.skip) == \"true\" ]; then\n  echo \"Skipping setting github status\"\n  exit 0\nfi\n\necho \"Setting github status of commit $(params.commit_sha) to $(params.state)\"\n\nset-github-status \\\n  --git-repo-url \"$(params.git_repo_url)\" \\\n  --commit-sha \"$(params.commit_sha)\" \\\n  --status \"$(params.state)\" \\\n  --context \"$(params.context)\" \\\n  --description \"$(params.description)\" \\\n  --target-url \"$(params.target_url)\"\n"
+          }
+        ]
+      }
+    }
+  }
+]

@@ -41,6 +41,7 @@ setup(
             "hydra-checklist=operatorcert.entrypoints.hydra_checklist:main",
             "create-container-image=operatorcert.entrypoints.create_container_image:main",
             "marketplace-replication=operatorcert.entrypoints.marketplace_replication:main",
+            "pipelinerun-summary=operatorcert.entrypoints.pipelinerun_summary:main",
         ],
     },
 )
