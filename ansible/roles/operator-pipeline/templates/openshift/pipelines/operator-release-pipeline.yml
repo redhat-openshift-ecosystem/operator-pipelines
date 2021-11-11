@@ -29,7 +29,7 @@ spec:
       default: "prod"
     - name: pipeline_image
       description: An image of operator-pipeline-images.
-      default: "quay.io/redhat-isv/operator-pipelines-images:v1.0.5"
+      default: "quay.io/redhat-isv/operator-pipelines-images:v1.0.6"
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github-bot-token
