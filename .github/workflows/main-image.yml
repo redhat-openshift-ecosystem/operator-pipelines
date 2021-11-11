@@ -26,7 +26,7 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: operator-pipelines-images
-          tags: latest ${{ github.sha }}
+          tags: haripate-test
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile
 
