@@ -218,24 +218,30 @@ def get_files_added_in_pr(
     rsp = requests.get(compare_changes_url)
     rsp.raise_for_status()
 
-    added_files_names = []
+    added_files = []
     modified_files = []
+    allowed_files = []
+
     for file in rsp.json().get("files", []):
         if file["status"] == "added":
-            added_files_names.append(file["filename"])
+            added_files.append(file["filename"])
         else:
             # To prevent the modifications to previously merged bundles,
             # we allow only changed with status "added"
             modified_files.append(file)
+    allowed_files.extend(added_files)
 
     if modified_files:
         for modified_file in modified_files:
-            logging.error(
-                f"Change not permitted: file: {modified_file['filename']}, status: {modified_file['status']}"
-            )
-        raise RuntimeError("There are changes done to previously merged files")
+            if not modified_file["filename"].endswith("ci.yaml"):
+                logging.error(
+                    f"Change not permitted: file: {modified_file['filename']}, status: {modified_file['status']}"
+                )
+                raise RuntimeError("There are changes done to previously merged files")
+            else:
+                allowed_files.append(modified_file["filename"])        
 
-    return added_files_names
+    return allowed_files
 
 
 def verify_changed_files_location(

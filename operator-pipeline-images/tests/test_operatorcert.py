@@ -173,6 +173,24 @@ def test_get_files_added_in_pr_changed_files(mock_get: MagicMock):
         "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup"
     )
 
+@patch("requests.get")
+def test_get_files_added_in_pr_changed_ci_yaml(mock_get: MagicMock):
+    mock_rsp = MagicMock()
+    mock_rsp.json.return_value = {
+        "irrelevant_key": "abc",
+        "files": [
+            {"filename": "ci.yaml", "status": "changed"},
+        ],
+    }
+    mock_get.return_value = mock_rsp
+    files = operatorcert.get_files_added_in_pr("rh", "operator-repo", "main", "user:fixup")
+    
+    mock_get.assert_called_with(
+        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup"
+    )
+
+    assert files == ["ci.yaml"]
+
 
 @pytest.mark.parametrize(
     "wrong_change",
