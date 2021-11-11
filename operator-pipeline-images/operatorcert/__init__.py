@@ -221,6 +221,7 @@ def get_files_added_in_pr(
     added_files = []
     modified_files = []
     allowed_files = []
+
     for file in rsp.json().get("files", []):
         if file["status"] == "added":
             added_files.append(file["filename"])
