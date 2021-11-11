@@ -74,8 +74,9 @@ spec:
           CHECK_RESULTS=$(cat $RESULTS_FILE | jq -r '.passed')
           if [ $CHECK_RESULTS = "false" ]; then
             echo "Not all preflight tests passed."
+          else
+            echo "All preflight tests passed successfully."
           fi
-          echo "All preflight tests passed successfully."
           echo -n "$CHECK_RESULTS" | tee $(results.preflight_results_exists.path)
           echo -n "$RESULTS_FILE" | tee $(results.preflight_results.path)
         else
