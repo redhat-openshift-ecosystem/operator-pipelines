@@ -1,0 +1,9 @@
+python-magic==0.4.24
+pyyaml==5.4.1
+requests==2.26.0
+yq==2.12.2
+giturlparse==0.10.0
+html2text==2020.1.16
+requests_kerberos==0.12.0
+twirp==0.0.4
+google-api-core==2.0.1
