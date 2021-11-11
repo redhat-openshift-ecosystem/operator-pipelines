@@ -1,0 +1,12 @@
+# Ignoring git and cache folders
+.git
+.github
+.cache
+
+# Ignoring all the markdown and class files
+*.md
+docs
+
+#Ignoring tekton pipeine and ansible tasks
+templates
+ansible

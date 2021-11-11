@@ -1,0 +1,74 @@
+{
+  "image": "example.com/namespace/image-redacted:0.0.0",
+  "test_library": {
+    "version": "0.0.0",
+    "commit": "32fb47617b45e8a19aa7f83c1ecb9bba23f6baff",
+    "name": "preflight"
+  },
+  "passed": false,
+  "results": {
+    "passed": [
+      {
+        "name": "BasedOnUbi",
+        "elapsed_time": 3.544120881,
+        "description": "Checking if the container's base image is based on UBI"
+      },
+      {
+        "name": "HasLicense",
+        "elapsed_time": 3.56617583,
+        "description": "Checking if terms and conditions for images are present."
+      },
+      {
+        "name": "HasUniqueTag",
+        "elapsed_time": 4.357380708,
+        "description": "Checking if container has a tag other than 'latest'."
+      },
+      {
+        "name": "HasNoProhibitedPackages",
+        "elapsed_time": 2.62590324,
+        "description": "Checks to ensure that the image in use does not contain prohibited packages."
+      },
+      {
+        "name": "LayerCountAcceptable",
+        "elapsed_time": 0.216305213,
+        "description": "Checking if container has less than 40 layers"
+      },
+      {
+        "name": "HasRequiredLabel",
+        "elapsed_time": 0.222866372,
+        "description": "Checking if the required labels are present in the container metadata."
+      }
+    ],
+    "failed": [
+      {
+        "name": "HasMinimalVulnerabilities",
+        "elapsed_time": 42.251459143,
+        "description": "Checking for critical or important security vulnerabilites.",
+        "help": "Components in the container image cannot contain any critical or important vulnerabilities, as defined at https://access.redhat.com/security/updates/classification",
+        "suggestion": "Update your UBI image to the latest version or update the packages in your image to the latest versions distrubuted by Red Hat.",
+        "knowledgebase_url": "https://connect.redhat.com/zones/containers/container-certification-policy-guide",
+        "check_url": "https://connect.redhat.com/zones/containers/container-certification-policy-guide"
+      },
+      {
+        "name": "RunAsNonRoot",
+        "elapsed_time": 2.275981322,
+        "description": "Checking if container runs as the root user",
+        "help": "A container that does not specify a non-root user will fail the automatic certification, and will be subject to a manual review before the container can be approved for publication",
+        "suggestion": "Indicate a specific USER in the dockerfile or containerfile",
+        "knowledgebase_url": "https://connect.redhat.com/zones/containers/container-certification-policy-guide",
+        "check_url": "https://connect.redhat.com/zones/containers/container-certification-policy-guide"
+      }
+    ],
+    "errors": [
+      {
+        "name": "test-test",
+        "elapsed_time": 2.275981322,
+        "description": "Checking if container runs as the root user",
+        "help": "A container that does not specify a non-root user will fail the automatic certification, and will be subject to a manual review before the container can be approved for publication",
+        "suggestion": "Indicate a specific USER in the dockerfile or containerfile",
+        "knowledgebase_url": "https://connect.redhat.com/zones/containers/container-certification-policy-guide",
+        "check_url": "https://connect.redhat.com/zones/containers/container-certification-policy-guide"
+      }
+    ]
+  }
+}
