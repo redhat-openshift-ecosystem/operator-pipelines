@@ -381,6 +381,8 @@ spec:
       params:
         - name: dirty_flag
           value: "$(tasks.digest-pinning.results.dirty_flag)"
+        - name: related_images_flag
+          value: "$(tasks.digest-pinning.results.related_images_flag)"
 
     - name: content-hash
       runAfter:
