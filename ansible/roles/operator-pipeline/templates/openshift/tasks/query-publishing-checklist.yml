@@ -5,12 +5,31 @@ metadata:
   name: query-publishing-checklist
 spec:
   params:
+    - name: pipeline_image
     - name: cert_project_id
+      description: ID of the bundle Certification Project
+    - name: connect_url
+      description: URL to Red Hat Connect
+  workspaces:
+    - name: hydra-credentials
   steps:
-    - name: reserve-operator-name
-      image: registry.access.redhat.com/ubi8-minimal
+    - name: query-publishing-checklist
+      image: "$(params.pipeline_image)"
+      env:
+        - name: HYDRA_USERNAME_PATH
+          value: $(workspaces.hydra-credentials.path)/username
+        - name: HYDRA_PASSWORD_PATH
+          value: $(workspaces.hydra-credentials.path)/password
       script: |
         #! /usr/bin/env bash
-        # GET request to Hydra via cert_project_id
-        # Print checklist points
-        echo "ok, 200"
+        # Don't use set -x to avoid exposing Hydra credentials
+        set -e
+
+        HYDRA_URL=$(params.connect_url)/hydra/prm
+
+        export HYDRA_USERNAME=$(cat $HYDRA_USERNAME_PATH)
+        export HYDRA_PASSWORD=$(cat $HYDRA_PASSWORD_PATH)
+
+        hydra-checklist \
+          --cert-project-id "$(params.cert_project_id)" \
+          --hydra-url $HYDRA_URL

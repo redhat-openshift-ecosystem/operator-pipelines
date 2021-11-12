@@ -1,0 +1,167 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: preflight-trigger
+spec:
+  params:
+    - default: '4.9'
+      name: ocp_version
+      type: string
+    - default: trace
+      name: log_level
+      type: string
+    - name: bundle_index_image
+      type: string
+    - name: bundle_image
+      type: string
+    - name: asset_type
+      type: string
+    - default: 'false'
+      description: "Set to 'true' to skip"
+      name: skip
+      type: string
+  results:
+    - description: ''
+      name: log_output_file
+    - description: ''
+      name: result_output_file
+    - description: ''
+      name: artifacts_output_dir
+  steps:
+    - env:
+        - name: PIPELINE_GPG_DECRYPTION_PRIVATE_KEY
+          value: $(workspaces.gpg-decryption-key.path)/private
+        - name: PIPELINE_GPG_DECRYPTION_PUBLIC_KEY
+          value: $(workspaces.gpg-decryption-key.path)/public
+      image: docker.io/library/fedora
+      name: encrypt-and-encode-docker-config-json
+      resources: {}
+      script: |
+          #!/usr/bin/env bash
+
+          if [ "$(params.skip)" == "true" ]; then
+              echo "Preflight testing has been skipped"
+              exit 0
+          fi
+
+          set -e
+
+          if [ -f "$(workspaces.credentials.path)/project_dockerconfigjson" ];
+          then
+              gpg -q --import "${PIPELINE_GPG_DECRYPTION_PRIVATE_KEY}" 1> /dev/null
+              echo "$(gpg --list-keys|grep -B1 'Operator Pipelines'|awk 'NR==1 { print }'|tr -d '[:space:]')":6: | gpg --import-ownertrust 1> /dev/null
+
+              gpg -q --import "${PIPELINE_GPG_DECRYPTION_PUBLIC_KEY}" 1> /dev/null
+              echo "$(gpg --list-keys|grep -B1 'Preflight Trigger'|awk 'NR==1 { print }'|tr -d '[:space:]')":6: | gpg --import-ownertrust 1> /dev/null
+
+              gpg --encrypt --sign --armor -r "$(gpg --list-keys|grep -B1 'Preflight Trigger'|awk 'NR==1 { print }'|tr -d '[:space:]')" -o- "$(workspaces.credentials.path)/project_dockerconfigjson" | basenc --base16 -w0 > "$(workspaces.credentials.path)/project_dockerconfigjson.gpg.b16"
+          fi
+      workingDir: $(workspaces.output.path)
+    - image: registry.access.redhat.com/ubi8/go-toolset
+      name: clone-openshift-release-for-configs
+      resources: {}
+      script: |
+          #!/usr/bin/env bash
+
+          if [ "$(params.skip)" == "true" ]; then
+              echo "Preflight testing has been skipped"
+              exit 0
+          fi
+
+          echo "Cloning https://github.com/openshift/release"
+          git clone https://github.com/openshift/release
+      workingDir: $(workspaces.output.path)
+    - env:
+        - name: KUBECONFIG
+          value: $(workspaces.kubeconfig.path)/kubeconfig
+      image: quay.io/opdev/preflight-trigger
+      name: create-openshift-ci-prowjob
+      resources: {}
+      script: |
+          #!/usr/bin/env sh
+
+          if [ "$(params.skip)" == "true" ]; then
+              echo "Preflight testing has been skipped"
+              exit 0
+          fi
+
+          set -e
+
+          if [ -f "$(workspaces.credentials.path)/project_dockerconfigjson.gpg.b16" ]
+          then
+              PFLT_DOCKERCONFIG="$(cat "$(workspaces.credentials.path)/project_dockerconfigjson.gpg.b16")"
+              export PFLT_DOCKERCONFIG
+
+              preflight-trigger \
+          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-claim" \
+          -job-config-path "release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-periodics.yaml" \
+          -prow-config-path release/core-services/prow/02_config/_config.yaml \
+          -ocp-version "$(params.ocp_version)" \
+          -pflt-docker-config "${PFLT_DOCKERCONFIG}" \
+          -pflt-artifacts artifacts \
+          -pflt-log-level "$(params.log_level)" \
+          -pflt-index-image "$(params.bundle_index_image)" \
+          -test-asset "$(params.bundle_image)" \
+          -asset-type "$(params.asset_type)" \
+          -output-path prowjob-base-url
+          else
+              preflight-trigger \
+          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-claim" \
+          -job-config-path "release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-periodics.yaml" \
+          -prow-config-path release/core-services/prow/02_config/_config.yaml \
+          -ocp-version "$(params.ocp_version)" \
+          -pflt-artifacts artifacts \
+          -pflt-log-level "$(params.log_level)" \
+          -pflt-index-image "$(params.bundle_index_image)" \
+          -test-asset "$(params.bundle_image)" \
+          -asset-type "$(params.asset_type)" \
+          -output-path prowjob-base-url
+          fi
+      workingDir: $(workspaces.output.path)
+    - env:
+        - name: PIPELINE_GPG_DECRYPTION_PRIVATE_KEY
+          value: $(workspaces.gpg-decryption-key.path)/private
+        - name: PIPELINE_GPG_DECRYPTION_PUBLIC_KEY
+          value: $(workspaces.gpg-decryption-key.path)/public
+      image: docker.io/library/fedora
+      name: get-prowjob-artifacts-and-decrypt
+      resources: {}
+      script: |
+          #!/usr/bin/env bash
+
+          if [ "$(params.skip)" == "true" ]; then
+            echo "Preflight testing has been skipped"
+            echo -n "none" > "$(results.log_output_file.path)"
+            echo -n "none" > "$(results.result_output_file.path)"
+            echo -n "none" > "$(results.artifacts_output_dir.path)"
+            exit 0
+          fi
+
+          BASE_URL="https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/origin-ci-test/logs/"
+          PROWJOB_URL=$(awk '/prowjob_url/ { gsub(/"/, ""); print $2 }' prowjob-base-url)
+          PROWJOB_ID=${PROWJOB_URL##*/}
+          ARTIFACTS_TARBALL_URI="${BASE_URL}periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-claim/${PROWJOB_ID}/artifacts/preflight-common-claim/operator-pipelines-preflight-common-encrypt/artifacts/preflight.tar.gz.asc"
+
+          curl -sLO "${ARTIFACTS_TARBALL_URI}"
+
+          gpg -q --import "${PIPELINE_GPG_DECRYPTION_PRIVATE_KEY}" 1> /dev/null
+          echo "$(gpg --list-keys|grep -B1 'Operator Pipelines'|awk 'NR==1 { print }'|tr -d '[:space:]')":6: | gpg --import-ownertrust 1> /dev/null
+
+          gpg -q --import "${PIPELINE_GPG_DECRYPTION_PUBLIC_KEY}" 1> /dev/null
+          echo "$(gpg --list-keys|grep -B1 'Preflight Trigger'|awk 'NR==1 { print }'|tr -d '[:space:]')":6: | gpg --import-ownertrust 1> /dev/null
+
+          gpg -d preflight.tar.gz.asc | tar -xzf -
+
+          mv artifacts/results.json .
+          mv preflight.stdout artifacts/
+          mv preflight.stderr artifacts/
+
+          echo -n preflight.log | tee "$(results.log_output_file.path)"
+          echo -n results.json | tee "$(results.result_output_file.path)"
+          echo -n artifacts | tee "$(results.artifacts_output_dir.path)"
+      workingDir: $(workspaces.output.path)
+  workspaces:
+    - name: output
+    - name: kubeconfig
+    - name: gpg-decryption-key
+    - name: credentials

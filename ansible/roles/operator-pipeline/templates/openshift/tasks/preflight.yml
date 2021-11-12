@@ -5,11 +5,9 @@ metadata:
   name: preflight
 spec:
   params:
-    - name: preflight_results_exists
-      default: "false"
-      description: Skips preflight execution if set to "true"
+    - name: pipeline_image
     - name: base_image
-      default: quay.io/opdev/preflight:0.0.0
+      default: quay.io/redhat-isv/preflight-test@sha256:442ab9fc593021a371bd1ed9f445c3d0ab9a29d8584a8edf45535a37e415c7a7
       description: Preflight image used
     - name: package_name
       description: Package name for the Operator under test
@@ -24,10 +22,12 @@ spec:
       default: "default"
     - name: namespace
       description: The namespace for the preflight config
-      default: "$(context.taskRun.namespace)"
+      default: "default"
     - name: log_level
       description: Preflight logging level
-      default: info
+      default: trace
+    - name: cert_project_id
+      description: Certification project id
 
   results:
     - name: log_output_file
@@ -42,12 +42,12 @@ spec:
       description: Docker config for retrieving the bundle image
       optional: true
   steps:
-    - name: prepare-environment
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+    - name: prepare-docker-config
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.output.path)
       env:
-        - name: KUBECONFIG
-          value: $(workspaces.kubeconfig.path)/kubeconfig
+        - name: DOCKERCONFIG
+          value: $(workspaces.output.path)/preflight-docker-config.json
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -56,13 +56,14 @@ spec:
           # Combine the default credentials with those found in the workspace
           # to maintain access to the internal registry.
 
-          export DOCKER_CONFIG=/tmp/.docker
-          mkdir $DOCKER_CONFIG
           jq -s '.[0] * .[1]' \
             $(workspaces.credentials.path)/.dockerconfigjson \
             $HOME/.docker/config.json \
-            > $DOCKER_CONFIG/config.json
+            > $DOCKERCONFIG
+        else
+          cp $HOME/.docker/config.json $DOCKERCONFIG
         fi
+
     - name: check-operator
       image: $(params.base_image)
       workingDir: $(workspaces.output.path)
@@ -77,25 +78,37 @@ spec:
           value: preflight.log
         - name: PFLT_ARTIFACTS
           value: artifacts
-        - name: KUBECONFIG
-          value: $(workspaces.kubeconfig.path)/kubeconfig
         - name: PFLT_LOGLEVEL
           value: $(params.log_level)
+        - name: PFLT_CERTPROJECTID
+          value: $(params.cert_project_id)
+        - name: PFLT_DOCKERCONFIG
+          value: $(workspaces.output.path)/preflight-docker-config.json
+        - name: KUBECONFIG
+          value: $(workspaces.kubeconfig.path)/kubeconfig
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
-        if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
-          echo "Preflight results already exists- skipping"
-          echo -n "none" | tee $(results.log_output_file.path)
-          echo -n "none" | tee $(results.result_output_file.path)
-          echo -n "none" | tee $(results.artifacts_output_dir.path)
-          exit 0
-        fi
-
         preflight check operator $(params.bundle_image)
 
+        mv $PFLT_ARTIFACTS/results.json results.json
+        chmod +r results.json
         echo -n $PFLT_LOGFILE | tee $(results.log_output_file.path)
         echo -n results.json | tee $(results.result_output_file.path)
         echo -n $PFLT_ARTIFACTS | tee $(results.artifacts_output_dir.path)
+
+    - name: verify-results
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.output.path)
+      script: |
+        #! /usr/bin/env bash
+        set -ex -o pipefail
+
+        PASSED=$(cat results.json | jq -r '.passed')
+        if [ $PASSED = "false" ]; then
+          echo "Not all preflight tests passed."
+          exit 1
+        fi
+
+        echo "All preflight tests passed."

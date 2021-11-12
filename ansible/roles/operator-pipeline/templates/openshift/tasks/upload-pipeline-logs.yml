@@ -5,6 +5,7 @@ metadata:
   name: upload-pipeline-logs
 spec:
   params:
+    - name: pipeline_image
     - name: pyxis_api_key_secret
       default: pyxis-api-secret
       description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
@@ -14,7 +15,7 @@ spec:
     - name: pyxis_key_path
       default: ""
     - name: pyxis_url
-      default: https://catalog.redhat.com/api/containers/
+      default: https://catalog.redhat.com/api/containers
       description: Red Hat's container API URL
     - name: md5sum
       description: Operator content md5 hash
@@ -35,7 +36,7 @@ spec:
       optional: true
   steps:
     - name: get-pipeline-logs
-      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8:0.19.0-2
+      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -45,7 +46,7 @@ spec:
         tkn pipelinerun logs "$(params.pipeline_name)" > pipeline.logs
 
     - name: upload-pipeline-logs
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)
@@ -54,10 +55,11 @@ spec:
       script: |
         #! /usr/bin/env bash
         echo "Uploading pipeline logs"
-        set -xe
+        # DO NOT USE `set -x`, to avoid revealing the secrets in logs!
+        set -e
 
         if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
-          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
           export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
@@ -74,7 +76,7 @@ spec:
 
         LOG_ID=$(cat pipeline-logs-artifact.json | jq -r "._id")
 
-        LOG_URL="$(params.pyxis_url)v1/projects/certification/artifacts/id/$LOG_ID"
+        LOG_URL="$(params.pyxis_url)/v1/projects/certification/artifacts/id/$LOG_ID"
 
         echo "Pipeline logs URL: "
         echo -n $LOG_URL | tee $(results.pipeline_log_url.path)

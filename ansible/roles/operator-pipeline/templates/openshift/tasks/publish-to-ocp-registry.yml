@@ -11,37 +11,48 @@ spec:
       description: name of the vendor
     - name: repository_name
     - name: dist_method
-      description: distribution method- either marketplace or certified
+      description: operator distribution method- either marketplace or connect
     - name: image
-      description: reference to the existing index image
+      description: reference to the existing bundle image
     - name: is_latest
       description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: bundle_version
       description: Operator bundle version.
+    - name: connect_registry
+      description: Container registry or proxy from which the published bundle will be pulled
+  workspaces:
+    - name: ocp-registry-kubeconfig
+      description: Kubeconfig for service account allowing connection with cluster that contains the ocp registries
   results:
     - name: container_digest
+    - name: image_pullspec
   steps:
     - name: imagestream-manipulations
-      image: registry.redhat.io/openshift4/ose-cli:v4.8
+      image: registry.redhat.io/openshift4/ose-cli@sha256:eed7052f0013b85087cd9fa8e4b328f56a027846107d32a65daeb3a50cf23b49
       script: |
         #! /usr/bin/env bash
         set -xe
 
+        # Copying Kubeconfig from secret workspace to grant edit permissions
+        cp $(workspaces.ocp-registry-kubeconfig.path)/kubeconfig $HOME/kubeconfig
+        export KUBECONFIG=$HOME/kubeconfig
+
+        # This task authenticates to registry with the credentials associated with service account
+
         # trim the whitespaces from the params
-        PROJECT_NAME=$(echo "$(params.vendor_label)" | xargs)
-        IMAGESTREAM_NAME=$(echo "$(params.repository_name)" | xargs)
-        TAG=$(echo "$(params.bundle_version)" | xargs)
-        DIST_METHOD=$(echo "$(params.dist_method)" | xargs)
-        IS_LATEST=$(echo "$(params.is_latest)" | xargs)
+        PROJECT_NAME=$(echo "$(params.vendor_label)" | xargs echo -n)
+        IMAGESTREAM_NAME=$(echo "$(params.repository_name)" | xargs echo -n)
+        TAG=$(echo "$(params.bundle_version)" | xargs echo -n)
+        DIST_METHOD=$(echo "$(params.dist_method)" | xargs echo -n)
+        IS_LATEST=$(echo "$(params.is_latest)" | xargs echo -n)
+        CONNECT_REGISTRY=$(echo "$(params.connect_registry)" | xargs echo -n)
 
         IMAGE=$(params.image)
 
         ROLE_NAME=$(echo ${PROJECT_NAME}-pull)
 
-        ## (create new openshift project AND grant permissions for SA) OR if it already exists- use existing project
-        oc new-project $PROJECT_NAME && \
-        oc policy add-role-to-user edit -z pipeline -n $PROJECT_NAME || \
-        oc project $PROJECT_NAME
+        ## Create new openshift project OR if it already exists- use existing project
+        oc new-project $PROJECT_NAME || oc project $PROJECT_NAME
 
         ## Get the Imagestream OR if it doesn't exists- (create it AND annotate it)
         oc get imagestream $IMAGESTREAM_NAME || \
@@ -57,7 +68,7 @@ spec:
             --resource-name=$IMAGESTREAM_NAME
 
         ## (Re)create rolebinding associated with the role
-        if [ "$DIST_METHOD" = "rhcc" ]; then
+        if [ "$DIST_METHOD" = "connect" ]; then
 
           # (Get rolebinding AND if it exists delete it)
           oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
@@ -67,7 +78,7 @@ spec:
             --serviceaccount connect:proxysa \
             --serviceaccount connect:rhmp-sa \
             --serviceaccount connect:bpmsa
-        elif [ "$DIST_METHOD" = "marketplace_only" ]; then
+        elif [ "$DIST_METHOD" = "marketplace" ]; then
 
           # (Get rolebinding AND if it exists delete it)
           oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
@@ -76,7 +87,7 @@ spec:
           oc create rolebinding $ROLE_NAME --role=$ROLE_NAME \
             --serviceaccount connect:rhmp-sa \
             --serviceaccount connect:bpmsa
-        else:
+        else
           echo "Error: wrong distribution method ${DIST_METHOD}"
           exit 1
         fi
@@ -86,20 +97,29 @@ spec:
           echo "Unexpected error when creating resources: $error"
         fi
 
+        ## Wait for ImagestreamTag creation
+        JSONPATH="{range .status.tags[?(@.tag==\"$TAG\")]}{.tag}{\"\n\"}{end}"
+        until [ $(oc get is $IMAGESTREAM_NAME -o jsonpath="$JSONPATH" | grep $TAG | wc -l) == 1 ]; do
+          echo "Waiting for the tag creation..."
+          sleep 1
+        done
+
         ## Test, whether ImagestreamTag was created properly- OR, if not,
         # (log the error AND exit)
+        JSONPATH="{.status.tags[?(@.tag==\"$TAG\")].conditions[].message}"
         oc get imagestreamtag $IMAGESTREAM_NAME:$TAG \
         || (echo "Error while creating ImageStreamTag. Are you sure image $IMAGE is available \
-        and secret registry-dockerconfig-secret grants access to it?" \
+        and secret registry-dockerconfig-secret grants access to it? Error: " \
+        && oc get is $IMAGESTREAM_NAME -o jsonpath="$JSONPATH" \
         && exit 1)
-
-        # TODO: log istag error- sadly, this image doesn't contain jq.
-        # oc get is $IMAGESTREAM_NAME -o json | jq '.status.tags[] | select(.tag | contains("$TAG")) | .conditions[].message'
 
         # optionally mark this tag as latest
         if [ "$IS_LATEST" = "true" ]; then
           oc tag $IMAGESTREAM_NAME:$TAG $IMAGESTREAM_NAME:latest
         fi
 
+        ### Results
         ## Get the container digest
-        oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o json | jq '.image.dockerImageMetadata.Id' | tr -d '"' | tee $(results.container_digest.path)
+        DIGEST=$(oc get imagestreamtag $IMAGESTREAM_NAME:$TAG -o jsonpath='{.image.metadata.name}')
+        echo -n $DIGEST > $(results.container_digest.path)
+        echo -n "${CONNECT_REGISTRY}/${PROJECT_NAME}/${IMAGESTREAM_NAME}@${DIGEST}" > $(results.image_pullspec.path)

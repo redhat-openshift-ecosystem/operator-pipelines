@@ -5,6 +5,7 @@ metadata:
   name: get-supported-versions
 spec:
   params:
+    - name: pipeline_image
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
   results:
@@ -13,20 +14,25 @@ spec:
     - name: max_supported_index
       description: Pull spec for the index corresponding to the max OCP version
     - name: indices
-      description: All known supported OCP indices
+      description: All known supported OCP indices paths
+    - name: indices_ocp_versions
+      description: All known supported OCP indices' OCP versions
     - name: max_version_indices
-      description: Latest known supported OCP indice
+      description: Latest known supported OCP indices
+    - name: ocp_version
+      description: OCP version annotation of the bundle
   workspaces:
     - name: source
   steps:
     - name: supported-version-check
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        VERSION_INFO=$(ocp-version-info $(params.bundle_path))
+        ORGANIZATION=$(cat config.yaml | yq -r '.organization')
+        VERSION_INFO=$(ocp-version-info $(params.bundle_path) $ORGANIZATION)
         echo $VERSION_INFO | jq
 
         echo $VERSION_INFO \
@@ -45,6 +51,16 @@ spec:
           | tee $(results.indices.path)
 
         echo $VERSION_INFO \
+          | jq -r '[.indices[].ocp_version]' \
+          | tr -d '\n\r' \
+          | tee $(results.indices_ocp_versions.path)
+
+        echo $VERSION_INFO \
           | jq -r '.max_version_index.path' \
           | tr -d '\n\r' \
           | tee $(results.max_version_indices.path)
+
+        echo $VERSION_INFO \
+          | jq -r '.versions_annotation' \
+          | tr -d '\n\r' \
+          | tee $(results.ocp_version.path)

@@ -5,6 +5,7 @@ metadata:
   name: get-ci-results-attempt
 spec:
   params:
+    - name: pipeline_image
     - name: pyxis_cert_path
       default: ""
       description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
@@ -18,6 +19,10 @@ spec:
     - name: operator_name
   results:
     - name: preflight_results_exists
+    - name: preflight_results
+      description: |
+        Relative file path, from the root of the results workspace,
+        where the JSON formatted results are stored.
     - name: test_result_id
   workspaces:
     - name: results
@@ -25,7 +30,7 @@ spec:
       optional: true
   steps:
     - name: get-results
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.results.path)
       env:
         - name: PYXIS_CERT_PATH
@@ -56,15 +61,26 @@ spec:
         cat test_result_id | tee $(results.test_result_id.path)
 
     - name: indicate-if-results-exists
-      image: registry.access.redhat.com/ubi8-minimal
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.results.path)
+      env:
+        - name: RESULTS_FILE
+          value: test_results.json
       script: |
         #! /usr/bin/env bash
 
-        if [ -f "test_results.json" ]; then
-          echo "Results exists"
-          echo -n "true" | tee $(results.preflight_results_exists.path)
+        if [ -f $RESULTS_FILE ]; then
+          echo "Results exist"
+          CHECK_RESULTS=$(cat $RESULTS_FILE | jq -r '.passed')
+          if [ $CHECK_RESULTS = "false" ]; then
+            echo "Not all preflight tests passed."
+          else
+            echo "All preflight tests passed successfully."
+          fi
+          echo -n "$CHECK_RESULTS" | tee $(results.preflight_results_exists.path)
+          echo -n "$RESULTS_FILE" | tee $(results.preflight_results.path)
         else
-          echo "Results doesn't exists"
+          echo "Results do not exist"
           echo -n "false" | tee $(results.preflight_results_exists.path)
+          echo -n "none" | tee $(results.preflight_results.path)
         fi

@@ -5,6 +5,7 @@ metadata:
   name: get-ci-results
 spec:
   params:
+    - name: pipeline_image
     - name: pyxis_cert_path
       default: ""
       description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
@@ -20,16 +21,21 @@ spec:
     # They are kept if they have value, or
     # they are replaced.
     - name: preflight_results_exists
+    - name: preflight_results
     - name: test_result_id
   results:
     - name: test_result_id
+    - name: preflight_results
+      description: |
+        Relative file path, from the root of the results workspace,
+        where the JSON formatted results are stored.
   workspaces:
     - name: results
     - name: pyxis-ssl-credentials
       optional: true
   steps:
     - name: get-results
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.results.path)
       env:
         - name: PYXIS_CERT_PATH
@@ -41,10 +47,12 @@ spec:
         set -xe
 
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
-        if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
+        if [ "$PREFLIGHT_RESULTS_EXISTS" == "true" ]; then
           echo "Preflight results already exists- skipping"
 
-          echo $(params.test_result_id) | tee $(results.test_result_id.path)
+          echo "$(params.test_result_id)" | tee $(results.test_result_id.path)
+
+          echo "$(params.preflight_results)" | tee $(results.preflight_results.path)
 
           exit 0
         fi
@@ -63,3 +71,4 @@ spec:
           --verbose
 
         cat test_result_id | tee $(results.test_result_id.path)
+        echo -n "test_results.json" > $(results.preflight_results.path)

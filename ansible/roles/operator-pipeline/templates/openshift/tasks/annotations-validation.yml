@@ -1,0 +1,28 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: annotations-validation
+spec:
+  params:
+    - name: pipeline_image
+    - name: bundle_path
+      description: path indicating the location of the certified bundle within the repository
+    - name: package_name
+      description: package name defined by the bundle path
+  workspaces:
+    - name: source
+  steps:
+    - name: bundle-parse
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        ANNOTATIONS_PACKAGE_NAME=$(cat $(params.bundle_path)/metadata/annotations.yaml | yq -r '.annotations."operators.operatorframework.io.bundle.package.v1"')
+
+        if [[ $(params.package_name) != $ANNOTATIONS_PACKAGE_NAME ]]; then
+          echo "Package name passed in bundle_path parameter doesn't equal the package name from submitted metadata/annotations.yaml file"
+          exit 1
+        fi

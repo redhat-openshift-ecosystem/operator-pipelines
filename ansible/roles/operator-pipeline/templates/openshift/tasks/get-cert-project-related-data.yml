@@ -5,6 +5,7 @@ metadata:
   name: get-cert-project-related-data
 spec:
   params:
+    - name: pipeline_image
     - name: cert_project_id
       description: Identifier of certification project from Red Hat Connect
     - name: pyxis_cert_path
@@ -15,20 +16,33 @@ spec:
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
   results:
+    - name: new_certification_status
+      description: New Certification status of the cert Project
     - name: isv_pid
       description: isv_pid of the certification project from Red Hat Connect
     - name: repo_name
       description: Repository name assigned to certification project from Red Hat Connect
-    - name: dist_method
-      description: Distribution method of the certification project- either certified or marketplace
+    - name: operator_distribution
+      description: Distribution method of the operator - either connect or marketplace
+    - name: organization
+      description: Organization defined in the project config.yaml - either certified-operator or redhat-marketplace
     - name: org_id
       description: Unique identifier of the organization in Red Hat Connect
+    - name: contacts
+      description: List of accounts with permissions allowing operator submission
+    - name: current_certification_status
+      description: Current Certification status of the cert Project
+    - name: github_usernames
+      description: List of GitHub accounts with permissions allowing operator submission
   workspaces:
     - name: pyxis-ssl-credentials
       optional: true
+    - name: source
+    - name: results
   steps:
     - name: get-cert-project-related-data
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)
@@ -42,8 +56,61 @@ spec:
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id)
 
-        # `grep .` ensures, that pipe fail if jq returns no results
-        cat cert_project | jq '.container.isv_pid' | tr -d '"' | grep . | tee $(results.isv_pid.path)
-        cat cert_project | jq '.container.repository_name' | tr -d '"' | grep . | tee $(results.repo_name.path)
-        cat cert_project | jq '.container.distribution_method' | tr -d '"' |  grep . | tee $(results.dist_method.path)
-        cat cert_project | jq '.org_id' | tr -d '"' |  tr -d '"' | grep . | tee $(results.org_id.path)
+        PROJECT_DATA_PATH="$(workspaces.results.path)/cert_project.json"
+        cp cert_project $PROJECT_DATA_PATH
+
+        CURRENT_CERTIFICATION_STATUS=$(cat $PROJECT_DATA_PATH | jq -r '.certification_status')
+        if [ "$CURRENT_CERTIFICATION_STATUS" != "Published" ]; then
+          echo -n "In Progress" | tee $(results.new_certification_status.path)
+          echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.current_certification_status.path)
+        else
+          echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.new_certification_status.path)
+          echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.current_certification_status.path)
+        fi
+
+        ORGANIZATION=$(cat config.yaml | yq -r '.organization')
+        echo -n "$ORGANIZATION" | tee $(results.organization.path)
+        OPERATOR_DISTRIBUTION=$(cat cert_project | jq '.operator_distribution'| tr -d '"')
+        case "$ORGANIZATION" in
+          "certified-operators")
+            if [ "$OPERATOR_DISTRIBUTION" != "connect" ]; then
+              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
+              exit 1
+            fi
+            ;;
+          "redhat-marketplace")
+            if [ "$OPERATOR_DISTRIBUTION" != "marketplace" ]; then
+              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
+              exit 1
+            fi
+            ;;
+          *)
+            echo "Invalid $ORGANIZATION"
+            exit 1
+            ;;
+        esac
+
+
+        get_from_cp () {
+          # Function to get the necessary fields from the CertProject
+          FIELD_NAME=$1
+          JQ_PATH=$2
+
+          # `grep .` ensures, that pipe fail if jq returns no results
+          cat $PROJECT_DATA_PATH | jq -re $JQ_PATH | grep . | tr -d "\n" || \
+            { echo " Error while retrieving $FIELD_NAME from the Certification Project- is the value missing?" \
+            && exit 1; }
+        }
+
+        get_from_cp isv_pid '.container.isv_pid' | tee $(results.isv_pid.path)
+        get_from_cp repository_name '.container.repository_name' | tee $(results.repo_name.path)
+        get_from_cp org_id '.org_id' | tee $(results.org_id.path)
+        get_from_cp operator_distribution '.operator_distribution' | tee $(results.operator_distribution.path)
+
+        # Exception, where function cannot be applied-
+        # github usernames have the newline symbol changed to space
+        echo "Retrieving github_usernames from the Certification Project"
+        GITHUB_USERNAMES=$(cat $PROJECT_DATA_PATH | jq -r '.container.github_usernames[]' | tr '\n' ' ' | grep . | tr -d "\n") || \
+            { echo " Error while retrieving github_usernames from the Certification Project- is the value missing?" \
+            && exit 1; }
+        echo -n $GITHUB_USERNAMES | tee $(results.github_usernames.path)

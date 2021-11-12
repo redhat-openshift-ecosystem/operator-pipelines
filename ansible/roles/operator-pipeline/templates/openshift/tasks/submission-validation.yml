@@ -5,35 +5,41 @@ metadata:
   name: submission-validation
 spec:
   params:
+    - name: pipeline_image
     - name: git_username
-    - name: git_pr_title
     - name: git_pr_url
+    - name: git_repo_url
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers
-  results:
-    - name: cert_project_id
+    - name: github_usernames
+      description: List of accounts with permissions allowing operator submission
     - name: operator_name
-    - name: bundle_version
+      description: name of the submitted operator
   workspaces:
     - name: source
   steps:
     - name: submission-validation
       workingDir: $(workspaces.source.path)
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        # 1. Verify via regex if PR title follows convention
-        # 2. Verify, that new version is added and no existing one modified
-        # 2. TODO: Verify, if the user which created the PR is allowed to
-        # submit the operator
-        # 3. Verify that there is no other open PRs for this operator
-        verify-submission \
-          --pr-title "$(params.git_pr_title)" \
-          --available-repositories redhat-openshift-ecosystem/operator-pipelines-test \
-          --pr-url $(params.git_pr_url) \
-          --verbose
+        # Parse the org plus repo from the URL.
+        # awk grabs everything after "github.com/"
+        # cut removes any potential trailing extension like ".git"
+        REPO=$(echo "$(params.git_repo_url)" | awk -F "github.com/" '{print $2}' | cut -d "." -f 1)
 
-        cat bundle_name | tee $(results.operator_name.path)
-        cat bundle_version | tee $(results.bundle_version.path)
+        # 1. Verify, if the user which created the PR is allowed to
+        # submit the operator. Contacts is a last parameter, as it contains list.
+        verify-pr-user \
+          --git-username $(params.git_username) \
+          --verbose \
+          --contacts $(params.github_usernames)
+
+        # 2. Verify that there is no other open PRs for this operator
+        verify-pr-uniqueness \
+          --available-repositories $REPO \
+          --pr-url $(params.git_pr_url) \
+          --bundle-name $(params.operator_name) \
+          --verbose

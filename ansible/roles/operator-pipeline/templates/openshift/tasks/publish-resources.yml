@@ -5,6 +5,7 @@ metadata:
   name: publish-resources
 spec:
   params:
+    - name: pipeline_image
     - name: cert_project_id
       description: ID of the bundle Certification Project (as in bundle ci.yaml)
     - name: org_id
@@ -15,7 +16,7 @@ spec:
     - name: pyxis_key_path
       default: ""
     - name: environment
-      default: production
+      default: prod
       description: Environment where the pipeline runs
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
@@ -24,7 +25,7 @@ spec:
       optional: true
   steps:
     - name: publish-vendor
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)
@@ -43,7 +44,7 @@ spec:
             vendor \
               --org-id "$(params.org_id)"
     - name: publish-repository
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)

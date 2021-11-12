@@ -5,36 +5,84 @@ metadata:
   name: operator-hosted-pipeline
 spec:
   params:
+    # When adding a new param, make sure to also add it to the webhook in
+    # operator-hosted-pipeline-trigger.yml if possible
     - name: git_pr_branch
     - name: git_pr_title
     - name: git_pr_url
     - name: git_fork_url
     - name: git_repo_url
     - name: git_username
+    - name: git_commit
+    - name: git_base_branch
+      description: Name of the base branch. e.g. "main"
     - name: pr_head_label
     - name: env
-      description: Which environment to run in. Can be one of [dev, qa, stage, production]
-      default: "production"
-    - name: bundle_path
+      description: Which environment to run in. Can be one of [dev, qa, stage, prod]
+      default: "prod"
     - name: preflight_min_version
     - name: ci_min_version
     - name: registry
+      description: Must be some variety of quay registry.
       default: quay.io
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
+    - name: pipeline_image
+      description: An image of operator-pipeline-images.
+      default: "quay.io/redhat-isv/operator-pipelines-images:v1.0.6"
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: github_bot_token
+    - name: quay_oauth_secret_name
+      default: quay-oauth-token
+    - name: quay_oauth_secret_key
+      default: token
   workspaces:
     - name: repository
     - name: results
     - name: ssh-dir
       optional: true
     - name: registry-credentials
+    - name: registry-credentials-all
+      description: Storage space for the result of merging certification project and
+        pipeline service account registry tokens.
     - name: pyxis-ssl-credentials
-    - name: github-bot-token
-    - name: kubeconfig
+    - name: prow-kubeconfig
+    - name: hydra-credentials
+    - name: preflight-decryption-key
+    - name: gpg-key
+      description: GPG private key that decrypts secrets partner's data
   tasks:
+    # Set a pending GitHub status check first to provide the user with immediate feedback.
+    - name: set-github-status-pending
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Certifying the Operator bundle."
+        - name: state
+          value: pending
+        - name: context
+          value: "operator/test"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # Set environment
     - name: set-env
+      runAfter:
+        - set-github-status-pending
       taskRef:
         name: set-env
         kind: Task
@@ -56,6 +104,8 @@ spec:
           value: $(params.git_fork_url)
         - name: revision
           value: $(params.git_pr_branch)
+        - name: gitInitImage
+          value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
       workspaces:
         - name: output
           workspace: repository
@@ -63,49 +113,74 @@ spec:
         - name: ssh-directory
           workspace: ssh-dir
 
-    # Validate submission
-    - name: submission-validation
+    # Verify PR title
+    - name: validate-pr-title
       runAfter:
         - checkout
       taskRef:
-        name: submission-validation
+        name: validate-pr-title
       params:
-        - name: git_username
-          value: $(params.git_username)
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_pr_title
           value: $(params.git_pr_title)
-        - name: git_pr_url
-          value: $(params.git_pr_url)
-        - name: pyxis_url
-          value: $(tasks.set-env.results.pyxis_url)
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
 
     # Get the bundle path
     - name: get-bundle-path
       runAfter:
-        - submission-validation
+        - validate-pr-title
       taskRef:
         name: get-bundle-path
       params:
         - name: git_pr_title
           value: $(params.git_pr_title)
 
-    # Get cert project id
-    - name: certification-project-check
+    # Verify the bundle path exists
+    - name: bundle-path-validation
       runAfter:
         - get-bundle-path
       taskRef:
-        name: certification-project-check
+        name: bundle-path-validation
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
           subPath: src
+
+    # Get cert project id
+    - name: certification-project-check
+      runAfter:
+        - bundle-path-validation
+      taskRef:
+        name: certification-project-check
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: create-support-link-for-pr
+      runAfter:
+        - certification-project-check
+      taskRef:
+        name: create-support-link-for-pr
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: connect_url
+          value: $(tasks.set-env.results.connect_url)
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pull_request_url
+          value: "$(params.git_pr_url)"
 
     # Get cert project related data
     - name: get-cert-project-related-data
@@ -114,12 +189,98 @@ spec:
       taskRef:
         name: get-cert-project-related-data
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+      workspaces:
+        - name: pyxis-ssl-credentials
+          workspace: pyxis-ssl-credentials
+        - name: source
+          workspace: repository
+          subPath: src
+        - name: results
+          workspace: results
+
+    # Merge user's registry tokens with service account credentials
+    # used elsewhere by this pipeline.
+    #
+    # NOTE: The project credentials will always "win" if there is a
+    # matching registry entry in the registry-credentials workspace.
+    # For example, if the partner provides credentials to quay.io,
+    # our credentials for that registry will be omitted.
+    - name: merge-registry-credentials
+      runAfter:
+        - get-cert-project-related-data
+      taskRef:
+        name: merge-registry-credentials
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: registry-credentials-all
+          workspace: registry-credentials-all
+        - name: registry-credentials
+          workspace: registry-credentials
+        - name: gpg-key
+          workspace: gpg-key
+        - name: project-data
+          workspace: results
+
+    # Validate submission
+    - name: submission-validation
+      runAfter:
+        - get-cert-project-related-data
+      taskRef:
+        name: submission-validation
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_pr_url
+          value: $(params.git_pr_url)
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: pyxis_url
+          value: $(tasks.set-env.results.pyxis_url)
+        - name: git_username
+          value: $(params.git_username)
+        - name: github_usernames
+          value: "$(tasks.get-cert-project-related-data.results.github_usernames)"
+        - name: operator_name
+          value: "$(tasks.validate-pr-title.results.operator_name)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # Updates certification status to "In Progress", if not already "Published".
+    # See the get-cert-project-related-data task for how that's determined.
+    - name: update-cert-project-status
+      runAfter:
+        - submission-validation
+      taskRef:
+        name: update-cert-project-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: new_certification_status
+          value: "$(tasks.get-cert-project-related-data.results.new_certification_status)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pyxis_cert_path
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
+        - name: pyxis_key_path
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: current_certification_status
+          value: "$(tasks.get-cert-project-related-data.results.current_certification_status)"
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
@@ -127,36 +288,38 @@ spec:
     # reserve operator name
     - name: reserve-operator-name
       runAfter:
-        - submission-validation
-        - get-cert-project-related-data
+        - update-cert-project-status
       taskRef:
         name: reserve-operator-name
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: association
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: operator_name
-          value: "$(tasks.submission-validation.results.operator_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
 
-    # additional checks
-    - name: operator-validation
+    - name: annotations-validation
       runAfter:
         - reserve-operator-name
       taskRef:
-        name: operator-validation
+        name: annotations-validation
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: package_name
+          value: "$(tasks.validate-pr-title.results.operator_name)"
       workspaces:
         - name: source
           workspace: repository
@@ -168,6 +331,8 @@ spec:
       taskRef:
         name: get-supported-versions
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -181,6 +346,8 @@ spec:
       taskRef:
         name: yaml-lint
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: args
           value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(tasks.get-bundle-path.results.bundle_path)"]
       workspaces:
@@ -191,15 +358,20 @@ spec:
     - name: digest-pinning
       runAfter:
         - reserve-operator-name
+        - merge-registry-credentials
       taskRef:
         name: digest-pinning
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
           subPath: src
+        - name: registry-credentials
+          workspace: registry-credentials-all
 
     - name: verify-pinned-digest
       runAfter:
@@ -212,10 +384,12 @@ spec:
 
     - name: content-hash
       runAfter:
-        - reserve-operator-name
+        - bundle-path-validation
       taskRef:
         name: content-hash
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -229,37 +403,33 @@ spec:
       taskRef:
         name: verify-changed-directories
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: operator_name
-          value: "$(tasks.submission-validation.results.operator_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: bundle_version
-          value: "$(tasks.submission-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: pr_head_label
           value: $(params.pr_head_label)
         - name: git_repo_url
           value: $(params.git_repo_url)
-    - name: query-publishing-checklist
-      runAfter:
-        - reserve-operator-name
-      taskRef:
-        name: query-publishing-checklist
-      params:
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: base_branch
+          value: $(params.git_base_branch)
 
     # Build images- bundle and index and push them to registry.
     # Those steps are also a part of the CI pipeline.
     - name: dockerfile-creation
       runAfter:
-        - operator-validation
+        - annotations-validation
         - get-supported-versions
         - yaml-lint
         - verify-pinned-digest
-        - content-hash
         - verify-changed-directories
-        - query-publishing-checklist
       taskRef:
         name: dockerfile-creation
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -278,7 +448,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name):$(tasks.validate-pr-title.results.bundle_version)"
         - name: CONTEXT
           value: "$(tasks.get-bundle-path.results.bundle_path)"
       workspaces:
@@ -286,7 +456,25 @@ spec:
           workspace: repository
           subPath: src
         - name: credentials
+          # Do not use registry-credentials-all. Project creds may replace quay.io push creds.
           workspace: registry-credentials
+
+    - name: make-bundle-repo-public
+      runAfter:
+        - build-bundle
+      taskRef:
+        name: set-quay-repo-visibility
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: repository
+          value: "$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)"
+        - name: visibility
+          value: public
+        - name: oauth_secret_name
+          value: "$(params.quay_oauth_secret_name)"
+        - name: oauth_secret_key
+          value: "$(params.quay_oauth_secret_key)"
 
     # Index image contains a record of bundle images from which
     # manifests could be extract in order to install an operator.
@@ -296,6 +484,8 @@ spec:
       taskRef:
         name: generate-index
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_image
           value: *bundleImage
         - name: from_index
@@ -305,6 +495,7 @@ spec:
           workspace: repository
           subPath: index
         - name: credentials
+          # Do not use registry-credentials-all. Project creds may replace quay.io push creds.
           workspace: registry-credentials
 
     - name: build-index
@@ -315,31 +506,46 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
-        - name: CONTEXT
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
-        # - name: DOCKERFILE
-        #   value: "Dockerfile.index"
+          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index:$(tasks.validate-pr-title.results.bundle_version)"
+        - name: DOCKERFILE
+          value: "$(tasks.generate-index.results.index_dockerfile)"
       workspaces:
         - name: source
           workspace: repository
-          subPath: src
+          subPath: index
         - name: credentials
+          # Do not use registry-credentials-all. Project creds may replace quay.io push creds.
           workspace: registry-credentials
+
+    - name: make-index-repo-public
+      runAfter:
+        - build-index
+      taskRef:
+        name: set-quay-repo-visibility
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: repository
+          value: "$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index"
+        - name: visibility
+          value: public
+        - name: oauth_secret_name
+          value: "$(params.quay_oauth_secret_name)"
+        - name: oauth_secret_key
+          value: "$(params.quay_oauth_secret_key)"
 
     # Try to retrieve preflight tests results
     # (they can run on premise)
     - name: get-ci-results-attempt
       runAfter:
-        - operator-validation
-        - yaml-lint
-        - verify-pinned-digest
+        - make-bundle-repo-public
+        - make-index-repo-public
         - content-hash
-        - verify-changed-directories
-        - query-publishing-checklist
       taskRef:
         name: get-ci-results-attempt
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: md5sum
@@ -347,13 +553,13 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.submission-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: operator_name
-          value: "$(tasks.submission-validation.results.operator_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: results
           workspace: results
@@ -361,98 +567,76 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
-    # If we didn't got the CI pipeline preflight test results
-    # run preflight here
-    # and try to retrieve them again
-    - name: ocp-environment-preparation
+    # TODO: this step runs always now, despite if the results exists or not
+    # https://issues.redhat.com/browse/ISV-1223
+    - name: preflight-trigger
       runAfter:
         - get-ci-results-attempt
-        - build-index
       taskRef:
-        name: ocp-environment-preparation
+        kind: Task
+        name: preflight-trigger
       params:
-        - name: index_image
-          value: *bundleIndexImage
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
-        - name: preflight_results_exists
+        - name: ocp_version
+          value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
+        - name: asset_type
+          value: operator
+        - name: bundle_index_image
+          value: >-
+            $(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index:$(tasks.validate-pr-title.results.bundle_version)
+        - name: bundle_image
+          value: >-
+            $(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name):$(tasks.validate-pr-title.results.bundle_version)
+        - name: skip
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
       workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
-    # TODO: passing kubeconfig here is just a temporary workaround to make the task pass
-    - name: preflight
-      runAfter:
-        - ocp-environment-preparation
-      taskRef:
-        name: preflight
-      params:
-        - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
-        - name: bundle_index_image
-          value: *bundleIndexImage
-        - name: bundle_image
-          value: *bundleImage
-      workspaces:
-        # TODO: passing kubeconfig here is just a temporary workaround to make the preflight task pass
         - name: kubeconfig
-          workspace: kubeconfig
+          workspace: prow-kubeconfig
+        - name: credentials
+          workspace: registry-credentials-all
+        - name: gpg-decryption-key
+          workspace: preflight-decryption-key
+        - name: output
+          subPath: preflight-trigger
+          workspace: repository
 
     - name: upload-artifacts
       runAfter:
-        - preflight
+        - preflight-trigger
       taskRef:
         name: upload-artifacts
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
         - name: log_file
-          value: "$(tasks.preflight.results.log_output_file)"
+          value: "$(tasks.preflight-trigger.results.log_output_file)"
         - name: artifacts_dir
-          value: "$(tasks.preflight.results.artifacts_output_dir)"
+          value: "$(tasks.preflight-trigger.results.artifacts_output_dir)"
         - name: result_file
-          value: "$(tasks.preflight.results.result_output_file)"
+          value: "$(tasks.preflight-trigger.results.result_output_file)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
+        - name: connect_url
+          value: "$(tasks.set-env.results.connect_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: source
           workspace: repository
-          subPath: src
+          subPath: preflight-trigger
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
-
-    - name: ocp-environment-cleanup
-      runAfter:
-        - upload-artifacts
-      taskRef:
-        name: ocp-environment-cleanup
-      params:
-        - name: index_image
-          value: *bundleIndexImage
-        - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
-        - name: preflight_results_exists
-          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
 
     - name: get-ci-results
       runAfter:
@@ -460,8 +644,12 @@ spec:
       taskRef:
         name: get-ci-results
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: preflight_results_exists
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
+        - name: preflight_results
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results)"
         - name: test_result_id
           value: "$(tasks.get-ci-results-attempt.results.test_result_id)"
         - name: pyxis_url
@@ -471,13 +659,13 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.submission-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: operator_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
       workspaces:
         - name: results
           workspace: results
@@ -492,6 +680,10 @@ spec:
       taskRef:
         name: verify-ci-results
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: preflight_results
+          value: "$(tasks.get-ci-results.results.preflight_results)"
         - name: preflight_min_version
           value: $(params.preflight_min_version)
         - name: ci_min_version
@@ -508,14 +700,16 @@ spec:
       taskRef:
         name: link-pull-request
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: test_result_id
           value: "$(tasks.get-ci-results.results.test_result_id)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
         - name: pull_request_url
           value: "$(params.git_pr_url)"
         - name: pull_request_status
@@ -524,29 +718,51 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
+    # Query Hydra API for status of the pre-certification checklist
+    - name: query-publishing-checklist
+      runAfter:
+        - link-pull-request
+        - verify-ci-results
+      taskRef:
+        name: query-publishing-checklist
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: connect_url
+          value: "$(tasks.set-env.results.connect_url)"
+      workspaces:
+        - name: hydra-credentials
+          workspace: hydra-credentials
+
     # merge PR
     - name: merge-pr
       runAfter:
-        - verify-ci-results
+        - query-publishing-checklist
       taskRef:
         name: merge-pr
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: bundle_path
           value: "$(tasks.get-bundle-path.results.bundle_path)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
       workspaces:
-        - name: github-bot-token
-          workspace: github-bot-token
         - name: source
           workspace: repository
           subPath: src
 
-  # Finally- clean up
   finally:
-    - name: cleanup
-      taskRef:
-        name: cleanup
+
+    # Upload the logs of this pipeline.
+    # Dependencies on other task results should be minimized. If any
+    # of those tasks fail, it'll prevent this task from executing.
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
@@ -554,19 +770,162 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
           value: "$(context.pipelineRun.name)"
         - name: pyxis_cert_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.pem
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
-          value: /workspace/pyxis-ssl-credentials/operator-pipeline.key
+          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+
+    # In the event of a failure, comment with the support link on the github PR
+    - name: github-add-support-comment
+      when:
+        - input: $(tasks.status)
+          operator: notin
+          values: ["Succeeded", "Completed"]
+      taskRef:
+        name: github-add-comment
+      params:
+        - name: REQUEST_URL
+          value: "$(params.git_pr_url)"
+        - name: COMMENT_OR_FILE
+          value: "There were some errors in your Operator bundle. You can use [this support case]($(tasks.create-support-link-for-pr.results.comment)) to contact the Red Hat certification team for review."
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: "$(params.github_token_secret_name)"
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: "$(params.github_token_secret_key)"
+
+    # Set the github status to success if the pipeline passed
+    - name: set-github-status-success
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Succeeded", "Completed"]
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Successfully certified the Operator bundle."
+        - name: target_url
+          value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
+        - name: state
+          value: success
+        - name: context
+          value: "operator/test"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
+    # Set the github status to failure with details link if the pipeline didn't pass.
+    - name: set-github-status-failure-with-link
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values:
+            - Succeeded
+            - Completed
+        - input: "$(tasks.certification-project-check.status)"
+          operator: in
+          values:
+            - Succeeded
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Failed to certify the Operator bundle."
+        - name: target_url
+          value: "$(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results"
+        - name: state
+          value: failure
+        - name: context
+          value: "operator/test"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
+    # Set the github status to failure without details link if the pipeline didn't pass.
+    # The "Details" link on the GitHub status cannot be generated without a success from
+    # the certification-project-check PipelineTask. This ensures the status is always set
+    # to false regardless where the failure occurred.
+    - name: set-github-status-failure-without-link
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values:
+            - Succeeded
+            - Completed
+        - input: "$(tasks.certification-project-check.status)"
+          operator: notin
+          values:
+            - Succeeded
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Failed to certify the Operator bundle."
+        - name: state
+          value: failure
+        - name: context
+          value: "operator/test"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
+    # Comment with a pipeline summary
+    - name: github-add-summary-comment
+      taskRef:
+        name: github-pipelinerun-summary
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: pipelinerun
+          value: "$(context.pipelineRun.name)"
+        - name: comment_suffix
+          value: |
+
+            ## Troubleshooting
+
+            Please refer to the [troubleshooting guide](https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/troubleshooting.md).
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: summary

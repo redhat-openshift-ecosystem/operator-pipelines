@@ -14,13 +14,13 @@ spec:
       default: "no-reply@redhat.com"
     - name: upstream_repo_name
       default: ""
-      description: Upstream repository name where the pull request will be open
+      description: Upstream repository where the pull request will be opened (namespace/name)
     - name: bundle_path
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
     - name: env
-      description: Which environment to run in. Can be one of [dev, qa, stage, production]
-      default: "production"
+      description: Which environment to run in. Can be one of [dev, qa, stage, prod]
+      default: "prod"
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
@@ -38,6 +38,9 @@ spec:
     - name: submit
       description: Set to "true" to submit results and open a pull request.
       default: "false"
+    - name: pipeline_image
+      description: An image of operator-pipeline-images.
+      default: "quay.io/redhat-isv/operator-pipelines-images:v1.0.6"
   workspaces:
     - name: pipeline
     - name: kubeconfig
@@ -69,6 +72,8 @@ spec:
           value: $(params.git_repo_url)
         - name: revision
           value: $(params.git_branch)
+        - name: gitInitImage
+          value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
       workspaces:
         - name: output
           workspace: pipeline
@@ -76,9 +81,25 @@ spec:
         - name: ssh-directory
           workspace: ssh-dir
 
-    - name: digest-pinning
+    # Verify the bundle path exists
+    - name: bundle-path-validation
       runAfter:
         - checkout
+      taskRef:
+        name: bundle-path-validation
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: digest-pinning
+      runAfter:
+        - bundle-path-validation
       taskRef:
         name: digest-pinning
       params:
@@ -86,10 +107,14 @@ spec:
           value: "$(params.bundle_path)"
         - name: enabled
           value: "$(params.pin_digests)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
       workspaces:
         - name: source
           workspace: pipeline
           subPath: src
+        - name: registry-credentials
+          workspace: registry-credentials
 
     - name: commit-pinned-digest
       runAfter:
@@ -97,6 +122,8 @@ spec:
       taskRef:
         name: commit-pinned-digest
       params:
+        - name: git_branch
+          value: "$(params.git_branch)"
         - name: git_user_name
           value: "$(params.git_username)"
         - name: git_user_email
@@ -116,6 +143,8 @@ spec:
       taskRef:
         name: yaml-lint
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: args
           value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(params.bundle_path)"]
       workspaces:
@@ -123,16 +152,18 @@ spec:
           workspace: pipeline
           subPath: src
 
-    - name: operator-validation
+    - name: annotations-validation
       runAfter:
         - commit-pinned-digest
       taskRef:
-        name: operator-validation
+        name: annotations-validation
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: package_name
+          value: "$(tasks.bundle-path-validation.results.package_name)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -144,6 +175,8 @@ spec:
       taskRef:
         name: get-supported-versions
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
       workspaces:
@@ -151,12 +184,28 @@ spec:
           workspace: pipeline
           subPath: src
 
+    - name: check-ocp-cluster-version
+      runAfter:
+        - get-supported-versions
+      taskRef:
+        name: check-ocp-cluster-version
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: indices_ocp_versions
+          value: "$(tasks.get-supported-versions.results.indices_ocp_versions)"
+      workspaces:
+        - name: kubeconfig
+          workspace: kubeconfig
+
     - name: certification-project-check
       runAfter:
         - commit-pinned-digest
       taskRef:
         name: certification-project-check
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
       workspaces:
@@ -170,6 +219,8 @@ spec:
       taskRef:
         name: content-hash
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
       workspaces:
@@ -179,12 +230,14 @@ spec:
 
     - name: dockerfile-creation
       runAfter:
-        - operator-validation
+        - annotations-validation
         - yaml-lint
         - certification-project-check
       taskRef:
         name: dockerfile-creation
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
       workspaces:
@@ -205,7 +258,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name):$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
       workspaces:
@@ -220,10 +273,12 @@ spec:
     - name: generate-index
       runAfter:
         - build-bundle
-        - get-supported-versions
+        - check-ocp-cluster-version
       taskRef:
         name: generate-index
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_image
           value: *bundleImage
         - name: from_index
@@ -243,7 +298,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.operator-validation.results.package_name)-index:$(tasks.operator-validation.results.bundle_version)"
+          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-index:$(tasks.bundle-path-validation.results.bundle_version)"
         - name: DOCKERFILE
           value: "$(tasks.generate-index.results.index_dockerfile)"
       workspaces:
@@ -259,10 +314,12 @@ spec:
       taskRef:
         name: preflight
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: bundle_index_image
           value: *bundleIndexImage
         - name: bundle_image
@@ -271,6 +328,8 @@ spec:
           value: "$(params.preflight_namespace)"
         - name: service_account
           value: "$(params.preflight_service_account)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
       workspaces:
         - name: output
           workspace: pipeline
@@ -292,6 +351,8 @@ spec:
       taskRef:
         name: upload-artifacts
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: log_file
           value: "$(tasks.preflight.results.log_output_file)"
         - name: artifacts_dir
@@ -303,9 +364,9 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:
@@ -321,6 +382,8 @@ spec:
       taskRef:
         name: open-pull-request
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: git_repo_url
           value: "$(params.git_repo_url)"
         - name: repository_name
@@ -329,14 +392,16 @@ spec:
           value: "$(params.git_branch)"
         - name: digest_pinned_branch
           value: "$(tasks.commit-pinned-digest.results.branch)"
+        - name: target_branch
+          value: "$(tasks.set-env.results.target_branch)"
         - name: test_logs_url
           value: "$(tasks.upload-artifacts.results.log_url)"
         - name: test_result_url
           value: "$(tasks.upload-artifacts.results.result_url)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: certification_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
       workspaces:
@@ -357,14 +422,16 @@ spec:
         - name: pyxis-api-key
           workspace: pyxis-api-key
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: md5sum
           value: "$(tasks.content-hash.results.md5sum)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.operator-validation.results.bundle_version)"
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: package_name
-          value: "$(tasks.operator-validation.results.package_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
@@ -374,6 +441,8 @@ spec:
       taskRef:
         name: show-support-link
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: env
           value: "$(params.env)"
         - name: cert_project_id

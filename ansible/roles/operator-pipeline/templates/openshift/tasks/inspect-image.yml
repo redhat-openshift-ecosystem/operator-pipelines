@@ -1,0 +1,33 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: inspect-image
+spec:
+  params:
+    - name: image
+      description: reference to the existing bundle image
+    - name: registry
+      description: Registry that contains bundle image
+  workspaces:
+    - name: registry-credentials
+      description: Docker config for retrieving the bundle image
+    - name: image-data
+      description: Workspace to store the large json files with the image data
+  steps:
+    - name: skopeo-inspect
+      image: registry.redhat.io/rhel8/skopeo:8.4-13
+      script: |
+        set -xe
+
+        skopeo login $(params.registry) --authfile $(workspaces.registry-credentials.path)/.dockerconfigjson \
+
+        skopeo inspect docker://$(params.image) > $(workspaces.image-data.path)/skopeo.json
+    - name: podman-inspect
+      image: registry.redhat.io/rhel8/podman:8.4-14
+      script: |
+        set -xe
+
+        podman pull $(params.image)
+
+        podman image inspect $(params.image) > $(workspaces.image-data.path)/podman.json

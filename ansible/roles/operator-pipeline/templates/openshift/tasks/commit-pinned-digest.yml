@@ -24,6 +24,7 @@ spec:
         volume types.
   params:
     - name: dirty_flag
+    - name: git_branch
     - name: verbose
       description: Log the commands that are executed during `commit-pinned-digest`'s operation.
       type: string
@@ -38,15 +39,25 @@ spec:
       description: |
         Git user email for performing git operation.
       default: "no-reply@redhat.com"
+    - name: userHome
+      description: |
+        Absolute path to the user's home directory. Set this explicitly if you are running the image as a non-root user or have overridden
+        the gitInitImage param with an image containing custom user configuration.
+      type: string
+      default: "/tekton/home"
   results:
     - name: commit
       description: The precise commit SHA that was fetched by this Task.
     - name: branch
   steps:
     - name: commit-changes
-      image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8:v1.5.0-43
+      image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
       workingDir: $(workspaces.source.path)
       env:
+        - name: CURRENT_BRANCH
+          value: "$(params.git_branch)"
+        - name: HOME
+          value: "$(params.userHome)"
         - name: PARAM_VERBOSE
           value: $(params.verbose)
         - name: WORKSPACE_SSH_DIRECTORY_BOUND
@@ -54,7 +65,7 @@ spec:
         - name: WORKSPACE_SSH_DIRECTORY_PATH
           value: $(workspaces.ssh-directory.path)
       script: |
-        #! /usr/bin/env sh
+        #! /usr/bin/env bash
         set -eu
 
         if [ "${PARAM_VERBOSE}" = "true" ] ; then
@@ -65,7 +76,7 @@ spec:
           cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" $HOME/.ssh
           chmod 700 $HOME/.ssh
           chmod -R 400 $HOME/.ssh/*
-          eval `ssh-agent -s`
+          eval $(ssh-agent)
           ssh-add $HOME/.ssh/id_rsa
         fi
 
@@ -78,12 +89,11 @@ spec:
         if [ $DIRTY_FLAG == "true" ]; then
           echo "Commit changes to temporary branch"
 
-          RANDOM_STRING=$(cat /dev/urandom | tr -dc 'a-z0-9'| fold -w 3 | head -n 1)
-          TEMP_BRANCH="pinned-operator-manifest-${RANDOM_STRING}"
+          TEMP_BRANCH="${CURRENT_BRANCH}-pinned"
           git checkout -b "${TEMP_BRANCH}"
           git add -u
           git commit -m "Pin the operator manifests"
-          git push origin "${TEMP_BRANCH}"
+          git push origin "${TEMP_BRANCH}" -f
 
           echo -n "$TEMP_BRANCH" > $(results.branch.path)
 

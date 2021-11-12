@@ -11,7 +11,7 @@
           metadata:
             name: "{{ service_account_name }}"
 
-    - name: Grant service account admin access
+    - name: Grant ansible service account admin access
       k8s:
         state: present
         namespace: "{{ oc_namespace }}"
@@ -50,32 +50,31 @@
         operator-pipeline.key: "{{ lookup('file', operator_pipeline_private_key_local_path, rstrip=False) | b64encode }}"
         operator-pipeline.pem: "{{ lookup('file', operator_pipeline_private_cert_local_path, rstrip=False) | b64encode }}"
 
-- name: Grant registry access
-  block:
-    - name: Create Operator pipeline quay token secret
-      no_log: yes
-      k8s:
-        state: present
-        force: yes
-        namespace: "{{ oc_namespace }}"
-        definition:
-          apiVersion: v1
-          kind: Secret
-          type: kubernetes.io/dockerconfigjson
-          metadata:
-            name: registry-dockerconfig-secret
-            labels:
-              app: operator-pipeline
-              suffix: "{{ suffix }}"
-              env: "{{ env }}"
-          data:
-            .dockerconfigjson: "{{ lookup('file', operator_pipeline_quay_token, rstrip=False) | b64encode }}"
-    - name: Link secret with pipeline service account (for imagestream operations)
-      ansible.builtin.shell: |
-        oc secret link pipeline registry-dockerconfig-secret
+- name: Create Operator pipeline registry token secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: kubernetes.io/dockerconfigjson
+      metadata:
+        name: registry-dockerconfig-secret
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        .dockerconfigjson: "{{ lookup('file', operator_pipeline_registry_token, rstrip=False) | b64encode }}"
 
 - name: Create Operator pipeline github bot token secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -91,10 +90,12 @@
           suffix: "{{ suffix }}"
           env: "{{ env }}"
       data:
-        github_bot_token.txt: "{{ lookup('file', operator_pipeline_github_bot_token, rstrip=False) | b64encode }}"
+        github_bot_token: "{{ lookup('file', operator_pipeline_github_bot_token, rstrip=False) | b64encode }}"
 
 - name: Create Operator pipeline github webhook secret
   no_log: yes
+  tags:
+    - secrets
   k8s:
     state: present
     force: yes
@@ -112,8 +113,203 @@
       data:
         webhook-secret: "{{ lookup('file', operator_pipeline_webhook_secret, rstrip=False) | b64encode }}"
 
+- name: Create Operator pipeline kerberos keytab secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: kerberos-keytab
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        krb5.keytab: "{{ lookup('file', kerberos_keytab, rstrip=False) | b64encode }}"
+
+- name: Create Operator pipeline IIB quay credentials secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: iib-quay-credentials
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        username: "{{ iib_quay_username | b64encode }}"
+        password: "{{ iib_quay_password | b64encode }}"
+
+- name: Create OCP cluster Kubeconfig secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: ocp-registry-kubeconfig
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        kubeconfig: "{{ lookup('file', operator_pipeline_kubeconfig_ocp_local_path, rstrip=False) | b64encode }}"
+
+- name: Create Prow cluster Kubeconfig secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: prow-kubeconfig
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        kubeconfig: "{{ lookup('file', operator_pipeline_kubeconfig_prow_local_path, rstrip=False) | b64encode }}"
+
+- name: Create preflight decryption key secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: preflight-decryption-key
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        private: "{{ lookup('file', operator_pipeline_preflight_decryption_key_private_local_path, rstrip=False) | b64encode }}"
+        public: "{{ lookup('file', operator_pipeline_preflight_decryption_key_public_local_path, rstrip=False) | b64encode }}"
+
+- name: Create OCP cluster Hydra credentials secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: hydra-credentials
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        username: "{{ lookup('file', operator_pipeline_hydra_username_local_path, rstrip=False) | b64encode }}"
+        password: "{{ lookup('file', operator_pipeline_hydra_password_local_path, rstrip=False) | b64encode }}"
+
+- name: Create Operator pipeline gpg secret key
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: isv-gpg-key
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        exd-guild-isv.key: "{{ lookup('file', operator_pipeline_exd_guild_isv_key_path, rstrip=False) | b64encode }}"
+        exd-guild-isv.passphrase: "{{ lookup('file', operator_pipeline_exd_guild_isv_passphrase_path, rstrip=False) | b64encode }}"
+
+- name: Create quay OAuth token secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: quay-oauth-token
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        token: "{{ quay_oauth_token | b64encode }}"
+
+- name: Create IBM webhook token secret
+  no_log: yes
+  tags:
+    - secrets
+  k8s:
+    state: present
+    force: yes
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: ibm-webhook-token
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        token: "{{ lookup('file', operator_pipeline_ibm_webhook_token_local_path, rstrip=False) | b64encode }}"
+
 
 - name: Deploy pipeline tasks
+  tags:
+    - tekton-task
   k8s:
     state: present
     apply: yes
@@ -123,6 +319,8 @@
     - ../templates/openshift/tasks/*
 
 - name: Deploy pipelines
+  tags:
+    - tekton-pipeline
   k8s:
     state: present
     apply: yes
@@ -132,4 +330,84 @@
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
     - ../templates/openshift/pipelines/operator-release-pipeline.yml
 
-- include: tasks/operator-hosted-pipeline-trigger.yml
+- name: Create cleaning CronJob
+  k8s:
+    state: present
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: pipelinerun-cleaner
+      spec:
+        # every 5 min
+        schedule: "*/5 * * * *"
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: "{{ service_account_name }}"
+                containers:
+                  - name: tkn
+                    image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8:0.19.0-2
+                    command: ["tkn", "pipelinerun", "delete", "--keep", "{{ preserve_after_cleanup }}"]
+                restartPolicy: OnFailure
+
+- include: tasks/webhook-event-listener.yml
+- include: tasks/webhook-hosted-pipeline-trigger.yml
+- include: tasks/webhook-release-pipeline-trigger.yml
+
+# Deploying CI pipeline- with tag "ci", that usually is explicitly included
+# desired only for local dev and for E2E tests
+- name: Deploy CI pipeline
+  block:
+    - name: Deploy CI pipeline
+      k8s:
+        state: present
+        apply: yes
+        namespace: "{{ oc_namespace }}"
+        definition: "{{ lookup('template', '{{ item }}') }}"
+      with_items:
+        - ../templates/openshift/pipelines/operator-ci-pipeline.yml
+    - name: Create GitHub SSH Credentials secret
+      no_log: yes
+      tags:
+        - secrets
+      k8s:
+        state: present
+        force: yes
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: opaque
+          metadata:
+            name: github-ssh-credentials
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          data:
+            id_rsa: "{{ lookup('file', github_ssh_credentials_path, rstrip=False) | b64encode }}"
+    - name: Create Kubeconfig secret
+      no_log: yes
+      tags:
+        - secrets
+      k8s:
+        state: present
+        force: yes
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: opaque
+          metadata:
+            name: kubeconfig
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          data:
+            kubeconfig: "{{ lookup('file', e2e_kubeconfig_path, rstrip=False) | b64encode }}"
+  tags:
+    - ci

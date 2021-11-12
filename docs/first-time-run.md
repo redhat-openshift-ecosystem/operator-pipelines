@@ -1,5 +1,21 @@
+## Quick test environment set-up for developers
 
-## Cluster resources to create
+To quickly setup testing environment to run the pipelines, go to directory `ansible` and use command:
+```bash
+bash init-custom-env.sh $PROJECT $ENVIRONMENT $PASSWD_FILE
+```
+Where:
+- PROJECT is the name of your project in Openshift cluster (eg. `john-playground`),
+where pipeline resources should be installed.
+- ENVIRONMENT indicates, which set of credentials should be used in your testing 
+project, and against which environment pipelines will run.
+Can be one of `dev`, `qa`, `stage` or `prod`.
+- PASSWD_FILE is a name of the file with ansible vault password.
+
+Warning- if some resources were already existing in the $PROJECT, they might conflict during the ansible 
+deployment. Then, they should be removed first.
+
+## Manually creating cluster resources
 
 [Common for all the pipelines](#common-for-all-the-pipelines)
 
@@ -11,23 +27,15 @@
 ### Common for all the pipelines:
 
 #### Registry Credentials
-The pipelines can optionally be configured to push images to a remote private
-registry. The user must create an auth secret containing the docker config. This
-secret can then be passed as a workspace named `registry-credentials` when invoking
+The pipelines can optionally be configured to push and pull images to/from a remote
+private registry. The user must create an auth secret containing the docker config.
+This secret can then be passed as a workspace named `registry-credentials` when invoking
 the pipeline.
 
 ```bash
-cat << EOF > registry-secret.yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: registry-dockerconfig-secret
-data:
-  .dockerconfigjson: < BASE64 ENCODED DOCKER CONFIG >
-type: kubernetes.io/dockerconfigjson
-EOF
-
-oc create -f registry-secret.yml
+oc create secret generic registry-dockerconfig-secret \
+  --type kubernetes.io/dockerconfigjson \
+  --from-file .dockerconfigjson=config.json
 ```
 
 #### Red Hat Catalog Imagestreams
@@ -87,7 +95,7 @@ container API. This requires a partner's API key and the key needs to be created
 as a secret in openshift cluster before running a Tekton pipeline.
 
 ```bash
-oc create secret generic pyxis-api-secret --from-literal PYXIS_API_KEY=< API KEY >
+oc create secret generic pyxis-api-secret --from-literal pyxis_api_key=< API KEY >
 ```
 
 #### Kubeconfig
@@ -98,6 +106,14 @@ by logging into said cluster as an admin user.
 ```bash
 KUBECONFIG=kubeconfig oc login -u <username> -p <password>
 oc create secret generic kubeconfig --from-file=kubeconfig=kubeconfig
+```
+
+#### GitHub API token
+To automatically open the PR with submission, pipeline must authenticate to GitHub. 
+Secret containing api token should be created.
+
+```bash
+oc create secret generic github-api-token --from-literal GITHUB_TOKEN=< GITHUB TOKEN >
 ```
 
 ### Only Hosted pipeline:
@@ -111,10 +127,91 @@ oc create secret generic operator-pipeline-api-certs \
   --from-file operator-pipeline.key
 ```
 
+#### Hydra credentials
+To verify publishing checklist, Hosted pipeline uses Hydra API. To authenticate with
+Hydra over basic auth, secret containing service account credentials should be created.
+
+```bash
+oc create secret generic hydra-credentials \
+  --from-literal username=<username>  \
+  --from-literal password=<password>
+```
+
 #### GitHub Bot token
 To automatically merge the PR, Hosted pipeline uses GitHub API. To authenticate
 when using this method, secret containing bot token should be created.
 
 ```bash
-oc create secret generic github-bot-token --from-literal github_bot_token.txt=< BOT TOKEN >
+oc create secret generic github-bot-token --from-literal github_bot_token=< BOT TOKEN >
+```
+
+#### Prow-kubeconfig
+Preflight tests are running on the separete cluster. To provision a cluster destined for the tests,
+Pipelines are using Prowjob. Thus, to start the preflight test, there is needede a Kubeconfig to cluster
+with enabled
+- [ProwJob](https://github.com/kubernetes/test-infra/tree/master/prow)
+- [OperatorCI](https://docs.ci.openshift.org/docs/architecture/ci-operator/)
+```bash
+oc create secret generic prow-kubeconfig \
+  --from-literal kubeconfig=<kubeconfig>
+```
+
+#### Preflight decryption key
+Results of the preflight tests are protected by encryption. In order to retrieve them
+from the preflight job, gpg decryption key should be supplied.
+```bash
+oc create secret generic preflight-decryption-key \
+  --from-literal private=<private gpg key> \
+  --from-literal public=<public gpg key>
+```
+
+#### OCP-registry-kubeconfig
+OCP clusters contains the public registries for Operator Bundle Images.
+To publish the image to this registry, Pipeline connects to OCP cluster via
+Kubeconfig.
+To create the secret which contains the OCP cluster Kubeconfig: 
+```bash
+oc create secret generic ocp-registry-kubeconfig \
+  --from-literal kubeconfig=<kubeconfig>
+```
+
+#### Quay OAuth Token
+A Quay OAuth token is required to set repo visibility to public.
+```bash
+oc create secret generic quay-oauth-token --from-literal token=<token>
+```
+
+### Only Release pipeline:
+#### Kerberos credentials
+For submitting the IIB build, you need kerberos keytab in a secret:
+```bash
+oc create secret generic kerberos-keytab \
+  --from-file krb5.keytab
+```
+
+#### Quay credentials
+Release pipeline uses Quay credentials to authenticate a push to an index image
+during the IIB build.
+```bash
+oc create secret generic iib-quay-credentials \
+  --from-literal username=<QUAY_USERNAME> \
+  --from-literal password=<QUAY_PASSWORD>
+```
+
+#### OCP-registry-kubeconfig
+OCP clusters contains the public registries for Operator Bundle Images.
+To publish the image to this registry, Pipeline connects to OCP cluster via
+Kubeconfig.
+To create the secret which contains the OCP cluster Kubeconfig: 
+```bash
+oc create secret generic ocp-registry-kubeconfig \
+  --from-literal kubeconfig=<kubeconfig>
+```
+
+#### IBM webhook token
+The Release pipeline needs to call an IBM webhook to trigger marketplace replication. To
+authenticate with the webhook, a token is needed.
+
+```bash
+oc create secret generic ibm-webhook-token --from-literal token=< TOKEN >
 ```

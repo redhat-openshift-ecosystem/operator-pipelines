@@ -1,0 +1,42 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-support-link-for-pr
+spec:
+  params:
+    - name: pipeline_image
+    - name: type
+      description: Connect case type.
+      default: "CERT"
+    - name: source
+      description: Connect case source.
+      default: "tekton"
+    - name: cert_project_id
+      description: Pyxis certification project id.
+    - name: cert_project_type
+      description: Connect cert project type. Should be Operator Bundle Image for operator pipelines.
+      default: "Operator Bundle Image"
+    - name: connect_url
+      description: Connect SPA URL based on selected environment
+    - name: pull_request_url
+  results:
+    - name: comment
+  steps:
+    - name: create-support-link-for-pr
+      image: "$(params.pipeline_image)"
+      script: |
+        #! /usr/bin/env bash
+        set -e
+
+        CONNECT_URL=$(params.connect_url)
+
+        # url-encode parameters
+        LINK_TYPE=$(printf %s "$(params.type)" | jq -sRr @uri)
+        LINK_SOURCE=$(printf %s "$(params.source)" | jq -sRr @uri)
+        CERT_PROJECT_ID=$(printf %s "$(params.cert_project_id)" | jq -sRr @uri)
+        CERT_PROJECT_TYPE=$(printf %s "$(params.cert_project_type)" | jq -sRr @uri)
+        PULL_REUQEST_URL=$(printf %s "$(params.pull_request_url)" | jq -sRr @uri)
+
+        echo "Follow this link if you wish to open a support case:"
+        echo "$CONNECT_URL/support/technology-partner/#/case/new?type=$LINK_TYPE&source=$LINK_SOURCE&cert_project_id=$CERT_PROJECT_ID&cert_project_type=$CERT_PROJECT_TYPE&pull_request_url=$PULL_REUQEST_URL" | tee $(results.comment.path)

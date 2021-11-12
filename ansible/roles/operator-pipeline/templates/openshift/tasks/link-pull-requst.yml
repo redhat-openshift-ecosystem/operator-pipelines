@@ -5,6 +5,7 @@ metadata:
   name: link-pull-request
 spec:
   params:
+    - name: pipeline_image
     - name: pyxis_cert_path
       default: ""
       description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
@@ -24,7 +25,7 @@ spec:
       optional: true
   steps:
     - name: link-pull-request-details-to-test-results
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)

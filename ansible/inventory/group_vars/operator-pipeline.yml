@@ -1,14 +1,35 @@
 ##### General settings
 env: unset
-oc_namespace: operator-pipeline-{{ env }}
+oc_namespace: "operator-pipeline-{{ env }}"
 service_account_name: operator-pipeline-admin
 suffix: "{{ env }}"
-preflight_min_version: 1.0.0
-ci_min_version: 1.0.0
+preflight_min_version: 0.0.0
+ci_min_version: 0.0.0
+
+operator_pipeline_image_repo: quay.io/redhat-isv/operator-pipelines-images
+operator_pipeline_image_tag: latest
+operator_pipeline_image_pull_spec: "{{ operator_pipeline_image_repo }}:{{ operator_pipeline_image_tag }}"
 
 ##### Secrets locations
 operator_pipeline_private_key_local_path: ../../vaults/{{ env }}/operator-pipeline.key
 operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipeline.pem
 
-operator_pipeline_quay_token: ../../vaults/common/dockerconfig.json
+operator_pipeline_kubeconfig_ocp_local_path: ../../vaults/{{ env }}/kubeconfig-ocp
+
+operator_pipeline_registry_token: ../../vaults/{{ env }}/dockerconfig.json
+
+operator_pipeline_kubeconfig_prow_local_path: ../../vaults/common/kubeconfig-prow
 operator_pipeline_github_bot_token: ../../vaults/common/github-bot-token.txt
+operator_pipeline_ibm_webhook_token_local_path: ../../vaults/common/nonprod-ibm-webhook-token
+
+operator_pipeline_hydra_username_local_path: ../../vaults/common/nonprod-hydra-username
+operator_pipeline_hydra_password_local_path: ../../vaults/common/nonprod-hydra-password
+
+operator_pipeline_preflight_decryption_key_private_local_path: ../../vaults/common/preflight-decryption-key-priv.gpg
+operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/common/preflight-decryption-key-pub.gpg
+
+operator_pipeline_exd_guild_isv_key_path: ../../vaults/common/exd-guild-isv.key
+operator_pipeline_exd_guild_isv_passphrase_path: ../../vaults/common/exd-guild-isv.passphrase
+
+github_ssh_credentials_path: ../../vaults/common/github-bot-ssh
+e2e_kubeconfig_path: ../../vaults/common/kubeconfig-e2e

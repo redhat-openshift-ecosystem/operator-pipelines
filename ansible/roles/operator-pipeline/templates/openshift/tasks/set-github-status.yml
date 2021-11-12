@@ -1,0 +1,58 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: set-github-status
+spec:
+  params:
+    - name: pipeline_image
+    - name: git_repo_url
+    - name: commit_sha
+      description: SHA of the commit to set the status for.
+    - name: description
+      description: Description attached to the github status.
+    - name: state
+      description: The github status to set for the given commit.
+    - name: context
+      description: Context attached to the github status.
+    # TODO - https://issues.redhat.com/browse/ISV-1219
+    - name: target_url
+      description: URL to more details about the status.
+      default: ""
+    - name: skip
+      default: "false"
+      description: Flag to skip the setting of github status.
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+  steps:
+    - name: set-github-status
+      image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #! /usr/bin/env bash
+        # Don't use set -x to avoid exposing github token
+        set -e
+
+        if [ $(params.skip) == "true" ]; then
+          echo "Skipping setting github status"
+          exit 0
+        fi
+
+        echo "Setting github status of commit $(params.commit_sha) to $(params.state)"
+
+        set-github-status \
+          --git-repo-url "$(params.git_repo_url)" \
+          --commit-sha "$(params.commit_sha)" \
+          --status "$(params.state)" \
+          --context "$(params.context)" \
+          --description "$(params.description)" \
+          --target-url "$(params.target_url)"

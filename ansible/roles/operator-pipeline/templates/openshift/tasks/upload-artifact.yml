@@ -5,6 +5,7 @@ metadata:
   name: upload-artifacts
 spec:
   params:
+    - name: pipeline_image
     - name: pyxis_api_key_secret
       default: pyxis-api-secret
       description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
@@ -16,6 +17,8 @@ spec:
       description: Path to Pyxis key. Valid only when internal Pyxis is used.
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers/
+    - name: connect_url
+      default: https://connect.redhat.com
     - name: log_file
     - name: result_file
     - name: artifacts_dir
@@ -28,6 +31,9 @@ spec:
   results:
     - name: log_url
     - name: result_url
+      description: URL to the Pyxis test results endpoint
+    - name: result_spa_url
+      description: URL to the Connect SPA test results page
   workspaces:
     - name: source
     - name: pyxis-ssl-credentials
@@ -36,14 +42,13 @@ spec:
       optional: true
   steps:
     - name: upload-test-logs
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
           value: $(params.pyxis_cert_path)
         - name: PYXIS_KEY_PATH
           value: $(params.pyxis_key_path)
-
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
@@ -54,7 +59,7 @@ spec:
         fi
 
         if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
-          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
           export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
@@ -78,7 +83,7 @@ spec:
         echo -n $LOG_URL | tee $(results.log_url.path)
 
     - name: upload-test-results
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
@@ -95,7 +100,7 @@ spec:
         fi
 
         if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
-          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
           export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
@@ -118,8 +123,13 @@ spec:
         echo "Test result URL: "
         echo -n $RESULT_URL | tee $(results.result_url.path)
 
+        RESULT_SPA_URL="$(params.connect_url)/projects/$(params.cert_project_id)/test-results"
+
+        echo "Test result SPA URL: "
+        echo -n $RESULT_SPA_URL | tee $(results.result_spa_url.path)
+
     - name: upload-test-artifacts
-      image: quay.io/redhat-isv/operator-pipelines-images:latest
+      image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
@@ -134,7 +144,7 @@ spec:
         fi
 
         if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
-          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key.txt
+          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
           export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
