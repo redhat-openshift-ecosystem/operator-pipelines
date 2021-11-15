@@ -85,6 +85,12 @@ spec:
               exit 0
           fi
 
+          if [ "$(params.ocp_version)" == "4.6" ] || [ "$(params.ocp_version)" == "4.7" ]; then
+              JOB_SUFFIX="aws"
+          else
+              JOB_SUFFIX="claim"
+          fi
+
           set -e
 
           if [ -f "$(workspaces.credentials.path)/project_dockerconfigjson.gpg.b16" ]
@@ -93,7 +99,7 @@ spec:
               export PFLT_DOCKERCONFIG
 
               preflight-trigger \
-          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-claim" \
+          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-${JOB_SUFFIX}" \
           -job-config-path "release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-periodics.yaml" \
           -prow-config-path release/core-services/prow/02_config/_config.yaml \
           -ocp-version "$(params.ocp_version)" \
@@ -106,7 +112,7 @@ spec:
           -output-path prowjob-base-url
           else
               preflight-trigger \
-          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-claim" \
+          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-${JOB_SUFFIX}" \
           -job-config-path "release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-periodics.yaml" \
           -prow-config-path release/core-services/prow/02_config/_config.yaml \
           -ocp-version "$(params.ocp_version)" \
