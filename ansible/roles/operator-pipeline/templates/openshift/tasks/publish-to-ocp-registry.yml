@@ -10,8 +10,6 @@ spec:
     - name: vendor_label
       description: name of the vendor
     - name: repository_name
-    - name: dist_method
-      description: operator distribution method- either marketplace or connect
     - name: image
       description: reference to the existing bundle image
     - name: is_latest
@@ -43,13 +41,12 @@ spec:
         PROJECT_NAME=$(echo "$(params.vendor_label)" | xargs echo -n)
         IMAGESTREAM_NAME=$(echo "$(params.repository_name)" | xargs echo -n)
         TAG=$(echo "$(params.bundle_version)" | xargs echo -n)
-        DIST_METHOD=$(echo "$(params.dist_method)" | xargs echo -n)
         IS_LATEST=$(echo "$(params.is_latest)" | xargs echo -n)
         CONNECT_REGISTRY=$(echo "$(params.connect_registry)" | xargs echo -n)
 
         IMAGE=$(params.image)
 
-        ROLE_NAME=$(echo ${PROJECT_NAME}-pull)
+        ROLE_NAME=$(echo ${IMAGESTREAM_NAME}-pull)
 
         ## Create new openshift project OR if it already exists- use existing project
         oc new-project $PROJECT_NAME || oc project $PROJECT_NAME
@@ -68,29 +65,15 @@ spec:
             --resource-name=$IMAGESTREAM_NAME
 
         ## (Re)create rolebinding associated with the role
-        if [ "$DIST_METHOD" = "connect" ]; then
 
-          # (Get rolebinding AND if it exists delete it)
-          oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
+        # (Get rolebinding AND if it exists delete it)
+        oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
 
-          # create rolebinding
-          oc create rolebinding $ROLE_NAME --role=$ROLE_NAME \
-            --serviceaccount connect:proxysa \
-            --serviceaccount connect:rhmp-sa \
-            --serviceaccount connect:bpmsa
-        elif [ "$DIST_METHOD" = "marketplace" ]; then
-
-          # (Get rolebinding AND if it exists delete it)
-          oc get rolebinding $ROLE_NAME && oc delete rolebinding $ROLE_NAME
-
-          # Create rolebinding
-          oc create rolebinding $ROLE_NAME --role=$ROLE_NAME \
-            --serviceaccount connect:rhmp-sa \
-            --serviceaccount connect:bpmsa
-        else
-          echo "Error: wrong distribution method ${DIST_METHOD}"
-          exit 1
-        fi
+        # create rolebinding
+        oc create rolebinding $ROLE_NAME --role=$ROLE_NAME \
+          --serviceaccount connect:proxysa \
+          --serviceaccount connect:rhmp-sa \
+          --serviceaccount connect:bpmsa
 
         ## Create ImagestreamTag
         if ! error=$(oc create imagestreamtag $IMAGESTREAM_NAME:$TAG --from-image $IMAGE) && ! grep -v AlreadyExists <<<"$error"; then
