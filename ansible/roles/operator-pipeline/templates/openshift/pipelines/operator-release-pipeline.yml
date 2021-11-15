@@ -275,8 +275,6 @@ spec:
           value: "$(tasks.get-vendor-related-data.results.vendor_label)"
         - name: repository_name
           value: "$(tasks.get-cert-project-related-data.results.repo_name)"
-        - name: dist_method
-          value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
         - name: image
           value: *bundleImage
         - name: is_latest
