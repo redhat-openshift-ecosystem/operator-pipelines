@@ -239,7 +239,7 @@ def get_files_added_in_pr(
                 )
                 raise RuntimeError("There are changes done to previously merged files")
             else:
-                allowed_files.append(modified_file["filename"])        
+                allowed_files.append(modified_file["filename"])
 
     return allowed_files
 
