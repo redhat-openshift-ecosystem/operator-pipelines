@@ -194,6 +194,7 @@ def test_get_files_added_in_pr_changed_ci_yaml(mock_get: MagicMock):
 
     assert files == ["ci.yaml"]
 
+
 @pytest.mark.parametrize(
     "wrong_change",
     [
