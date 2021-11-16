@@ -218,6 +218,7 @@ def get_files_added_in_pr(
     rsp = requests.get(compare_changes_url)
     rsp.raise_for_status()
 
+
     added_files = []
     modified_files = []
     allowed_files = []
@@ -229,6 +230,7 @@ def get_files_added_in_pr(
             # To prevent the modifications to previously merged bundles,
             # we allow only changed with status "added"
             modified_files.append(file)
+
     allowed_files.extend(added_files)
 
     if modified_files:
@@ -242,6 +244,7 @@ def get_files_added_in_pr(
                 allowed_files.append(modified_file["filename"])
 
     return allowed_files
+
 
 
 def verify_changed_files_location(

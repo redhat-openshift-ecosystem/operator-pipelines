@@ -31,7 +31,7 @@
               - name: git_repo_url
                 value: $(body.pull_request.base.repo.clone_url)
               - name: git_username
-                value: $(body.pull_request.head.user.login)
+                value: $(body.pull_request.user.login)
               - name: git_commit
                 value: $(body.pull_request.head.sha)
               - name: git_base_branch

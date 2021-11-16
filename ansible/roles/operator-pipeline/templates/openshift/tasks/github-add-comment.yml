@@ -89,6 +89,8 @@ spec:
               key: $(params.GITHUB_TOKEN_SECRET_KEY)
 
       image: registry.access.redhat.com/ubi8/ubi-minimal:8.2
+      # TODO: Store this script elsewhere
+      # https://issues.redhat.com/browse/ISV-1386
       script: |
         #!/usr/libexec/platform-python
         import json

@@ -29,7 +29,7 @@ spec:
       default: "prod"
     - name: pipeline_image
       description: An image of operator-pipeline-images.
-      default: "quay.io/redhat-isv/operator-pipelines-images:v1.0.5"
+      default: "quay.io/redhat-isv/operator-pipelines-images:v1.0.6"
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github-bot-token
@@ -275,8 +275,6 @@ spec:
           value: "$(tasks.get-vendor-related-data.results.vendor_label)"
         - name: repository_name
           value: "$(tasks.get-cert-project-related-data.results.repo_name)"
-        - name: dist_method
-          value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
         - name: image
           value: *bundleImage
         - name: is_latest
@@ -351,10 +349,34 @@ spec:
         - name: image-data
           workspace: image-data
 
+    # call IIB to publish the bundle
+    - name: publish-bundle
+      runAfter:
+        - create-container-image
+        - trigger-marketplace-replication
+      taskRef:
+        name: publish-bundle
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_versions
+          value: "$(tasks.get-supported-versions.results.indices)"
+        - name: bundle_pullspec
+          value: "$(tasks.publish-to-ocp-registry.results.image_pullspec)"
+        - name: operator_distribution_method
+          value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
+        - name: iib_url
+          value: "$(tasks.set-env.results.iib_url)"
+        - name: environment
+          value: "$(params.env)"
+      workspaces:
+        - name: kerberos-keytab
+          workspace: kerberos-keytab
+
     # Publish Vendor, Repository
     - name: publish-resources
       runAfter:
-        - create-container-image
+        - publish-bundle
       taskRef:
         name: publish-resources
       params:
@@ -375,30 +397,6 @@ spec:
       workspaces:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
-
-    # call IIB to publish the bundle
-    - name: publish-bundle
-      runAfter:
-        - publish-resources
-        - trigger-marketplace-replication
-      taskRef:
-        name: publish-bundle
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_versions
-          value: "$(tasks.get-supported-versions.results.indices)"
-        - name: bundle_pullspec
-          value: "$(tasks.publish-to-ocp-registry.results.image_pullspec)"
-        - name: operator_distribution_method
-          value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
-        - name: iib_url
-          value: "$(tasks.set-env.results.iib_url)"
-        - name: environment
-          value: "$(params.env)"
-      workspaces:
-        - name: kerberos-keytab
-          workspace: kerberos-keytab
 
   finally:
 
@@ -432,7 +430,7 @@ spec:
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
 
     # In the event of a failure, comment with the support link on the github PR
-    - name: github-add-comment
+    - name: github-add-support-comment
       when:
         - input: $(tasks.status)
           operator: notin
@@ -572,3 +570,23 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
+
+    # Comment with a pipeline summary
+    - name: github-add-summary-comment
+      taskRef:
+        name: github-pipelinerun-summary
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: pipelinerun
+          value: "$(context.pipelineRun.name)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: summary
