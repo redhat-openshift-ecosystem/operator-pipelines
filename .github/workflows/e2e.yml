@@ -18,7 +18,7 @@ jobs:
         with:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
           ref: 'e2e-test-operator'
-          #token: ''
+          token: ${{ secrets.BOT_TOKEN }}
       - name: Create commit to create PR with test data
         run: |
           git config user.name 'rh-operator-bundle-bot'
