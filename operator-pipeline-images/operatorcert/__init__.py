@@ -3,7 +3,7 @@ import logging
 import pathlib
 import re
 from urllib.parse import urljoin
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import requests
 import yaml
@@ -171,7 +171,7 @@ def ocp_version_info(
     }
 
 
-def get_repo_and_org_from_github_url(git_repo_url: str) -> (str, str):
+def get_repo_and_org_from_github_url(git_repo_url: str) -> Tuple[str, str]:
     """
     Parse github repository URL to get the organization (or user) and
     repository name
@@ -276,7 +276,7 @@ def verify_changed_files_location(
         raise RuntimeError("There are changes in the invalid path")
 
 
-def parse_pr_title(pr_title: str) -> (str, str):
+def parse_pr_title(pr_title: str) -> Tuple[str, str]:
     """
     Test, if PR title complies to regex.
     If yes, extract the Bundle name and version.
