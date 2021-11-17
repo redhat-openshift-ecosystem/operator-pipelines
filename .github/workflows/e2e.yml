@@ -22,7 +22,7 @@ jobs:
       - name: Prepare environment
         run: |
           # Install dependencies
-          apt install -y hub
+          sudo apt install -y hub
       - name: Create a MR with the test data
         run: |
           BRANCH_NAME=test-pr-123
