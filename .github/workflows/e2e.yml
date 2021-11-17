@@ -40,7 +40,7 @@ jobs:
         delete-branch: true
         branch-suffix: short-commit-hash
         title: 'operator test-e2e-operator (0.0.7-${GITHUB_SHA})'
-        body: 'This is PR used for E2E tests of the operator pipelines"
+        body: 'This is PR used for E2E tests of the operator pipelines'
 
 
   run-e2e:
