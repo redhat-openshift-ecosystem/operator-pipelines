@@ -99,10 +99,10 @@ spec:
         CSVFILE=$(find $BUNDLE_PATH -name "*clusterserviceversion.yaml" -o -name "*clusterserviceversion.yml")
         RELATED_IMAGE_COUNT=$(yq -e '.spec.relatedImages | length' $CSVFILE)
 
-        if [[ $REPLACEMENT_COUNT == $RELATED_IMAGE_COUNT ]]; then
+        if [[ $RELATED_IMAGE_COUNT >= $REFERENCE_COUNT ]]; then
           echo "Related images section exists."
           echo -n "true" | tee $(results.related_images_flag.path)
         else
-          echo "Related images section does not exist."
+          echo "The relatedImages section does not exist or is missing images."
           echo -n "false" | tee $(results.related_images_flag.path)
         fi
