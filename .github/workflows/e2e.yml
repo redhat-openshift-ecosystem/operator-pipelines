@@ -5,9 +5,34 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
+      - ISV-1320
   pull_request:
   workflow_dispatch:
 jobs:
+  prepare-test-data:
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
+          ref: 'e2e-test-operator'
+          #token: ''
+      - name: Prepare environment
+        run: |
+          # Install dependencies
+          apt install -y hub
+      - name: Create a MR with the test data
+        run: |
+          BRANCH_NAME=test-pr-123
+          REPO_NAME=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git
+
+          git clone $REPO_NAME
+          cd operator-pipelines-test
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+          hub pull-request -b main -h $BRANCH_NAME
   run-e2e:
     runs-on: ubuntu-latest
     environment:
