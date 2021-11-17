@@ -21,20 +21,21 @@ jobs:
       - name: Create commit to create PR with test data
         run: |
           git config user.name 'rh-operator-bundle-bot'
-          git config user.email 'exd-guild-isv@redhat.com'
+          git config user.email 'exd-guild-isv+operators@redhat.com'
 
           cd operators/test-e2e-operator
           mv 0.0.7 0.0.7-$GITHUB_SHA
-          find ./ -type f -exec sed -i 's/0.0.7/0.0.7-$GITHUB_SHA/g' {} \;
+          find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$GITHUB_SHA/g" {} \;
           git commit -am "new version of operator"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.BOT_TOKEN }}
+          author: exd-guild-isv+operators@redhat.com
           commit-message: 'Preparing the data for E2E tests'
           delete-branch: true
           branch-suffix: short-commit-hash
-          title: 'operator test-e2e-operator (0.0.7-${GITHUB_SHA})'
+          title: operator test-e2e-operator (0.0.7-${{ GITHUB_SHA }})
           body: 'This is PR used for E2E tests of the operator pipelines'
   run-e2e:
     runs-on: ubuntu-latest
