@@ -31,7 +31,7 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.BOT_TOKEN }}
-          author: exd-guild-isv+operators@redhat.com
+          author: 'rh-operator-bundle-bot <exd-guild-isv+operators@redhat.com>'
           commit-message: 'Preparing the data for E2E tests'
           delete-branch: true
           branch-suffix: short-commit-hash
