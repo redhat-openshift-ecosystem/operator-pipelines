@@ -19,10 +19,6 @@ jobs:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
           ref: 'e2e-test-operator'
           #token: ''
-      - name: Prepare environment
-        run: |
-          # Install dependencies
-          sudo apt install -y hub
       - name: Create commit to create PR with test data
         run: |
           git config user.name 'rh-operator-bundle-bot'
@@ -32,17 +28,15 @@ jobs:
           mv 0.0.7 0.0.7-$GITHUB_SHA
           find ./ -type f -exec sed -i 's/0.0.7/0.0.7-$GITHUB_SHA/g' {} \;
           git commit -am "new version of operator"
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
-        #token: todo
-        commit-message: 'Preparing the data for E2E tests'
-        delete-branch: true
-        branch-suffix: short-commit-hash
-        title: 'operator test-e2e-operator (0.0.7-${GITHUB_SHA})'
-        body: 'This is PR used for E2E tests of the operator pipelines'
-
-
+        with:
+          #token: todo
+          commit-message: 'Preparing the data for E2E tests'
+          delete-branch: true
+          branch-suffix: short-commit-hash
+          title: 'operator test-e2e-operator (0.0.7-${GITHUB_SHA})'
+          body: 'This is PR used for E2E tests of the operator pipelines'
   run-e2e:
     runs-on: ubuntu-latest
     environment:
