@@ -35,7 +35,7 @@ jobs:
           commit-message: 'Preparing the data for E2E tests'
           delete-branch: true
           branch-suffix: short-commit-hash
-          title: operator test-e2e-operator (0.0.7-${{ GITHUB_SHA }})
+          title: "operator test-e2e-operator (0.0.7-${GITHUB_SHA})"
           body: 'This is PR used for E2E tests of the operator pipelines'
   run-e2e:
     runs-on: ubuntu-latest
