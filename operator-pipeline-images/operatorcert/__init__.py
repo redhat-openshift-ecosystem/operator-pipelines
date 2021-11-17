@@ -267,13 +267,13 @@ def verify_changed_files_location(
     wrong_changes = False
     for file_path in changed_files:
         if file_path.startswith(path) or file_path == config_path:
-            logging.info(f"Change path ok: {file_path}")
+            logging.info(f"Permitted change: {file_path}")
         else:
-            logging.error(f"Wrong change path: {file_path}")
+            logging.error(f"Unpermitted change: {file_path}")
             wrong_changes = True
 
     if wrong_changes:
-        raise RuntimeError("There are changes in the invalid path")
+        raise RuntimeError("There are unpermitted file changes")
 
 
 def parse_pr_title(pr_title: str) -> Tuple[str, str]:
