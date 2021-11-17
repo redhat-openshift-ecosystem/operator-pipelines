@@ -41,6 +41,15 @@ spec:
       default: quay-oauth-token
     - name: quay_oauth_secret_key
       default: token
+    - name: hydra_secret_name
+      description: Kubernetes secret name that contains the Hydra credentials.
+      default: hydra-credentials
+    - name: hydra_secret_username_key
+      description: The key within the Kubernetes secret that contains the Hydra username.
+      default: username
+    - name: hydra_secret_password_key
+      description: The key within the Kubernetes secret that contains the Hydra password
+      default: password
     - name: ignore_publishing_checklist
       default: "false"
       description: Ignore the results of the publishing checklist
@@ -55,7 +64,6 @@ spec:
         pipeline service account registry tokens.
     - name: pyxis-ssl-credentials
     - name: prow-kubeconfig
-    - name: hydra-credentials
     - name: preflight-decryption-key
     - name: gpg-key
       description: GPG private key that decrypts secrets partner's data
@@ -769,11 +777,14 @@ spec:
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: connect_url
           value: "$(tasks.set-env.results.connect_url)"
+        - name: hydra_secret_name
+          value: "$(params.hydra_secret_name)"
+        - name: hydra_secret_username_key
+          value: "$(params.hydra_secret_username_key)"
+        - name: hydra_secret_password_key
+          value: "$(params.hydra_secret_password_key)"
         - name: ignore_publishing_checklist
           value: "$(params.ignore_publishing_checklist)"
-      workspaces:
-        - name: hydra-credentials
-          workspace: hydra-credentials
 
     # merge PR
     - name: merge-pr

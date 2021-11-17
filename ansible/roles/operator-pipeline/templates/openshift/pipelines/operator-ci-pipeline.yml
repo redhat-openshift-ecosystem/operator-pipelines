@@ -41,14 +41,18 @@ spec:
     - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
+    - name: pyxis_api_key_secret_name
+      description: Kubernetes secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+      default: pyxis-api-secret
+    - name: pyxis_api_key_secret_key
+      description: The key within the Kubernetes secret that contains Pyxis API key. Valid only when external Pyxis is used.
+      default: pyxis_api_key
   workspaces:
     - name: pipeline
     - name: kubeconfig
     - name: ssh-dir
       optional: true
     - name: registry-credentials
-      optional: true
-    - name: pyxis-api-key
       optional: true
   tasks:
     - name: set-env
@@ -382,14 +386,16 @@ spec:
           value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: package_name
           value: "$(tasks.bundle-path-validation.results.package_name)"
+        - name: pyxis_api_key_secret_name
+          value: "$(params.pyxis_api_key_secret_name)"
+        - name: pyxis_api_key_secret_key
+          value: "$(params.pyxis_api_key_secret_key)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:
         - name: source
           workspace: pipeline
           subPath: preflight
-        - name: pyxis-api-key
-          workspace: pyxis-api-key
 
     - name: open-pr
       runAfter:
@@ -433,9 +439,6 @@ spec:
           operator: in
           values:
             - "true"
-      workspaces:
-        - name: pyxis-api-key
-          workspace: pyxis-api-key
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -451,6 +454,10 @@ spec:
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
           value: "$(context.pipelineRun.name)"
+        - name: pyxis_api_key_secret_name
+          value: "$(params.pyxis_api_key_secret_name)"
+        - name: pyxis_api_key_secret_key
+          value: "$(params.pyxis_api_key_secret_key)"
 
     - name: show-support-link
       taskRef:

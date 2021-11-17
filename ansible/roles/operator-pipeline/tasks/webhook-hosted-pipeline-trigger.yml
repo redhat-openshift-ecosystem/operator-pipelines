@@ -148,9 +148,6 @@
                     - name: preflight-decryption-key
                       secret:
                         secretName: "preflight-decryption-key"
-                    - name: hydra-credentials
-                      secret:
-                        secretName: "hydra-credentials"
                     - name: gpg-key
                       secret:
                         secretName: "isv-gpg-key"

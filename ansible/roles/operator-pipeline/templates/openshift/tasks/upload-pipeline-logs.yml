@@ -6,9 +6,12 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-    - name: pyxis_api_key_secret
-      default: pyxis-api-secret
-      description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_api_key_secret_name
+      default: default-api-secret
+      description: Kubernetes secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_api_key_secret_key
+      default: pyxis_api_key
+      description: The key within the Kubernetes secret that contains Pyxis API key. Valid only when external Pyxis is used.
     - name: pyxis_cert_path
       default: ""
       description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
@@ -32,8 +35,6 @@ spec:
   workspaces:
     - name: pyxis-ssl-credentials
       optional: true
-    - name: pyxis-api-key
-      optional: true
   steps:
     - name: get-pipeline-logs
       image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
@@ -52,16 +53,16 @@ spec:
           value: $(params.pyxis_cert_path)
         - name: PYXIS_KEY_PATH
           value: $(params.pyxis_key_path)
+        - name: PYXIS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.pyxis_api_key_secret_name)
+              key: $(params.pyxis_api_key_secret_key)
+              optional: true
       script: |
         #! /usr/bin/env bash
         echo "Uploading pipeline logs"
-        # DO NOT USE `set -x`, to avoid revealing the secrets in logs!
-        set -e
-
-        if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
-          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
-          export PYXIS_API_KEY=$(cat $API_KEY_PATH)
-        fi
+        set -ex
 
         upload-artifacts \
           --cert-project-id "$(params.cert_project_id)" \

@@ -10,28 +10,34 @@ spec:
       description: ID of the bundle Certification Project
     - name: connect_url
       description: URL to Red Hat Connect
+    - name: hydra_secret_name
+      description: Kubernetes secret name that contains the Hydra credentials
+    - name: hydra_secret_username_key
+      description: The key within the Kubernetes secret that contains the Hydra username
+    - name: hydra_secret_password_key
+      description: The key within the Kubernetes secret that contains the Hydra password
     - name: ignore_publishing_checklist
       default: "false"
       description: Ignore the results of the publishing checklist
-  workspaces:
-    - name: hydra-credentials
   steps:
     - name: query-publishing-checklist
       image: "$(params.pipeline_image)"
       env:
-        - name: HYDRA_USERNAME_PATH
-          value: $(workspaces.hydra-credentials.path)/username
-        - name: HYDRA_PASSWORD_PATH
-          value: $(workspaces.hydra-credentials.path)/password
+        - name: HYDRA_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: $(params.hydra_secret_name)
+              key: $(params.hydra_secret_username_key)
+        - name: HYDRA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.hydra_secret_name)
+              key: $(params.hydra_secret_password_key)
       script: |
         #! /usr/bin/env bash
-        # Don't use set -x to avoid exposing Hydra credentials
-        set -e
+        set -ex
 
         HYDRA_URL=$(params.connect_url)/hydra/prm
-
-        export HYDRA_USERNAME=$(cat $HYDRA_USERNAME_PATH)
-        export HYDRA_PASSWORD=$(cat $HYDRA_PASSWORD_PATH)
 
         hydra-checklist \
           --cert-project-id "$(params.cert_project_id)" \

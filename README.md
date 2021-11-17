@@ -36,7 +36,6 @@ tkn pipeline start operator-ci-pipeline \
   --param env=prod \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=kubeconfig,secret=kubeconfig \
-  --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
 ```
 If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:
@@ -51,9 +50,7 @@ tkn pipeline start operator-ci-pipeline \
   --param registry=quay.io \
   --param image_namespace=redhat-isv \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=kubeconfig,secret=kubeconfig \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
-  --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
 ```
 
@@ -122,7 +119,6 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=prow-kubeconfig,secret=prow-kubeconfig \
   --workspace name=preflight-decryption-key,secret=preflight-decryption-key \
-  --workspace name=hydra-credentials,secret=hydra-credentials \
   --workspace name=gpg-key,secret=isv-gpg-key \
   --showlog
 ```
