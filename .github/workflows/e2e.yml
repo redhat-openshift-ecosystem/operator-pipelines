@@ -27,6 +27,7 @@ jobs:
         run: |
           BRANCH_NAME=test-pr-123
           REPO_NAME=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git
+          GITHUB_TOKEN=${{ github.token }}
 
           git clone $REPO_NAME
           cd operator-pipelines-test
