@@ -18,7 +18,6 @@ jobs:
         with:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
           ref: 'e2e-test-operator'
-          token: ${{ secrets.BOT_TOKEN }}
       - name: Create commit to create PR with test data
         run: |
           git config user.name 'rh-operator-bundle-bot'
@@ -31,7 +30,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
-          #token: todo
+          token: ${{ secrets.BOT_TOKEN }}
           commit-message: 'Preparing the data for E2E tests'
           delete-branch: true
           branch-suffix: short-commit-hash
