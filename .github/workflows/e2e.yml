@@ -55,6 +55,9 @@ jobs:
       # from branch e2e-test-operator- just with the new version.
       - name: Create commit to create PR with test data
         run: |
+          git config user.name 'rh-operator-bundle-bot'
+          git config user.email 'exd-guild-isv+operators@redhat.com'
+
           cd operators/test-e2e-operator
           mv 0.0.7 0.0.7-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
