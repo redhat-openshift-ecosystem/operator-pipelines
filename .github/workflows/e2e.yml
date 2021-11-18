@@ -9,15 +9,22 @@ on:  # yamllint disable-line rule:truthy
   pull_request:
   workflow_dispatch:
 jobs:
+  prepare-env-job:
+     runs-on: ubuntu-latest
+     outputs:
+       short_sha: ${{ steps.prepare.outputs.short_sha }}
+       pr_title: ${{ steps.prepare.outputs.pr_title }}
+     steps:
+       - id: prepare
+         run: |
+           SHORT_SHA=$(git rev-parse --short HEAD)
+           echo "::set-output name=short_sha::$SHORT_SHA"
+           echo "::set-output name=pr_title::operator test-e2e-operator (0.0.7-${SHORT_SHA})"
   prepare-test-data:
     runs-on: ubuntu-latest
-    environment:
-      name: dev
+    env:
+      SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
     steps:
-      - name: Set environmental variables
-        run: |
-          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          echo 'PR_TITLE="operator test-e2e-operator (0.0.7-${SHORT_SHA})"'
       - uses: actions/checkout@v2
         with:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
@@ -37,14 +44,12 @@ jobs:
           token: ${{ secrets.BOT_TOKEN }}
           author: 'rh-operator-bundle-bot <exd-guild-isv+operators@redhat.com>'
           commit-message: 'Preparing the data for E2E tests'
-          branch: ${{ SHORT_SHA }}
-          title: ${{ PR_TITLE }}
+          branch: ${{needs.prepare-env-job.outputs.short_sha}}
+          title: ${{needs.prepare-env-job.outputs.pr_title}}
           delete-branch: true
           body: 'This is PR used for E2E tests of the operator pipelines'
   run-e2e:
     runs-on: ubuntu-latest
-    environment:
-      name: dev
     steps:
       - name: Set environmental variables
         run: |
