@@ -14,6 +14,7 @@ jobs:
      outputs:
        short_sha: ${{ steps.prepare.outputs.short_sha }}
        pr_title: ${{ steps.prepare.outputs.pr_title }}
+       oc_project: ${{ steps.prepare.outputs.oc_project}}
      steps:
        - uses: actions/checkout@v2
        - id: prepare
@@ -21,6 +22,7 @@ jobs:
            SHORT_SHA=$(git rev-parse --short HEAD)
            echo "::set-output name=short_sha::$SHORT_SHA"
            echo "::set-output name=pr_title::operator test-e2e-operator (0.0.7-${SHORT_SHA})"
+           echo "::set-output name=oc_project::test-e2e-${SHORT_SHA}"
   prepare-test-data:
     runs-on: ubuntu-latest
     needs: prepare-env-job
@@ -52,12 +54,11 @@ jobs:
           body: 'This is PR used for E2E tests of the operator pipelines'
   run-e2e:
     runs-on: ubuntu-latest
+    needs: prepare-env-job
+    env:
+      SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
+      OC_PROJECT: ${{needs.prepare-env-job.outputs.oc_project}}
     steps:
-      - name: Set environmental variables
-        run: |
-          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          echo 'PR_TITLE="operator test-e2e-operator (0.0.7-${SHORT_SHA})"'
-          echo "OC_PROJECT=test-e2e-${SHORT_SHA}" >> $GITHUB_ENV
       - uses: actions/checkout@v1
       - name: Prepare environment
         run: |
