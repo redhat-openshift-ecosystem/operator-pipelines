@@ -37,8 +37,8 @@ jobs:
           token: ${{ secrets.BOT_TOKEN }}
           author: 'rh-operator-bundle-bot <exd-guild-isv+operators@redhat.com>'
           commit-message: 'Preparing the data for E2E tests'
-          branch: ${SHORT_SHA}
-          title: ${PR_TITLE}
+          branch: ${{ SHORT_SHA }}
+          title: ${{ PR_TITLE }}
           delete-branch: true
           body: 'This is PR used for E2E tests of the operator pipelines'
   run-e2e:
@@ -50,7 +50,7 @@ jobs:
         run: |
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
           echo 'PR_TITLE="operator test-e2e-operator (0.0.7-${SHORT_SHA})"'
-          echo "OC_PROJECT=test-e2e-$SHORT_SHA" >> $GITHUB_ENV
+          echo "OC_PROJECT=test-e2e-${SHORT_SHA}" >> $GITHUB_ENV
       - uses: actions/checkout@v1
       - name: Prepare environment
         run: |
