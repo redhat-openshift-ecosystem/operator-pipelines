@@ -15,6 +15,7 @@ jobs:
        short_sha: ${{ steps.prepare.outputs.short_sha }}
        pr_title: ${{ steps.prepare.outputs.pr_title }}
      steps:
+       - uses: actions/checkout@v2
        - id: prepare
          run: |
            SHORT_SHA=$(git rev-parse --short HEAD)
