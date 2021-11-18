@@ -15,7 +15,8 @@ jobs:
       name: dev
     steps:
       - name: Set environmental variables
-        run: echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+        run: |
+          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
       - uses: actions/checkout@v2
         with:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
@@ -45,6 +46,7 @@ jobs:
     steps:
       - name: Set environmental variables
         run: |
+          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
           echo "OC_PROJECT=test-e2e-$SHORT_SHA" >> $GITHUB_ENV
       - uses: actions/checkout@v1
       - name: Prepare environment
