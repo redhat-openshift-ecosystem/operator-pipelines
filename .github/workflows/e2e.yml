@@ -17,6 +17,7 @@ jobs:
       - name: Set environmental variables
         run: |
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+          echo 'PR_TITLE="operator test-e2e-operator (0.0.7-${SHORT_SHA})"'
       - uses: actions/checkout@v2
         with:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
@@ -36,11 +37,9 @@ jobs:
           token: ${{ secrets.BOT_TOKEN }}
           author: 'rh-operator-bundle-bot <exd-guild-isv+operators@redhat.com>'
           commit-message: 'Preparing the data for E2E tests'
-          branch: "test-e2e-branch"
-          title: "operator test-e2e-operator (0.0.7-${GITHUB_SHA})"
-          #delete-branch: true
-          #branch-suffix: short-commit-hash
-          #title: "operator test-e2e-operator (0.0.7-${GITHUB_SHA})"
+          branch: ${SHORT_SHA}
+          title: ${PR_TITLE}
+          delete-branch: true
           body: 'This is PR used for E2E tests of the operator pipelines'
   run-e2e:
     runs-on: ubuntu-latest
@@ -50,6 +49,7 @@ jobs:
       - name: Set environmental variables
         run: |
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+          echo 'PR_TITLE="operator test-e2e-operator (0.0.7-${SHORT_SHA})"'
           echo "OC_PROJECT=test-e2e-$SHORT_SHA" >> $GITHUB_ENV
       - uses: actions/checkout@v1
       - name: Prepare environment
@@ -84,7 +84,7 @@ jobs:
           tkn pipeline start operator-ci-pipeline \
             --use-param-defaults \
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
-            --param git_branch=e2e-test-operator-$SHORT_SHA \
+            --param git_branch=$SHORT_SHA \
             --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
             --param env=stage \
             --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
