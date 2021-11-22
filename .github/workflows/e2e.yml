@@ -86,7 +86,9 @@ jobs:
       # Get the number of the created PR- it's used for cleanup
       - id: get_pr_number
         run: |
-          PR_NUMBER=$(hub pr show -f %I)
+          hub pr show --head ${PR_BASE_BRANCH} -f %I
+          hub pr show --head ${PR_BASE_BRANCH} --url
+          PR_NUMBER=$(hub pr show --head ${PR_BASE_BRANCH} -f %I)
           echo "::set-output name=pr_number::${PR_NUMBER}"
 
   # Deploy and run the E2E tests
