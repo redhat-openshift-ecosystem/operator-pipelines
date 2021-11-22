@@ -152,23 +152,6 @@ spec:
           workspace: pipeline
           subPath: src
 
-    - name: annotations-validation
-      runAfter:
-        - commit-pinned-digest
-      taskRef:
-        name: annotations-validation
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(params.bundle_path)"
-        - name: package_name
-          value: "$(tasks.bundle-path-validation.results.package_name)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
-
     - name: get-supported-versions
       runAfter:
         - commit-pinned-digest
@@ -213,6 +196,19 @@ spec:
           workspace: pipeline
           subPath: src
 
+    - name: get-organization
+      runAfter:
+        - commit-pinned-digest
+      taskRef:
+        name: get-organization
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
     - name: content-hash
       runAfter:
         - commit-pinned-digest
@@ -223,6 +219,25 @@ spec:
           value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(params.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: src
+
+    - name: annotations-validation
+      runAfter:
+        - get-organization
+      taskRef:
+        name: annotations-validation
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(params.bundle_path)"
+        - name: package_name
+          value: "$(tasks.bundle-path-validation.results.package_name)"
+        - name: organization
+          value: "$(tasks.get-organization.results.organization)"
       workspaces:
         - name: source
           workspace: pipeline

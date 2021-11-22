@@ -182,6 +182,19 @@ spec:
         - name: pull_request_url
           value: "$(params.git_pr_url)"
 
+    - name: get-organization
+      runAfter:
+        - certification-project-check
+      taskRef:
+        name: get-organization
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Get cert project related data
     - name: get-cert-project-related-data
       runAfter:
@@ -207,6 +220,19 @@ spec:
           subPath: src
         - name: results
           workspace: results
+
+    - name: verify-project-distribution
+      runAfter:
+        - get-cert-project-related-data
+      taskRef:
+        name: verify-project-distribution
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: project_distribution
+          value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
+        - name: organization
+          value: "$(tasks.get-organization.results.organization)"
 
     # Merge user's registry tokens with service account credentials
     # used elsewhere by this pipeline.
@@ -289,6 +315,7 @@ spec:
     - name: reserve-operator-name
       runAfter:
         - update-cert-project-status
+        - annotations-validation
       taskRef:
         name: reserve-operator-name
       workspaces:
@@ -308,11 +335,11 @@ spec:
         - name: pyxis_key_path
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
         - name: source
-          value: "$(tasks.get-cert-project-related-data.results.organization)"
+          value: "$(tasks.get-organization.results.organization)"
 
     - name: annotations-validation
       runAfter:
-        - reserve-operator-name
+        - get-organization
       taskRef:
         name: annotations-validation
       params:
@@ -322,6 +349,8 @@ spec:
           value: "$(tasks.get-bundle-path.results.bundle_path)"
         - name: package_name
           value: "$(tasks.validate-pr-title.results.operator_name)"
+        - name: organization
+          value: "$(tasks.get-organization.results.organization)"
       workspaces:
         - name: source
           workspace: repository
@@ -429,6 +458,7 @@ spec:
         - yaml-lint
         - verify-pinned-digest
         - verify-changed-directories
+        - verify-project-distribution
       taskRef:
         name: dockerfile-creation
       params:
