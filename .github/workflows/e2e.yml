@@ -16,18 +16,18 @@ jobs:
   # concatenate strings and use them as values to keywords other than "run".
   # For run, they can be used after redeclared in keyword "env".
   prepare-env-job:
-     runs-on: ubuntu-latest
-     outputs:
-       short_sha: ${{ steps.prepare.outputs.short_sha }}
-       pr_title: ${{ steps.prepare.outputs.pr_title }}
-       oc_project: ${{ steps.prepare.outputs.oc_project}}
-     steps:
-       - id: prepare
-         run: |
-           echo "::set-output name=short_sha::${GITHUB_SHA::7}"
-           echo "::set-output name=pr_title::operator test-e2e-operator (0.0.7-${GITHUB_SHA::7})"
-           echo "::set-output name=oc_project::test-e2e-${GITHUB_SHA::7}"
-           echo "::set-output name=test_pr_base_branch::${GITHUB_SHA::7}-base"
+    runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.prepare.outputs.short_sha }}
+      pr_title: ${{ steps.prepare.outputs.pr_title }}
+      oc_project: ${{ steps.prepare.outputs.oc_project}}
+    steps:
+      - id: prepare
+        run: |
+          echo "::set-output name=short_sha::${GITHUB_SHA::7}"
+          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.7-${GITHUB_SHA::7})"
+          echo "::set-output name=oc_project::test-e2e-${GITHUB_SHA::7}"
+          echo "::set-output name=test_pr_base_branch::${GITHUB_SHA::7}-base"
 
   # Create a Pull Request with the fake version of fake operator in the repository operator-pipelines-test.
   # Pipelines will run against this PR.
@@ -166,11 +166,19 @@ jobs:
       - name: Clean OC project
         if: always()
         run: |
+
+          # Prepare Kubeconfig.
+          # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
+          # to create Kubernetes context.
+          mkdir $HOME/.kube
+          cat <<EOF > $HOME/.kube/config
+          ${{ secrets.KUBECONFIG }}
+          EOF
+
           oc delete project $OC_PROJECT
 
       - name: Clean opened PR
-        # run only on failure- on success PR is merged by pipeline
-        if: failure()
+        if: always()
         uses: peter-evans/close-pull@v1
         with:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
@@ -183,8 +191,8 @@ jobs:
         if: always()
         uses: dawidd6/action-delete-branch@v3
         with:
-         github_token: ${{ secrets.BOT_TOKEN }}
-         owner: redhat-openshift-ecosystem
-         repository: operator-pipelines-test
-         branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
-         soft_fail: true
+          github_token: ${{ secrets.BOT_TOKEN }}
+          owner: redhat-openshift-ecosystem
+          repository: operator-pipelines-test
+          branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+          soft_fail: true
