@@ -183,6 +183,19 @@ spec:
         - name: pull_request_url
           value: "$(params.git_pr_url)"
 
+    - name: get-organization
+      runAfter:
+        - certification-project-check
+      taskRef:
+        name: get-organization
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Get the bundle versions to build index
     - name: get-supported-versions
       runAfter:
@@ -202,7 +215,7 @@ spec:
     # Get additional data necessary for certification
     - name: get-cert-project-related-data
       runAfter:
-        - certification-project-check
+        - get-organization
       taskRef:
         name: get-cert-project-related-data
       params:
@@ -309,7 +322,7 @@ spec:
         - name: ocp_version
           value: "$(tasks.get-supported-versions.results.ocp_version)"
         - name: organization
-          value: "$(tasks.get-cert-project-related-data.results.organization)"
+          value: "$(tasks.get-organization.results.organization)"
         - name: version
           value: "$(tasks.bundle-path-validation.results.bundle_version)"
       workspaces:

@@ -1,0 +1,29 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-organization
+spec:
+  description: >-
+    This task gets organization value from git repository.
+  params:
+    - name: pipeline_image
+      description: The common pipeline image.
+
+  results:
+    - name: organization
+      description: |
+        Organization defined in the project config.yaml - either certified-operator or redhat-marketplace
+
+  workspaces:
+    - name: source
+  steps:
+    - name: get-organization
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe -o pipefail
+
+        ORGANIZATION=$(cat config.yaml | yq -r '.organization')
+        echo -n "$ORGANIZATION" | tee $(results.organization.path)
