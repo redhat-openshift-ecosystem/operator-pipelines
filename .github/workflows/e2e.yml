@@ -1,20 +1,17 @@
 ---
 name: E2E-CI
-# TODO: Document the secrets!
-# TODO: Document, how the partner can use this workflow!
 
 on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
-      - ISV-1320
   pull_request:
   workflow_dispatch:
 jobs:
 
   # envs  for other jobs are prepared as outputs of this task. Outputs are a good way to
   # concatenate strings and use them as values to keywords other than "run".
-  # For run, they can be used after redeclared in keyword "env".
+  # For run, they can be used with keyword "env".
   prepare-env-job:
     runs-on: ubuntu-latest
     outputs:
@@ -169,6 +166,8 @@ jobs:
       - name: Clean OC project
         if: always()
         run: |
+
+          echo $OC_PROJECT
 
           # Prepare Kubeconfig.
           # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
