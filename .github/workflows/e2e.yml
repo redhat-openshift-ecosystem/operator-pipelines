@@ -162,6 +162,9 @@ jobs:
     needs:
       - run-e2e
       - prepare-env-job
+      - prepare-test-data
+    env:
+      OC_PROJECT: ${{needs.prepare-env-job.outputs.oc_project}}
     steps:
       - name: Clean OC project
         if: always()
