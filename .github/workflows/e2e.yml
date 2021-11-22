@@ -25,9 +25,9 @@ jobs:
        - id: prepare
          run: |
            echo "::set-output name=short_sha::${GITHUB_SHA::7}"
-           echo "::set-output name=pr_title::operator test-e2e-operator (0.0.7-${SHORT_SHA})"
-           echo "::set-output name=oc_project::test-e2e-${SHORT_SHA}"
-           echo "::set-output name=test_pr_base_branch::${SHORT_SHA}-base"
+           echo "::set-output name=pr_title::operator test-e2e-operator (0.0.7-${GITHUB_SHA::7})"
+           echo "::set-output name=oc_project::test-e2e-${GITHUB_SHA::7}"
+           echo "::set-output name=test_pr_base_branch::${GITHUB_SHA::7}-base"
 
   # Create a Pull Request with the fake version of fake operator in the repository operator-pipelines-test.
   # Pipelines will run against this PR.
