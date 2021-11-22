@@ -39,6 +39,8 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
       PR_BASE_BRANCH: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+      # This env is needed for hub cli
+      GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
     steps:
       # Clone repository operator-pipelines-test on branch e2e-test-operator
       - uses: actions/checkout@v2
@@ -86,10 +88,9 @@ jobs:
       # Get the number of the created PR- it's used for cleanup
       - id: get_pr_number
         run: |
-          echo "test"
-          hub pr show --head ${PR_BASE_BRANCH} -f "%I"
+          hub pr show -f "%I"
           hub pr show --head ${PR_BASE_BRANCH} --url
-          PR_NUMBER=$(hub pr show --head ${PR_BASE_BRANCH} -f "%I")
+          PR_NUMBER=$(hub pr show -f "%I")
           echo "::set-output name=pr_number::${PR_NUMBER}"
 
   # Deploy and run the E2E tests
