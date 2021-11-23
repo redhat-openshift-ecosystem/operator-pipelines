@@ -70,7 +70,7 @@ spec:
                     PYXIS_URL="https://pyxis.qa.engineering.redhat.com"
                     ;;
                     external)
-                    PYXIS_URL="pyxis-qa-ext.int.us-west.dc.preprod.paas.redhat.com"
+                    PYXIS_URL="https://pyxis-qa-ext.int.us-west.dc.preprod.paas.redhat.com"
                     ;;
                 esac
                 TARGET_BRANCH="qa"
