@@ -5,6 +5,7 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
+      - ISV-890
   pull_request:
   workflow_dispatch:
 jobs:
@@ -32,7 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-env-job
     outputs:
-      test_pr_number: ${{ steps.get_pr_number.outputs.pr_number }}
+      test_pr_number: ${{ steps.get_pr_data.outputs.pr_number }}
+      test_pr_head_sha: ${{ steps.get_pr_data.outputs.pr_head_sha }}
     env:
       SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
       PR_BASE_BRANCH: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
@@ -83,13 +85,16 @@ jobs:
           body: 'This is PR used for E2E tests of the operator pipelines'
 
       # Get the number of the created PR- it's used for cleanup
-      - id: get_pr_number
+      - id: get_pr_data
         run: |
           PR_NUMBER=$(hub pr show -f "%I")
+          PR_HEAD_SHA=$(hub pr show -f "%sH")
           echo "::set-output name=pr_number::${PR_NUMBER}"
+          echo "::set-output name=pr_head_sha::${PR_HEAD_SHA}"
+
 
   # Deploy and run the E2E tests
-  run-e2e:
+  run-e2e-CI:
     runs-on: ubuntu-latest
     needs:
       - prepare-env-job
@@ -130,21 +135,58 @@ jobs:
           bash init-custom-env.sh $OC_PROJECT stage vault-password
           popd
 
-      - name: Run CI pipeline
+      #- name: Run CI pipeline
+      #  run: |
+      #    tkn pipeline start operator-ci-pipeline \
+      #      --use-param-defaults \
+      #      --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+      #      --param git_branch=$SHORT_SHA \
+      #      --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
+      #      --param env=stage \
+      #      --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
+      #      --workspace name=kubeconfig,secret=kubeconfig \
+      #      --workspace name=ssh-dir,secret=github-ssh-credentials \
+      #      --workspace name=pyxis-api-key,secret=pyxis-api-secret \
+      #      --showlog
+
+      #- name: Check if CI pipeline passed
+      #  run: |
+      #    PIPELINERUN_NAME=$(oc get pr --no-headers -o custom-columns=":metadata.name")
+      #    PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
+      #    if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
+      #      oc get pr
+      #      exit 1
+      #    fi
+
+      - name: Run Hosted pipeline
         run: |
-          tkn pipeline start operator-ci-pipeline \
+          tkn pipeline start operator-hosted-pipeline \
             --use-param-defaults \
-            --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
-            --param git_branch=$SHORT_SHA \
-            --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
+            --param git_pr_branch=$SHORT_SHA \
+            --param git_pr_title=${{needs.prepare-env-job.outputs.pr_title}} \
+            --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
+            --param git_fork_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
+            --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
+            --param git_username=rh-operator-bundle-bot \
+            --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
+            --param git_base_branch=main \
+            --param pr_head_label=$SHORT_SHA \
             --param env=stage \
-            --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-            --workspace name=kubeconfig,secret=kubeconfig \
-            --workspace name=ssh-dir,secret=github-ssh-credentials \
-            --workspace name=pyxis-api-key,secret=pyxis-api-secret \
+            --param preflight_min_version=0.0.0 \
+            --param ci_min_version=0.0.0 \
+            --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
+            --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
+            --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
+            --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+            --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
+            --workspace name=prow-kubeconfig,secret=prow-kubeconfig \
+            --workspace name=preflight-decryption-key,secret=preflight-decryption-key \
+            --workspace name=hydra-credentials,secret=hydra-credentials \
+            --workspace name=gpg-key,secret=isv-gpg-key \
             --showlog
 
-      - name: Check if pipeline passed
+      # TODO: now it can check the CI
+      - name: Check if Hosted pipeline passed
         run: |
           PIPELINERUN_NAME=$(oc get pr --no-headers -o custom-columns=":metadata.name")
           PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
