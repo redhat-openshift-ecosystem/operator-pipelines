@@ -10,6 +10,8 @@ spec:
       description: The assocation that the operator belongs in, usually the isv_pid.
     - name: operator_name
       description: The operator name to be reserved.
+    - name: source
+      description: The source catalog the operator belongs to, usually "redhat-marketplace" or "certified-operators"
     - name: pyxis_cert_path
       default: ""
       description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
@@ -32,6 +34,8 @@ spec:
           value: $(params.pyxis_key_path)
         - name: ASSOCIATION
           value: $(params.association)
+        - name: SOURCE
+          value: $(params.source)
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -42,5 +46,5 @@ spec:
           --association $ASSOCIATION \
           --operator-name "$(params.operator_name)" \
           --pyxis-url "$(params.pyxis_url)" \
-          --source "certified-operators" \
+          --source $SOURCE \
           --verbose

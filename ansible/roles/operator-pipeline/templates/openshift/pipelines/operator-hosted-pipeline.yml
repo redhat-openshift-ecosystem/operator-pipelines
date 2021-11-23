@@ -307,6 +307,8 @@ spec:
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: source
+          value: "$(tasks.get-cert-project-related-data.results.organization)"
 
     - name: annotations-validation
       runAfter:
