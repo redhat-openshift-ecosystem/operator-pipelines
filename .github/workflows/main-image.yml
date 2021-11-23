@@ -1,46 +1,72 @@
-name: Build and Push Image
-on:  # yamllint disable-line rule:truthy
-  - push
-  - pull_request
+name: Multiarch build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
+
+env:
+  IMAGE_TAG: latest
+  IMAGE_NAME: operator-pipelines-images
+  IMAGE_REGISTRY: quay.io
+  IMAGE_NAMESPACE: mayurwaghmode111
 
 jobs:
-  test-lint:
-    name: Run unit tests and linters
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: fedora-python/tox-github-action@v0.4
-        with:
-          tox_env: black,test
-          dnf_install: krb5-devel krb5-workstation
-
-  build:
-    name: Build and push image
+  build-multiplatform-containerfile:
+    name: Build multi-platform image using Dcokerfile
     runs-on: ubuntu-20.04
-
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Build Image
-        id: build-image
+      - name: add checkout action...
+        uses: actions/checkout@v2
+        
+      - name: Install qemu dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+            
+      - name: Build image linux/amd64
         uses: redhat-actions/buildah-build@v2
         with:
-          image: operator-pipelines-images
-          tags: latest ${{ github.sha }}
-          dockerfiles: |
-            ./operator-pipeline-images/Dockerfile
-
-      - name: Push To quay.io
-        id: push-to-quay
-        uses: redhat-actions/push-to-registry@v2
+          image: ${{ env.IMAGE_NAME }}
+          tags: linux-amd64
+          arch: amd64
+          containerfiles: |
+            ./Dockerfile
+     
+      - name: Build image linux/ppc64le
+        uses: redhat-actions/buildah-build@v2
         with:
-          image: ${{ steps.build-image.outputs.image }}
-          tags: ${{ steps.build-image.outputs.tags }}
-          registry: quay.io/redhat-isv
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-        if: ${{ github.event_name == 'push' }}
+          image: ${{ env.IMAGE_NAME }}
+          tags: linux-ppc64le
+          arch: ppc64le
+          containerfiles: |
+            ./Dockerfile-ppc64le
+               
+      - name: Check images created
+        run: buildah images | grep '${{ env.IMAGE_NAME }}'
 
-      - name: Print image url
-        run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
-        if: ${{ github.event_name == 'push' }}
+      - name: Check image metadata
+        run: |
+          set -x
+          buildah inspect ${{ env.IMAGE_NAME }}:linux-amd64 | jq ".OCIv1.architecture"
+          buildah inspect ${{ env.IMAGE_NAME }}:linux-amd64 | jq ".Docker.architecture"
+          buildah inspect ${{ env.IMAGE_NAME }}:linux-ppc64le | jq ".OCIv1.architecture"
+          buildah inspect ${{ env.IMAGE_NAME }}:linux-ppc64le | jq ".Docker.architecture"
+          
+      # Authenticate to container image registry to push the image
+      - name: Podman Login
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_PWD }}
+          
+      - name: Create and add to manifest
+        run: |
+          buildah manifest create ${{ env.IMAGE_NAME }}
+          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-amd64
+          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-ppc64le
+          
+      - name: Push manifest
+        run: podman manifest push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  --all
