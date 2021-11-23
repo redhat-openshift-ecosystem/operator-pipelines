@@ -111,7 +111,7 @@ def call_ibm_webhook(args: Any) -> None:
             verify=args.verify,
         )
         LOGGER.debug("Webhook response: %s", response)
-    except TwirpServerException as e:
+    except TwirpServerException as e:  # pragma: no cover
         LOGGER.exception(str(e))
         sys.exit(1)
 
