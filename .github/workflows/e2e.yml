@@ -94,7 +94,7 @@ jobs:
 
 
   # Deploy and run the E2E tests
-  run-e2e-CI:
+  run-e2e:
     runs-on: ubuntu-latest
     needs:
       - prepare-env-job
