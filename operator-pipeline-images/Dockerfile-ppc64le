@@ -38,7 +38,7 @@ RUN dnf update -y && \
     python3-devel && \
     dnf clean all
 
-COPY config/krb5.conf /etc/krb5.conf
+COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 
 # Install opm CLI
 RUN wget https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.6.22/opm-linux-4.6.22.tar.gz && \
@@ -50,7 +50,7 @@ RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
 WORKDIR /home/user
 
-COPY . ./
+COPY ./operator-pipeline-images ./
 
 RUN pip3 install .
 
