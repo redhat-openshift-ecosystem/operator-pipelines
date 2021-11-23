@@ -41,6 +41,9 @@ spec:
       default: quay-oauth-token
     - name: quay_oauth_secret_key
       default: token
+    - name: developer
+      default: "false"
+      description: The flag to disable the task for developer
   workspaces:
     - name: repository
     - name: results
@@ -736,6 +739,8 @@ spec:
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: connect_url
           value: "$(tasks.set-env.results.connect_url)"
+        - name: developer
+          value: "$(params.developer)"
       workspaces:
         - name: hydra-credentials
           workspace: hydra-credentials
