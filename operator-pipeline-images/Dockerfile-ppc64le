@@ -8,7 +8,7 @@ ARG USER_UID=1000
 USER root
 
 # setup certificates
-COPY certs/* /etc/pki/ca-trust/source/anchors/
+COPY operator-pipeline-images/certs/* /etc/pki/ca-trust/source/anchors/
 RUN /usr/bin/update-ca-trust
 
 # This is just a temporary workaround until we figure out how to
