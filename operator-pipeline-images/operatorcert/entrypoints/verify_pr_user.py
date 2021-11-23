@@ -4,7 +4,7 @@ import logging
 from operatorcert import validate_user
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Verify if the Github user can submit the bundle"
     )
@@ -35,5 +35,5 @@ def main() -> None:
     validate_user(args.git_username, args.contacts)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

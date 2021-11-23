@@ -1,5 +1,6 @@
 import datetime
 import json
+from typing import Any
 
 import humanize
 from dateutil.parser import isoparse
@@ -85,7 +86,7 @@ Start Time: *{start_time}*
     # Markdown TaskRun template
     TASKRUN_TEMPLATE = "| {icon} | {name} | {start_time} | {duration} |"
 
-    def __init__(self, obj: dict, taskruns: list[TaskRun]) -> None:
+    def __init__(self, obj: dict, taskruns: Any) -> None:
         self.obj = obj
         self.taskruns = taskruns
 
@@ -122,7 +123,7 @@ Start Time: *{start_time}*
         return isoparse(self.obj["status"]["startTime"])
 
     @property
-    def finally_taskruns(self) -> list[TaskRun]:
+    def finally_taskruns(self) -> Any:
         """
         Returns all taskruns in the finally spec.
 

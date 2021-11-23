@@ -97,3 +97,5 @@ def test_reserve_operator_name(mock_post) -> None:
             }
         ]
     }
+
+    reserve_operator_name.reserve_operator_name(args)

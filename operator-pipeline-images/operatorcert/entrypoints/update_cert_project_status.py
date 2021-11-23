@@ -13,7 +13,7 @@ from operatorcert.utils import store_results
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     """
     Setup argument parser
 
@@ -61,7 +61,7 @@ def update_cert_project_status(args: Any) -> None:
     store_results({"cert_project": cert_project})
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     parser = setup_argparser()
     args = parser.parse_args()
 
@@ -73,5 +73,5 @@ def main() -> None:
     update_cert_project_status(args)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

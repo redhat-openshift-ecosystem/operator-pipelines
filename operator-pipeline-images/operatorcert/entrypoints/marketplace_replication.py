@@ -20,7 +20,7 @@ from operatorcert.logger import setup_logger
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> Any:
+def setup_argparser() -> Any:  # pragma: no cover
     """
     Setup argument parser
 
@@ -116,7 +116,7 @@ def call_ibm_webhook(args: Any) -> None:
         sys.exit(1)
 
 
-def main():
+def main():  # pragma: no cover
     """
     Main func
     """
@@ -129,5 +129,5 @@ def main():
     call_ibm_webhook(args)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
