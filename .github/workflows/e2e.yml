@@ -71,7 +71,7 @@ jobs:
 
           rm -rf 0.0.7-*
           # Add, commit and push, if anything was removed.
-          git add --all && git commit -m "removing previously merged operator" && git push || true
+          (git add --all && git commit -m "removing previously merged operator" && git push) || echo "No previously merged test operator to remove"
 
           cd operators/test-e2e-operator
           cp -r 0.0.7 0.0.7-$SHORT_SHA
