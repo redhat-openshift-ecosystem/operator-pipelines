@@ -38,6 +38,7 @@ jobs:
       test_pr_head_sha: ${{ steps.get_pr_data.outputs.pr_head_sha }}
     env:
       SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
+      PR_BASE_BRANCH: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
       # This env is needed for hub cli
       GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
     steps:
@@ -72,15 +73,18 @@ jobs:
           # Head branch of the PR will be created by create-pull-request action
           git commit -am "new version of operator"
 
+
+      - name: Create test PR base branch
+        run: |
+          git branch -c main ${PR_BASE_BRANCH}
+
       # Create test branch as copy of main. This branch will be base for
       # created test PR. It will be deleted later for cleanup.
-      - name: Push to built branch
-        uses: Automattic/action-commit-to-branch@master
+      - name: Push PR base branch
+        uses: ad-m/github-push-action@master
         with:
+          github_token: ${{ secrets.BOT_TOKEN }}
           branch: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
-          commit_message: 'Creating the base branch for test pull request'
-        env:
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
 
       # Create PR.
       - name: Create Pull Request
