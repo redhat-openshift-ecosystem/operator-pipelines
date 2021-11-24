@@ -70,8 +70,8 @@ jobs:
           # If something will go wrong with the test branch, backup is on branch e2e-test-operator-backup
 
           rm -rf 0.0.7-*
-          # Commit and push, if anything was removed.
-          git commit -am "removing previously merged operator" && git push || true
+          # Add, commit and push, if anything was removed.
+          git add --all && git commit -m "removing previously merged operator" && git push || true
 
           cd operators/test-e2e-operator
           cp -r 0.0.7 0.0.7-$SHORT_SHA
