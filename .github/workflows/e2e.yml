@@ -56,6 +56,8 @@ jobs:
       # from branch e2e-test-operator- just with the new version.
       - name: Create commit to create PR with test data
         run: |
+          git fetch
+
           # If something would go wrong with the test branch, backup is on branch e2e-test-operator-backup
           git checkout e2e-test-operator
 
