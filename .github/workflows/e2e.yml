@@ -85,6 +85,7 @@ jobs:
         with:
           github_token: ${{ secrets.BOT_TOKEN }}
           branch: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+          repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
 
       # Create PR.
       - name: Create Pull Request
