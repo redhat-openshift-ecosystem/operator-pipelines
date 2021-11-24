@@ -230,6 +230,17 @@ jobs:
 
           oc delete project $OC_PROJECT
 
+      - name: Clean opened PR
+        # Do it on failure- on success Hosted pipeline will do it anyway
+        if: failure()
+        uses: peter-evans/close-pull@v1
+        with:
+          repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
+          pull-request-number: ${{needs.prepare-test-data.outputs.test_pr_number}}
+          comment: Auto-closing test pull request
+          delete-branch: true
+          token: ${{ secrets.BOT_TOKEN }}
+
       # Deleting the branches associated with the PR will also close the PR- if it still exists
       - name: Clean test branches
         if: always()
