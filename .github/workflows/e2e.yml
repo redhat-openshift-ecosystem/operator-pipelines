@@ -46,8 +46,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
-          # If something go wrong with the test branch, backup is on branch e2e-test-operator-backup
-          ref: 'e2e-test-operator'
 
       - name: Prepare environment
         run: |
@@ -58,21 +56,27 @@ jobs:
       # from branch e2e-test-operator- just with the new version.
       - name: Create commit to create PR with test data
         run: |
+          # If something would go wrong with the test branch, backup is on branch e2e-test-operator-backup
+          git checkout e2e-test-operator
+
           git config user.name 'rh-operator-bundle-bot'
           git config user.email 'exd-guild-isv+operators@redhat.com'
 
           cd operators/test-e2e-operator
 
+          # Modify the test operator version
           mv 0.0.7 0.0.7-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
+
+          # Create HEAD branch of test PR
+          git checkout -b $SHORT_SHA
           git commit -am "new version of operator"
 
       # Create test branch as copy of main. This branch will be base for
-      # created test PR
-      - name: Create test branch
+      # created test PR. It will be deleted later for cleanup.
+      - name: Create test PR base branch
         run: |
           echo "Creating branch $PR_BASE_BRANCH as copy of main"
-          git fetch
           git branch -c main ${PR_BASE_BRANCH}
 
       # Create PR.
