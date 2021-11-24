@@ -54,13 +54,6 @@ jobs:
           # Install dependencies- GitHub client
           sudo apt install -y hub
 
-      # Create test branch as copy of main. This branch will be base for
-      # created test PR
-      - name: Create test branch
-        run: |
-          echo "Creating branch ${PR_BASE_BRANCH} as copy of main"
-          git branch -c main ${PR_BASE_BRANCH}
-
       # Create commit with changes used for E2E tests. This commit contains the `test-e2e-operator`
       # from branch e2e-test-operator- just with the new version.
       - name: Create commit to create PR with test data
@@ -73,6 +66,13 @@ jobs:
           mv 0.0.7 0.0.7-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
           git commit -am "new version of operator"
+
+      # Create test branch as copy of main. This branch will be base for
+      # created test PR
+      - name: Create test branch
+        run: |
+          echo "Creating branch $PR_BASE_BRANCH as copy of main"
+          git branch -c main ${PR_BASE_BRANCH}
 
       # Create PR.
       - name: Create Pull Request
@@ -172,7 +172,7 @@ jobs:
             --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_username=rh-operator-bundle-bot \
             --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
-            --param git_base_branch=main \
+            --param git_base_branch=${{needs.prepare-env-job.outputs.test_pr_base_branch}} \
             --param pr_head_label=$SHORT_SHA \
             --param env=stage \
             --param preflight_min_version=0.0.0 \
