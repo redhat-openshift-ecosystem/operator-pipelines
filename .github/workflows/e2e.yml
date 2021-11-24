@@ -63,7 +63,6 @@ jobs:
 
           git config user.name 'rh-operator-bundle-bot'
           git config user.email 'exd-guild-isv+operators@redhat.com'
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/redhat-openshift-ecosystem/operator-pipelines-test
 
           cd operators/test-e2e-operator
 
@@ -71,10 +70,8 @@ jobs:
           mv 0.0.7 0.0.7-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
 
-          # Create HEAD branch of test PR
-          git checkout -b $SHORT_SHA
+          # Head branch of the PR will be created by create-pull-request action
           git commit -am "new version of operator"
-          git push --set-upstream origin $SHORT_SHA
 
       # Create test branch as copy of main. This branch will be base for
       # created test PR. It will be deleted later for cleanup.
