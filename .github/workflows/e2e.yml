@@ -63,6 +63,7 @@ jobs:
 
           git config user.name 'rh-operator-bundle-bot'
           git config user.email 'exd-guild-isv+operators@redhat.com'
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/redhat-openshift-ecosystem/operator-pipelines-test
 
           cd operators/test-e2e-operator
 
