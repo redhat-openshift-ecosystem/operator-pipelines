@@ -78,8 +78,7 @@ jobs:
           cp -r 0.0.7 0.0.7-$SHORT_SHA
           cd 0.0.7-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
-          cd -
-          git commit -am "new version of operator"
+          git add --all && git commit -m "new version of operator"
 
       # Create PR.
       - name: Create Pull Request
