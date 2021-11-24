@@ -86,7 +86,7 @@ Start Time: *{start_time}*
     # Markdown TaskRun template
     TASKRUN_TEMPLATE = "| {icon} | {name} | {start_time} | {duration} |"
 
-    def __init__(self, obj: dict, taskruns: Any) -> None:
+    def __init__(self, obj: dict, taskruns: list[TaskRun]) -> None:
         self.obj = obj
         self.taskruns = taskruns
 
