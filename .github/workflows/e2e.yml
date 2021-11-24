@@ -63,6 +63,7 @@ jobs:
       # from branch e2e-test-operator- just with the new version.
       - name: Create commit to create PR with test data
         run: |
+          set -x
           git config user.name 'rh-operator-bundle-bot'
           git config user.email 'exd-guild-isv+operators@redhat.com'
 
@@ -71,7 +72,7 @@ jobs:
 
           rm -rf 0.0.7-*
           # Add, commit and push, if anything was removed.
-          (git add --all && git commit -m "removing previously merged operator" && git push) || echo "No previously merged test operator to remove"
+          (git commit -am "removing previously merged operator" && git push) || echo "No previously merged test operator to remove"
 
           cd operators/test-e2e-operator
           cp -r 0.0.7 0.0.7-$SHORT_SHA
