@@ -19,6 +19,7 @@ jobs:
       short_sha: ${{ steps.prepare.outputs.short_sha }}
       pr_title: ${{ steps.prepare.outputs.pr_title }}
       oc_project: ${{ steps.prepare.outputs.oc_project }}
+      test_pr_base_branch: ${{ steps.prepare.outputs.test_pr_base_branch }}
     steps:
       - id: prepare
         run: |
@@ -69,16 +70,9 @@ jobs:
 
           cd operators/test-e2e-operator
 
-          # Remove all of previously merged versions of test operator, if there are any.
-
-          rm -rf 0.0.7-*
-          # Commit and push, if anything was removed.
-          (git commit -am "removing previously merged operator" && git push) || echo "No previously merged test operator to remove"
-
-          cp -r 0.0.7 0.0.7-$SHORT_SHA
-          cd 0.0.7-$SHORT_SHA
+          mv 0.0.7 0.0.7-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
-          git add --all && git commit -m "new version of operator"
+          git commit -am "new version of operator"
 
       # Create PR.
       - name: Create Pull Request
@@ -87,9 +81,7 @@ jobs:
           token: ${{ secrets.BOT_TOKEN }}
           author: 'rh-operator-bundle-bot <exd-guild-isv+operators@redhat.com>'
           commit-message: 'Preparing the data for E2E tests'
-          # base: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
-          # test
-          base: 377ca23
+          base: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
           branch: ${{needs.prepare-env-job.outputs.short_sha}}
           title: ${{needs.prepare-env-job.outputs.pr_title}}
           delete-branch: true
@@ -102,7 +94,6 @@ jobs:
           PR_HEAD_SHA=$(hub pr show -f "%sH")
           echo "::set-output name=pr_number::${PR_NUMBER}"
           echo "::set-output name=pr_head_sha::${PR_HEAD_SHA}"
-
 
   # Deploy and run the E2E tests
   run-e2e:
