@@ -212,28 +212,3 @@ def test_remove_latest_from_previous_image(mock_put: MagicMock, mock_get: MagicM
 
     mock_rsp.json.return_value = {"data": []}
     remove_latest_from_previous_image(pyxis_url, isv_pid)
-
-
-@patch("operatorcert.entrypoints.create_container_image.setup_argparser")
-@patch("operatorcert.entrypoints.create_container_image.check_if_image_already_exists")
-@patch(
-    "operatorcert.entrypoints.create_container_image.remove_latest_from_previous_image"
-)
-@patch("operatorcert.entrypoints.create_container_image.create_container_image")
-@patch("operatorcert.entrypoints.create_container_image.json.load")
-@patch("operatorcert.entrypoints.create_container_image.open")
-def test_main(
-    mock_open: MagicMock,
-    mock_json: MagicMock,
-    mock_create_image: MagicMock,
-    mock_remove_image: MagicMock,
-    mock_check_image: MagicMock,
-    mock_arg_parser: MagicMock,
-) -> None:
-    main()
-    mock_check_image.assert_called_once()
-
-    # if image doesn't exist
-    mock_check_image.return_value = None
-    main()
-    mock_create_image.assert_called_once()
