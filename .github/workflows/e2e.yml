@@ -66,8 +66,16 @@ jobs:
           git config user.name 'rh-operator-bundle-bot'
           git config user.email 'exd-guild-isv+operators@redhat.com'
 
+          # Remove all of previously merged test operators, if there are any.
+          # If something will go wrong with the test branch, backup is on branch e2e-test-operator-backup
+
+          rm -rf 0.0.7-*
+          # Commit and push, if anything was removed.
+          git commit -am "removing previously merged operator" && git push || true
+
           cd operators/test-e2e-operator
-          mv 0.0.7 0.0.7-$SHORT_SHA
+          cp 0.0.7 0.0.7-$SHORT_SHA
+          cd 0.0.7-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
           git commit -am "new version of operator"
 
@@ -151,7 +159,7 @@ jobs:
 
       #- name: Check if CI pipeline passed
       #  run: |
-      #    PIPELINERUN_NAME=$(oc get pr --no-headers -o custom-columns=":metadata.name")
+      #    PIPELINERUN_NAME=$(oc get pr -l tekton.dev/pipeline=operator-ci-pipeline --no-headers -o custom-columns=":metadata.name")
       #    PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
       #    if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
       #      oc get pr
@@ -185,10 +193,9 @@ jobs:
             --workspace name=gpg-key,secret=isv-gpg-key \
             --showlog
 
-      # TODO: now it can check the CI
       - name: Check if Hosted pipeline passed
         run: |
-          PIPELINERUN_NAME=$(oc get pr --no-headers -o custom-columns=":metadata.name")
+          PIPELINERUN_NAME=$(oc get pr --no-headers -l tekton.dev/pipeline=operator-ci-pipeline -o custom-columns=":metadata.name")
           PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
           if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
             oc get pr
@@ -221,16 +228,7 @@ jobs:
 
           oc delete project $OC_PROJECT
 
-      - name: Clean opened PR
-        if: always()
-        uses: peter-evans/close-pull@v1
-        with:
-          repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
-          pull-request-number: ${{needs.prepare-test-data.outputs.test_pr_number}}
-          comment: Auto-closing test pull request
-          delete-branch: true
-          token: ${{ secrets.BOT_TOKEN }}
-
+      # Deleting the branches associated with the PR will also close the PR- if it still exists
       - name: Clean test branches
         if: always()
         uses: dawidd6/action-delete-branch@v3
