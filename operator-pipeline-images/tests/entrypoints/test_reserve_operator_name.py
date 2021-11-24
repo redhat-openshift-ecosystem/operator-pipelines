@@ -82,12 +82,13 @@ def test_check_operator_name_available(
 
 
 @patch("operatorcert.entrypoints.reserve_operator_name.pyxis.post")
-def test_reserve_operator_name(mock_post) -> None:
+def test_reserve_operator_name(mock_post: MagicMock) -> None:
     args = MagicMock()
     args.pyxis_url = "http://foo.com/"
     args.key_path = "key.path"
     args.association = "ospid-123"
-    args.package_name = "operator-new"
+    args.operator_name = "operator-new"
+    args.source = "sample_source"
 
     mock_post.return_value.json.return_value = {
         "data": [
@@ -99,3 +100,11 @@ def test_reserve_operator_name(mock_post) -> None:
     }
 
     reserve_operator_name.reserve_operator_name(args)
+    mock_post.assert_called_once_with(
+        "http://foo.com/v1/operators/packages",
+        {
+            "association": "ospid-123",
+            "package_name": "operator-new",
+            "source": "sample_source",
+        },
+    )
