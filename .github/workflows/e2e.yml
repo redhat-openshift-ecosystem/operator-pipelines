@@ -45,6 +45,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
+          # If something go wrong with the test branch, backup is on branch e2e-test-operator-backup
           ref: 'e2e-test-operator'
 
       - name: Prepare environment
@@ -56,7 +57,7 @@ jobs:
       # created test PR
       - name: Create test branch
         run: |
-          echo "Creating branch $SHORT_SHA-merge as copy of main"
+          echo "Creating branch ${PR_BASE_BRANCH} as copy of main"
           git branch -c main ${PR_BASE_BRANCH}
 
       # Create commit with changes used for E2E tests. This commit contains the `test-e2e-operator`
@@ -69,7 +70,6 @@ jobs:
           cd operators/test-e2e-operator
 
           # Remove all of previously merged versions of test operator, if there are any.
-          # If something will go wrong with the test branch, backup is on branch e2e-test-operator-backup
 
           rm -rf 0.0.7-*
           # Commit and push, if anything was removed.
@@ -87,7 +87,9 @@ jobs:
           token: ${{ secrets.BOT_TOKEN }}
           author: 'rh-operator-bundle-bot <exd-guild-isv+operators@redhat.com>'
           commit-message: 'Preparing the data for E2E tests'
-          base: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+          # base: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+          # test
+          base: 377ca23
           branch: ${{needs.prepare-env-job.outputs.short_sha}}
           title: ${{needs.prepare-env-job.outputs.pr_title}}
           delete-branch: true
@@ -229,17 +231,6 @@ jobs:
           EOF
 
           oc delete project $OC_PROJECT
-
-      - name: Clean opened PR
-        # Do it on failure- on success Hosted pipeline will do it anyway
-        if: failure()
-        uses: peter-evans/close-pull@v1
-        with:
-          repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
-          pull-request-number: ${{needs.prepare-test-data.outputs.test_pr_number}}
-          comment: Auto-closing test pull request
-          delete-branch: true
-          token: ${{ secrets.BOT_TOKEN }}
 
       # Deleting the branches associated with the PR will also close the PR- if it still exists
       - name: Clean test branches
