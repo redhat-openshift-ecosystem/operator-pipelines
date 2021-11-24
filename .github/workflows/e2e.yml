@@ -74,7 +74,7 @@ jobs:
           git commit -am "removing previously merged operator" && git push || true
 
           cd operators/test-e2e-operator
-          cp 0.0.7 0.0.7-$SHORT_SHA
+          cp -r 0.0.7 0.0.7-$SHORT_SHA
           cd 0.0.7-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
           git commit -am "new version of operator"
