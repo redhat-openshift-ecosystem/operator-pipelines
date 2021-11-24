@@ -73,6 +73,7 @@ jobs:
           # Create HEAD branch of test PR
           git checkout -b $SHORT_SHA
           git commit -am "new version of operator"
+          git push --set-upstream origin $SHORT_SHA
 
       # Create test branch as copy of main. This branch will be base for
       # created test PR. It will be deleted later for cleanup.
@@ -80,6 +81,7 @@ jobs:
         run: |
           echo "Creating branch $PR_BASE_BRANCH as copy of main"
           git branch -c main ${PR_BASE_BRANCH}
+          git push --set-upstream origin ${PR_BASE_BRANCH}
 
       # Create PR.
       - name: Create Pull Request
