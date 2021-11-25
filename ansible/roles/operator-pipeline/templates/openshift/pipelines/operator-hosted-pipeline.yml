@@ -722,28 +722,30 @@ spec:
         - name: pyxis-ssl-credentials
           workspace: pyxis-ssl-credentials
 
-    # Query Hydra API for status of the pre-certification checklist
-    - name: query-publishing-checklist
-      runAfter:
-        - link-pull-request
-        - verify-ci-results
-      taskRef:
-        name: query-publishing-checklist
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: connect_url
-          value: "$(tasks.set-env.results.connect_url)"
-      workspaces:
-        - name: hydra-credentials
-          workspace: hydra-credentials
+    ## Query Hydra API for status of the pre-certification checklist
+    #- name: query-publishing-checklist
+    #  runAfter:
+    #    - link-pull-request
+    #    - verify-ci-results
+    #  taskRef:
+    #    name: query-publishing-checklist
+    #  params:
+    #    - name: pipeline_image
+    #      value: "$(params.pipeline_image)"
+    #    - name: cert_project_id
+    #      value: "$(tasks.certification-project-check.results.certification_project_id)"
+    #    - name: connect_url
+    #      value: "$(tasks.set-env.results.connect_url)"
+    #  workspaces:
+    #    - name: hydra-credentials
+    #      workspace: hydra-credentials
 
     # merge PR
     - name: merge-pr
       runAfter:
-        - query-publishing-checklist
+        #- query-publishing-checklist
+        - link-pull-request
+        - verify-ci-results
       taskRef:
         name: merge-pr
       params:
