@@ -6,7 +6,6 @@ on:  # yamllint disable-line rule:truthy
     branches:
       - main
       - ISV-890
-  pull_request:
   workflow_dispatch:
 jobs:
 
