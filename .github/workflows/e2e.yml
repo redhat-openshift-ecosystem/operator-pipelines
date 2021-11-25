@@ -81,7 +81,7 @@ jobs:
           cp -r /tmp/test-e2e-operator operators/
 
           # Head branch of the PR will be created by create-pull-request action
-          git commit -am "new version of operator"
+          git add operators && git commit -m "new version of operator"
 
       - name: Create test PR base branch
         run: |
