@@ -33,14 +33,9 @@ jobs:
   prepare-test-data:
     runs-on: ubuntu-latest
     needs: prepare-env-job
-    outputs:
-      test_pr_number: ${{ steps.get_pr_data.outputs.pr_number }}
-      test_pr_head_sha: ${{ steps.get_pr_data.outputs.pr_head_sha }}
     env:
       SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
       PR_BASE_BRANCH: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
-      # This env is needed for hub cli
-      GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
     steps:
       # Clone repository operator-pipelines-test on branch e2e-test-operator
       - uses: actions/checkout@v2
@@ -48,23 +43,27 @@ jobs:
           repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
           token: ${{ secrets.BOT_TOKEN }}
 
-      - name: Prepare environment
+      - name: Configure Git
         run: |
-          # Install dependencies- GitHub client
-          sudo apt install -y hub
+          git config user.name 'rh-operator-bundle-bot'
+          git config user.email 'exd-guild-isv+operators@redhat.com'
+          git fetch
+
+      - name: Create test PR base branch
+        run: |
+          git branch -c main ${PR_BASE_BRANCH}
+          # must checkout to base branch before `create-pull-request` action, as current branch
+          # is used as base for PR
+          git checkout ${PR_BASE_BRANCH}
+          git push --set-upstream origin ${PR_BASE_BRANCH}
 
       # Create commit with changes used for E2E tests. This commit contains the `test-e2e-operator`
       # from branch e2e-test-operator- just with the new version.
-      - name: Create commit to create PR with test data
+      - name: Create commit to create PR with test data (PR head branch)
         run: |
-          git fetch
-
           # Start from the branch e2e-test-operator. This branch contains the base test operator.
           # If something would go wrong with the test branch, backup is on branch e2e-test-operator-backup
           git checkout e2e-test-operator
-
-          git config user.name 'rh-operator-bundle-bot'
-          git config user.email 'exd-guild-isv+operators@redhat.com'
 
           pushd operators/test-e2e-operator
 
@@ -83,16 +82,8 @@ jobs:
           # Head branch of the PR will be created by create-pull-request action
           git add operators && git commit -m "new version of operator"
 
-      - name: Create test PR base branch
-        run: |
-          git branch -c main ${PR_BASE_BRANCH}
-          # must checkout to base branch before `create-pull-request` action, as current branch
-          # is used as base for PR
-          git checkout ${PR_BASE_BRANCH}
-          git push --set-upstream origin ${PR_BASE_BRANCH}
-
       # Create PR.
-      - name: Create Pull Request
+      - id: create_pull_request
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.BOT_TOKEN }}
@@ -103,14 +94,6 @@ jobs:
           title: ${{needs.prepare-env-job.outputs.pr_title}}
           delete-branch: true
           body: 'This is PR used for E2E tests of the operator pipelines'
-
-      # Get the number of the created PR- it's used for cleanup
-      - id: get_pr_data
-        run: |
-          PR_NUMBER=$(hub pr show -h ${SHORT_SHA} -f "%I")
-          PR_HEAD_SHA=$(hub pr show -h ${SHORT_SHA} -f "%sH")
-          echo "::set-output name=pr_number::${PR_NUMBER}"
-          echo "::set-output name=pr_head_sha::${PR_HEAD_SHA}"
 
   # Deploy and run the E2E tests
   run-e2e:
@@ -184,11 +167,11 @@ jobs:
             --param git_pr_branch=$SHORT_SHA \
             --param image_namespace=operator-pipeline-stage \
             --param git_pr_title="${{needs.prepare-env-job.outputs.pr_title}}" \
-            --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
+            --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{ steps.create_pull_request.outputs.pull-request-number }} \
             --param git_fork_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_username=rh-operator-bundle-bot \
-            --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
+            --param git_commit=${{ steps.create_pull_request.outputs.pull-request-head-sha }} \
             --param git_base_branch=${{needs.prepare-env-job.outputs.test_pr_base_branch}} \
             --param pr_head_label=$SHORT_SHA \
             --param env=stage \
