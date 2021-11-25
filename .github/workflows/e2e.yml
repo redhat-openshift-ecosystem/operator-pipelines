@@ -74,7 +74,7 @@ jobs:
 
           popd
 
-          cp operators/test-e2e-operator /tmp
+          cp -r operators/test-e2e-operator /tmp
 
           # Start the feature branch (head) from main
           git checkout main
