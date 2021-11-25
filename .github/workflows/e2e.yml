@@ -78,7 +78,7 @@ jobs:
 
           # Start the feature branch (head) from main
           git checkout main
-          cp /tmp/test-e2e-operator operators/
+          cp -r /tmp/test-e2e-operator operators/
 
           # Head branch of the PR will be created by create-pull-request action
           git commit -am "new version of operator"
