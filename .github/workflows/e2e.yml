@@ -107,8 +107,8 @@ jobs:
       # Get the number of the created PR- it's used for cleanup
       - id: get_pr_data
         run: |
-          PR_NUMBER=$(hub pr show --base ${PR_BASE_BRANCH} --format "%I")
-          PR_HEAD_SHA=$(hub pr show --base ${PR_BASE_BRANCH} --format "%sH")
+          PR_NUMBER=$(hub pr show -b ${PR_BASE_BRANCH} -f "%I")
+          PR_HEAD_SHA=$(hub pr show -b ${PR_BASE_BRANCH} -f "%sH")
           echo "::set-output name=pr_number::${PR_NUMBER}"
           echo "::set-output name=pr_head_sha::${PR_HEAD_SHA}"
 
