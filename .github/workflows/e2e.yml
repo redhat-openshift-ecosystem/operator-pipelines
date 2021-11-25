@@ -73,8 +73,9 @@ jobs:
           # Head branch of the PR will be created by create-pull-request action
           git commit -am "new version of operator"
 
-
       - name: Create test PR base branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           git branch -c main ${PR_BASE_BRANCH}
           hub push --set-upstream origin ${PR_BASE_BRANCH}
