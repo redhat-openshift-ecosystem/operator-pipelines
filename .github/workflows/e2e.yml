@@ -36,6 +36,9 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
       PR_BASE_BRANCH: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+    outputs:
+      test_pr_number: ${{ steps.create_pull_request.outputs.pr_number }}
+      test_pr_head_sha: ${{ steps.create_pull_request.outputs.pr_head_sha }}
     steps:
       # Clone repository operator-pipelines-test on branch e2e-test-operator
       - uses: actions/checkout@v2
@@ -167,11 +170,11 @@ jobs:
             --param git_pr_branch=$SHORT_SHA \
             --param image_namespace=operator-pipeline-stage \
             --param git_pr_title="${{needs.prepare-env-job.outputs.pr_title}}" \
-            --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{ steps.create_pull_request.outputs.pull-request-number }} \
+            --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
             --param git_fork_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_username=rh-operator-bundle-bot \
-            --param git_commit=${{ steps.create_pull_request.outputs.pull-request-head-sha }} \
+            --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
             --param git_base_branch=${{needs.prepare-env-job.outputs.test_pr_base_branch}} \
             --param pr_head_label=$SHORT_SHA \
             --param env=stage \
