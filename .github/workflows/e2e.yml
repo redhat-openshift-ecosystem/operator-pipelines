@@ -77,15 +77,7 @@ jobs:
       - name: Create test PR base branch
         run: |
           git branch -c main ${PR_BASE_BRANCH}
-
-      # Create test branch as copy of main. This branch will be base for
-      # created test PR. It will be deleted later for cleanup.
-      - name: Push PR base branch
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.BOT_TOKEN }}
-          branch: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
-          repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
+          hub push --set-upstream origin $SHORT_SHA
 
       # Create PR.
       - name: Create Pull Request
