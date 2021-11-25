@@ -59,6 +59,7 @@ jobs:
         run: |
           git fetch
 
+          # Start from the branch e2e-test-operator. This branch contains the base test operator.
           # If something would go wrong with the test branch, backup is on branch e2e-test-operator-backup
           git checkout e2e-test-operator
 
@@ -77,6 +78,7 @@ jobs:
       - name: Create test PR base branch
         run: |
           git branch -c main ${PR_BASE_BRANCH}
+          git checkout ${PR_BASE_BRANCH}
           git push --set-upstream origin ${PR_BASE_BRANCH}
 
       # Create PR.
