@@ -55,9 +55,6 @@ jobs:
       - name: Create test PR base branch
         run: |
           git branch -c main ${PR_BASE_BRANCH}
-          # must checkout to base branch before `create-pull-request` action, as current branch
-          # is used as base for PR
-          git checkout ${PR_BASE_BRANCH}
           git push --set-upstream origin ${PR_BASE_BRANCH}
 
       # Create commit with changes used for E2E tests. This commit contains the `test-e2e-operator`
