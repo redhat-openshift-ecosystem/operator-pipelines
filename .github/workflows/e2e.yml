@@ -66,11 +66,19 @@ jobs:
           git config user.name 'rh-operator-bundle-bot'
           git config user.email 'exd-guild-isv+operators@redhat.com'
 
-          cd operators/test-e2e-operator
+          pushd operators/test-e2e-operator
 
           # Modify the test operator version
           mv 0.0.7 0.0.7-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
+
+          popd
+
+          cp operators/test-e2e-operator /tmp
+
+          # Start the feature branch (head) from main
+          git checkout main
+          cp /tmp/test-e2e-operator operators/
 
           # Head branch of the PR will be created by create-pull-request action
           git commit -am "new version of operator"
@@ -78,6 +86,8 @@ jobs:
       - name: Create test PR base branch
         run: |
           git branch -c main ${PR_BASE_BRANCH}
+          # must checkout to base branch before `create-pull-request` action, as current branch
+          # is used as base for PR
           git checkout ${PR_BASE_BRANCH}
           git push --set-upstream origin ${PR_BASE_BRANCH}
 
@@ -238,5 +248,5 @@ jobs:
           github_token: ${{ secrets.BOT_TOKEN }}
           owner: redhat-openshift-ecosystem
           repository: operator-pipelines-test
-          branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+          branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}},${{needs.prepare-env-job.outputs.short_sha}}
           soft_fail: true
