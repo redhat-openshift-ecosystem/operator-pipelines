@@ -26,175 +26,175 @@ jobs:
           echo "::set-output name=oc_project::test-e2e-${GITHUB_SHA::7}"
           echo "::set-output name=test_pr_base_branch::${GITHUB_SHA::7}-base"
 
-  # Create a Pull Request with the fake version of fake operator in the repository operator-pipelines-test.
-  # Pipelines will run against this PR.
-  prepare-test-data:
-    runs-on: ubuntu-latest
-    needs: prepare-env-job
-    outputs:
-      test_pr_number: ${{ steps.get_pr_number.outputs.pr_number }}
-    env:
-      SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
-      PR_BASE_BRANCH: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
-      # This env is needed for hub cli
-      GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
-    steps:
-      # Clone repository operator-pipelines-test on branch e2e-test-operator
-      - uses: actions/checkout@v2
-        with:
-          repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
-          ref: 'e2e-test-operator'
+  ## Create a Pull Request with the fake version of fake operator in the repository operator-pipelines-test.
+  ## Pipelines will run against this PR.
+  #prepare-test-data:
+  #  runs-on: ubuntu-latest
+  #  needs: prepare-env-job
+  #  outputs:
+  #    test_pr_number: ${{ steps.get_pr_number.outputs.pr_number }}
+  #  env:
+  #    SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
+  #    PR_BASE_BRANCH: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+  #    # This env is needed for hub cli
+  #    GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+  #  steps:
+  #    # Clone repository operator-pipelines-test on branch e2e-test-operator
+  #    - uses: actions/checkout@v2
+  #      with:
+  #        repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
+  #        ref: 'e2e-test-operator'
 
-      - name: Prepare environment
-        run: |
-          # Install dependencies- GitHub client
-          sudo apt install -y hub
+  #    - name: Prepare environment
+  #      run: |
+  #        # Install dependencies- GitHub client
+  #        sudo apt install -y hub
 
-      # Create test branch as copy of main. This branch will be base for
-      # created test PR
-      - name: Create test branch
-        run: |
-          echo "Creating branch $SHORT_SHA-merge as copy of main"
-          git branch -c main ${PR_BASE_BRANCH}
+  #    # Create test branch as copy of main. This branch will be base for
+  #    # created test PR
+  #    - name: Create test branch
+  #      run: |
+  #        echo "Creating branch $SHORT_SHA-merge as copy of main"
+  #        git branch -c main ${PR_BASE_BRANCH}
 
-      # Create commit with changes used for E2E tests. This commit contains the `test-e2e-operator`
-      # from branch e2e-test-operator- just with the new version.
-      - name: Create commit to create PR with test data
-        run: |
-          git config user.name 'rh-operator-bundle-bot'
-          git config user.email 'exd-guild-isv+operators@redhat.com'
+  #    # Create commit with changes used for E2E tests. This commit contains the `test-e2e-operator`
+  #    # from branch e2e-test-operator- just with the new version.
+  #    - name: Create commit to create PR with test data
+  #      run: |
+  #        git config user.name 'rh-operator-bundle-bot'
+  #        git config user.email 'exd-guild-isv+operators@redhat.com'
 
-          cd operators/test-e2e-operator
-          mv 0.0.7 0.0.7-$SHORT_SHA
-          find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
-          git commit -am "new version of operator"
+  #        cd operators/test-e2e-operator
+  #        mv 0.0.7 0.0.7-$SHORT_SHA
+  #        find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$SHORT_SHA/g" {} \;
+  #        git commit -am "new version of operator"
 
-      # Create PR.
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.BOT_TOKEN }}
-          author: 'rh-operator-bundle-bot <exd-guild-isv+operators@redhat.com>'
-          commit-message: 'Preparing the data for E2E tests'
-          base: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
-          branch: ${{needs.prepare-env-job.outputs.short_sha}}
-          title: ${{needs.prepare-env-job.outputs.pr_title}}
-          delete-branch: true
-          body: 'This is PR used for E2E tests of the operator pipelines'
+  #    # Create PR.
+  #    - name: Create Pull Request
+  #      uses: peter-evans/create-pull-request@v3
+  #      with:
+  #        token: ${{ secrets.BOT_TOKEN }}
+  #        author: 'rh-operator-bundle-bot <exd-guild-isv+operators@redhat.com>'
+  #        commit-message: 'Preparing the data for E2E tests'
+  #        base: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+  #        branch: ${{needs.prepare-env-job.outputs.short_sha}}
+  #        title: ${{needs.prepare-env-job.outputs.pr_title}}
+  #        delete-branch: true
+  #        body: 'This is PR used for E2E tests of the operator pipelines'
 
-      # Get the number of the created PR- it's used for cleanup
-      - id: get_pr_number
-        run: |
-          PR_NUMBER=$(hub pr show -f "%I")
-          echo "::set-output name=pr_number::${PR_NUMBER}"
+  #    # Get the number of the created PR- it's used for cleanup
+  #    - id: get_pr_number
+  #      run: |
+  #        PR_NUMBER=$(hub pr show -f "%I")
+  #        echo "::set-output name=pr_number::${PR_NUMBER}"
 
-  # Deploy and run the E2E tests
-  run-e2e:
-    runs-on: ubuntu-latest
-    needs:
-      - prepare-env-job
-      - prepare-test-data
-    env:
-      SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
-      OC_PROJECT: ${{needs.prepare-env-job.outputs.oc_project}}
-    steps:
-      # Clone repo
-      - uses: actions/checkout@v1
+  ## Deploy and run the E2E tests
+  #run-e2e:
+  #  runs-on: ubuntu-latest
+  #  needs:
+  #    - prepare-env-job
+  #    - prepare-test-data
+  #  env:
+  #    SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
+  #    OC_PROJECT: ${{needs.prepare-env-job.outputs.oc_project}}
+  #  steps:
+  #    # Clone repo
+  #    - uses: actions/checkout@v1
 
-      - name: Prepare environment
-        run: |
-          # Install dependencies
-          pip install --user openshift
+  #    - name: Prepare environment
+  #      run: |
+  #        # Install dependencies
+  #        pip install --user openshift
 
-          # Install tkn cli
-          curl -LO https://github.com/tektoncd/cli/releases/download/v0.21.0/tkn_0.21.0_Linux_x86_64.tar.gz
-          tar xvzf tkn_0.21.0_Linux_x86_64.tar.gz -C /usr/local/bin/
+  #        # Install tkn cli
+  #        curl -LO https://github.com/tektoncd/cli/releases/download/v0.21.0/tkn_0.21.0_Linux_x86_64.tar.gz
+  #        tar xvzf tkn_0.21.0_Linux_x86_64.tar.gz -C /usr/local/bin/
 
-          # Prepare Kubeconfig.
-          # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
-          # to create Kubernetes context.
-          mkdir $HOME/.kube
-          cat <<EOF > $HOME/.kube/config
-          ${{ secrets.KUBECONFIG }}
-          EOF
+  #        # Prepare Kubeconfig.
+  #        # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
+  #        # to create Kubernetes context.
+  #        mkdir $HOME/.kube
+  #        cat <<EOF > $HOME/.kube/config
+  #        ${{ secrets.KUBECONFIG }}
+  #        EOF
 
-          # Prepare vault password
-          echo ${{ secrets.VAULT_PASSWORD }} > ansible/vault-password
+  #        # Prepare vault password
+  #        echo ${{ secrets.VAULT_PASSWORD }} > ansible/vault-password
 
-      - name: Deploy e2e environment
-        # Default timeout is 2 min
-        timeout-minutes: 5
-        run: |
-          oc new-project $OC_PROJECT
-          pushd ansible
-          bash init-custom-env.sh $OC_PROJECT stage vault-password
-          popd
+  #    - name: Deploy e2e environment
+  #      # Default timeout is 2 min
+  #      timeout-minutes: 5
+  #      run: |
+  #        oc new-project $OC_PROJECT
+  #        pushd ansible
+  #        bash init-custom-env.sh $OC_PROJECT stage vault-password
+  #        popd
 
-      - name: Run CI pipeline
-        run: |
-          tkn pipeline start operator-ci-pipeline \
-            --use-param-defaults \
-            --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
-            --param git_branch=$SHORT_SHA \
-            --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
-            --param env=stage \
-            --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-            --workspace name=kubeconfig,secret=kubeconfig \
-            --workspace name=ssh-dir,secret=github-ssh-credentials \
-            --workspace name=pyxis-api-key,secret=pyxis-api-secret \
-            --showlog
+  #    - name: Run CI pipeline
+  #      run: |
+  #        tkn pipeline start operator-ci-pipeline \
+  #          --use-param-defaults \
+  #          --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+  #          --param git_branch=$SHORT_SHA \
+  #          --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
+  #          --param env=stage \
+  #          --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
+  #          --workspace name=kubeconfig,secret=kubeconfig \
+  #          --workspace name=ssh-dir,secret=github-ssh-credentials \
+  #          --workspace name=pyxis-api-key,secret=pyxis-api-secret \
+  #          --showlog
 
-      - name: Check if pipeline passed
-        run: |
-          PIPELINERUN_NAME=$(oc get pr --no-headers -o custom-columns=":metadata.name")
-          PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
-          if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
-            oc get pr
-            exit 1
-          fi
+  #    - name: Check if pipeline passed
+  #      run: |
+  #        PIPELINERUN_NAME=$(oc get pr --no-headers -o custom-columns=":metadata.name")
+  #        PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
+  #        if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
+  #          oc get pr
+  #          exit 1
+  #        fi
 
-  cleanup:
-    runs-on: ubuntu-latest
-    if: ${{ always() }}
-    needs:
-      - run-e2e
-      - prepare-env-job
-      - prepare-test-data
-    env:
-      OC_PROJECT: ${{needs.prepare-env-job.outputs.oc_project}}
-    steps:
-      - name: Clean OC project
-        if: always()
-        run: |
+  #cleanup:
+  #  runs-on: ubuntu-latest
+  #  if: ${{ always() }}
+  #  needs:
+  #    - run-e2e
+  #    - prepare-env-job
+  #    - prepare-test-data
+  #  env:
+  #    OC_PROJECT: ${{needs.prepare-env-job.outputs.oc_project}}
+  #  steps:
+  #    - name: Clean OC project
+  #      if: always()
+  #      run: |
 
-          echo $OC_PROJECT
+  #        echo $OC_PROJECT
 
-          # Prepare Kubeconfig.
-          # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
-          # to create Kubernetes context.
-          mkdir $HOME/.kube
-          cat <<EOF > $HOME/.kube/config
-          ${{ secrets.KUBECONFIG }}
-          EOF
+  #        # Prepare Kubeconfig.
+  #        # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
+  #        # to create Kubernetes context.
+  #        mkdir $HOME/.kube
+  #        cat <<EOF > $HOME/.kube/config
+  #        ${{ secrets.KUBECONFIG }}
+  #        EOF
 
-          oc delete project $OC_PROJECT
+  #        oc delete project $OC_PROJECT
 
-      - name: Clean opened PR
-        if: always()
-        uses: peter-evans/close-pull@v1
-        with:
-          repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
-          pull-request-number: ${{needs.prepare-test-data.outputs.test_pr_number}}
-          comment: Auto-closing test pull request
-          delete-branch: true
-          token: ${{ secrets.BOT_TOKEN }}
+  #    - name: Clean opened PR
+  #      if: always()
+  #      uses: peter-evans/close-pull@v1
+  #      with:
+  #        repository: 'redhat-openshift-ecosystem/operator-pipelines-test'
+  #        pull-request-number: ${{needs.prepare-test-data.outputs.test_pr_number}}
+  #        comment: Auto-closing test pull request
+  #        delete-branch: true
+  #        token: ${{ secrets.BOT_TOKEN }}
 
-      - name: Clean test branches
-        if: always()
-        uses: dawidd6/action-delete-branch@v3
-        with:
-          github_token: ${{ secrets.BOT_TOKEN }}
-          owner: redhat-openshift-ecosystem
-          repository: operator-pipelines-test
-          branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
-          soft_fail: true
+  #    - name: Clean test branches
+  #      if: always()
+  #      uses: dawidd6/action-delete-branch@v3
+  #      with:
+  #        github_token: ${{ secrets.BOT_TOKEN }}
+  #        owner: redhat-openshift-ecosystem
+  #        repository: operator-pipelines-test
+  #        branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
+  #        soft_fail: true

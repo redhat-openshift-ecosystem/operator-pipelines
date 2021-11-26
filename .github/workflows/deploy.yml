@@ -4,7 +4,7 @@ name: Deployment
 on:  # yamllint disable-line rule:truthy
   workflow_run:
     workflows: ["E2E-CI"]
-    branches: [main, ISV-1418]
+    branches: [ISV-1418]
     types:
       - completed
   workflow_dispatch:
