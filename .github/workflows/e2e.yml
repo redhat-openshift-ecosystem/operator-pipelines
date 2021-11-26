@@ -47,8 +47,8 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name 'rh-operator-bundle-bot'
-          git config user.email 'exd-guild-isv+operators@redhat.com'
+          git config user.name 'rh-operator-bundle-test-e2e'
+          git config user.email 'exd-guild-isv+operators-test-e2e@redhat.com'
           git fetch
 
       - name: Create test PR base branch
@@ -86,7 +86,7 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.BOT_TOKEN }}
-          author: 'rh-operator-bundle-bot <exd-guild-isv+operators@redhat.com>'
+          author: 'rh-operator-bundle-test-e2e <exd-guild-isv+operators-test-e2e@redhat.com>'
           commit-message: 'Preparing the data for E2E tests'
           base: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
           branch: ${{needs.prepare-env-job.outputs.short_sha}}
@@ -159,76 +159,76 @@ jobs:
       #      exit 1
       #    fi
 
-      #- name: Run Hosted pipeline
-      #  run: |
-      #    tkn pipeline start operator-hosted-pipeline \
-      #      --use-param-defaults \
-      #      --param git_pr_branch=$SHORT_SHA \
-      #      --param image_namespace=operator-pipeline-stage \
-      #      --param git_pr_title="${{needs.prepare-env-job.outputs.pr_title}}" \
-      #      --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
-      #      --param git_fork_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
-      #      --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
-      #      --param git_username=rh-operator-bundle-bot \
-      #      --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
-      #      --param git_base_branch=${{needs.prepare-env-job.outputs.test_pr_base_branch}} \
-      #      --param pr_head_label=$SHORT_SHA \
-      #      --param env=stage \
-      #      --param preflight_min_version=0.0.0 \
-      #      --param ci_min_version=0.0.0 \
-      #      --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
-      #      --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
-      #      --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
-      #      --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
-      #      --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
-      #      --workspace name=prow-kubeconfig,secret=prow-kubeconfig \
-      #      --workspace name=preflight-decryption-key,secret=preflight-decryption-key \
-      #      --workspace name=hydra-credentials,secret=hydra-credentials \
-      #      --workspace name=gpg-key,secret=isv-gpg-key \
-      #      --showlog
+      - name: Run Hosted pipeline
+        run: |
+          tkn pipeline start operator-hosted-pipeline \
+            --use-param-defaults \
+            --param git_pr_branch=$SHORT_SHA \
+            --param image_namespace=operator-pipeline-stage \
+            --param git_pr_title="${{needs.prepare-env-job.outputs.pr_title}}" \
+            --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
+            --param git_fork_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
+            --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
+            --param git_username=rh-operator-bundle-bot \
+            --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
+            --param git_base_branch=${{needs.prepare-env-job.outputs.test_pr_base_branch}} \
+            --param pr_head_label=$SHORT_SHA \
+            --param env=stage \
+            --param preflight_min_version=0.0.0 \
+            --param ci_min_version=0.0.0 \
+            --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
+            --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
+            --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
+            --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+            --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
+            --workspace name=prow-kubeconfig,secret=prow-kubeconfig \
+            --workspace name=preflight-decryption-key,secret=preflight-decryption-key \
+            --workspace name=hydra-credentials,secret=hydra-credentials \
+            --workspace name=gpg-key,secret=isv-gpg-key \
+            --showlog
 
-      #- name: Check if Hosted pipeline passed
-      #  run: |
-      #    PIPELINERUN_NAME=$(oc get pr --no-headers -l tekton.dev/pipeline=operator-ci-pipeline -o custom-columns=":metadata.name")
-      #    PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
-      #    if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
-      #      oc get pr
-      #      exit 1
-      #    fi
+      - name: Check if Hosted pipeline passed
+        run: |
+          PIPELINERUN_NAME=$(oc get pr --no-headers -l tekton.dev/pipeline=operator-ci-pipeline -o custom-columns=":metadata.name")
+          PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
+          if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
+            oc get pr
+            exit 1
+          fi
 
-  #cleanup:
-  #  runs-on: ubuntu-latest
-  #  if: ${{ always() }}
-  #  needs:
-  #    - run-e2e
-  #    - prepare-env-job
-  #    - prepare-test-data
-  #  env:
-  #    OC_PROJECT: ${{needs.prepare-env-job.outputs.oc_project}}
-  #  steps:
-  #    - name: Clean OC project
-  #      if: always()
-  #      run: |
+  cleanup:
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs:
+      - run-e2e
+      - prepare-env-job
+      - prepare-test-data
+    env:
+      OC_PROJECT: ${{needs.prepare-env-job.outputs.oc_project}}
+    steps:
+      - name: Clean OC project
+        if: always()
+        run: |
 
-  #        echo $OC_PROJECT
+          echo $OC_PROJECT
 
-  #        # Prepare Kubeconfig.
-  #        # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
-  #        # to create Kubernetes context.
-  #        mkdir $HOME/.kube
-  #        cat <<EOF > $HOME/.kube/config
-  #        ${{ secrets.KUBECONFIG }}
-  #        EOF
+          # Prepare Kubeconfig.
+          # Use GitHub secret which contains the Kubeconfig for SA with admin privilleges (same as in ansible vault)
+          # to create Kubernetes context.
+          mkdir $HOME/.kube
+          cat <<EOF > $HOME/.kube/config
+          ${{ secrets.KUBECONFIG }}
+          EOF
 
-  #        oc delete project $OC_PROJECT
+          oc delete project $OC_PROJECT
 
-  #    # Deleting the branches associated with the PR will also close the PR- if it still exists
-  #    - name: Clean test branches
-  #      if: always()
-  #      uses: dawidd6/action-delete-branch@v3
-  #      with:
-  #        github_token: ${{ secrets.BOT_TOKEN }}
-  #        owner: redhat-openshift-ecosystem
-  #        repository: operator-pipelines-test
-  #        branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}},${{needs.prepare-env-job.outputs.short_sha}}
-  #        soft_fail: true
+      # Deleting the branches associated with the PR will also close the PR- if it still exists
+      - name: Clean test branches
+        if: always()
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.BOT_TOKEN }}
+          owner: redhat-openshift-ecosystem
+          repository: operator-pipelines-test
+          branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}},${{needs.prepare-env-job.outputs.short_sha}}
+          soft_fail: true
