@@ -1,10 +1,7 @@
 name: Multiarch build
+
 on:
-  push:
-  pull_request:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'  # every day at midnight
 
 env:
   IMAGE_TAG: latest
@@ -13,9 +10,10 @@ env:
   IMAGE_NAMESPACE: mayurwaghmode111
 
 jobs:
-  build-multiplatform-containerfile:
-    name: Build multi-platform image using Dcokerfile
+  build:
+    name: Build and push multi-arch image
     runs-on: ubuntu-20.04
+    
     steps:
       - name: add checkout action...
         uses: actions/checkout@v2
@@ -55,7 +53,7 @@ jobs:
           buildah inspect ${{ env.IMAGE_NAME }}:linux-ppc64le | jq ".Docker.architecture"
           
       # Authenticate to container image registry to push the image
-      - name: Podman Login
+      - name: Podman Login to quay.io
         uses: redhat-actions/podman-login@v1
         with:
           registry: quay.io
@@ -68,5 +66,5 @@ jobs:
           buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-amd64
           buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-ppc64le
           
-      - name: Push manifest
+      - name: Push manifest to quay.io
         run: podman manifest push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  --all
