@@ -1,6 +1,7 @@
 name: Multiarch build
 
 on:
+  push:
   workflow_dispatch:
 
 env:
@@ -40,17 +41,6 @@ jobs:
           arch: ppc64le
           containerfiles: |
             ./operator-pipeline-images/Dockerfile-ppc64le
-               
-      - name: Check images created
-        run: buildah images | grep '${{ env.IMAGE_NAME }}'
-
-      - name: Check image metadata
-        run: |
-          set -x
-          buildah inspect ${{ env.IMAGE_NAME }}:linux-amd64 | jq ".OCIv1.architecture"
-          buildah inspect ${{ env.IMAGE_NAME }}:linux-amd64 | jq ".Docker.architecture"
-          buildah inspect ${{ env.IMAGE_NAME }}:linux-ppc64le | jq ".OCIv1.architecture"
-          buildah inspect ${{ env.IMAGE_NAME }}:linux-ppc64le | jq ".Docker.architecture"
           
       # Authenticate to container image registry to push the image
       - name: Podman Login to quay.io
