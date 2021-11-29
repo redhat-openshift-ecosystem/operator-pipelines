@@ -8,7 +8,7 @@ env:
   IMAGE_TAG: latest
   IMAGE_NAME: operator-pipelines-images
   IMAGE_REGISTRY: quay.io
-  IMAGE_NAMESPACE: mayurwaghmode111
+  IMAGE_NAMESPACE: quay.io/redhat-isv
 
 jobs:
   build:
@@ -47,8 +47,8 @@ jobs:
         uses: redhat-actions/podman-login@v1
         with:
           registry: quay.io
-          username: ${{ secrets.QUAY_USER }}
-          password: ${{ secrets.QUAY_PWD }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
           
       - name: Create and add to manifest
         run: |
