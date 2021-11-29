@@ -22,15 +22,15 @@ jobs:
   build:
     name: Build and push image
     runs-on: ubuntu-20.04
-    
+
     steps:
       - uses: actions/checkout@v2
-        
+
       - name: Install qemu dependency
         run: |
           sudo apt-get update
           sudo apt-get install -y qemu-user-static
-            
+
       - name: Build image linux/amd64
         id: build-image-amd64
         uses: redhat-actions/buildah-build@v2
@@ -40,7 +40,7 @@ jobs:
           arch: amd64
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile
-     
+
       - name: Build image linux/ppc64le
         id: build-image-ppc64le
         uses: redhat-actions/buildah-build@v2
@@ -50,7 +50,7 @@ jobs:
           arch: ppc64le
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile-ppc64le
-          
+
       # Authenticate to container image registry to push the image
       - name: Podman Login to quay.io
         uses: redhat-actions/podman-login@v1
@@ -58,13 +58,13 @@ jobs:
           registry: quay.io
           username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_PWD }}
-          
+
       - name: Create and add to manifest
         run: |
           buildah manifest create ${{ env.IMAGE_NAME }}
           buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-amd64
           buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-ppc64le
-          
+
       - name: Push manifest to quay.io
         run: podman manifest push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} quay.io/mayurwaghmode111/operator-pipelines-images:${{ env.IMAGE_TAG }}  --all
         if: ${{ github.event_name == 'push' }}
