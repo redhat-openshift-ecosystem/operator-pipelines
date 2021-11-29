@@ -1,23 +1,30 @@
-name: Multiarch build
-
-on:
-  push:
-  workflow_dispatch:
+name: Build and Push Image
+on:  # yamllint disable-line rule:truthy
+  - push
+  - pull_request
 
 env:
-  IMAGE_TAG: latest
+  IMAGE_TAG: latest ${{ github.sha }}
   IMAGE_NAME: operator-pipelines-images
   IMAGE_REGISTRY: quay.io
-  IMAGE_NAMESPACE: quay.io/redhat-isv
-
+  IMAGE_NAMESPACE: quay.io/mayurwaghmode111
 jobs:
+  test-lint:
+    name: Run unit tests and linters
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: fedora-python/tox-github-action@v0.4
+        with:
+          tox_env: black,test
+          dnf_install: krb5-devel krb5-workstation
+
   build:
-    name: Build and push multi-arch image
+    name: Build and push image
     runs-on: ubuntu-20.04
     
     steps:
-      - name: add checkout action...
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         
       - name: Install qemu dependency
         run: |
@@ -25,21 +32,23 @@ jobs:
           sudo apt-get install -y qemu-user-static
             
       - name: Build image linux/amd64
+        id: build-image-amd64
         uses: redhat-actions/buildah-build@v2
         with:
-          image: ${{ env.IMAGE_NAME }}
+          image: operator-pipelines-images
           tags: linux-amd64
           arch: amd64
-          containerfiles: |
+          dockerfiles: |
             ./operator-pipeline-images/Dockerfile
      
       - name: Build image linux/ppc64le
+        id: build-image-ppc64le
         uses: redhat-actions/buildah-build@v2
         with:
-          image: ${{ env.IMAGE_NAME }}
+          image: operator-pipelines-images
           tags: linux-ppc64le
           arch: ppc64le
-          containerfiles: |
+          dockerfiles: |
             ./operator-pipeline-images/Dockerfile-ppc64le
           
       # Authenticate to container image registry to push the image
@@ -47,8 +56,8 @@ jobs:
         uses: redhat-actions/podman-login@v1
         with:
           registry: quay.io
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_PWD }}
           
       - name: Create and add to manifest
         run: |
@@ -57,4 +66,5 @@ jobs:
           buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-ppc64le
           
       - name: Push manifest to quay.io
-        run: podman manifest push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  --all
+        run: podman manifest push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} quay.io/mayurwaghmode111/operator-pipelines-images:${{ env.IMAGE_TAG }}  --all
+        if: ${{ github.event_name == 'push' }}
