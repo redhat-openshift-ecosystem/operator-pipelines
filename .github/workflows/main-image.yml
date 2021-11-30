@@ -36,21 +36,22 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: operator-pipelines-images
-          tags: ${{ env.IMAGE_TAG }}
+          tags: latest ${{ github.sha }}
           archs: amd64, ppc64le
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile
 
-      - name: Push To Quay
+      - name: Push To quay.io
+        id: push-to-quay
         uses: redhat-actions/push-to-registry@v2
-        id: push
         with:
-          image: ${{ steps.build_image.outputs.image }}
-          tags: ${{ steps.build_image.outputs.tags }}
-          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: quay.io/mayurwaghmode111
           username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_PWD }}
+        if: ${{ github.event_name == 'push' }}
 
-      - name: Echo outputs
-        run: |
-          echo "${{ toJSON(steps.push.outputs) }}"  
+      - name: Print image url
+        run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
+        if: ${{ github.event_name == 'push' }}
