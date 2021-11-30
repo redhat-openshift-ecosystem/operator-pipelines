@@ -189,7 +189,7 @@ jobs:
 
       - name: Check if Hosted pipeline passed
         run: |
-          PIPELINERUN_NAME=$(oc get pr --no-headers -l tekton.dev/pipeline=operator-ci-pipeline -o custom-columns=":metadata.name")
+          PIPELINERUN_NAME=$(oc get pr --no-headers -l tekton.dev/pipeline=operator-hosted-pipeline -o custom-columns=":metadata.name")
           PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
           if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
             oc get pr
