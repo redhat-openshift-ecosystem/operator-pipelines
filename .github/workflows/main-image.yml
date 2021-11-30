@@ -4,9 +4,10 @@ on:  # yamllint disable-line rule:truthy
   - pull_request
 
 env:
-  IMAGE_TAG: latest
+  IMAGE_TAG: latest ${{ github.sha }}
   IMAGE_NAME: operator-pipelines-images
   IMAGE_REGISTRY: quay.io
+  IMAGE_NAMESPACE: mayurwaghmode111
 jobs:
   test-lint:
     name: Run unit tests and linters
@@ -30,45 +31,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y qemu-user-static
 
-      - name: Build image linux/amd64
-        id: build-image-amd64
+      - name: Build image 
+        id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
           image: operator-pipelines-images
-          tags: linux-amd64
-          arch: amd64
+          tags: ${{ env.IMAGE_TAGS }}
+          archs: amd64, ppc64le
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile
 
-      - name: Build image linux/ppc64le
-        id: build-image-ppc64le
-        uses: redhat-actions/buildah-build@v2
+      - name: Push To Quay
+        uses: redhat-actions/push-to-registry@v2
+        id: push
         with:
-          image: operator-pipelines-images
-          tags: linux-ppc64le
-          arch: ppc64le
-          dockerfiles: |
-            ./operator-pipeline-images/Dockerfile-ppc64le
+          image: ${{ steps.build_image.outputs.image }}
+          tags: ${{ steps.build_image.outputs.tags }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_PWD }}
 
-      # Authenticate to container image registry to push the image
-      - name: Podman Login to quay.io
-        uses: redhat-actions/podman-login@v1
-        with:
-          registry: quay.io
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-        if: ${{ github.event_name == 'push' }}
-
-      - name: Create and add to manifest
+      - name: Echo outputs
         run: |
-          buildah manifest create ${{ env.IMAGE_NAME }}
-          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-amd64
-          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-ppc64le
+          echo "${{ toJSON(steps.push.outputs) }}"
 
-      - name: Push manifest to quay.io
-        run: podman manifest push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  --all
-        if: ${{ github.event_name == 'push' }}
-
-      - name: Print image url
-        run: echo "Image pushed to ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
-        if: ${{ github.event_name == 'push' }}
+    
