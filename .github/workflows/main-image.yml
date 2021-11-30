@@ -6,6 +6,7 @@ on:  # yamllint disable-line rule:truthy
 env:
   IMAGE_TAG: latest ${{ github.sha }}
   IMAGE_NAME: operator-pipelines-images
+  IMAGE_REGISTRY: quay.io
 jobs:
   test-lint:
     name: Run unit tests and linters
@@ -64,5 +65,5 @@ jobs:
           buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-ppc64le
 
       - name: Push manifest to quay.io
-        run: podman manifest push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  quay.io/redhat-isv/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  --all
+        run: podman manifest push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  --all
         if: ${{ github.event_name == 'push' }}
