@@ -38,7 +38,7 @@ jobs:
           tags: latest ${{ github.sha }}
           archs: amd64, ppc64le
           dockerfiles: |
-            ./Dockerfile
+            ./operator-pipeline-images/tmpDockerfile
 
       - name: Push To quay.io
         id: push-to-quay
