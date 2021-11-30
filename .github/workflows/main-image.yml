@@ -36,7 +36,7 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: operator-pipelines-images
-          tags: ${{ env.IMAGE_TAGS }}
+          tags: ${{ env.IMAGE_TAG }}
           archs: amd64, ppc64le
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile
