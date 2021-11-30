@@ -3,11 +3,6 @@ on:  # yamllint disable-line rule:truthy
   - push
   - pull_request
 
-env:
-  IMAGE_TAG: latest ${{ github.sha }}
-  IMAGE_NAME: multi-arch-test
-  IMAGE_REGISTRY: quay.io
-  IMAGE_NAMESPACE: mayurwaghmode111
 jobs:
   test-lint:
     name: Run unit tests and linters
@@ -34,11 +29,11 @@ jobs:
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: operator-pipelines-images
+          image: operator-pipelines-images-multi-arch 
           tags: latest ${{ github.sha }}
           archs: amd64, ppc64le
           dockerfiles: |
-            ./operator-pipeline-images/tmpDockerfile
+            ./operator-pipeline-images/Dockerfile
 
       - name: Push To quay.io
         id: push-to-quay
