@@ -4,7 +4,7 @@ on:  # yamllint disable-line rule:truthy
   - pull_request
 
 env:
-  IMAGE_TAG: latest ${{ github.sha }}
+  IMAGE_TAG: latest
   IMAGE_NAME: operator-pipelines-images
   IMAGE_REGISTRY: quay.io
 jobs:
