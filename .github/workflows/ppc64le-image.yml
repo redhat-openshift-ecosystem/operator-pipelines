@@ -41,7 +41,7 @@ jobs:
         with:
           image: ${{ steps.build-image.outputs.image }}
           tags: ${{ steps.build-image.outputs.tags }}
-          registry: quay.io/redhat-isv
+          registry: quay.io/mayurwaghmode111
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
         if: ${{ github.event_name == 'push' }}
