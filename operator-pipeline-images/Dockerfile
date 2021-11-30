@@ -21,9 +21,13 @@ RUN dnf update -y && \
     dnf install -y \
     findutils \
     git \
+    wget \
     gcc \
     gnupg2 \
     jq \
+    cargo \
+    libffi-devel \
+    redhat-rpm-config \
     krb5-devel \
     krb5-workstation \
     yamllint \
@@ -36,10 +40,16 @@ RUN dnf update -y && \
 
 COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 
-# Install opm CLI
+# Install opm CLI for x86
 RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.17.5/linux-amd64-opm && \
     chmod +x linux-amd64-opm && \
     mv linux-amd64-opm /usr/local/bin/opm
+    
+# Install opm CLI for ppc64le   
+RUN wget https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.6.22/opm-linux-4.6.22.tar.gz && \
+    tar xvf opm-linux-4.6.22.tar.gz && \
+    chmod +x opm && \
+    mv opm /usr/local/bin/opm
 
 RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
