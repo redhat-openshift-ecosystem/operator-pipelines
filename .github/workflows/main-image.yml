@@ -20,19 +20,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Install qemu dependency
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y qemu-user-static
           
       - name: Build image 
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: operator-pipelines-images
+          image: operator-pipelines-images-multi-arch
           tags: latest ${{ github.sha }}
-          archs: amd64, ppc64le
+          archs: amd64
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile
 
@@ -42,7 +37,7 @@ jobs:
         with:
           image: ${{ steps.build-image.outputs.image }}
           tags: ${{ steps.build-image.outputs.tags }}
-          registry: quay.io/redhat-isv
+          registry: quay.io/mayurwaghmode111
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
         if: ${{ github.event_name == 'push' }}
