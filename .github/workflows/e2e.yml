@@ -136,28 +136,28 @@ jobs:
           bash init-custom-env.sh $OC_PROJECT stage vault-password
           popd
 
-      #- name: Run CI pipeline
-      #  run: |
-      #    tkn pipeline start operator-ci-pipeline \
-      #      --use-param-defaults \
-      #      --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
-      #      --param git_branch=$SHORT_SHA \
-      #      --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
-      #      --param env=stage \
-      #      --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-      #      --workspace name=kubeconfig,secret=kubeconfig \
-      #      --workspace name=ssh-dir,secret=github-ssh-credentials \
-      #      --workspace name=pyxis-api-key,secret=pyxis-api-secret \
-      #      --showlog
+      - name: Run CI pipeline
+        run: |
+          tkn pipeline start operator-ci-pipeline \
+            --use-param-defaults \
+            --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+            --param git_branch=$SHORT_SHA \
+            --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
+            --param env=stage \
+            --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
+            --workspace name=kubeconfig,secret=kubeconfig \
+            --workspace name=ssh-dir,secret=github-ssh-credentials \
+            --workspace name=pyxis-api-key,secret=pyxis-api-secret \
+            --showlog
 
-      #- name: Check if CI pipeline passed
-      #  run: |
-      #    PIPELINERUN_NAME=$(oc get pr -l tekton.dev/pipeline=operator-ci-pipeline --no-headers -o custom-columns=":metadata.name")
-      #    PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
-      #    if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
-      #      oc get pr
-      #      exit 1
-      #    fi
+      - name: Check if CI pipeline passed
+        run: |
+          PIPELINERUN_NAME=$(oc get pr -l tekton.dev/pipeline=operator-ci-pipeline --no-headers -o custom-columns=":metadata.name")
+          PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
+          if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
+            oc get pr
+            exit 1
+          fi
 
       - name: Run Hosted pipeline
         run: |
