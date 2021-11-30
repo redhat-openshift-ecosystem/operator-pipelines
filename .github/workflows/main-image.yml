@@ -29,7 +29,7 @@ jobs:
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: operator-pipelines-images-multi-arch 
+          image: operator-pipelines-images
           tags: latest ${{ github.sha }}
           archs: amd64, ppc64le
           dockerfiles: |
@@ -41,9 +41,9 @@ jobs:
         with:
           image: ${{ steps.build-image.outputs.image }}
           tags: ${{ steps.build-image.outputs.tags }}
-          registry: quay.io/mayurwaghmode111
-          username: ${{ secrets.QUAY_USER }}
-          password: ${{ secrets.QUAY_PWD }}
+          registry: quay.io/redhat-isv
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
         if: ${{ github.event_name == 'push' }}
 
       - name: Print image url
