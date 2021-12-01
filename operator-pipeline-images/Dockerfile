@@ -21,13 +21,9 @@ RUN dnf update -y && \
     dnf install -y \
     findutils \
     git \
-    wget \
     gcc \
     gnupg2 \
     jq \
-    cargo \
-    libffi-devel \
-    redhat-rpm-config \
     krb5-devel \
     krb5-workstation \
     yamllint \
@@ -44,7 +40,6 @@ COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.17.5/linux-amd64-opm && \
     chmod +x linux-amd64-opm && \
     mv linux-amd64-opm /usr/local/bin/opm
-    
 
 RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
