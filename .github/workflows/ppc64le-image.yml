@@ -1,19 +1,9 @@
-name: Build and Push Image
+name: Build and Push ppc64le Image
 on:  # yamllint disable-line rule:truthy
   - push
   - pull_request
 
 jobs:
-  test-lint:
-    name: Run unit tests and linters
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: fedora-python/tox-github-action@v0.4
-        with:
-          tox_env: black,test
-          dnf_install: krb5-devel krb5-workstation
-
   build:
     name: Build and push image
     runs-on: ubuntu-20.04
@@ -30,20 +20,21 @@ jobs:
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: operator-pipelines-images-multi-arch
+          image: operator-pipelines-images
           tags: ppc64le ${{ github.sha }}
           archs: ppc64le
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile-ppc64le
+            
       - name: Push To quay.io
         id: push-to-quay
         uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ steps.build-image.outputs.image }}
           tags: ${{ steps.build-image.outputs.tags }}
-          registry: quay.io/mayurwaghmode111
-          username: ${{ secrets.QUAY_USER }}
-          password: ${{ secrets.QUAY_PWD }}
+          registry: quay.io/redhat-isv
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
         if: ${{ github.event_name == 'push' }}
 
       - name: Print image url
