@@ -25,7 +25,7 @@ jobs:
           archs: ppc64le
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile-ppc64le
-    
+
       - name: Push To quay.io
         id: push-to-quay
         uses: redhat-actions/push-to-registry@v2
