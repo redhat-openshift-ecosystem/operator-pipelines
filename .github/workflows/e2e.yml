@@ -142,6 +142,10 @@ jobs:
           bash init-custom-env.sh $OC_PROJECT stage vault-password
           popd
 
+      - name: Create secret allowing the fake partner account to submit the results in CI pipeline
+        run: |
+          oc create secret generic pyxis-api-secret --from-literal pyxis_api_key=${{ secrets.PYXIS_API_KEY }}
+
       - name: Run CI pipeline
         run: |
           tkn pipeline start operator-ci-pipeline \
@@ -150,6 +154,7 @@ jobs:
             --param git_branch=$SHORT_SHA \
             --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
             --param env=stage \
+            --param submit=true \
             --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=kubeconfig,secret=kubeconfig \
             --workspace name=ssh-dir,secret=github-ssh-credentials \
