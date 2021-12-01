@@ -31,7 +31,7 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: operator-pipelines-images-multi-arch
-          tags: latest ${{ github.sha }}
+          tags: ppc64le ${{ github.sha }}
           archs: ppc64le
           dockerfiles: |
             ./operator-pipeline-images/Dockerfile-ppc64le
