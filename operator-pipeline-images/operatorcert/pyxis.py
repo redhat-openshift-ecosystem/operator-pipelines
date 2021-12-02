@@ -38,7 +38,8 @@ def _get_session() -> requests.Session:
     env = os.environ.get("ENVIRONMENT")
 
     proxies = {}
-    if env != "prod":
+    # If it's external preprod
+    if env != "prod" and api_key:
         proxies = {
             "http": "http://squid.corp.redhat.com:3128",
             "https": "http://squid.corp.redhat.com:3128",
@@ -61,7 +62,7 @@ def _get_session() -> requests.Session:
         session.cert = (cert, key)
 
     if proxies:
-        LOGGER.debug("Pyxis session configured for Proxy (preprod environment)")
+        LOGGER.debug("Pyxis session configured for Proxy (external preprod environment)")
         session.proxies.update(proxies)
 
     return session
