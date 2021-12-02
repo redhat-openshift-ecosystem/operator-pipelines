@@ -1,0 +1,49 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: verify-project-distribution
+spec:
+  description: >-
+    This task verifies that project with correct distribution method is used.
+  params:
+    - name: pipeline_image
+      description: The common pipeline image.
+
+    - name: organization
+      description: |
+        Organization defined in the project config.yaml - either certified-operator or redhat-marketplace
+
+    - name: project_distribution
+      description: |
+        Certification project distribution method.
+  steps:
+    - name: verify-project-distribution
+      image: "$(params.pipeline_image)"
+      env:
+        - name: ORGANIZATION
+          value: $(params.organization)
+        - name: OPERATOR_DISTRIBUTION
+          value: $(params.project_distribution)
+      script: |
+        #! /usr/bin/env bash
+        set -xe -o pipefail
+
+        case "$ORGANIZATION" in
+          "certified-operators")
+            if [ "$OPERATOR_DISTRIBUTION" != "connect" ]; then
+              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
+              exit 1
+            fi
+            ;;
+          "redhat-marketplace")
+            if [ "$OPERATOR_DISTRIBUTION" != "marketplace" ]; then
+              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
+              exit 1
+            fi
+            ;;
+          *)
+            echo "Invalid $ORGANIZATION"
+            exit 1
+            ;;
+        esac

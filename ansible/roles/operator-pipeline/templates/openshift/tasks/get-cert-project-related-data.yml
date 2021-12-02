@@ -24,8 +24,6 @@ spec:
       description: Repository name assigned to certification project from Red Hat Connect
     - name: operator_distribution
       description: Distribution method of the operator - either connect or marketplace
-    - name: organization
-      description: Organization defined in the project config.yaml - either certified-operator or redhat-marketplace
     - name: org_id
       description: Unique identifier of the organization in Red Hat Connect
     - name: contacts
@@ -67,29 +65,6 @@ spec:
           echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.new_certification_status.path)
           echo -n "$CURRENT_CERTIFICATION_STATUS" | tee $(results.current_certification_status.path)
         fi
-
-        ORGANIZATION=$(cat config.yaml | yq -r '.organization')
-        echo -n "$ORGANIZATION" | tee $(results.organization.path)
-        OPERATOR_DISTRIBUTION=$(cat cert_project | jq '.operator_distribution'| tr -d '"')
-        case "$ORGANIZATION" in
-          "certified-operators")
-            if [ "$OPERATOR_DISTRIBUTION" != "connect" ]; then
-              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
-              exit 1
-            fi
-            ;;
-          "redhat-marketplace")
-            if [ "$OPERATOR_DISTRIBUTION" != "marketplace" ]; then
-              echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
-              exit 1
-            fi
-            ;;
-          *)
-            echo "Invalid $ORGANIZATION"
-            exit 1
-            ;;
-        esac
-
 
         get_from_cp () {
           # Function to get the necessary fields from the CertProject
