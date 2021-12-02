@@ -62,7 +62,9 @@ def _get_session() -> requests.Session:
         session.cert = (cert, key)
 
     if proxies:
-        LOGGER.debug("Pyxis session configured for Proxy (external preprod environment)")
+        LOGGER.debug(
+            "Pyxis session configured for Proxy (external preprod environment)"
+        )
         session.proxies.update(proxies)
 
     return session
