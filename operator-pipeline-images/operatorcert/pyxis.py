@@ -35,6 +35,14 @@ def _get_session() -> requests.Session:
     api_key = os.environ.get("PYXIS_API_KEY")
     cert = os.environ.get("PYXIS_CERT_PATH")
     key = os.environ.get("PYXIS_KEY_PATH")
+    env = os.environ.get("ENVIRONMENT")
+
+    proxies = {}
+    if env != "prod":
+        proxies = {
+            "http": "http://squid.corp.redhat.com:3128",
+            "https": "http://squid.corp.redhat.com:3128",
+        }
 
     # API key or cert + key need to be provided using env variable
     if not api_key and (not cert or not key):
@@ -44,12 +52,18 @@ def _get_session() -> requests.Session:
         )
 
     session = requests.Session()
+
     if api_key:
         LOGGER.debug("Pyxis session using API key is created")
         session.headers.update({"X-API-KEY": api_key})
     else:
         LOGGER.debug("Pyxis session using cert + key is created")
         session.cert = (cert, key)
+
+    if proxies:
+        LOGGER.debug("Pyxis session configured for Proxy (preprod environment)")
+        session.proxies.update(proxies)
+
     return session
 
 
