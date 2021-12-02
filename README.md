@@ -35,7 +35,6 @@ tkn pipeline start operator-ci-pipeline \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param env=prod \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
-  --workspace name=kubeconfig,secret=kubeconfig \
   --showlog
 ```
 If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:

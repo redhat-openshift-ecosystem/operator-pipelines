@@ -47,9 +47,14 @@ spec:
     - name: pyxis_api_key_secret_key
       description: The key within the Kubernetes secret that contains Pyxis API key. Valid only when external Pyxis is used.
       default: pyxis_api_key
+    - name: kubeconfig_secret_name
+      description: The name of the Kubernetes Secret that contains the kubeconfig.
+      default: kubeconfig
+    - name: kubeconfig_secret_key
+      description: The key within the Kubernetes Secret that contains the kubeconfig.
+      default: kubeconfig
   workspaces:
     - name: pipeline
-    - name: kubeconfig
     - name: ssh-dir
       optional: true
     - name: registry-credentials
@@ -181,9 +186,10 @@ spec:
           value: "$(params.pipeline_image)"
         - name: indices_ocp_versions
           value: "$(tasks.get-supported-versions.results.indices_ocp_versions)"
-      workspaces:
-        - name: kubeconfig
-          workspace: kubeconfig
+        - name: kubeconfig_secret_name
+          value: "$(params.kubeconfig_secret_name)"
+        - name: kubeconfig_secret_key
+          value: "$(params.kubeconfig_secret_key)"
 
     - name: certification-project-check
       runAfter:
@@ -349,12 +355,14 @@ spec:
           value: "$(params.preflight_service_account)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: kubeconfig_secret_name
+          value: "$(params.kubeconfig_secret_name)"
+        - name: kubeconfig_secret_key
+          value: "$(params.kubeconfig_secret_key)"
       workspaces:
         - name: output
           workspace: pipeline
           subPath: preflight
-        - name: kubeconfig
-          workspace: kubeconfig
         - name: credentials
           workspace: registry-credentials
 
