@@ -202,8 +202,8 @@ git push origin <insert-branch-name>
 
 #### Create an API Key
 
-Contact a Pyxis admin to assist with this request. It must correspond to the
-`org_id` for the certification project under test.
+[File a ticket](https://url.corp.redhat.com/86973d1) with Pyxis admins to assist with this request.
+It must correspond to the `org_id` for the certification project under test.
 
 ## Making Changes to the Pipelines
 
@@ -247,7 +247,7 @@ pip install ".[dev]"
 
 ### Tips
 
-- If adding a new script - don't forget to add the entrypoint to setup.py
+- If adding a new script in the pipeline image - don't forget to add the entrypoint to setup.py
 
 ### Run Unit Tests, Code Style Checkers, etc.
 

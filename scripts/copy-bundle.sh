@@ -7,7 +7,7 @@ usage() {
   [ -i BUNDLE_IMAGE a pull spec to a bundle image to copy ]
   [ -n PKG_NAME the new operator package name ]
   [ -v BUNDLE_VERSION the new operator version ]
-  [ -r OCP_RANGE the new supported OpenShift version range ]
+  [ -r OCP_RANGE the new supported OpenShift version range (see: https://url.corp.redhat.com/6e0ad44) ]
   [ -o OUTPUT_PATH a directory for the generated structure ]
   [ -h show this usage ]" 1>&2
 }

@@ -16,10 +16,10 @@ documentation instead.
 
 ### Operator CI Pipeline
 
-The Operator CI pipeline is a Tekton pipeline that can be triggered by a partner on on-premise
-infrastructure. The pipeline validates an Operator Bundle, builds it and install it to an OpenShift
-environment. After installation pre-flight tests are executed which validate that the Operator meets
-minimum requirements for Red Hat OpenShift Certification. If all preceding tasks pass the CI pipeline
+The Operator CI pipeline is a Tekton pipeline that can be triggered by a partner using on-premise
+infrastructure. The pipeline validates an Operator Bundle, builds it and installs it to an OpenShift
+environment. After installation, pre-flight tests are executed which validate that the Operator meets
+minimum requirements for Red Hat OpenShift Certification. If all preceding tasks pass, the CI pipeline
 optionally uploads results and submits a pull request to trigger the next stages of the operator
 certification workflow.
 
