@@ -13,7 +13,7 @@ from operatorcert.logger import setup_logger
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> Any:
+def setup_argparser() -> Any:  # pragma: no cover
     """
     Setup argument parser
 
@@ -194,7 +194,7 @@ def upload_results_and_artifacts(args: Any) -> Dict[str, Any]:
     return response
 
 
-def main():
+def main():  # pragma: no cover
     """
     Main func
     """
@@ -210,5 +210,5 @@ def main():
     LOGGER.info(f"Output stored in: {args.output}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

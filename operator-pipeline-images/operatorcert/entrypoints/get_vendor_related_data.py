@@ -7,7 +7,7 @@ from operatorcert import pyxis, store_results
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     """
     Setup argument parser
 
@@ -45,7 +45,7 @@ def get_vendor_related_data(pyxis_url: str, org_id: str) -> None:
     store_results({"vendor": vendor})
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     parser = setup_argparser()
     args = parser.parse_args()
 
@@ -57,5 +57,5 @@ def main() -> None:
     get_vendor_related_data(args.pyxis_url, args.org_id)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

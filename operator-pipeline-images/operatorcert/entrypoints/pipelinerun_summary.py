@@ -5,7 +5,7 @@ import sys
 from operatorcert.tekton import PipelineRun
 
 
-def parse_args() -> argparse.ArgumentParser:
+def parse_args() -> argparse.ArgumentParser:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Construct a markdown summary for a Tekton PipelineRun."
     )

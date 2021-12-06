@@ -7,7 +7,7 @@ from operatorcert import github, get_repo_and_org_from_github_url
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     """
     Setup argument parser
 
@@ -75,5 +75,5 @@ def main() -> None:
     set_github_status(args)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

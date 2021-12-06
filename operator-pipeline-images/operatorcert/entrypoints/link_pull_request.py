@@ -10,7 +10,7 @@ from operatorcert.logger import setup_logger
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> Any:
+def setup_argparser() -> Any:  # pragma: no cover
     """
     Setup argument parser
 
@@ -76,7 +76,7 @@ def link_pr_to_test_results(
     return pyxis.patch(test_result_url, data)
 
 
-def main():
+def main():  # pragma: no cover
     """
     Main func
     """
@@ -94,5 +94,5 @@ def main():
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

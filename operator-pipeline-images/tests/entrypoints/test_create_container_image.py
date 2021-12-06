@@ -8,6 +8,7 @@ from operatorcert.entrypoints.create_container_image import (
     create_container_image,
     prepare_parsed_data,
     remove_latest_from_previous_image,
+    main,
 )
 
 
@@ -95,6 +96,64 @@ def test_create_container_image(
     )
 
 
+@patch("operatorcert.entrypoints.create_container_image.pyxis.post")
+@patch("operatorcert.entrypoints.create_container_image.prepare_parsed_data")
+@patch("operatorcert.entrypoints.create_container_image.datetime")
+def test_create_container_image(
+    mock_datetime: MagicMock, mock_prepare_parsed: MagicMock, mock_post: MagicMock
+):
+    # Arrange
+    mock_post.return_value = "ok"
+    mock_prepare_parsed.return_value = {"architecture": "ok"}
+
+    # mock date
+    mock_datetime.now = MagicMock(return_value=datetime(1970, 10, 10, 10, 10, 10))
+
+    args = MagicMock()
+    args.pyxis_url = "https://catalog.redhat.com/api/containers/"
+    args.isv_pid = "some_isv_pid"
+    args.registry = "some_registry"
+    args.repository = "some_repo"
+    args.docker_image_digest = "some_digest"
+    args.bundle_version = "some_version"
+    args.is_latest = "true"
+
+    # Act
+    rsp = create_container_image(args, {}, [{"Size": 1}])
+
+    # Assert
+    assert rsp == "ok"
+    mock_post.assert_called_with(
+        "https://catalog.redhat.com/api/containers/v1/images",
+        {
+            "isv_pid": "some_isv_pid",
+            "repositories": [
+                {
+                    "published": True,
+                    "registry": "some_registry",
+                    "repository": "some_repo",
+                    "push_date": "1970-10-10T10:10:10.000000+00:00",
+                    "tags": [
+                        {
+                            "added_date": "1970-10-10T10:10:10.000000+00:00",
+                            "name": "some_version-1",
+                        },
+                        {
+                            "added_date": "1970-10-10T10:10:10.000000+00:00",
+                            "name": "latest",
+                        },
+                    ],
+                }
+            ],
+            "certified": True,
+            "docker_image_digest": "some_digest",
+            "architecture": "ok",
+            "parsed_data": {"architecture": "ok"},
+            "sum_layer_size_bytes": 1,
+        },
+    )
+
+
 def test_prepare_parsed_data():
     # Arrange
     file_content = {
@@ -145,3 +204,11 @@ def test_remove_latest_from_previous_image(mock_put: MagicMock, mock_get: MagicM
             "repositories": [{"tags": [{"name": "some_other"}]}],
         },
     )
+
+    # for no query results
+
+    mock_rsp = MagicMock()
+    mock_get.return_value = mock_rsp
+
+    mock_rsp.json.return_value = {"data": []}
+    remove_latest_from_previous_image(pyxis_url, isv_pid)

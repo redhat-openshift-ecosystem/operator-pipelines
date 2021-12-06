@@ -13,7 +13,7 @@ class AnnotationFileNotFound(Exception):
     """
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     """
     Setup argument parser
 
@@ -66,7 +66,7 @@ def generate_dockerfile_content(args: Any) -> str:
     return dockerfile_content
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     """
     Main func
     """
@@ -84,5 +84,5 @@ def main() -> None:
     store_results(results)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
