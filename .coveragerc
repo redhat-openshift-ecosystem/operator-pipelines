@@ -2,5 +2,3 @@
 source = operator-pipeline-images/operatorcert
 omit = operator-pipeline-images/operatorcert/webhook/*
 
-[report]
-omit = operator-pipeline-images/operatorcert/entrypoints/*

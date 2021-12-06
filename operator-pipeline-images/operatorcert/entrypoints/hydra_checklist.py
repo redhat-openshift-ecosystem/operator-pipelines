@@ -8,7 +8,7 @@ from operatorcert import hydra
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> Any:
+def setup_argparser() -> Any:  # pragma: no cover
     """
     Setup argument parser
 
@@ -84,5 +84,5 @@ def main() -> None:
     check_hydra_checklist_status(args.cert_project_id, args.hydra_url,args.developer)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

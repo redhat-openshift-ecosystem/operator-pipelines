@@ -5,7 +5,7 @@ from operatorcert import download_test_results
 from operatorcert.utils import store_results
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Get the test results and logs from the CI pipeline. Test results can be found in the file test_results.json"
     )
@@ -47,5 +47,5 @@ def main() -> None:
     store_results({"test_result_id": test_results_id})
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

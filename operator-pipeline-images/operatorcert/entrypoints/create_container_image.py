@@ -12,7 +12,7 @@ from operatorcert.logger import setup_logger
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> Any:
+def setup_argparser() -> Any:  # pragma: no cover
     """
     Setup argument parser
 
@@ -200,7 +200,7 @@ def remove_latest_from_previous_image(pyxis_url: str, isv_pid: str):
         pyxis.put(put_image_url, prev_image)
 
 
-def main():
+def main():  # pragma: no cover
     """
     Main func
     """
@@ -224,5 +224,5 @@ def main():
         create_container_image(args, skopeo_result, podman_result)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

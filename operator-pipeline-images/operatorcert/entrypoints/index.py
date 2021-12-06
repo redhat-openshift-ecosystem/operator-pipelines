@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     """
     Setup argument parser
 

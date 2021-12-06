@@ -13,7 +13,7 @@ from operatorcert import github
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> Any:
+def setup_argparser() -> Any:  # pragma: no cover
     """
     Setup argument parser
 
@@ -141,7 +141,7 @@ def get_pr_body(args: Any) -> str:
     return body
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     """
     Main function
     """
@@ -167,5 +167,5 @@ def main() -> None:
     LOGGER.info(f"Pull request URL: {url}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

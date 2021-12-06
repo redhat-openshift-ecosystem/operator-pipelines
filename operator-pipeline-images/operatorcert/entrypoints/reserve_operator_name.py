@@ -8,7 +8,7 @@ from operatorcert import pyxis
 LOGGER = logging.getLogger("operator-cert")
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     """
     Setup argument parser
 
@@ -79,7 +79,7 @@ def reserve_operator_name(args) -> None:
     )
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     parser = setup_argparser()
     args = parser.parse_args()
 
@@ -92,5 +92,5 @@ def main() -> None:
     reserve_operator_name(args)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

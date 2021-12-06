@@ -5,7 +5,7 @@ from operatorcert import parse_pr_title
 from operatorcert.utils import store_results
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Verify, if the pull request title complies to regex"
     )
@@ -34,5 +34,5 @@ def main() -> None:
     store_results(results)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

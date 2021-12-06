@@ -7,7 +7,7 @@ import sys
 from operatorcert import ocp_version_info
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Determines the OCP version under test."
     )
@@ -37,5 +37,5 @@ def main() -> None:
     logging.info(json.dumps(version_info))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

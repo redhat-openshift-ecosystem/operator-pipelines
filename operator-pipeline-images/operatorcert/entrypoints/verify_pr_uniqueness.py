@@ -4,7 +4,7 @@ import logging
 from operatorcert import verify_pr_uniqueness
 
 
-def setup_argparser() -> argparse.ArgumentParser:
+def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Verify if submission is unique in the repository"
     )
@@ -38,5 +38,5 @@ def main() -> None:
     verify_pr_uniqueness(repos, args.pr_url, args.bundle_name)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
