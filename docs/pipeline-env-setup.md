@@ -132,7 +132,7 @@ oc create secret generic github-bot-token --from-literal github_bot_token=< BOT 
 
 ### Prow-kubeconfig
 Hosted preflight tests are run on the separate cluster. To provision a cluster destined for the tests,
-the pipeline uses a Prowjob. Thus, to start the preflight test, there is needs to be a prow-specific
+the pipeline uses a Prowjob. Thus, to start the preflight test, there needs to be a prow-specific
 kubeconfig.
 - [ProwJob](https://github.com/kubernetes/test-infra/tree/master/prow)
 - [OperatorCI](https://docs.ci.openshift.org/docs/architecture/ci-operator/)

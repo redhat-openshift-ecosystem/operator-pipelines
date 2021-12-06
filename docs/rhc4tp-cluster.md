@@ -12,7 +12,7 @@ to prepare the RHC4TP clusters for use by the pipeline.
     oc create sa operator-pipelines -n default
     ```
 
-1. Create a Kubeconfig for the service account. It should be stored in the repository Ansible Vault.
+1. Create a kubeconfig for the service account. It should be stored in the repository Ansible Vault.
 
     ```bash
     clusterName=dev

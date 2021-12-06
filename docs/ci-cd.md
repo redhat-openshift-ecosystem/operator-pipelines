@@ -4,7 +4,7 @@ This project uses GitHub actions for CI (tests, linters) and CD (deployment).
 
 ## Secrets
 
-Both deployment and E2E tests needs GitHub secrets to work properly.
+Both deployment and E2E tests need GitHub secrets to work properly.
 The following secrets should be kept in the repository:
 
 | Secret name | Secret value | Purpose |
