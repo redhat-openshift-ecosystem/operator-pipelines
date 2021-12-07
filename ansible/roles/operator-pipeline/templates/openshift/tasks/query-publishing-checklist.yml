@@ -12,7 +12,7 @@ spec:
       description: URL to Red Hat Connect
     - name: ignore_publishing_checklist
       default: "false"
-      description: The flag to disable the task for developer
+      description: Ignore the results of the publishing checklist
   workspaces:
     - name: hydra-credentials
   steps:

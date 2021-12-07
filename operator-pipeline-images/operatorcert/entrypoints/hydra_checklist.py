@@ -28,14 +28,14 @@ def setup_argparser() -> Any:  # pragma: no cover
     parser.add_argument(
         "--ignore-publishing-checklist",
         default="false",
-        help="The flag to disable the task for developer",
+        help="Ignore the results of the publishing checklist",
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     return parser
 
 
 def check_hydra_checklist_status(
-    cert_project_id: str, hydra_url: str, ignore_publishing_checklist: str
+    cert_project_id: str, hydra_url: str, ignore_publishing_checklist: bool
 ) -> Any:
     # query hydra checklist API
     # Not using urljoin because for some reason it will eat up the prm at the end if
@@ -66,7 +66,8 @@ def check_hydra_checklist_status(
             f"Pre-certification checklist is not completed for cert project with id "
             f"{cert_project_id}."
         )
-        if ignore_publishing_checklist == "true":
+        LOGGER.error(f"ignore_publishing_checklist: {ignore_publishing_checklist}")
+        if ignore_publishing_checklist:
             return
         sys.exit(1)
 
@@ -84,7 +85,7 @@ def main() -> None:
     logging.basicConfig(level=log_level)
 
     check_hydra_checklist_status(
-        args.cert_project_id, args.hydra_url, args.ignore_publishing_checklist
+        args.cert_project_id, args.hydra_url, args.ignore_publishing_checklist == "true"
     )
 
 

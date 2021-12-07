@@ -42,7 +42,7 @@ def test_check_hydra_checklist_status_incomplete(
         ],
         "completed": False,
     }
-    hydra_checklist.check_hydra_checklist_status("foo", "fake-hydra.url", "false")
+    hydra_checklist.check_hydra_checklist_status("foo", "fake-hydra.url", False)
     mock_exit.assert_called_once_with(1)
 
     # If the developer flag is on
@@ -54,4 +54,4 @@ def test_check_hydra_checklist_status_incomplete(
         ],
         "completed": False,
     }
-    hydra_checklist.check_hydra_checklist_status("foo", "fake-hydra.url", "true")
+    hydra_checklist.check_hydra_checklist_status("foo", "fake-hydra.url", True)
