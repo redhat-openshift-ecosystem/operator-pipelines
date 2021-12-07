@@ -25,11 +25,18 @@ def setup_argparser() -> Any:  # pragma: no cover
         default="https://connect.redhat.com/hydra/prm",
         help="URL to the Hydra API",
     )
+    parser.add_argument(
+        "--ignore-publishing-checklist",
+        default="false",
+        help="Ignore the results of the publishing checklist",
+    )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     return parser
 
 
-def check_hydra_checklist_status(cert_project_id: str, hydra_url: str) -> Any:
+def check_hydra_checklist_status(
+    cert_project_id: str, hydra_url: str, ignore_publishing_checklist: bool
+) -> Any:
     # query hydra checklist API
     # Not using urljoin because for some reason it will eat up the prm at the end if
     # url doesn't end with a /
@@ -59,6 +66,8 @@ def check_hydra_checklist_status(cert_project_id: str, hydra_url: str) -> Any:
             f"Pre-certification checklist is not completed for cert project with id "
             f"{cert_project_id}."
         )
+        if ignore_publishing_checklist:
+            return
         sys.exit(1)
 
 
@@ -74,7 +83,9 @@ def main() -> None:
         log_level = "DEBUG"
     logging.basicConfig(level=log_level)
 
-    check_hydra_checklist_status(args.cert_project_id, args.hydra_url)
+    check_hydra_checklist_status(
+        args.cert_project_id, args.hydra_url, args.ignore_publishing_checklist == "true"
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover

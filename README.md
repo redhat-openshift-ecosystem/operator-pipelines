@@ -127,7 +127,13 @@ tkn pipeline start operator-hosted-pipeline \
   --showlog
 ```
 
-> :warning: Only quay-based registries are supported by the hosted pipeline.
+To ignore the results of the publishing checklist, pass the following argument:
+
+```bash
+  --param ignore_publishing_checklist=true
+```
+
+:warning: Only quay-based registries are supported by the hosted pipeline.
 There are some quay specific tasks for configuring the repositories where
 the bundle and index images are pushed.
 

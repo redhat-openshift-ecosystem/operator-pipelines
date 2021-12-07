@@ -41,6 +41,9 @@ spec:
       default: quay-oauth-token
     - name: quay_oauth_secret_key
       default: token
+    - name: ignore_publishing_checklist
+      default: "false"
+      description: Ignore the results of the publishing checklist
   workspaces:
     - name: repository
     - name: results
@@ -766,6 +769,8 @@ spec:
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: connect_url
           value: "$(tasks.set-env.results.connect_url)"
+        - name: ignore_publishing_checklist
+          value: "$(params.ignore_publishing_checklist)"
       workspaces:
         - name: hydra-credentials
           workspace: hydra-credentials

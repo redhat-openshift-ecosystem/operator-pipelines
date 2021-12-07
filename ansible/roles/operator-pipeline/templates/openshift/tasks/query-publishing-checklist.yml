@@ -10,6 +10,9 @@ spec:
       description: ID of the bundle Certification Project
     - name: connect_url
       description: URL to Red Hat Connect
+    - name: ignore_publishing_checklist
+      default: "false"
+      description: Ignore the results of the publishing checklist
   workspaces:
     - name: hydra-credentials
   steps:
@@ -32,4 +35,5 @@ spec:
 
         hydra-checklist \
           --cert-project-id "$(params.cert_project_id)" \
-          --hydra-url $HYDRA_URL
+          --hydra-url $HYDRA_URL \
+          --ignore-publishing-checklist "$(params.ignore_publishing_checklist)"
