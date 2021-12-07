@@ -139,9 +139,6 @@
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-secret"
-                    - name: pyxis-ssl-credentials
-                      secret:
-                        secretName: "operator-pipeline-api-certs"
                     - name: prow-kubeconfig
                       secret:
                         secretName: "prow-kubeconfig"

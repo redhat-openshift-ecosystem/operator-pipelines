@@ -12,30 +12,36 @@ spec:
       description: The operator name to be reserved.
     - name: source
       description: The source catalog the operator belongs to, usually "redhat-marketplace" or "certified-operators"
-    - name: pyxis_cert_path
-      default: ""
-      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
-    - name: pyxis_key_path
-      default: ""
-      description: Path to Pyxis key. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_secret_name
+      description: Kubernetes secret name that contains the Pyxis SSL files.
+    - name: pyxis_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert.
+    - name: pyxis_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key.
     - name: pyxis_url
       description: Pyxis instance to reserve the operator name on.
       default: https://pyxis.engineering.redhat.com
-  workspaces:
-    - name: pyxis-ssl-credentials
-      optional: false
+  volumes:
+    - name: pyxis-ssl-volume
+      secret:
+        secretName: "$(params.pyxis_ssl_secret_name)"
+        optional: false
   steps:
     - name: reserve-operator-name
       image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
-          value: $(params.pyxis_cert_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
         - name: PYXIS_KEY_PATH
-          value: $(params.pyxis_key_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
         - name: ASSOCIATION
           value: $(params.association)
         - name: SOURCE
           value: $(params.source)
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
       script: |
         #! /usr/bin/env bash
         set -xe

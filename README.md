@@ -115,7 +115,6 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
-  --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=prow-kubeconfig,secret=prow-kubeconfig \
   --workspace name=preflight-decryption-key,secret=preflight-decryption-key \
   --workspace name=gpg-key,secret=isv-gpg-key \
@@ -152,7 +151,6 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
-  --workspace name=pyxis-ssl-credentials,secret=operator-pipeline-api-certs \
   --workspace name=kerberos-keytab,secret=kerberos-keytab \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --workspace name=ocp-registry-kubeconfig,secret=ocp-registry-kubeconfig \

@@ -12,11 +12,15 @@ spec:
     - name: pyxis_api_key_secret_key
       default: pyxis_api_key
       description: The key within the Kubernetes secret that contains Pyxis API key. Valid only when external Pyxis is used.
-    - name: pyxis_cert_path
-      default: ""
-      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
-    - name: pyxis_key_path
-      default: ""
+    - name: pyxis_ssl_secret_name
+      default: default-api-certs
+      description: Kubernetes secret name that contains the Pyxis SSL files. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_cert_secret_key
+      default: default-ssl-cert
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_key_secret_key
+      default: default-ssl-key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key. Valid only when internal Pyxis is used.
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers/
       description: Red Hat's container API URL
@@ -32,9 +36,11 @@ spec:
       description: Tekton pipeline run name where logs will be gathered from
   results:
     - name: pipeline_log_url
-  workspaces:
-    - name: pyxis-ssl-credentials
-      optional: true
+  volumes:
+    - name: pyxis-ssl-volume
+      secret:
+        secretName: "$(params.pyxis_ssl_secret_name)"
+        optional: true
   steps:
     - name: get-pipeline-logs
       image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
@@ -50,15 +56,19 @@ spec:
       image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
-          value: $(params.pyxis_cert_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
         - name: PYXIS_KEY_PATH
-          value: $(params.pyxis_key_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
         - name: PYXIS_API_KEY
           valueFrom:
             secretKeyRef:
               name: $(params.pyxis_api_key_secret_name)
               key: $(params.pyxis_api_key_secret_key)
               optional: true
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
       script: |
         #! /usr/bin/env bash
         echo "Uploading pipeline logs"

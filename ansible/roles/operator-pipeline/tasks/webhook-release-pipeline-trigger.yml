@@ -107,9 +107,6 @@
                           resources:
                             requests:
                               storage: 100Mi
-                    - name: pyxis-ssl-credentials
-                      secret:
-                        secretName: "operator-pipeline-api-certs"
                     - name: kerberos-keytab
                       secret:
                         secretName: "kerberos-keytab"

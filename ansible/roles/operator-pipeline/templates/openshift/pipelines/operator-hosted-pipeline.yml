@@ -48,11 +48,20 @@ spec:
       description: The key within the Kubernetes secret that contains the Hydra username.
       default: username
     - name: hydra_secret_password_key
-      description: The key within the Kubernetes secret that contains the Hydra password
+      description: The key within the Kubernetes secret that contains the Hydra password.
       default: password
     - name: ignore_publishing_checklist
       default: "false"
       description: Ignore the results of the publishing checklist
+    - name: pyxis_ssl_secret_name
+      description: Kubernetes secret name that contains the Pyxis SSL files.
+      default: operator-pipeline-api-certs
+    - name: pyxis_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert.
+      default: operator-pipeline.pem
+    - name: pyxis_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key.
+      default: operator-pipeline.key
   workspaces:
     - name: repository
     - name: results
@@ -62,7 +71,6 @@ spec:
     - name: registry-credentials-all
       description: Storage space for the result of merging certification project and
         pipeline service account registry tokens.
-    - name: pyxis-ssl-credentials
     - name: prow-kubeconfig
     - name: preflight-decryption-key
     - name: gpg-key
@@ -219,13 +227,13 @@ spec:
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_cert_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
-        - name: pyxis_key_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
       workspaces:
-        - name: pyxis-ssl-credentials
-          workspace: pyxis-ssl-credentials
         - name: source
           workspace: repository
           subPath: src
@@ -312,15 +320,14 @@ spec:
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_cert_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
-        - name: pyxis_key_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
         - name: current_certification_status
           value: "$(tasks.get-cert-project-related-data.results.current_certification_status)"
-      workspaces:
-        - name: pyxis-ssl-credentials
-          workspace: pyxis-ssl-credentials
 
     # reserve operator name
     - name: reserve-operator-name
@@ -329,9 +336,6 @@ spec:
         - annotations-validation
       taskRef:
         name: reserve-operator-name
-      workspaces:
-        - name: pyxis-ssl-credentials
-          workspace: pyxis-ssl-credentials
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -341,10 +345,12 @@ spec:
           value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_cert_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
-        - name: pyxis_key_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
         - name: source
           value: "$(tasks.get-organization.results.organization)"
 
@@ -601,16 +607,16 @@ spec:
           value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: operator_name
           value: "$(tasks.validate-pr-title.results.operator_name)"
-        - name: pyxis_cert_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
-        - name: pyxis_key_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
       workspaces:
         - name: results
           workspace: results
           subPath: results
-        - name: pyxis-ssl-credentials
-          workspace: pyxis-ssl-credentials
 
     # TODO: this step runs always now, despite if the results exists or not
     # https://issues.redhat.com/browse/ISV-1223
@@ -672,16 +678,16 @@ spec:
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: connect_url
           value: "$(tasks.set-env.results.connect_url)"
-        - name: pyxis_cert_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
-        - name: pyxis_key_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
       workspaces:
         - name: source
           workspace: repository
           subPath: preflight-trigger
-        - name: pyxis-ssl-credentials
-          workspace: pyxis-ssl-credentials
 
     - name: get-ci-results
       runAfter:
@@ -707,16 +713,16 @@ spec:
           value: "$(tasks.validate-pr-title.results.bundle_version)"
         - name: operator_name
           value: "$(tasks.validate-pr-title.results.operator_name)"
-        - name: pyxis_cert_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
-        - name: pyxis_key_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
       workspaces:
         - name: results
           workspace: results
           subPath: results
-        - name: pyxis-ssl-credentials
-          workspace: pyxis-ssl-credentials
 
     # Verify the CI results
     - name: verify-ci-results
@@ -751,17 +757,16 @@ spec:
           value: "$(tasks.get-ci-results.results.test_result_id)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_cert_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
-        - name: pyxis_key_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
         - name: pull_request_url
           value: "$(params.git_pr_url)"
         - name: pull_request_status
           value: "open"
-      workspaces:
-        - name: pyxis-ssl-credentials
-          workspace: pyxis-ssl-credentials
 
     # Query Hydra API for status of the pre-certification checklist
     - name: query-publishing-checklist
@@ -816,9 +821,6 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
-      workspaces:
-        - name: pyxis-ssl-credentials
-          workspace: pyxis-ssl-credentials
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -834,10 +836,12 @@ spec:
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
           value: "$(context.pipelineRun.name)"
-        - name: pyxis_cert_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
-        - name: pyxis_key_path
-          value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
 
     # In the event of a failure, comment with the support link on the github PR
     - name: github-add-support-comment
