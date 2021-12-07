@@ -10,7 +10,7 @@ spec:
       description: ID of the bundle Certification Project
     - name: connect_url
       description: URL to Red Hat Connect
-    - name: developer
+    - name: ignore_publishing_checklist
       default: "false"
       description: The flag to disable the task for developer 
   workspaces:
@@ -36,4 +36,4 @@ spec:
         hydra-checklist \
           --cert-project-id "$(params.cert_project_id)" \
           --hydra-url $HYDRA_URL \
-          --developer "$(params.developer)"
+          --ignore-publishing-checklist "$(params.ignore_publishing_checklist)"

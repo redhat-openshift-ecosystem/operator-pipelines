@@ -41,7 +41,7 @@ spec:
       default: quay-oauth-token
     - name: quay_oauth_secret_key
       default: token
-    - name: developer
+    - name: ignore_publishing_checklist
       default: "false"
       description: The flag to disable the task for developer
   workspaces:
@@ -769,8 +769,8 @@ spec:
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: connect_url
           value: "$(tasks.set-env.results.connect_url)"
-        - name: developer
-          value: "$(params.developer)"
+        - name: ignore_publishing_checklist
+          value: "$(params.ignore_publishing_checklist)"
       workspaces:
         - name: hydra-credentials
           workspace: hydra-credentials
