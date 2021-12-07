@@ -66,7 +66,6 @@ def check_hydra_checklist_status(
             f"Pre-certification checklist is not completed for cert project with id "
             f"{cert_project_id}."
         )
-        LOGGER.error(f"ignore_publishing_checklist: {ignore_publishing_checklist}")
         if ignore_publishing_checklist:
             return
         sys.exit(1)
