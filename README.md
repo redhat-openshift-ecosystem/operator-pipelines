@@ -1,46 +1,41 @@
-# Operator pipelines
+# Red Hat ISV Operator Certification Pipelines
 
-## Prerequisites
+Red Hat OpenShift pipelines for certifying ISV Operator Bundles.
 
-**To run any of the pipelines for the first time, multiple cluster resources has to be created.**
+## Getting Started
 
-See [first-time-run.md](docs/first-time-run.md)
+Refer to the [developer guide](docs/developer-guide.md).
 
-**To publish the image to OCP registry, cluster with registry should be prepared at first.**
+> **Note**: This documentation is intended for pipeline **developers/maintainers** only.
+>
+> Partners/users should refer to
+[this](https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/operator-cert-workflow.md)
+documentation instead.
 
-See one-time actions necessary to prepare new cluster: [rhc4tp-cluster.md](docs/rhc4tp-cluster.md)
+## Usage
 
-## Local setup
-To create local cluster for sake of testing the pipelines, see [local-dev.md](docs/local-dev.md)
+### Operator CI Pipeline
 
+The Operator CI pipeline is a Tekton pipeline that can be triggered by a partner using on-premise
+infrastructure. The pipeline validates an Operator Bundle, builds it and installs it to an OpenShift
+environment. After installation, pre-flight tests are executed which validate that the Operator meets
+minimum requirements for Red Hat OpenShift Certification. If all preceding tasks pass, the CI pipeline
+optionally uploads results and submits a pull request to trigger the next stages of the operator
+certification workflow.
 
-## Operator CI pipeline
+> **Note:** Execution of the CI pipeline is NOT required in the overall certification workflow.
 
-Operator CI pipeline is a pipeline that can be triggered by partner on on-premise
-infrastructure. The pipeline does basic check of new operator, build it and install
-it in ocp environment. After an operator is installed a pre-flight tests are executed
-that validates that operator meets minimum requirements for Red Hat OpenShift Certification.
-If tests pass a CI pipeline submits a PR for full operator certification workflow.
-
-### Installation
-```bash
-oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-ci-pipeline.yml
-oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
-```
-
-### Execution
 If using the default internal registry, the CI pipeline can be triggered using the tkn CLI like so:
 
 ```bash
 tkn pipeline start operator-ci-pipeline \
   --use-param-defaults \
-  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+  --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param env=prod \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=kubeconfig,secret=kubeconfig \
-  --workspace name=ssh-dir,secret=github-ssh-credentials \
   --workspace name=pyxis-api-key,secret=pyxis-api-secret \
   --showlog
 ```
@@ -49,7 +44,7 @@ If using an external registry, the CI pipeline can be triggered using the tkn CL
 ```bash
 tkn pipeline start operator-ci-pipeline \
   --use-param-defaults \
-  --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
+  --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_branch=main \
   --param bundle_path=operators/kogito-operator/1.6.0-ok \
   --param env=prod \
@@ -62,8 +57,8 @@ tkn pipeline start operator-ci-pipeline \
   --showlog
 ```
 
-To enable opening the PR and uploading the pipeline logs (visible to logs owner in Red Hat Ecosystem Catalog),
-pass the following argument:
+To enable opening the PR and uploading the pipeline logs (visible to the certification project
+owner in Red Hat Connect), pass the following argument:
 
 ```bash
     --param submit=true
@@ -80,28 +75,29 @@ To enable digest pinning, pass the following arguments:
 
 ```bash
   --param pin_digests=true \
+  --param git_repo_url=<github_repo_ssh_url> \
   --param git_username=<github_user_name> \
   --param git_email=<github_email> \
   --workspace name=ssh-dir,secret=github-ssh-credentials
 ```
 
-If any of bundle's related images is stored in private registry user needs to
-provide registry tokens for all used private registries. See more details about
-how to provide registry token in [first-time-run.md](docs/first-time-run.md).
+> **Note:** The `git_repo_url` param needs an SSH URL to commit the pinned digests.
 
-## Operator Hosted pipeline
-The Hosted Operator Certification Pipeline is used as a validation of the operator
-bundles. It’s an additional (to CI pipeline) layer of validation that has to run within
-the Red Hat infrastructure. It contains multiple steps from the CI pipeline, making the CI pipeline optional.
-It is triggered by creating the submission pull request, and successfully completes with merging it.
+If any of bundle's related images are stored in a private registry the user needs to provide tokens
+to pull from those registries. See more details about how to provide registry tokens in the
+[pipeline environment setup documentation](docs/pipeline-env-setup.md#registry-credentials).
 
-### Installation
-```bash
-oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-hosted-pipeline.yml
-oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
-```
+### Operator Hosted Pipeline
 
-### Execution
+The hosted pipeline is used to certify the Operator bundles.
+It’s an additional (to CI pipeline) layer of validation that has to run within
+the Red Hat infrastructure. It is intended to be triggered upon the creation of a
+bundle pull request and successfully completes with merging it (configurable).
+
+> **Note:** Execution of the hosted pipeline is ALWAYS required in the overall certification workflow.
+Prior execution of the CI pipeline may influence its behavior if results were submitted. Preflight
+testing may be skipped in such a case.
+
 The hosted pipeline can be triggered using the tkn CLI like so:
 
 ```bash
@@ -141,24 +137,14 @@ To ignore the results of the publishing checklist, pass the following argument:
 There are some quay specific tasks for configuring the repositories where
 the bundle and index images are pushed.
 
+### Operator Release Pipeline
 
-## Operator Release pipeline
-The Release pipeline runs after the layers of validation (CI (optionally) and Hosted pipeline).
-It is used to certify and publish submitted bundle version.
-It is triggered by a merged pull request and successfully completes
-once the bundle has been distributed to all relevant Operator catalogs and appears in the Red Hat Ecosystem Catalog.
+The release pipeline is responsible for releasing a bundle image which has passed certification.
+It's intended to be triggered by the merge of a bundle pull request by the hosted pipeline.
+It successfully completes once the bundle has been distributed to all relevant Operator catalogs
+and appears in the Red Hat Ecosystem Catalog.
 
-
-
-### Installation
-
-```bash
-oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-release-pipeline.yml
-oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
-```
-
-### Execution
-The release pipeline can be triggered using the tkn CLI like so:
+> **Note:** Execution of the release pipeline is ALWAYS required in the overall certification workflow.
 
 ```bash
 tkn pipeline start operator-release-pipeline \
@@ -178,21 +164,11 @@ tkn pipeline start operator-release-pipeline \
   --showlog
 ```
 
-# operator-pipelines-images
-Container images containing the set of tools for Partner Operator Bundle [certification pipelines](https://github.com/redhat-openshift-ecosystem/operator-pipelines).
+### Using a Custom Pipeline Image
 
-## Development
-
-To install the python package in a development environment, run:
+All the pipelines share a common pipeline image for many of the steps.
+This image can be overridden by passing the following to any `tkn pipeline start` command.
 
 ```bash
-pip install ".[dev]"
-```
-
-To test the scripts with the pipelines, see [local-dev.md](docs/local-dev.md).
-
-To run unit tests and code style checkers:
-
-```bash
-tox
+--param pipeline_image=<image-pull-spec>
 ```

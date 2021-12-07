@@ -1,21 +1,4 @@
-## Quick test environment set-up for developers
-
-To quickly setup testing environment to run the pipelines, go to directory `ansible` and use command:
-```bash
-bash init-custom-env.sh $PROJECT $ENVIRONMENT $PASSWD_FILE
-```
-Where:
-- PROJECT is the name of your project in Openshift cluster (eg. `john-playground`),
-where pipeline resources should be installed.
-- ENVIRONMENT indicates, which set of credentials should be used in your testing 
-project, and against which environment pipelines will run.
-Can be one of `dev`, `qa`, `stage` or `prod`.
-- PASSWD_FILE is a name of the file with ansible vault password.
-
-Warning- if some resources were already existing in the $PROJECT, they might conflict during the ansible 
-deployment. Then, they should be removed first.
-
-## Manually creating cluster resources
+# Pipeline Environment Setup
 
 [Common for all the pipelines](#common-for-all-the-pipelines)
 
@@ -23,10 +6,11 @@ deployment. Then, they should be removed first.
 
 [Only Hosted Pipeline](#only-hosted-pipeline)
 
+[Only Release Pipeline](#only-release-pipeline)
 
-### Common for all the pipelines:
+## Common for all the pipelines:
 
-#### Registry Credentials
+### Registry Credentials
 The pipelines can optionally be configured to push and pull images to/from a remote
 private registry. The user must create an auth secret containing the docker config.
 This secret can then be passed as a workspace named `registry-credentials` when invoking
@@ -38,7 +22,7 @@ oc create secret generic registry-dockerconfig-secret \
   --from-file .dockerconfigjson=config.json
 ```
 
-#### Red Hat Catalog Imagestreams
+### Red Hat Catalog Imagestreams
 
 The pipelines must pull the parent index images through the internal OpenShift
 registry to take advantage of the built-in credentials for Red Hat's terms-based
@@ -56,7 +40,7 @@ oc import-image certified-operator-index \
   --confirm \
   --all
 
-# Must be run once before certifying against the Red Hat Martketplace catalog.
+# Must be run once before certifying against the Red Hat Marketplace catalog.
 oc import-image redhat-marketplace-index \
   --from=registry.redhat.io/redhat/redhat-marketplace-index \
   --reference-policy local \
@@ -65,9 +49,9 @@ oc import-image redhat-marketplace-index \
   --all
 ```
 
-### Only CI pipeline:
+## Only CI pipeline:
 
-#### Git SSH Secret
+### Git SSH Secret
 The pipelines requires git SSH credentials with 
 write access to the repository if automatic digest pinning
 is enabled using the pin_digests param. This is disabled
@@ -89,16 +73,16 @@ EOF
 oc create -f ssh-secret.yml
 ```
 
-#### Container API access
+### Container API access
 CI pipelines automatically upload a test results, logs and artifacts using Red Hat
 container API. This requires a partner's API key and the key needs to be created
-as a secret in openshift cluster before running a Tekton pipeline.
+as a secret in OpenShift cluster before running a Tekton pipeline.
 
 ```bash
 oc create secret generic pyxis-api-secret --from-literal pyxis_api_key=< API KEY >
 ```
 
-#### Kubeconfig
+### Kubeconfig
 
 The CI pipeline requires a kubeconfig with admin credentials. This can be created
 by logging into said cluster as an admin user.
@@ -108,7 +92,7 @@ KUBECONFIG=kubeconfig oc login -u <username> -p <password>
 oc create secret generic kubeconfig --from-file=kubeconfig=kubeconfig
 ```
 
-#### GitHub API token
+### GitHub API token
 To automatically open the PR with submission, pipeline must authenticate to GitHub. 
 Secret containing api token should be created.
 
@@ -116,8 +100,9 @@ Secret containing api token should be created.
 oc create secret generic github-api-token --from-literal GITHUB_TOKEN=< GITHUB TOKEN >
 ```
 
-### Only Hosted pipeline:
-#### Container API access
+## Only Hosted pipeline:
+
+### Container API access
 The hosted pipeline communicates with internal Container API that requires cert + key.
 The corresponding secret needs to be created before running the pipeline.
 
@@ -127,7 +112,7 @@ oc create secret generic operator-pipeline-api-certs \
   --from-file operator-pipeline.key
 ```
 
-#### Hydra credentials
+### Hydra credentials
 To verify publishing checklist, Hosted pipeline uses Hydra API. To authenticate with
 Hydra over basic auth, secret containing service account credentials should be created.
 
@@ -137,7 +122,7 @@ oc create secret generic hydra-credentials \
   --from-literal password=<password>
 ```
 
-#### GitHub Bot token
+### GitHub Bot token
 To automatically merge the PR, Hosted pipeline uses GitHub API. To authenticate
 when using this method, secret containing bot token should be created.
 
@@ -145,10 +130,10 @@ when using this method, secret containing bot token should be created.
 oc create secret generic github-bot-token --from-literal github_bot_token=< BOT TOKEN >
 ```
 
-#### Prow-kubeconfig
-Preflight tests are running on the separete cluster. To provision a cluster destined for the tests,
-Pipelines are using Prowjob. Thus, to start the preflight test, there is needede a Kubeconfig to cluster
-with enabled
+### Prow-kubeconfig
+Hosted preflight tests are run on the separate cluster. To provision a cluster destined for the tests,
+the pipeline uses a Prowjob. Thus, to start the preflight test, there needs to be a prow-specific
+kubeconfig.
 - [ProwJob](https://github.com/kubernetes/test-infra/tree/master/prow)
 - [OperatorCI](https://docs.ci.openshift.org/docs/architecture/ci-operator/)
 ```bash
@@ -156,7 +141,7 @@ oc create secret generic prow-kubeconfig \
   --from-literal kubeconfig=<kubeconfig>
 ```
 
-#### Preflight decryption key
+### Preflight decryption key
 Results of the preflight tests are protected by encryption. In order to retrieve them
 from the preflight job, gpg decryption key should be supplied.
 ```bash
@@ -165,31 +150,32 @@ oc create secret generic preflight-decryption-key \
   --from-literal public=<public gpg key>
 ```
 
-#### OCP-registry-kubeconfig
+### OCP-registry-kubeconfig
 OCP clusters contains the public registries for Operator Bundle Images.
 To publish the image to this registry, Pipeline connects to OCP cluster via
-Kubeconfig.
-To create the secret which contains the OCP cluster Kubeconfig: 
+kubeconfig.
+To create the secret which contains the OCP cluster kubeconfig:
 ```bash
 oc create secret generic ocp-registry-kubeconfig \
   --from-literal kubeconfig=<kubeconfig>
 ```
 
-#### Quay OAuth Token
+### Quay OAuth Token
 A Quay OAuth token is required to set repo visibility to public.
 ```bash
 oc create secret generic quay-oauth-token --from-literal token=<token>
 ```
 
-### Only Release pipeline:
-#### Kerberos credentials
+## Only Release pipeline:
+
+### Kerberos credentials
 For submitting the IIB build, you need kerberos keytab in a secret:
 ```bash
 oc create secret generic kerberos-keytab \
   --from-file krb5.keytab
 ```
 
-#### Quay credentials
+### Quay credentials
 Release pipeline uses Quay credentials to authenticate a push to an index image
 during the IIB build.
 ```bash
@@ -198,17 +184,19 @@ oc create secret generic iib-quay-credentials \
   --from-literal password=<QUAY_PASSWORD>
 ```
 
-#### OCP-registry-kubeconfig
+### OCP-registry-kubeconfig
 OCP clusters contains the public registries for Operator Bundle Images.
 To publish the image to this registry, Pipeline connects to OCP cluster via
-Kubeconfig.
-To create the secret which contains the OCP cluster Kubeconfig: 
+kubeconfig.
+To create the secret which contains the OCP cluster kubeconfig:
 ```bash
 oc create secret generic ocp-registry-kubeconfig \
   --from-literal kubeconfig=<kubeconfig>
 ```
 
-#### IBM webhook token
+Additional setup instructions for this cluster are documented [here](rhc4tp-cluster.md).
+
+### IBM webhook token
 The Release pipeline needs to call an IBM webhook to trigger marketplace replication. To
 authenticate with the webhook, a token is needed.
 
