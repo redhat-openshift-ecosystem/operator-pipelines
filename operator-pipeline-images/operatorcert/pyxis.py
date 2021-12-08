@@ -37,6 +37,8 @@ def _get_session() -> requests.Session:
     key = os.environ.get("PYXIS_KEY_PATH")
     env = os.environ.get("ENVIRONMENT")
 
+    # Document about the proxy configuration:
+    # https://source.redhat.com/groups/public/customer-platform-devops/digital_experience_operations_dxp_ops_wiki/using_squid_proxy_to_access_akamai_preprod_domains_over_vpn
     proxies = {}
     # If it's external preprod
     if env != "prod" and api_key:
