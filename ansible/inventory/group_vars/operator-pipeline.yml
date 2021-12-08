@@ -28,8 +28,8 @@ operator_pipeline_hydra_password_local_path: ../../vaults/common/nonprod-hydra-p
 operator_pipeline_preflight_decryption_key_private_local_path: ../../vaults/common/preflight-decryption-key-priv.gpg
 operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/common/preflight-decryption-key-pub.gpg
 
-operator_pipeline_exd_guild_isv_key_path: ../../vaults/common/exd-guild-isv.key
-operator_pipeline_exd_guild_isv_passphrase_path: ../../vaults/common/exd-guild-isv.passphrase
+operator_pipeline_exd_guild_isv_key_path: ../../vaults/{{ env }}/exd-guild-isv.key
+operator_pipeline_exd_guild_isv_passphrase_path: ../../vaults/{{ env }}/exd-guild-isv.passphrase
 
 github_ssh_credentials_path: ../../vaults/common/github-bot-ssh
 e2e_kubeconfig_path: ../../vaults/common/kubeconfig-e2e
