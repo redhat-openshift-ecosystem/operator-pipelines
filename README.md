@@ -115,7 +115,6 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
-  --workspace name=gpg-key,secret=isv-gpg-key \
   --showlog
 ```
 

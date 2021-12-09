@@ -77,6 +77,16 @@ spec:
     - name: preflight_decryption_public_key_secret_key
       description: The key within the Kubernetes Secret that contains the gpg public key.
       default: public
+    - name: gpg_secret_name
+      description: >-
+      The name of the Kubernetes Secret that contains the GPG private key that is used for decryption of user's tokens.
+      default: isv-gpg-key
+    - name: gpg_key_secret_key
+      descripton: The key within the Kubernetes Secret that contains the gpg key.
+      default: exd-guild-isv.key
+    - name: gpg_passphrase_secret_key
+      descripton: The key within the Kubernetes Secret that contains the gpg passphrase.
+      default: exd-guild-isv.passphrase
   workspaces:
     - name: repository
     - name: results
@@ -86,8 +96,6 @@ spec:
     - name: registry-credentials-all
       description: Storage space for the result of merging certification project and
         pipeline service account registry tokens.
-    - name: gpg-key
-      description: GPG private key that decrypts secrets partner's data
   tasks:
     # Set a pending GitHub status check first to provide the user with immediate feedback.
     - name: set-github-status-pending
@@ -281,13 +289,17 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
+        - name: gpg_secret_name
+          value: "$(params.gpg_secret_name)"
+        - name: gpg_key_secret_key
+          value: "$(params.gpg_key_secret_key)"
+        - name: gpg_passphrase_secret_key
+          value: "$(params.gpg_passphrase_secret_key)"
       workspaces:
         - name: registry-credentials-all
           workspace: registry-credentials-all
         - name: registry-credentials
           workspace: registry-credentials
-        - name: gpg-key
-          workspace: gpg-key
         - name: project-data
           workspace: results
 
