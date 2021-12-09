@@ -61,12 +61,19 @@ spec:
       The key within the Kubernetes Secret that contains the kubeconfig for service
       account allowing connection with cluster that contains the ocp registries.
       default: kubeconfig
+    - name: kerberos_keytab_secret_name
+      description: >-
+      The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+      default: kerberos-keytab
+    - name: kerberos_keytab_secret_key
+      description: >-
+      The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+      default: krb5.keytab
   workspaces:
     - name: repository
     - name: results
     - name: ssh-dir
       optional: true
-    - name: kerberos-keytab
     - name: registry-credentials
     - name: image-data
 
@@ -399,9 +406,10 @@ spec:
           value: "$(tasks.set-env.results.iib_url)"
         - name: environment
           value: "$(params.env)"
-      workspaces:
-        - name: kerberos-keytab
-          workspace: kerberos-keytab
+        - name: kerberos_keytab_secret_name
+          value: "$(params.kerberos_keytab_secret_name)"
+        - name: kerberos_keytab_secret_key
+          value: "$(params.kerberos_keytab_secret_key)"
 
     # Publish Vendor, Repository
     - name: publish-resources

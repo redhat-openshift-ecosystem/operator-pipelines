@@ -148,7 +148,6 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
-  --workspace name=kerberos-keytab,secret=kerberos-keytab \
   --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
   --showlog
 ```

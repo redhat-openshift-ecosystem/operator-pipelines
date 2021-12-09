@@ -13,9 +13,12 @@ spec:
     - name: iib_url
       description: IIB API url
       default: https://iib.engineering.redhat.com
-    - name: kerberos_keytab
-      description: Kerberos keytab file name
-      default: krb5.keytab
+    - name: kerberos_keytab_secret_name
+      description: >-
+      The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+    - name: kerberos_keytab_secret_key
+      description: >-
+      The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
     - name: operator_distribution_method
       description: Operator distribution method. Can be one of [connect, marketplace]
     - name: environment
@@ -24,8 +27,10 @@ spec:
   results:
     - name: status
       description: Indicates a status of publishing a bundle to an index
-  workspaces:
-    - name: kerberos-keytab
+  volumes:
+    - name: kerberos-volume
+      secret:
+        secretName: "$(params.kerberos_keytab_secret_name)"
   steps:
     - name: publish-bundle
       image: "$(params.pipeline_image)"
@@ -41,9 +46,13 @@ spec:
               name: iib-quay-credentials
               key: password
         - name: KRB_KEYTAB_FILE
-          value: "$(workspaces.kerberos-keytab.path)/$(params.kerberos_keytab)"
+          value: "/etc/kerberos/$(params.kerberos_keytab_secret_key)"
         - name: DIST_METHOD
           value: "$(params.operator_distribution_method)"
+      volumeMounts:
+        - name: kerberos-volume
+          readOnly: true
+          mountPath: "/etc/kerberos"
       script: |
         #! /usr/bin/env bash
         set -xe

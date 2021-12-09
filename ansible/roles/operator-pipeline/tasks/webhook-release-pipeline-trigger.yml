@@ -107,9 +107,6 @@
                           resources:
                             requests:
                               storage: 100Mi
-                    - name: kerberos-keytab
-                      secret:
-                        secretName: "kerberos-keytab"
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-secret"
