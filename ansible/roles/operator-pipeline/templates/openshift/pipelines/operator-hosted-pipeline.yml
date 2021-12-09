@@ -62,6 +62,12 @@ spec:
     - name: pyxis_ssl_key_secret_key
       description: The key within the Kubernetes secret that contains the Pyxis SSL key.
       default: operator-pipeline.key
+    - name: prow_kubeconfig_secret_name
+      description: The name of the Kubernetes Secret that contains the prow kubeconfig for preflight tests.
+      default: prow-kubeconfig
+    - name: prow_kubeconfig_secret_key
+      description: The key within the Kubernetes Secret that contains the prow kubeconfig for preflight tests.
+      default: kubeconfig
   workspaces:
     - name: repository
     - name: results
@@ -71,7 +77,6 @@ spec:
     - name: registry-credentials-all
       description: Storage space for the result of merging certification project and
         pipeline service account registry tokens.
-    - name: prow-kubeconfig
     - name: preflight-decryption-key
     - name: gpg-key
       description: GPG private key that decrypts secrets partner's data
@@ -637,11 +642,13 @@ spec:
         - name: bundle_image
           value: >-
             $(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name):$(tasks.validate-pr-title.results.bundle_version)
+        - name: prow_kubeconfig_secret_name
+          value: "$(params.prow_kubeconfig_secret_name)"
+        - name: prow_kubeconfig_secret_key
+          value: "$(params.prow_kubeconfig_secret_key)"
         - name: skip
           value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
       workspaces:
-        - name: kubeconfig
-          workspace: prow-kubeconfig
         - name: credentials
           workspace: registry-credentials-all
         - name: gpg-decryption-key

@@ -139,9 +139,6 @@
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-secret"
-                    - name: prow-kubeconfig
-                      secret:
-                        secretName: "prow-kubeconfig"
                     - name: preflight-decryption-key
                       secret:
                         secretName: "preflight-decryption-key"
