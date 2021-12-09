@@ -51,6 +51,16 @@ spec:
     - name: pyxis_ssl_key_secret_key
       description: The key within the Kubernetes secret that contains the Pyxis SSL key.
       default: operator-pipeline.key
+    - name: ocp_registry_kubeconfig_secret_name
+      description: >-
+      The name of the Kubernetes Secret that contains the kubeconfig for service account
+      allowing connection with cluster that contains the ocp registries.
+      default: ocp-registry-kubeconfig
+    - name: ocp_registry_kubeconfig_secret_key
+      description: >-
+      The key within the Kubernetes Secret that contains the kubeconfig for service
+      account allowing connection with cluster that contains the ocp registries.
+      default: kubeconfig
   workspaces:
     - name: repository
     - name: results
@@ -59,7 +69,6 @@ spec:
     - name: kerberos-keytab
     - name: registry-credentials
     - name: image-data
-    - name: ocp-registry-kubeconfig
 
   tasks:
     # Set a pending GitHub status check first to provide the user with immeditate feedback.
@@ -303,9 +312,10 @@ spec:
           value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: connect_registry
           value: "$(tasks.set-env.results.connect_registry)"
-      workspaces:
-        - name: ocp-registry-kubeconfig
-          workspace: ocp-registry-kubeconfig
+        - name: ocp_registry_kubeconfig_secret_name
+          value: "$(params.ocp_registry_kubeconfig_secret_name)"
+        - name: ocp_registry_kubeconfig_secret_key
+          value: "$(params.ocp_registry_kubeconfig_secret_key)"
 
     # Trigger IBM webhook for marketplace replication
     - name: trigger-marketplace-replication

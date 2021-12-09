@@ -113,6 +113,3 @@
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-secret"
-                    - name: ocp-registry-kubeconfig
-                      secret:
-                        secretName: "ocp-registry-kubeconfig"
