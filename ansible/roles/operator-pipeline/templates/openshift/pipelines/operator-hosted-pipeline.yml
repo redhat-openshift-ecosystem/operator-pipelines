@@ -68,6 +68,15 @@ spec:
     - name: prow_kubeconfig_secret_key
       description: The key within the Kubernetes Secret that contains the prow kubeconfig for preflight tests.
       default: kubeconfig
+    - name: preflight_decryption_key_secret_name
+      description: The name of the Kubernetes Secret that contains the gpg decryption key.
+      default: preflight-decryption-key
+    - name: preflight_decryption_private_key_secret_key
+      description: The key within the Kubernetes Secret that contains the gpg private key.
+      default: private
+    - name: preflight_decryption_public_key_secret_key
+      description: The key within the Kubernetes Secret that contains the gpg public key.
+      default: public
   workspaces:
     - name: repository
     - name: results
@@ -77,7 +86,6 @@ spec:
     - name: registry-credentials-all
       description: Storage space for the result of merging certification project and
         pipeline service account registry tokens.
-    - name: preflight-decryption-key
     - name: gpg-key
       description: GPG private key that decrypts secrets partner's data
   tasks:
@@ -642,6 +650,12 @@ spec:
         - name: bundle_image
           value: >-
             $(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name):$(tasks.validate-pr-title.results.bundle_version)
+        - name: gpg_decryption_key_secret_name
+          value: "$(params.preflight_decryption_key_secret_name)"
+        - name: gpg_decryption_private_key_secret_key
+          value: "$(params.preflight_decryption_private_key_secret_key)"
+        - name: gpg_decryption_public_key_secret_key
+          value: "$(params.preflight_decryption_public_key_secret_key)"
         - name: prow_kubeconfig_secret_name
           value: "$(params.prow_kubeconfig_secret_name)"
         - name: prow_kubeconfig_secret_key
@@ -651,8 +665,6 @@ spec:
       workspaces:
         - name: credentials
           workspace: registry-credentials-all
-        - name: gpg-decryption-key
-          workspace: preflight-decryption-key
         - name: output
           subPath: preflight-trigger
           workspace: repository

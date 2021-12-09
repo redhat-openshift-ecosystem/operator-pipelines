@@ -139,9 +139,6 @@
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-secret"
-                    - name: preflight-decryption-key
-                      secret:
-                        secretName: "preflight-decryption-key"
                     - name: gpg-key
                       secret:
                         secretName: "isv-gpg-key"
