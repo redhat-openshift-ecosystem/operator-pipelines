@@ -28,9 +28,13 @@ spec:
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
+    - name: ignore_publishing_checklist
+      default: "false"
+      description: Ignore the results of the publishing checklist
     - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
+      # Kubernetes secrets related params, usually with default values
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github-bot-token
@@ -50,9 +54,6 @@ spec:
     - name: hydra_secret_password_key
       description: The key within the Kubernetes secret that contains the Hydra password.
       default: password
-    - name: ignore_publishing_checklist
-      default: "false"
-      description: Ignore the results of the publishing checklist
     - name: pyxis_ssl_secret_name
       description: Kubernetes secret name that contains the Pyxis SSL files.
       default: operator-pipeline-api-certs
@@ -79,13 +80,13 @@ spec:
       default: public
     - name: gpg_secret_name
       description: >-
-      The name of the Kubernetes Secret that contains the GPG private key that is used for decryption of user's tokens.
+        The name of the Kubernetes Secret that contains the GPG private key that is used for decryption of user's tokens.
       default: isv-gpg-key
     - name: gpg_key_secret_key
-      descripton: The key within the Kubernetes Secret that contains the gpg key.
+      description: The key within the Kubernetes Secret that contains the gpg key.
       default: exd-guild-isv.key
     - name: gpg_passphrase_secret_key
-      descripton: The key within the Kubernetes Secret that contains the gpg passphrase.
+      description: The key within the Kubernetes Secret that contains the gpg passphrase.
       default: exd-guild-isv.passphrase
   workspaces:
     - name: repository

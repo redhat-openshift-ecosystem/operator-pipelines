@@ -20,12 +20,12 @@ spec:
       description: Container registry or proxy from which the published bundle will be pulled
     - name: ocp_registry_kubeconfig_secret_name
       description: >-
-      The name of the Kubernetes Secret that contains the kubeconfig for service account
-      allowing connection with cluster that contains the ocp registries.
+        The name of the Kubernetes Secret that contains the kubeconfig for service account
+        allowing connection with cluster that contains the ocp registries.
     - name: ocp_registry_kubeconfig_secret_key
       description: >-
-      The key within the Kubernetes Secret that contains the kubeconfig for service
-      account allowing connection with cluster that contains the ocp registries.
+        The key within the Kubernetes Secret that contains the kubeconfig for service
+        account allowing connection with cluster that contains the ocp registries.
   results:
     - name: container_digest
     - name: image_pullspec

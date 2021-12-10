@@ -30,6 +30,7 @@ spec:
     - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
+    # Kubernetes secrets related params, usually with default values
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github-bot-token
@@ -53,21 +54,21 @@ spec:
       default: operator-pipeline.key
     - name: ocp_registry_kubeconfig_secret_name
       description: >-
-      The name of the Kubernetes Secret that contains the kubeconfig for service account
-      allowing connection with cluster that contains the ocp registries.
+        The name of the Kubernetes Secret that contains the kubeconfig for service account
+        allowing connection with cluster that contains the ocp registries.
       default: ocp-registry-kubeconfig
     - name: ocp_registry_kubeconfig_secret_key
       description: >-
-      The key within the Kubernetes Secret that contains the kubeconfig for service
-      account allowing connection with cluster that contains the ocp registries.
+        The key within the Kubernetes Secret that contains the kubeconfig for service
+        account allowing connection with cluster that contains the ocp registries.
       default: kubeconfig
     - name: kerberos_keytab_secret_name
       description: >-
-      The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+        The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
       default: kerberos-keytab
     - name: kerberos_keytab_secret_key
       description: >-
-      The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+        The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
       default: krb5.keytab
   workspaces:
     - name: repository

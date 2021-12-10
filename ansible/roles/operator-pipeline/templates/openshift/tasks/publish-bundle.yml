@@ -15,10 +15,10 @@ spec:
       default: https://iib.engineering.redhat.com
     - name: kerberos_keytab_secret_name
       description: >-
-      The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+        The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
     - name: kerberos_keytab_secret_key
       description: >-
-      The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+        The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
     - name: operator_distribution_method
       description: Operator distribution method. Can be one of [connect, marketplace]
     - name: environment

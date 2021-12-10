@@ -94,7 +94,7 @@ spec:
       workingDir: $(workspaces.output.path)
     - env:
         - name: KUBECONFIG
-          value: /etc/kubeconfig-volume/$(params.kubeconfig_secret_key)
+          value: /etc/kubeconfig-volume/$(params.prow_kubeconfig_secret_key)
       image: quay.io/opdev/preflight-trigger
       name: create-openshift-ci-prowjob
       resources: {}
