@@ -22,12 +22,26 @@ def test_get_session_api_key(monkeypatch: Any) -> None:
     assert session.headers["X-API-KEY"] == "123"
 
 
-def test_get_session_cert(monkeypatch: Any) -> None:
+@patch("os.path.exists")
+def test_get_session_cert(mock_path_exists: MagicMock, monkeypatch: Any) -> None:
+    mock_path_exists.return_value = True
     monkeypatch.setenv("PYXIS_CERT_PATH", "/path/to/cert.pem")
     monkeypatch.setenv("PYXIS_KEY_PATH", "/path/to/key.key")
     session = pyxis._get_session()
 
     assert session.cert == ("/path/to/cert.pem", "/path/to/key.key")
+
+
+@patch("os.path.exists")
+def test_get_session_cert_not_exist(
+    mock_path_exists: MagicMock, monkeypatch: Any
+) -> None:
+    mock_path_exists.return_value = False
+    monkeypatch.setenv("PYXIS_CERT_PATH", "/path/to/cert.pem")
+    monkeypatch.setenv("PYXIS_KEY_PATH", "/path/to/key.key")
+
+    with pytest.raises(Exception):
+        pyxis._get_session()
 
 
 def test_get_session_no_auth(monkeypatch: Any) -> None:
