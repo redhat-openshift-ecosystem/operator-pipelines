@@ -33,7 +33,9 @@ def test_get_session_cert(mock_path_exists: MagicMock, monkeypatch: Any) -> None
 
 
 @patch("os.path.exists")
-def test_get_session_cert_not_exist(mock_path_exists: MagicMock, monkeypatch: Any) -> None:
+def test_get_session_cert_not_exist(
+    mock_path_exists: MagicMock, monkeypatch: Any
+) -> None:
     mock_path_exists.return_value = False
     monkeypatch.setenv("PYXIS_CERT_PATH", "/path/to/cert.pem")
     monkeypatch.setenv("PYXIS_KEY_PATH", "/path/to/key.key")
