@@ -40,22 +40,24 @@ spec:
 
         if [[ $(params.organization) == "redhat-marketplace" ]]; then
 
-          MARKETPLACE_REMOTE_WORKFLOW=$(cat $(params.bundle_path)/metadata/annotations.yaml | yq -r '.annotations."marketplace.openshift.io/remote-workflow"')
-          MARKETPLACE_SUPPORT_WORKFLOW=$(cat $(params.bundle_path)/metadata/annotations.yaml | yq -r '.annotations."marketplace.openshift.io/support-workflow"')
+          BUNDLE_PATH=$(realpath $(params.bundle_path))
+          CSVFILE=$(find $BUNDLE_PATH -name "*clusterserviceversion.yaml" -o -name "*clusterserviceversion.yml")
+          MARKETPLACE_REMOTE_WORKFLOW=$(cat $CSVFILE | yq -r '.metadata.annotations."marketplace.openshift.io/remote-workflow"')
+          MARKETPLACE_SUPPORT_WORKFLOW=$(cat $CSVFILE | yq -r '.metadata.annotations."marketplace.openshift.io/support-workflow"')
 
           EXPECTED_MARKETPLACE_REMOTE_WORKFLOW="https://marketplace.redhat.com/en-us/operators/$(params.package_name)/pricing?utm_source=openshift_console"
           EXPECTED_MARKETPLACE_SUPPORT_WORKFLOW="https://marketplace.redhat.com/en-us/operators/$(params.package_name)/support?utm_source=openshift_console"
 
           if [[ $MARKETPLACE_REMOTE_WORKFLOW != $EXPECTED_MARKETPLACE_REMOTE_WORKFLOW ]]; then
             echo "Missing or incorrect 'marketplace.openshift.io/remote-workflow' annotation."
-            echo "To fix this issue define the annotation in 'metadata/annotations.yaml' file."
+            echo "To fix this issue define the annotation in 'manifests/*.clusterserviceversion.yaml' file."
             echo "The correct value for the annotation is: $EXPECTED_MARKETPLACE_REMOTE_WORKFLOW"
             exit 1
           fi
 
           if [[ $MARKETPLACE_SUPPORT_WORKFLOW != $EXPECTED_MARKETPLACE_SUPPORT_WORKFLOW ]]; then
             echo "Missing or incorrect 'marketplace.openshift.io/support-workflow' annotation."
-            echo "To fix this issue define the annotation in 'metadata/annotations.yaml' file."
+            echo "To fix this issue define the annotation in 'manifests/*.clusterserviceversion.yaml' file."
             echo "The correct value for the annotation is: $EXPECTED_MARKETPLACE_REMOTE_WORKFLOW"
             exit 1
           fi
