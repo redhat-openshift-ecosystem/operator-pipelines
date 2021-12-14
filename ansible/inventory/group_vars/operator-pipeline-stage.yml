@@ -4,7 +4,7 @@ branch: "{{ env }}"
 operator_pipeline_webhook_secret: ../../vaults/common/github-webhook-secret-preprod.txt
 kerberos_keytab: ../../vaults/common/nonprod-operatorpipelines.keytab
 
-operator_pipeline_image_tag: "v1.0.7"
+operator_pipeline_image_tag: "v1.0.8"
 
 # how many of newest pipelineruns should be preserved on cleanup?
 preserve_after_cleanup: "5"
