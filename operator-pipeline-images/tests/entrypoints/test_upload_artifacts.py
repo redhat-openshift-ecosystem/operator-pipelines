@@ -29,7 +29,7 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
     upload_artifacts.upload_artifact(args, filename, 1)
 
     mock_post.assert_called_once_with(
-        "http://foo.com/v1/projects/certification/id/123123/artifacts",
+        "http://foo.com/containers/v1/projects/certification/id/123123/artifacts",
         {
             "content": "a",
             "certification_hash": args.certification_hash,
