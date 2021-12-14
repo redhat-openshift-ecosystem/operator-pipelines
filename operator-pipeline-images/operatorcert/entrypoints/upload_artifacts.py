@@ -94,7 +94,7 @@ def upload_artifact(args: Any, file_path: str, org_id: Any = None) -> Dict[str, 
     """
     upload_url = urljoin(
         args.pyxis_url,
-        f"/containers/v1/projects/certification/id/{args.cert_project_id}/artifacts",
+        f"v1/projects/certification/id/{args.cert_project_id}/artifacts",
     )
     file_name = os.path.basename(file_path)
     file_size = os.path.getsize(file_path)
