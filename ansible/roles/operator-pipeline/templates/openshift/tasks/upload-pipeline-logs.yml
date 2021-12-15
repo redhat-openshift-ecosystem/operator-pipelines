@@ -15,7 +15,7 @@ spec:
     - name: pyxis_key_path
       default: ""
     - name: pyxis_url
-      default: https://catalog.redhat.com/api/containers
+      default: https://catalog.redhat.com/api/containers/
       description: Red Hat's container API URL
     - name: md5sum
       description: Operator content md5 hash
@@ -80,7 +80,7 @@ spec:
 
         LOG_ID=$(cat pipeline-logs-artifact.json | jq -r "._id")
 
-        LOG_URL="$(params.pyxis_url)/v1/projects/certification/artifacts/id/$LOG_ID"
+        LOG_URL="$(params.pyxis_url)v1/projects/certification/artifacts/id/$LOG_ID"
 
         echo "Pipeline logs URL: "
         echo -n $LOG_URL | tee $(results.pipeline_log_url.path)
