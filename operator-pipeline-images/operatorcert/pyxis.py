@@ -20,11 +20,14 @@ def is_internal() -> bool:
     return cert and key
 
 
-def _get_session() -> requests.Session:
+def _get_session(pyxis_url: str) -> requests.Session:
     """
     Create a Pyxis http session with auth based on env variables.
 
     Auth is set to use either API key or certificate + key.
+
+    Args:
+        url (str): Pyxis API URL
 
     Raises:
         Exception: Exception is raised when auth ENV variables are missing.
@@ -35,13 +38,13 @@ def _get_session() -> requests.Session:
     api_key = os.environ.get("PYXIS_API_KEY")
     cert = os.environ.get("PYXIS_CERT_PATH")
     key = os.environ.get("PYXIS_KEY_PATH")
-    env = os.environ.get("ENVIRONMENT")
 
     # Document about the proxy configuration:
     # https://source.redhat.com/groups/public/customer-platform-devops/digital_experience_operations_dxp_ops_wiki/using_squid_proxy_to_access_akamai_preprod_domains_over_vpn
     proxies = {}
-    # If it's external preprod
-    if env != "prod" and api_key:
+    # If it is external preprod
+    is_preprod = any(env in pyxis_url for env in ["dev", "qa", "stage"])
+    if is_preprod and api_key:
         proxies = {
             "http": "http://squid.corp.redhat.com:3128",
             "https": "http://squid.corp.redhat.com:3128",
@@ -88,7 +91,7 @@ def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Pyxis response
     """
-    session = _get_session()
+    session = _get_session(url)
 
     LOGGER.debug(f"POST Pyxis request: {url}")
     resp = session.post(url, json=body)
@@ -114,7 +117,7 @@ def put(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Pyxis response
     """
-    session = _get_session()
+    session = _get_session(url)
 
     LOGGER.debug(f"PATCH Pyxis request: {url}")
     resp = session.put(url, json=body)
@@ -140,7 +143,7 @@ def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Pyxis response
     """
-    session = _get_session()
+    session = _get_session(url)
 
     LOGGER.debug(f"PATCH Pyxis request: {url}")
     resp = session.patch(url, json=body)
@@ -165,7 +168,7 @@ def get(url: str) -> Any:
     Returns:
         Any: Pyxis GET request response
     """
-    session = _get_session()
+    session = _get_session(url)
     LOGGER.debug(f"GET Pyxis request: {url}")
     resp = session.get(url)
     # Not raising exception for error statuses, because GET request can be used to check
@@ -185,7 +188,7 @@ def get_project(base_url: str, project_id: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Pyxis project response
     """
-    session = _get_session()
+    session = _get_session(url)
 
     project_url = urljoin(base_url, f"v1/projects/certification/id/{project_id}")
     LOGGER.debug(f"Getting project details: {project_id}")
@@ -212,7 +215,7 @@ def get_vendor_by_org_id(base_url: str, org_id: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Vendor Pyxis response
     """
-    session = _get_session()
+    session = _get_session(url)
 
     project_url = urljoin(base_url, f"v1/vendors/org-id/{org_id}")
     LOGGER.debug(f"Getting project details by org_id: {org_id}")
@@ -239,7 +242,7 @@ def get_repository_by_isv_pid(base_url: str, isv_pid: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Repository Pyxis response
     """
-    session = _get_session()
+    session = _get_session(url)
 
     repo_url = urljoin(base_url, "v1/repositories")
     LOGGER.debug(f"Getting repository details by isv_pid: {isv_pid}")
