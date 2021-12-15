@@ -188,7 +188,7 @@ def get_project(base_url: str, project_id: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Pyxis project response
     """
-    session = _get_session(url)
+    session = _get_session(base_url)
 
     project_url = urljoin(base_url, f"v1/projects/certification/id/{project_id}")
     LOGGER.debug(f"Getting project details: {project_id}")
@@ -215,7 +215,7 @@ def get_vendor_by_org_id(base_url: str, org_id: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Vendor Pyxis response
     """
-    session = _get_session(url)
+    session = _get_session(base_url)
 
     project_url = urljoin(base_url, f"v1/vendors/org-id/{org_id}")
     LOGGER.debug(f"Getting project details by org_id: {org_id}")
@@ -242,7 +242,7 @@ def get_repository_by_isv_pid(base_url: str, isv_pid: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Repository Pyxis response
     """
-    session = _get_session(url)
+    session = _get_session(base_url)
 
     repo_url = urljoin(base_url, "v1/repositories")
     LOGGER.debug(f"Getting repository details by isv_pid: {isv_pid}")
