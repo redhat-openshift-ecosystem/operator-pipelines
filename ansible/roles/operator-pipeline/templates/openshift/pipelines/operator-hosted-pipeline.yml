@@ -827,6 +827,8 @@ spec:
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.pem
         - name: pyxis_key_path
           value: $(workspaces.pyxis-ssl-credentials.path)/operator-pipeline.key
+        - name: env
+          value: $(params.env)
 
     # In the event of a failure, comment with the support link on the github PR
     - name: github-add-support-comment

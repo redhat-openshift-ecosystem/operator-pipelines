@@ -451,6 +451,8 @@ spec:
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
           value: "$(context.pipelineRun.name)"
+        - name: env
+          value: $(params.env)
 
     - name: show-support-link
       taskRef:
