@@ -67,7 +67,7 @@ def _get_session() -> requests.Session:
             "No auth details provided for Pyxis. "
             "Either define PYXIS_API_KEY or PYXIS_CERT_PATH + PYXIS_KEY_PATH"
         )
-    
+
     if proxies:
         LOGGER.debug(
             "Pyxis session configured for Proxy (external preprod environment)"
