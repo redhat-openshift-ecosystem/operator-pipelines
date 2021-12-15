@@ -56,7 +56,7 @@ spec:
                     PYXIS_URL="https://pyxis.stage.engineering.redhat.com"
                     ;;
                     external)
-                    PYXIS_URL="https://catalog.stage.redhat.com/api/containers"
+                    PYXIS_URL="https://catalog.stage.redhat.com/api/containers/"
                     ;;
                 esac
                 TARGET_BRANCH="stage"
