@@ -58,6 +58,12 @@ spec:
           SOURCE_BRANCH="$(params.digest_pinned_branch)"
         fi
 
+        if [ -z $(params.repository_name) ]
+        then
+          echo "upstream_repo_name parameter should be filled in order to create the Pull Request"
+          exit 1
+        fi
+
         open-pull-request \
           --git-repo-url "$(params.git_repo_url)" \
           --git-upstream-repo-name "$(params.repository_name)" \
