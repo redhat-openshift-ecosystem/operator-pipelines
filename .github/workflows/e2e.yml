@@ -147,7 +147,7 @@ jobs:
           tkn pipeline start operator-ci-pipeline \
             --use-param-defaults \
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
-            --param upstream_repo_name=operator-pipelines-test \
+            --param upstream_repo_name=redhat-openshift-ecosystem/operator-pipelines-test \
             --param git_branch=$SHORT_SHA \
             --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
             --param env=stage \
