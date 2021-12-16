@@ -33,3 +33,6 @@ operator_pipeline_exd_guild_isv_passphrase_path: ../../vaults/{{ env }}/exd-guil
 
 github_ssh_credentials_path: ../../vaults/common/github-bot-ssh
 e2e_kubeconfig_path: ../../vaults/common/kubeconfig-e2e
+
+pyxis_api_key_path: ../../vaults/{{ env }}/pyxis_api_key
+e2e_gh_account_path: ../../vaults/{{ env }}/e2e-gh-account-pat

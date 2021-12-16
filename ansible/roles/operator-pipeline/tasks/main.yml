@@ -409,5 +409,47 @@
               env: "{{ env }}"
           data:
             kubeconfig: "{{ lookup('file', e2e_kubeconfig_path, rstrip=False) | b64encode }}"
+
+  - name: Create Pyxis-API-Key secret (only stage, for sake of E2E CI pipeline)
+    no_log: yes
+    tags:
+      - secrets
+    k8s:
+      state: present
+      force: yes
+      namespace: "{{ oc_namespace }}"
+      definition:
+        apiVersion: v1
+        kind: Secret
+        type: opaque
+        metadata:
+          name: pyxis_api_key
+          labels:
+            app: operator-pipeline
+            suffix: "{{ suffix }}"
+            env: "{{ env }}"
+        data:
+          pyxis_api_key: "{{ lookup('file', pyxis_api_key_path, rstrip=False) | b64encode }}"
+
+  - name: Create Github-API-key secret (only stage, for sake of E2E CI pipeline)
+    no_log: yes
+    tags:
+      - secrets
+    k8s:
+      state: present
+      force: yes
+      namespace: "{{ oc_namespace }}"
+      definition:
+        apiVersion: v1
+        kind: Secret
+        type: opaque
+        metadata:
+          name: github_token_pr_open
+          labels:
+            app: operator-pipeline
+            suffix: "{{ suffix }}"
+            env: "{{ env }}"
+        data:
+          GITHUB_TOKEN: "{{ lookup('file', e2e_gh_account_path, rstrip=False) | b64encode }}"
   tags:
     - ci
