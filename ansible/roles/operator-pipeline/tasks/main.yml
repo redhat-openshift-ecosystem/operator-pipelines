@@ -423,7 +423,7 @@
           kind: Secret
           type: opaque
           metadata:
-            name: pyxis_api_key
+            name: pyxis-api-secret
             labels:
               app: operator-pipeline
               suffix: "{{ suffix }}"
@@ -444,7 +444,7 @@
           kind: Secret
           type: opaque
           metadata:
-            name: github_token_pr_open
+            name: github-api-token
             labels:
               app: operator-pipeline
               suffix: "{{ suffix }}"
