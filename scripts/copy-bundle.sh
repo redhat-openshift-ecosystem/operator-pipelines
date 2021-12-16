@@ -77,7 +77,7 @@ NEW_CSV=$(
   podman run --rm \
     -v $DEST/manifests:$MNT_PATH:Z \
     $YQ_IMG \
-    yq "$CSV_YQ_EXPR" "$MNT_PATH/$(basename $CSV)"
+    yq -y "$CSV_YQ_EXPR" "$MNT_PATH/$(basename $CSV)"
 )
 
 # Generate a replacement annotations YAML
@@ -85,7 +85,7 @@ NEW_ANNOTATIONS=$(
   podman run --rm \
     -v $DEST/metadata:$MNT_PATH:Z \
     $YQ_IMG \
-    yq "$ANNOTATIONS_YQ_EXPR" "$MNT_PATH/$(basename $ANNOTATIONS)"
+    yq -y "$ANNOTATIONS_YQ_EXPR" "$MNT_PATH/$(basename $ANNOTATIONS)"
 )
 
 # Save the modifications
