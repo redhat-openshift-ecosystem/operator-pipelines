@@ -1,19 +1,11 @@
 name: Build and Push Image
 on:  # yamllint disable-line rule:truthy
-  - push
-  - pull_request
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
-  test-lint:
-    name: Run unit tests and linters
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: fedora-python/tox-github-action@v0.4
-        with:
-          tox_env: black,test
-          dnf_install: krb5-devel krb5-workstation
-
   build:
     name: Build and push image
     runs-on: ubuntu-20.04
