@@ -1,7 +1,9 @@
 name: Build and Push ppc64le Image
 on:  # yamllint disable-line rule:truthy
-  - push
-  - pull_request
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
