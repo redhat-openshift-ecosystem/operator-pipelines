@@ -1,5 +1,8 @@
 ---
 name: E2E-CI
+###
+# To read more about the E2E workflow, see docs/ci-cd.md
+###
 
 on:  # yamllint disable-line rule:truthy
   workflow_run:
