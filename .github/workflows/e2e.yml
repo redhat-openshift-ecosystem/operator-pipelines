@@ -144,6 +144,7 @@ jobs:
 
       - name: Run CI pipeline
         run: |
+          # Change submit=true after ISV-1503
           tkn pipeline start operator-ci-pipeline \
             --use-param-defaults \
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
@@ -151,7 +152,7 @@ jobs:
             --param git_branch=$SHORT_SHA \
             --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
             --param env=stage \
-            --param submit=false \ # Change to True after ISV-1503
+            --param submit=false \
             --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=kubeconfig,secret=kubeconfig \
             --workspace name=ssh-dir,secret=github-ssh-credentials \
