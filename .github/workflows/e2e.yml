@@ -5,9 +5,13 @@ name: E2E-CI
 ###
 
 on:  # yamllint disable-line rule:truthy
-  push:
+  workflow_run:
+    workflows:
+      - validation
     branches:
       - main
+    types:
+      - completed
   workflow_dispatch:
 jobs:
 

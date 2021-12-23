@@ -85,6 +85,15 @@ spec:
               exit 0
           fi
 
+          DPTP_VER="4.9"
+          CP_VER="$(params.ocp_version)"
+
+          if [ "$(printf '%s\n' "$DPTP_VER" "$CP_VER" | sort -V | head -n1)" = "$DPTP_VER" ]; then
+              OCP_VER="${DPTP_VER}"
+          else
+              OCP_VER="${CP_VER}"
+          fi
+
           if [ "$(params.ocp_version)" == "4.6" ] || [ "$(params.ocp_version)" == "4.7" ]; then
               JOB_SUFFIX="aws"
           else
@@ -99,10 +108,10 @@ spec:
               export PFLT_DOCKERCONFIG
 
               preflight-trigger \
-          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-${JOB_SUFFIX}" \
-          -job-config-path "release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-periodics.yaml" \
+          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-${OCP_VER}-preflight-common-${JOB_SUFFIX}" \
+          -job-config-path "release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-${OCP_VER}-periodics.yaml" \
           -prow-config-path release/core-services/prow/02_config/_config.yaml \
-          -ocp-version "$(params.ocp_version)" \
+          -ocp-version "${OCP_VER}" \
           -pflt-docker-config "${PFLT_DOCKERCONFIG}" \
           -pflt-artifacts artifacts \
           -pflt-log-level "$(params.log_level)" \
@@ -112,10 +121,10 @@ spec:
           -output-path prowjob-base-url
           else
               preflight-trigger \
-          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-${JOB_SUFFIX}" \
-          -job-config-path "release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-periodics.yaml" \
+          -job-name "periodic-ci-redhat-openshift-ecosystem-preflight-ocp-${OCP_VER}-preflight-common-${JOB_SUFFIX}" \
+          -job-config-path "release/ci-operator/jobs/redhat-openshift-ecosystem/preflight/redhat-openshift-ecosystem-preflight-ocp-${OCP_VER}-periodics.yaml" \
           -prow-config-path release/core-services/prow/02_config/_config.yaml \
-          -ocp-version "$(params.ocp_version)" \
+          -ocp-version "${OCP_VER}" \
           -pflt-artifacts artifacts \
           -pflt-log-level "$(params.log_level)" \
           -pflt-index-image "$(params.bundle_index_image)" \
@@ -152,7 +161,7 @@ spec:
           BASE_URL="https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/origin-ci-test/logs/"
           PROWJOB_URL=$(awk '/prowjob_url/ { gsub(/"/, ""); print $2 }' prowjob-base-url)
           PROWJOB_ID=${PROWJOB_URL##*/}
-          ARTIFACTS_TARBALL_URI="${BASE_URL}periodic-ci-redhat-openshift-ecosystem-preflight-ocp-$(params.ocp_version)-preflight-common-${JOB_SUFFIX}/${PROWJOB_ID}/artifacts/preflight-common-${JOB_SUFFIX}/operator-pipelines-preflight-common-encrypt/artifacts/preflight.tar.gz.asc"
+          ARTIFACTS_TARBALL_URI="${BASE_URL}periodic-ci-redhat-openshift-ecosystem-preflight-ocp-${OCP_VER}-preflight-common-${JOB_SUFFIX}/${PROWJOB_ID}/artifacts/preflight-common-${JOB_SUFFIX}/operator-pipelines-preflight-common-encrypt/artifacts/preflight.tar.gz.asc"
 
           curl -sLO "${ARTIFACTS_TARBALL_URI}"
 
