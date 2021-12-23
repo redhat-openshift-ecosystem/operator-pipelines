@@ -13,9 +13,17 @@ The following secrets should be kept in the repository:
 | KUBECONFIG | Kubeconfig of the cluster, where E2E tests should run | E2E tests- resources are deployed to the namespace $SHORT_COMMIT_HASH in this cluster |
 | VAULT_PASSWORD | Password to the Ansible Vault stored in the repository | E2E tests- password is needed to decrypt the secrets and thus- recreate the resources |
 
+## Run order
+
+- Validation- run always.
+- Build and Push Image/ ppc64le Image- run always. That is intended
+to help for the developers to test the image in case of changes.
+- E2E-CI- runs only on the merge to main (or on manual trigger)
+- Deployment- run only after successful E2E-CI running on main.
+
 ## E2E tests
 
-### When they run?
+### When do they run?
 
 E2E tests are stage of the CI/CD that runs only in two cases:
 - On merge to main and before deployment
@@ -28,7 +36,13 @@ There are future plans to run them in cronjob as a part of the QA workflow.
 - prepare the environment- script [ansible/init-custom-env.sh](../ansible/init-custom-env.sh):
   - prepare the custom project in OpenShift preprod cluster
   - install all of the pipelines dependencies in this project
-- run the pipelines with `tkn`
+- prepare the test data by copying operator from branch `e2e-test-operator`-
+with custom version
+- run the CI pipeline with `tkn` against the prepared branch. 
+On success, it creates the PR on this branch.
+- run the Hosted pipeline with `tkn` against PR created by CI pipeline. On success,
+this PR is merged. 
+- TODO: Release pipeline.
 - check if pipelines passed- using `oc`
 - remove the project, and thus- clean up all associated resources
 
@@ -51,4 +65,3 @@ in the test data (see point 2.).
 This Cert Project should:
 - be accessible to the test partner account (credentials stored in ansbile vault),
 - meet the Hydra checklist requirements
-- meet the preflight tests requirements.
