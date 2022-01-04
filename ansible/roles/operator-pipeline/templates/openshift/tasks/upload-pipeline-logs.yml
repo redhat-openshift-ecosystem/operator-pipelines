@@ -27,8 +27,6 @@ spec:
       description: Operator package name
     - name: pipeline_name
       description: Tekton pipeline run name where logs will be gathered from
-    - name: env
-      description: Environment. One of [dev, qa, stage, prod]
   results:
     - name: pipeline_log_url
   workspaces:
@@ -54,8 +52,6 @@ spec:
           value: $(params.pyxis_cert_path)
         - name: PYXIS_KEY_PATH
           value: $(params.pyxis_key_path)
-        - name: ENVIRONMENT
-          value: $(params.env)
       script: |
         #! /usr/bin/env bash
         echo "Uploading pipeline logs"
