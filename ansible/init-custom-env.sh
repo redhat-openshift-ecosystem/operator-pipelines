@@ -12,8 +12,9 @@ umask 077
 
 NAMESPACE=$1
 ENV=$2
+PIPELINE_IMAGE_TAG=${4:-released}
 SECRET=$(dirname "$0")/vaults/custom/ocp-token.yml
-PASSWD_FILE=./vault-password
+PASSWD_FILE=$3
 
 # Initialize the environment by creating the service account and giving for it admin permissions
 initialize_environment() {
@@ -29,6 +30,7 @@ initialize_environment() {
         -e "custom=true" \
         -e "ocp_host=`oc whoami --show-server`" \
         -e "ocp_token=`oc whoami -t`" \
+        -e "operator_pipeline_image_tag=$PIPELINE_IMAGE_TAG" \
         --tags init \
         -vvvv
 }
