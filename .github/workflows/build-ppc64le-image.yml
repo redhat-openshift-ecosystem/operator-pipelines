@@ -1,9 +1,13 @@
 name: Build and Push ppc64le Image
 on:  # yamllint disable-line rule:truthy
-  pull_request:
-  push:
+  workflow_run:
+    workflows:
+      - validation
     branches:
       - main
+    types:
+      - completed
+  workflow_dispatch:
 
 jobs:
   build:

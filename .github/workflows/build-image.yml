@@ -1,14 +1,22 @@
-name: Build and Push Image
+---
+name: Build
+
 on:  # yamllint disable-line rule:truthy
-  pull_request:
-  push:
+  workflow_run:
+    workflows:
+      - validation
     branches:
       - main
+    types:
+      - completed
+  workflow_dispatch:
 
 jobs:
   build:
     name: Build and push image
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - uses: actions/checkout@v2
@@ -31,8 +39,6 @@ jobs:
           registry: quay.io/redhat-isv
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-        if: ${{ github.event_name == 'push' }}
 
       - name: Print image url
         run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
-        if: ${{ github.event_name == 'push' }}
