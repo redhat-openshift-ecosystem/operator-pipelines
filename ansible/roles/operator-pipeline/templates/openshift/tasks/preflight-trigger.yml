@@ -152,6 +152,15 @@ spec:
             exit 0
           fi
 
+          DPTP_VER="4.9"
+          CP_VER="$(params.ocp_version)"
+
+          if [ "$(printf '%s\n' "$DPTP_VER" "$CP_VER" | sort -V | head -n1)" = "$DPTP_VER" ]; then
+              OCP_VER="${DPTP_VER}"
+          else
+              OCP_VER="${CP_VER}"
+          fi
+
           if [ "$(params.ocp_version)" == "4.6" ] || [ "$(params.ocp_version)" == "4.7" ]; then
               JOB_SUFFIX="aws"
           else
