@@ -7,7 +7,7 @@ name: E2E-CI
 on:  # yamllint disable-line rule:truthy
   workflow_run:
     workflows:
-      - validation
+      - Build
     branches:
       - main
     types:
@@ -139,7 +139,7 @@ jobs:
         run: |
           oc new-project $OC_PROJECT
           pushd ansible
-          bash init-custom-env.sh $OC_PROJECT stage vault-password
+          bash init-custom-env.sh $OC_PROJECT stage vault-password ${{ github.sha }}
           popd
 
       - name: Run CI pipeline

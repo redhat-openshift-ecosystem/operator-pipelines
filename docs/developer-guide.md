@@ -38,7 +38,7 @@ selecting `copy login command`.
 
 ```bash
 # Assuming the current working directory is ansible/
-./init-custom-env.sh $PROJECT $ENVIRONMENT $PASSWD_FILE
+./init-custom-env.sh $PROJECT $ENVIRONMENT $PASSWD_FILE [$PIPELINE_IMAGE_TAG]
 ```
 
 | Argument | Description |
@@ -46,6 +46,7 @@ selecting `copy login command`.
 | PROJECT | An OpenShift project name (eg. `john-playground`). Pipeline resources will be installed here. |
 | ENVIRONMENT | The environmental dependencies and corresponding credentials to leverage. Can be one of `dev`, `qa`, `stage` or `prod`. |
 | PASSWD_FILE | File path containing the ansible vault password. |
+| PIPELINE_IMAGE_TAG | The tag name of operator pipeline image. (optional) |
 
 :warning: Conflicts may occur if the project already contains some resources. They may need to be removed first.
 
