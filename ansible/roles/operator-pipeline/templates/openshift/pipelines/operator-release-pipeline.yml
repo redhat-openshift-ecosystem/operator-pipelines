@@ -460,7 +460,7 @@ spec:
         - name: GITHUB_TOKEN_SECRET_KEY
           value: "$(params.github_token_secret_key)"
 
-    # Add the connect page URL in github PR comment to view the test results/logs 
+    # Add the connect page URL in github PR comment to view the test results/logs
     - name: github-add-connect-url-comment
       when:
         - input: "$(tasks.certification-project-check.status)"
