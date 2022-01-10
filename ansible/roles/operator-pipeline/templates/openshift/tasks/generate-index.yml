@@ -21,36 +21,112 @@ spec:
     - name: credentials
       description: Docker config for retrieving the bundle image
       optional: true
+  stepTemplate:
+    env:
+      - name: DOCKER_CONFIG
+        value: "$(workspaces.output.path)/opm-docker-config"
+      - name: DB_PATH
+        value: /var/lib/iib/_hidden/do.not.edit.db
+      - name: FBC_FILE
+        value: fbc.txt
   steps:
+    - name: inspect-base-index
+      image: registry.redhat.io/rhel8/podman:8.5-13
+      workingDir: $(workspaces.output.path)
+      script: |
+        #! /usr/bin/env bash
+        set -exo pipefail
+
+        # Copy the default credentials to the "output" workspace so they can be
+        # accessed without root access in other steps.
+        mkdir -p $DOCKER_CONFIG
+        cp $HOME/.docker/config.json $DOCKER_CONFIG/config.json
+        chmod 644 $DOCKER_CONFIG/config.json
+
+        # Pull the index image from a pre-configured imagestream in the current namespace.
+        # It may be possible to eliminate this once sqlite-based index images are no
+        # longer supported.
+        INDEX_IMG_STREAM=$(echo $(params.from_index) | rev | cut -f1 -d/ | rev)
+        FROM_INDEX="$(params.internal_registry)/$(context.taskRun.namespace)/$INDEX_IMG_STREAM"
+
+        podman pull $FROM_INDEX
+        podman image inspect $FROM_INDEX | tee podman-inspect.json
+
+    - name: determine-index-format
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.output.path)
+      script: |
+        #! /usr/bin/env bash
+        set -x
+
+        # Create a special file in the workspace if this index uses file-based configs
+        CONFIGS_QUERY='.[0].Labels."operators.operatorframework.io.index.configs.v1"'
+        jq -e "$CONFIGS_QUERY" podman-inspect.json && touch $FBC_FILE
+        exit 0
+
+    - name: extract-database
+      image: "$(params.from_index)"
+      workingDir: $(workspaces.output.path)
+      script: |
+        #! /usr/bin/env bash
+        set -ex
+
+        if [ -f "$FBC_FILE" ]; then
+          echo "This index image uses file based configs. Extracting the database."
+          cp $DB_PATH index.db
+          chmod 664 index.db
+        else
+          echo "This index image does not use file based configs. Skipping database extraction."
+        fi
+
     - name: generate
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
-        set -xe
+        set -exo pipefail
 
         if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
-          # Setup registry credentials for OPM. Combine the default credentials
-          # with those found in the workspace to maintain access to the internal
-          # registry.
-          export DOCKER_CONFIG=/tmp/.docker
-          mkdir $DOCKER_CONFIG
+          # Merge the default docker config and the extra creds
           jq -s '.[0] * .[1]' \
             $(workspaces.credentials.path)/.dockerconfigjson \
-            $HOME/.docker/config.json \
-            > $DOCKER_CONFIG/config.json
+            $DOCKER_CONFIG/config.json \
+            > temp-config.json
+
+          mv temp-config.json $DOCKER_CONFIG/config.json
+          rm temp-config.json
         fi
 
-        INDEX_IMG_STREAM=$(echo $(params.from_index) | rev | cut -f1 -d/ | rev)
-        FROM_INDEX="$(params.internal_registry)/$(context.taskRun.namespace)/$INDEX_IMG_STREAM"
+        if [ -f "$FBC_FILE" ]; then
+          # Add the bundle to the sqlite DB
+          opm registry add \
+            -b "$(params.bundle_image)" \
+            -d index.db
 
-        opm index add \
-          --from-index $FROM_INDEX \
-          --bundles "$(params.bundle_image)" \
-          --container-tool none \
-          --out-dockerfile Dockerfile.index \
-          --generate
+          # Migrate the sqlite DB to a file-based catalog in the "index" directory.
+          # The Dockerfile will be named after this directory.
+          opm migrate index.db index
+
+          # Generate the index Dockerfile
+          opm alpha generate dockerfile index
+
+          # Amend the Dockerfile with the addition of the sqlite DB for backwards compatibility
+          echo -e "\nADD index.db $DB_PATH\n" >> index.Dockerfile
+        else
+          # Pull the index image from a pre-configured imagestream in the current namespace.
+          # It may be possible to eliminate this once sqlite-based index images are no
+          # longer supported.
+          INDEX_IMG_STREAM=$(echo $(params.from_index) | rev | cut -f1 -d/ | rev)
+          FROM_INDEX="$(params.internal_registry)/$(context.taskRun.namespace)/$INDEX_IMG_STREAM"
+
+          opm index add \
+            --from-index "$FROM_INDEX" \
+            --bundles "$(params.bundle_image)" \
+            --container-tool none \
+            --out-dockerfile index.Dockerfile \
+            --generate
+        fi
 
         ls -lh
-        cat Dockerfile.index
-        echo -n Dockerfile.index | tee $(results.index_dockerfile.path)
+        cat index.Dockerfile
+        echo -n index.Dockerfile > $(results.index_dockerfile.path)
