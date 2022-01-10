@@ -24,7 +24,6 @@ def test_set_github_status(
     args.context = "operator/test"
     args.descripton = "demo"
     args.state = "pending"
-    args.target_url = "https://api.github.com"
     mock_url.return_value = "redhat-openshift-ecosystem", "operator-pipelines"
 
     set_github_status.set_github_status(args)
@@ -34,6 +33,5 @@ def test_set_github_status(
             "context": args.context,
             "description": args.description,
             "state": args.status,
-            "target_url": args.target_url,
         },
     )

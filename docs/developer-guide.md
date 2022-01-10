@@ -117,7 +117,7 @@ The pipelines depend on the following certification project fields:
   "operator_distribution": "<insert-distribution>",
 
   // Must correspond to a containerVendor record with the same org_id value.
-  "org_id": <insert-org-id>,
+  "org_id": "<insert-org-id>",
 
   "container": {
     "type": "operator bundle image",

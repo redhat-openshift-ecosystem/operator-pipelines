@@ -15,10 +15,6 @@ spec:
       description: The github status to set for the given commit.
     - name: context
       description: Context attached to the github status.
-    # TODO - https://issues.redhat.com/browse/ISV-1219
-    - name: target_url
-      description: URL to more details about the status.
-      default: ""
     - name: skip
       default: "false"
       description: Flag to skip the setting of github status.
@@ -54,5 +50,4 @@ spec:
           --commit-sha "$(params.commit_sha)" \
           --status "$(params.state)" \
           --context "$(params.context)" \
-          --description "$(params.description)" \
-          --target-url "$(params.target_url)"
+          --description "$(params.description)"
