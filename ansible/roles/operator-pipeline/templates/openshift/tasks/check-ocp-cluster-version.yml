@@ -8,16 +8,26 @@ spec:
     - name: pipeline_image
     - name: indices_ocp_versions
       description: All known supported OCP indices' OCP versions
-  workspaces:
-    - name: kubeconfig
+    - name: kubeconfig_secret_name
+      description: The name of the Kubernetes Secret that contains the kubeconfig.
+    - name: kubeconfig_secret_key
+      description: The key within the Kubernetes Secret that contains the kubeconfig.
+  volumes:
+    - name: kubeconfig-volume
+      secret:
+        secretName: "$(params.kubeconfig_secret_name)"
   steps:
     - name: check-ocp-cluster-version
       image: "$(params.pipeline_image)"
+      volumeMounts:
+        - name: kubeconfig-volume
+          readOnly: true
+          mountPath: "/etc/kubeconfig-volume"
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        KUBECONFIG=$(workspaces.kubeconfig.path)/kubeconfig
+        KUBECONFIG=/etc/kubeconfig-volume/$(params.kubeconfig_secret_key)
         CLUSTER_VERSION=$(oc get clusterversion -o jsonpath="{.items[0].status.desired.version}" --kubeconfig $KUBECONFIG)
         # Grab only the major and minor version for comparison
         CLUSTER_VERSION=$(echo $CLUSTER_VERSION | cut -d. -f1,2)

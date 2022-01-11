@@ -6,14 +6,14 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-    - name: pyxis_cert_path
-      default: ""
-      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
-    - name: pyxis_key_path
-      default: ""
-      description: Path to Pyxis key. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_secret_name
+      description: Kubernetes secret name that contains the Pyxis SSL files. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key. Valid only when internal Pyxis is used.
     - name: pyxis_url
-      default: https://catalog.redhat.com/api/containers/
+      default: https://pyxis.engineering.redhat.com
     - name: isv_pid
       description: isv_pid of the certification project from Red Hat Connect
     - name: repository
@@ -25,18 +25,20 @@ spec:
     - name: is_latest
       description: If explicitly set to "true", resulting image will be tagged as "latest"
   workspaces:
-    - name: pyxis-ssl-credentials
-      description: SSL certificates allowing authentication in Pyxis
     - name: image-data
       description: JSON files with data about image retrieved with Skopeo and Podman
+  volumes:
+    - name: pyxis-ssl-volume
+      secret:
+        secretName: "$(params.pyxis_ssl_secret_name)"
   steps:
     - name: create-container-image
       image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
-          value: $(params.pyxis_cert_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
         - name: PYXIS_KEY_PATH
-          value: $(params.pyxis_key_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
         - name: PYXIS_URL
           value: $(params.pyxis_url)
         - name: ISV_PID
@@ -49,6 +51,10 @@ spec:
           value: $(params.bundle_version)
         - name: IS_LATEST
           value: $(params.is_latest)
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
       script: |
         #! /usr/bin/env bash
         set -xe

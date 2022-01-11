@@ -35,8 +35,7 @@ spec:
               key: $(params.github_token_secret_key)
       script: |
         #! /usr/bin/env bash
-        # Don't use set -x to avoid exposing github token
-        set -e
+        set -ex
 
         if [ $(params.skip) == "true" ]; then
           echo "Skipping setting github status"

@@ -39,7 +39,7 @@ RUN dnf update -y && \
     dnf clean all
 
 COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
-    
+
 # Install opm CLI for ppc64le   
 RUN curl -LO https://github.com/mayurwaghmode/operator-registry/releases/download/v1.19.5/linux-ppc64le-opm && \
     chmod +x linux-ppc64le-opm && \

@@ -28,16 +28,22 @@ spec:
       default: trace
     - name: cert_project_id
       description: Certification project id
+    - name: kubeconfig_secret_name
+      description: The name of the Kubernetes Secret that contains the kubeconfig for the cluster used in preflight testing.
+    - name: kubeconfig_secret_key
+      description: The key within the Kubernetes Secret that contains the kubeconfig for the cluster used in preflight testing.
 
   results:
     - name: log_output_file
     - name: result_output_file
     - name: artifacts_output_dir
+  volumes:
+    - name: kubeconfig-volume
+      secret:
+        secretName: "$(params.kubeconfig_secret_name)"
   workspaces:
     - name: output
       description: Storage for preflight results, logs and artifacts.
-    - name: kubeconfig
-      description: A kubernetes config for the cluster used in preflight testing
     - name: credentials
       description: Docker config for retrieving the bundle image
       optional: true
@@ -85,7 +91,11 @@ spec:
         - name: PFLT_DOCKERCONFIG
           value: $(workspaces.output.path)/preflight-docker-config.json
         - name: KUBECONFIG
-          value: $(workspaces.kubeconfig.path)/kubeconfig
+          value: /etc/kubeconfig-volume/$(params.kubeconfig_secret_key)
+      volumeMounts:
+        - name: kubeconfig-volume
+          readOnly: true
+          mountPath: "/etc/kubeconfig-volume"
       script: |
         #! /usr/bin/env bash
         set -xe

@@ -18,21 +18,34 @@ spec:
       description: Operator bundle version.
     - name: connect_registry
       description: Container registry or proxy from which the published bundle will be pulled
-  workspaces:
-    - name: ocp-registry-kubeconfig
-      description: Kubeconfig for service account allowing connection with cluster that contains the ocp registries
+    - name: ocp_registry_kubeconfig_secret_name
+      description: >-
+        The name of the Kubernetes Secret that contains the kubeconfig for service account
+        allowing connection with cluster that contains the ocp registries.
+    - name: ocp_registry_kubeconfig_secret_key
+      description: >-
+        The key within the Kubernetes Secret that contains the kubeconfig for service
+        account allowing connection with cluster that contains the ocp registries.
   results:
     - name: container_digest
     - name: image_pullspec
+  volumes:
+    - name: kubeconfig-volume
+      secret:
+        secretName: "$(params.ocp_registry_kubeconfig_secret_name)"
   steps:
     - name: imagestream-manipulations
       image: registry.redhat.io/openshift4/ose-cli@sha256:eed7052f0013b85087cd9fa8e4b328f56a027846107d32a65daeb3a50cf23b49
+      volumeMounts:
+        - name: kubeconfig-volume
+          readOnly: true
+          mountPath: "/etc/kubeconfig-volume"
       script: |
         #! /usr/bin/env bash
         set -xe
 
         # Copying Kubeconfig from secret workspace to grant edit permissions
-        cp $(workspaces.ocp-registry-kubeconfig.path)/kubeconfig $HOME/kubeconfig
+        cp /etc/kubeconfig-volume/$(params.ocp_registry_kubeconfig_secret_key) $HOME/kubeconfig
         export KUBECONFIG=$HOME/kubeconfig
 
         # This task authenticates to registry with the credentials associated with service account

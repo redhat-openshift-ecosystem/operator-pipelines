@@ -37,7 +37,7 @@ RUN dnf update -y && \
 COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 
 # Install opm CLI
-RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.17.5/linux-amd64-opm && \
+RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.19.5/linux-amd64-opm && \
     chmod +x linux-amd64-opm && \
     mv linux-amd64-opm /usr/local/bin/opm
 

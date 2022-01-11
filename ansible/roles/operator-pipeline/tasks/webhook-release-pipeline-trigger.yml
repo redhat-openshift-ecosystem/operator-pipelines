@@ -107,15 +107,6 @@
                           resources:
                             requests:
                               storage: 100Mi
-                    - name: pyxis-ssl-credentials
-                      secret:
-                        secretName: "operator-pipeline-api-certs"
-                    - name: kerberos-keytab
-                      secret:
-                        secretName: "kerberos-keytab"
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-secret"
-                    - name: ocp-registry-kubeconfig
-                      secret:
-                        secretName: "ocp-registry-kubeconfig"
