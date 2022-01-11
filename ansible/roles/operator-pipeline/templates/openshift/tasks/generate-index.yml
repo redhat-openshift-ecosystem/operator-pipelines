@@ -40,8 +40,9 @@ spec:
         # Copy the default credentials to the "output" workspace so they can be
         # accessed without root access in other steps.
         mkdir -p $DOCKER_CONFIG
+        chmod 775 $DOCKER_CONFIG
         cp $HOME/.docker/config.json $DOCKER_CONFIG/config.json
-        chmod 644 $DOCKER_CONFIG/config.json
+        chmod 664 $DOCKER_CONFIG/config.json
 
         # Pull the index image from a pre-configured imagestream in the current namespace.
         # It may be possible to eliminate this once sqlite-based index images are no
@@ -94,7 +95,6 @@ spec:
             > temp-config.json
 
           mv temp-config.json $DOCKER_CONFIG/config.json
-          rm temp-config.json
         fi
 
         if [ -f "$FBC_FILE" ]; then
