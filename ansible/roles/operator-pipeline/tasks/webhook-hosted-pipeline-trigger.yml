@@ -139,18 +139,3 @@
                     - name: registry-credentials
                       secret:
                         secretName: "registry-dockerconfig-secret"
-                    - name: pyxis-ssl-credentials
-                      secret:
-                        secretName: "operator-pipeline-api-certs"
-                    - name: prow-kubeconfig
-                      secret:
-                        secretName: "prow-kubeconfig"
-                    - name: preflight-decryption-key
-                      secret:
-                        secretName: "preflight-decryption-key"
-                    - name: hydra-credentials
-                      secret:
-                        secretName: "hydra-credentials"
-                    - name: gpg-key
-                      secret:
-                        secretName: "isv-gpg-key"

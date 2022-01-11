@@ -6,15 +6,21 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-    - name: pyxis_api_key_secret
-      default: pyxis-api-secret
-      description: OpenShift secret name that contains Pyxis API key. Valid only when external Pyxis is used.
-    - name: pyxis_cert_path
-      default: ""
-      description: Path to Pyxis certificates. Valid only when internal Pyxis is used.
-    - name: pyxis_key_path
-      default: ""
-      description: Path to Pyxis key. Valid only when internal Pyxis is used.
+    - name: pyxis_api_key_secret_name
+      default: default-api-secret
+      description: Kubernetes secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_api_key_secret_key
+      default: pyxis_api_key
+      description: The key within the Kubernetes secret that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_ssl_secret_name
+      default: default-api-certs
+      description: Kubernetes secret name that contains the Pyxis SSL files. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_cert_secret_key
+      default: default-ssl-cert
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_key_secret_key
+      default: default-ssl-key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key. Valid only when internal Pyxis is used.
     - name: pyxis_url
       default: https://catalog.redhat.com/api/containers/
     - name: connect_url
@@ -36,19 +42,30 @@ spec:
       description: URL to the Connect SPA test results page
   workspaces:
     - name: source
-    - name: pyxis-ssl-credentials
-      optional: true
-    - name: pyxis-api-key
-      optional: true
+  volumes:
+    - name: pyxis-ssl-volume
+      secret:
+        secretName: "$(params.pyxis_ssl_secret_name)"
+        optional: true
   steps:
     - name: upload-test-logs
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
-          value: $(params.pyxis_cert_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
         - name: PYXIS_KEY_PATH
-          value: $(params.pyxis_key_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+        - name: PYXIS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.pyxis_api_key_secret_name)
+              key: $(params.pyxis_api_key_secret_key)
+              optional: true
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
@@ -56,11 +73,6 @@ spec:
           echo "Preflight logs already exists - skipping"
           echo "none" | tee $(results.log_url.path)
           exit 0
-        fi
-
-        if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
-          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
-          export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
         echo "Uploading test log"
@@ -87,9 +99,19 @@ spec:
       workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
-          value: $(params.pyxis_cert_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
         - name: PYXIS_KEY_PATH
-          value: $(params.pyxis_key_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+        - name: PYXIS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.pyxis_api_key_secret_name)
+              key: $(params.pyxis_api_key_secret_key)
+              optional: true
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
@@ -97,11 +119,6 @@ spec:
           echo "Preflight results already exists - skipping"
           echo "none" | tee $(results.result_url.path)
           exit 0
-        fi
-
-        if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
-          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
-          export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
         echo "Uploading test results"
@@ -133,19 +150,24 @@ spec:
       workingDir: $(workspaces.source.path)
       env:
         - name: PYXIS_CERT_PATH
-          value: $(params.pyxis_cert_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
         - name: PYXIS_KEY_PATH
-          value: $(params.pyxis_key_path)
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+        - name: PYXIS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.pyxis_api_key_secret_name)
+              key: $(params.pyxis_api_key_secret_key)
+              optional: true
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
       script: |
         #! /usr/bin/env bash
         PREFLIGHT_RESULTS_EXISTS="$(params.preflight_results_exists)"
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           exit 0
-        fi
-
-        if [[ "$(workspaces.pyxis-api-key.bound)" == "true" ]]; then
-          API_KEY_PATH=$(workspaces.pyxis-api-key.path)/pyxis_api_key
-          export PYXIS_API_KEY=$(cat $API_KEY_PATH)
         fi
 
         echo "Uploading test artifacts"
