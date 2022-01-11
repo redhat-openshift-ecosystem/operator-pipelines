@@ -486,11 +486,6 @@ spec:
 
     # Add the connect page URL in github PR comment to view the test results/logs
     - name: github-add-connect-url-comment
-      when:
-        - input: "$(tasks.certification-project-check.status)"
-          operator: in
-          values:
-            - Succeeded
       taskRef:
         name: github-add-comment
       params:
