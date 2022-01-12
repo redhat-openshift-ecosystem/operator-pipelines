@@ -777,7 +777,7 @@ spec:
           subPath: results
 
     # link pull request details to test results
-    - name: link-pull-request
+    - name: link-pull-request-with-open-status
       runAfter:
         - get-ci-results
       taskRef:
@@ -803,7 +803,7 @@ spec:
     # Query Hydra API for status of the pre-certification checklist
     - name: query-publishing-checklist
       runAfter:
-        - link-pull-request
+        - link-pull-request-with-open-status
         - verify-ci-results
       taskRef:
         name: query-publishing-checklist
@@ -844,6 +844,30 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+    
+    # link pull request details to test results
+    - name: link-pull-request-with-merged-status
+      runAfter:
+        - merge-pr
+      taskRef:
+        name: link-pull-request
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: test_result_id
+          value: "$(tasks.get-ci-results.results.test_result_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
+        - name: pull_request_url
+          value: "$(params.git_pr_url)"
+        - name: pull_request_status
+          value: "merged"
 
   finally:
 
