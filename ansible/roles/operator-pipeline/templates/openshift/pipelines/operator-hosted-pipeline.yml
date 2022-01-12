@@ -844,7 +844,7 @@ spec:
         - name: source
           workspace: repository
           subPath: src
-    
+
     # link pull request details to test results
     - name: link-pull-request-with-merged-status
       runAfter:
