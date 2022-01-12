@@ -145,6 +145,7 @@ def create_container_image(
         ],
         "certified": True,
         "docker_image_digest": args.docker_image_digest,
+        "image_id": args.docker_image_digest,
         "architecture": parsed_data["architecture"],
         "parsed_data": parsed_data,
         "sum_layer_size_bytes": int(podman_result[0]["Size"]),
