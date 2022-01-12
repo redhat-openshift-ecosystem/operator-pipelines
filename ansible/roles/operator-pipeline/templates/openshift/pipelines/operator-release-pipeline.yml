@@ -484,20 +484,6 @@ spec:
         - name: GITHUB_TOKEN_SECRET_KEY
           value: "$(params.github_token_secret_key)"
 
-    # Add the connect page URL in github PR comment to view the test results/logs
-    - name: github-add-connect-url-comment
-      taskRef:
-        name: github-add-comment
-      params:
-        - name: REQUEST_URL
-          value: "$(params.git_pr_url)"
-        - name: COMMENT_OR_FILE
-          value: "[View your certification test results and logs here]($(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results)."
-        - name: GITHUB_TOKEN_SECRET_NAME
-          value: "$(params.github_token_secret_name)"
-        - name: GITHUB_TOKEN_SECRET_KEY
-          value: "$(params.github_token_secret_key)"
-
     # Updates certification status to "Published"
     - name: update-cert-project-status
       taskRef:
