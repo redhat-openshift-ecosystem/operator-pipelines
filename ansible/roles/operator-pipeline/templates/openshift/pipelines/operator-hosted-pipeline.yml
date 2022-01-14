@@ -849,6 +849,10 @@ spec:
     - name: link-pull-request-with-merged-status
       runAfter:
         - merge-pr
+      when:
+        - input: $(tasks.merge-pr.results.pr_merged)
+          operator: in
+          values: ["true"]
       taskRef:
         name: link-pull-request
       params:

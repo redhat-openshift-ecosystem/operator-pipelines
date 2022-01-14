@@ -18,6 +18,7 @@ spec:
     - name: source
   results:
     - name: bool_merge
+    - name: pr_merged
   steps:
     - name: check-if-merge
       image: "$(params.pipeline_image)"
@@ -78,6 +79,7 @@ spec:
 
         if [ "$BOOL_MERGE" = "false" ]; then
           echo "merge explicitly set to false- not merging the Pull Request"
+          echo -n "false" | tee $(results.pr_merged.path)
           exit 0
         fi
 
@@ -96,3 +98,4 @@ spec:
           $API_URL
 
         echo "Merge request has been merged!"
+        echo -n "true" | tee $(results.pr_merged.path)
