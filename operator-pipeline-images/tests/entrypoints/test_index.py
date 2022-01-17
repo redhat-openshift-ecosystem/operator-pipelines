@@ -1,4 +1,6 @@
+from functools import partial
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from operatorcert.entrypoints import index
@@ -16,22 +18,27 @@ def test_parse_indices() -> None:
 
 @patch("operatorcert.iib.get_builds")
 def test_wait_for_results(mock_get_builds: MagicMock) -> None:
+    wait = partial(
+        index.wait_for_results,
+        "https://iib.engineering.redhat.com",
+        "some_batch_id",
+        delay=0.1,
+        timeout=0.5,
+    )
 
     # if the builds are in complete state
     mock_get_builds.return_value = {
         "items": [{"state": "complete", "batch": "some_batch_id"}]
     }
 
-    rsp = index.wait_for_results("https://iib.engineering.redhat.com", "some_batch_id")
-    assert rsp["items"] == [{"state": "complete", "batch": "some_batch_id"}]
+    assert wait()["items"] == [{"state": "complete", "batch": "some_batch_id"}]
 
     # if the builds are in failed state without state history
     mock_get_builds.return_value = {
         "items": [{"state": "failed", "id": 1, "batch": "some_batch_id"}]
     }
 
-    rsp = index.wait_for_results("https://iib.engineering.redhat.com", "some_batch_id")
-    assert rsp["items"] == [{"state": "failed", "id": 1, "batch": "some_batch_id"}]
+    assert wait()["items"] == [{"state": "failed", "id": 1, "batch": "some_batch_id"}]
 
     # if the builds are in failed state with state history
     mock_get_builds.return_value = {
@@ -45,8 +52,7 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
         ]
     }
 
-    rsp = index.wait_for_results("https://iib.engineering.redhat.com", "some_batch_id")
-    assert rsp["items"] == [
+    assert wait()["items"] == [
         {
             "state": "failed",
             "id": 1,
@@ -63,8 +69,7 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
         ]
     }
 
-    rsp = index.wait_for_results("https://iib.engineering.redhat.com", "some_batch_id")
-    assert rsp["items"] == [
+    assert wait()["items"] == [
         {"state": "failed", "id": 2, "batch": "some_batch_id"},
         {"state": "complete", "id": 1, "batch": "some_batch_id"},
     ]
@@ -77,10 +82,7 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
         ]
     }
 
-    rsp = index.wait_for_results(
-        "https://iib.engineering.redhat.com", "some_batch_id", timeout=1
-    )
-    assert rsp == None
+    assert wait() is None
 
 
 @patch("operatorcert.iib.add_builds")
