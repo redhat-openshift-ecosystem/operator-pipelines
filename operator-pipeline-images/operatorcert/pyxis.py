@@ -1,9 +1,11 @@
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -20,14 +22,15 @@ def is_internal() -> bool:
     return cert and key
 
 
-def _get_session(pyxis_url: str) -> requests.Session:
+def _get_session(pyxis_url: str, auth_required: bool = True) -> requests.Session:
     """
     Create a Pyxis http session with auth based on env variables.
 
-    Auth is set to use either API key or certificate + key.
+    Auth is optional and can be set to use either API key or certificate + key.
 
     Args:
         url (str): Pyxis API URL
+        auth_required (bool): Whether authentication should be required for the session
 
     Raises:
         Exception: Exception is raised when auth ENV variables are missing.
@@ -52,24 +55,35 @@ def _get_session(pyxis_url: str) -> requests.Session:
 
     session = requests.Session()
 
-    if api_key:
-        LOGGER.debug("Pyxis session using API key is created")
-        session.headers.update({"X-API-KEY": api_key})
-    elif cert and key:
-        if os.path.exists(cert) and os.path.exists(key):
-            LOGGER.debug("Pyxis session using cert + key is created")
-            session.cert = (cert, key)
+    # Exponential retry backoff for a max wait of ~8.5 mins
+    retries = Retry(
+        total=10, backoff_factor=1, status_forcelist=(408, 500, 502, 503, 504)
+    )
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    if auth_required:
+        if api_key:
+            LOGGER.debug("Pyxis session using API key is created")
+            session.headers.update({"X-API-KEY": api_key})
+        elif cert and key:
+            if os.path.exists(cert) and os.path.exists(key):
+                LOGGER.debug("Pyxis session using cert + key is created")
+                session.cert = (cert, key)
+            else:
+                raise Exception(
+                    "PYXIS_CERT_PATH or PYXIS_KEY_PATH does not point to a file that "
+                    "exists."
+                )
         else:
+            # API key or cert + key need to be provided using env variable
             raise Exception(
-                "PYXIS_CERT_PATH or PYXIS_KEY_PATH does not point to a file that "
-                "exists."
+                "No auth details provided for Pyxis. "
+                "Either define PYXIS_API_KEY or PYXIS_CERT_PATH + PYXIS_KEY_PATH"
             )
     else:
-        # API key or cert + key need to be provided using env variable
-        raise Exception(
-            "No auth details provided for Pyxis. "
-            "Either define PYXIS_API_KEY or PYXIS_CERT_PATH + PYXIS_KEY_PATH"
-        )
+        LOGGER.debug("Pyxis session without authentication is created")
 
     if proxies:
         LOGGER.debug(
@@ -158,19 +172,24 @@ def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
     return resp.json()
 
 
-def get(url: str) -> Any:
+def get(
+    url: str, params: Optional[Dict[str, str]] = None, auth_required: bool = True
+) -> Any:
     """
     Pyxis GET request
 
     Args:
         url (str): Pyxis URL
+        params (dict): Additional query parameters
+        auth_required (bool): Whether authentication should be required for the session
 
     Returns:
         Any: Pyxis GET request response
     """
-    session = _get_session(url)
-    LOGGER.debug(f"GET Pyxis request: {url}")
-    resp = session.get(url)
+    session = _get_session(url, auth_required=auth_required)
+    LOGGER.debug(f"GET Pyxis request url: {url}")
+    LOGGER.debug(f"GET Pyxis request params: {params}")
+    resp = session.get(url, params=params)
     # Not raising exception for error statuses, because GET request can be used to check
     # if something exists. We don't want a 404 to cause failures.
 

@@ -1,8 +1,11 @@
+import logging
 from typing import Any, Dict
 from urllib.parse import urljoin
-from requests_kerberos import HTTPKerberosAuth
+
 import requests
-import logging
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+from requests_kerberos import HTTPKerberosAuth
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -21,6 +24,14 @@ def get_session(kerberos_auth=True) -> Any:
 
     if kerberos_auth:
         session.auth = HTTPKerberosAuth()
+
+    # Exponential retry backoff for a max wait of ~8.5 mins
+    retries = Retry(
+        total=10, backoff_factor=1, status_forcelist=(408, 500, 502, 503, 504)
+    )
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
 
     return session
 

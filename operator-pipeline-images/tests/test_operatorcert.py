@@ -65,7 +65,7 @@ def test_get_csv_annotations(bundle: Bundle) -> None:
         operatorcert.get_csv_annotations(bundle_root, "foo-operator")
 
 
-@patch("requests.get")
+@patch("operatorcert.pyxis.get")
 def test_get_supported_indices(mock_get: MagicMock) -> None:
     mock_rsp = MagicMock()
     mock_rsp.json.return_value = {"data": ["foo", "bar"]}
@@ -136,60 +136,57 @@ def test_get_repo_and_org_from_github_url():
         )
 
 
-@patch("requests.get")
+@patch("operatorcert.github.get")
 def test_get_files_added_in_pr(mock_get: MagicMock):
-    mock_rsp = MagicMock()
-    mock_rsp.json.return_value = {
+    mock_get.return_value = {
         "irrelevant_key": "abc",
         "files": [
             {"filename": "first", "status": "added"},
             {"filename": "second", "status": "added"},
         ],
     }
-    mock_get.return_value = mock_rsp
     files = operatorcert.get_files_added_in_pr(
         "rh", "operator-repo", "main", "user:fixup"
     )
     mock_get.assert_called_with(
-        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup"
+        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup",
+        auth_required=False,
     )
     assert files == ["first", "second"]
 
 
-@patch("requests.get")
+@patch("operatorcert.github.get")
 def test_get_files_added_in_pr_changed_files(mock_get: MagicMock):
-    mock_rsp = MagicMock()
-    mock_rsp.json.return_value = {
+    mock_get.return_value = {
         "irrelevant_key": "abc",
         "files": [
             {"filename": "first", "status": "deleted"},
             {"filename": "second", "status": "changed"},
         ],
     }
-    mock_get.return_value = mock_rsp
     with pytest.raises(RuntimeError):
         operatorcert.get_files_added_in_pr("rh", "operator-repo", "main", "user:fixup")
     mock_get.assert_called_with(
-        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup"
+        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup",
+        auth_required=False,
     )
 
 
-@patch("requests.get")
+@patch("operatorcert.github.get")
 def test_get_files_added_in_pr_changed_ci_yaml(mock_get: MagicMock):
-    mock_rsp = MagicMock()
-    mock_rsp.json.return_value = {
+    mock_get.return_value = {
         "irrelevant_key": "abc",
         "files": [
             {"filename": "ci.yaml", "status": "changed"},
         ],
     }
-    mock_get.return_value = mock_rsp
     files = operatorcert.get_files_added_in_pr(
         "rh", "operator-repo", "main", "user:fixup"
     )
 
     mock_get.assert_called_with(
-        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup"
+        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup",
+        auth_required=False,
     )
 
     assert files == ["ci.yaml"]
@@ -257,7 +254,7 @@ def test_parse_pr_title(pr_title: str, is_valid: bool, name: str, version: str):
             operatorcert.parse_pr_title(pr_title)
 
 
-@patch("requests.get")
+@patch("operatorcert.github.get")
 def test_verify_pr_uniqueness(mock_get: MagicMock):
     base_pr_url = "https://github.com/user/repo/pulls/1"
     pr_rsp = [
@@ -286,10 +283,7 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
         ],
     ]
 
-    mock_rsp = MagicMock()
-    mock_rsp.json.side_effect = pr_rsp
-
-    mock_get.return_value = mock_rsp
+    mock_get.side_effect = pr_rsp
 
     available_repositories = ["org1/repo_a", "org2/repo_b"]
     base_pr_bundle_name = "first"
@@ -301,11 +295,11 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
     pr_rsp[1].append(
         {"title": "operator first (1.2.4)", "html_url": base_pr_url.replace("1", "5")}
     )
-    mock_rsp.json.side_effect = pr_rsp
+    mock_get.side_effect = pr_rsp
 
     assert mock_get.call_args_list == [
-        call("https://api.github.com/repos/org1/repo_a/pulls"),
-        call("https://api.github.com/repos/org2/repo_b/pulls"),
+        call("https://api.github.com/repos/org1/repo_a/pulls", auth_required=False),
+        call("https://api.github.com/repos/org2/repo_b/pulls", auth_required=False),
     ]
 
     with pytest.raises(RuntimeError):

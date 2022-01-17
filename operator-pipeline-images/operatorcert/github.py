@@ -1,8 +1,10 @@
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -22,16 +24,60 @@ def _get_session(auth_required: bool = False) -> requests.Session:
     Returns:
         requests.Session: Github session
     """
-    token = os.environ.get("GITHUB_TOKEN")
-
-    if auth_required and not token:
-        raise Exception("No auth details provided for Github. Define GITHUB_TOKEN.")
-
     session = requests.Session()
-    session.headers.update(
-        {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+
+    # Exponential retry backoff for a max wait of ~8.5 mins
+    retries = Retry(
+        total=10, backoff_factor=1, status_forcelist=(408, 500, 502, 503, 504)
     )
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    if auth_required:
+        token = os.environ.get("GITHUB_TOKEN")
+
+        if not token:
+            raise Exception("No auth details provided for Github. Define GITHUB_TOKEN.")
+
+        session.headers.update(
+            {
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github.v3+json",
+            }
+        )
+
     return session
+
+
+def get(
+    url: str, params: Optional[Dict[str, str]] = None, auth_required: bool = True
+) -> Dict[str, Any]:
+    """
+    Issue a GET request to the GitHub API
+
+    Args:
+        url (str): Github API URL
+        params (dict): Additional query parameters
+        auth_required (bool): Whether authentication should be required for the session
+
+    Returns:
+        Dict[str, Any]: GitHub response
+    """
+    session = _get_session(auth_required=auth_required)
+    LOGGER.debug(f"GET GitHub request url: {url}")
+    LOGGER.debug(f"GET GitHub request params: {params}")
+    resp = session.get(url, params=params)
+
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError:
+        LOGGER.exception(
+            f"GitHub GET query failed with {url} - {resp.status_code} - {resp.text}"
+        )
+        raise
+
+    return resp.json()
 
 
 def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
