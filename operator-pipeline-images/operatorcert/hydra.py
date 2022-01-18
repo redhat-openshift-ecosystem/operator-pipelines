@@ -5,9 +5,8 @@ import sys
 from typing import Any, Dict
 
 import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 
+from operatorcert.utils import add_session_retries
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -31,14 +30,7 @@ def _get_session() -> requests.Session:
 
     session = requests.Session()
     session.auth = (username, password)
-
-    # Exponential retry backoff for a max wait of ~8.5 mins
-    retries = Retry(
-        total=10, backoff_factor=1, status_forcelist=(408, 500, 502, 503, 504)
-    )
-    adapter = HTTPAdapter(max_retries=retries)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
+    add_session_retries(session)
 
     return session
 
