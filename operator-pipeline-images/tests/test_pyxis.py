@@ -54,7 +54,13 @@ def test_get_session_cert_not_exist(
         pyxis._get_session("test")
 
 
-def test_get_session_no_auth(monkeypatch: Any) -> None:
+def test_get_session_no_auth() -> None:
+    session = pyxis._get_session("test", auth_required=False)
+    assert session.cert is None
+    assert session.headers.get("X-API-KEY") is None
+
+
+def test_get_session_no_credentials(monkeypatch: Any) -> None:
     with pytest.raises(Exception):
         pyxis._get_session("test")
 
