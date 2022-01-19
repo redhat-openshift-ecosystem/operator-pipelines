@@ -56,7 +56,7 @@ execute_playbook() {
 pull_parent_index() {
   oc project $NAMESPACE
   # Must be run once before certifying against the certified catalog.
-  oc --request-timeout 5m import-image certified-operator-index \
+  oc --request-timeout 10m import-image certified-operator-index \
     --from=registry.redhat.io/redhat/certified-operator-index \
     --reference-policy local \
     --scheduled \
@@ -64,7 +64,7 @@ pull_parent_index() {
     --all
 
   # Must be run once before certifying against the Red Hat Martketplace catalog.
-  oc --request-timeout 5m import-image redhat-marketplace-index \
+  oc --request-timeout 10m import-image redhat-marketplace-index \
     --from=registry.redhat.io/redhat/redhat-marketplace-index \
     --reference-policy local \
     --scheduled \
