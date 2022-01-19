@@ -467,7 +467,7 @@ spec:
           value: "$(params.pyxis_api_key_secret_name)"
         - name: pyxis_api_key_secret_key
           value: "$(params.pyxis_api_key_secret_key)"
-       workspaces:
+      workspaces:
         - name: source   
           workspace: pipeline
           subPath: src 
