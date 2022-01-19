@@ -36,6 +36,8 @@ spec:
       description: Tekton pipeline run name where logs will be gathered from
   results:
     - name: pipeline_log_url
+  workspaces:
+    - name: source
   volumes:
     - name: pyxis-ssl-volume
       secret:
@@ -50,7 +52,7 @@ spec:
 
         echo "Getting pipeline logs"
 
-        tkn pipelinerun logs "$(params.pipeline_name)" > pipeline.logs
+        tkn pipelinerun logs "$(params.pipeline_name)" > $(workspaces.source.path)/pipeline.logs
 
     - name: upload-pipeline-logs
       image: "$(params.pipeline_image)"
@@ -80,7 +82,7 @@ spec:
           --operator-package-name "$(params.package_name)" \
           --certification-hash "$(params.md5sum)" \
           --pyxis-url "$(params.pyxis_url)" \
-          --path pipeline.logs \
+          --path $(workspaces.source.path)/pipeline.logs \
           --type pipeline-logs \
           --output pipeline-logs-artifact.json \
           --verbose
