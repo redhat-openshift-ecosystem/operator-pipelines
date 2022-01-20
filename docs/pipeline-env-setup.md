@@ -33,7 +33,7 @@ there is a one time configuration for each desired distribution catalog.
 
 ```bash
 # Must be run once before certifying against the certified catalog.
-oc --request-timeout 5m import-image certified-operator-index \
+oc --request-timeout 10m import-image certified-operator-index \
   --from=registry.redhat.io/redhat/certified-operator-index \
   --reference-policy local \
   --scheduled \
@@ -41,7 +41,7 @@ oc --request-timeout 5m import-image certified-operator-index \
   --all
 
 # Must be run once before certifying against the Red Hat Marketplace catalog.
-oc --request-timeout 5m import-image redhat-marketplace-index \
+oc --request-timeout 10m import-image redhat-marketplace-index \
   --from=registry.redhat.io/redhat/redhat-marketplace-index \
   --reference-policy local \
   --scheduled \

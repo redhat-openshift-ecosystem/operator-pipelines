@@ -1,10 +1,12 @@
 import logging
 import os
 import re
-import requests
 import sys
 from typing import Any, Dict
 
+import requests
+
+from operatorcert.utils import add_session_retries
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -28,6 +30,8 @@ def _get_session() -> requests.Session:
 
     session = requests.Session()
     session.auth = (username, password)
+    add_session_retries(session)
+
     return session
 
 

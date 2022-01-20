@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 import requests
 import yaml
 
+from operatorcert import github
 from operatorcert import pyxis
 from operatorcert.utils import find_file, store_results
 
@@ -115,7 +116,7 @@ def get_supported_indices(
         "include": "data.ocp_version,data.path",
     }
 
-    rsp = requests.get(url, params=params)
+    rsp = pyxis.get(url, params=params, auth_required=False)
     rsp.raise_for_status()
     return rsp.json()["data"]
 
@@ -215,14 +216,13 @@ def get_files_added_in_pr(
         f"https://api.github.com/repos/{organization}/{repository}"
         f"/compare/{base_branch}...{pr_head_label}"
     )
-    rsp = requests.get(compare_changes_url)
-    rsp.raise_for_status()
+    comparison = github.get(compare_changes_url, auth_required=False)
 
     added_files = []
     modified_files = []
     allowed_files = []
 
-    for file in rsp.json().get("files", []):
+    for file in comparison.get("files", []):
         if file["status"] == "added":
             added_files.append(file["filename"])
         else:
@@ -322,9 +322,7 @@ def verify_pr_uniqueness(
 
     for repo in available_repositories:
         # List the open PRs in the given repositories,
-        rsp = requests.get(base_url + repo + "/pulls")
-        rsp.raise_for_status()
-        prs = rsp.json()
+        prs = github.get(base_url + repo + "/pulls", auth_required=False)
 
         # find duplicates
         duplicate_prs = []

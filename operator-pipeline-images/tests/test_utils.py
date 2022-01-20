@@ -69,3 +69,22 @@ def test_set_client_keytab() -> None:
         mock_isfile.return_value = True
         utils.set_client_keytab("test")
         assert os.environ["KRB5_CLIENT_KTNAME"] == "FILE:test"
+
+
+def test_add_session_retries() -> None:
+    status_forcelist = (404, 503)
+    total = 3
+    backoff_factor = 0.5
+    session = utils.Session()
+    utils.add_session_retries(
+        session,
+        total=total,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    assert session.adapters["http://"].max_retries.total == total
+    assert session.adapters["http://"].max_retries.backoff_factor == backoff_factor
+    assert session.adapters["http://"].max_retries.status_forcelist == status_forcelist
+    assert session.adapters["https://"].max_retries.total == total
+    assert session.adapters["https://"].max_retries.backoff_factor == backoff_factor
+    assert session.adapters["https://"].max_retries.status_forcelist == status_forcelist

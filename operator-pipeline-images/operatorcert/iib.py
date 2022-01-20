@@ -1,8 +1,11 @@
+import logging
 from typing import Any, Dict
 from urllib.parse import urljoin
-from requests_kerberos import HTTPKerberosAuth
+
 import requests
-import logging
+from requests_kerberos import HTTPKerberosAuth
+
+from operatorcert.utils import add_session_retries
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -18,6 +21,7 @@ def get_session(kerberos_auth=True) -> Any:
         Any: IIB session
     """
     session = requests.Session()
+    add_session_retries(session)
 
     if kerberos_auth:
         session.auth = HTTPKerberosAuth()
