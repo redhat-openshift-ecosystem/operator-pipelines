@@ -467,8 +467,7 @@ spec:
           value: "$(params.pyxis_ssl_key_secret_key)"
       workspaces:
         - name: source
-          workspace: pipeline
-          subPath: src
+          workspace: repository
 
     # In the event of a failure, comment with the support link on the github PR
     - name: github-add-support-comment
