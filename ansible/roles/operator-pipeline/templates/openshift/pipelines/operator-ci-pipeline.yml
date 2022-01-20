@@ -470,7 +470,6 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline
-          subPath: src
 
     - name: show-support-link
       taskRef:
