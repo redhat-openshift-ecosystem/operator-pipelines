@@ -1,0 +1,73 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: upload-signature
+spec:
+  params:
+    - name: docker_reference
+    - name: manifest_digest
+    - name: repository
+    - name: sig_key_id
+      description: The signing key id that the content was signed with.
+    - name: signature_data
+      description: The signature to upload to Pyxis signature.
+    - name: pipeline_image
+    - name: pyxis_ssl_secret_name
+      description: Kubernetes secret name that contains the Pyxis SSL files.
+    - name: pyxis_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert.
+    - name: pyxis_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key.
+    - name: pyxis_url
+      description: Pyxis instance to upload the signature to.
+      default: https://pyxis.engineering.redhat.com
+    - name: verify_signature
+      description: Whether to verify that the signature data is signed with the right key.
+      default: "true"
+  volumes:
+    - name: pyxis-ssl-volume
+      secret:
+        secretName: "$(params.pyxis_ssl_secret_name)"
+        optional: false
+  steps:
+    - name: verify-signature
+      image: "$(params.pipeline_image)"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        if [[ "$(params.verify_signature)" == "true" ]]; then
+          echo "Verifying signature before upload"
+          echo $(params.signature_data) | base64 --decode > decoded_signed_claim
+
+          # import containerisvsign pub key
+          curl -O https://www.redhat.com/security/data/55A34A82.txt
+          gpg --import 55A34A82.txt
+          gpg --verify decoded_signed_claim
+        fi
+
+    - name: upload-signature
+      image: "$(params.pipeline_image)"
+      env:
+        - name: PYXIS_CERT_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
+        - name: PYXIS_KEY_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        echo "Signature verified. Uploading to Pyxis sigstore"
+        upload-signature \
+          --pyxis-url "$(params.pyxis_url)" \
+          --manifest-digest "$(params.manifest_digest)" \
+          --reference "$(params.docker_reference)" \
+          --repository "$(params.repository)" \
+          --sig-key-id "$(params.sig_key_id)" \
+          --signature-data "$(params.signature_data)" \
+          --verbose
