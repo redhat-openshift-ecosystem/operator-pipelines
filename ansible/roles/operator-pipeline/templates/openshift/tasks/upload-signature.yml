@@ -13,6 +13,10 @@ spec:
     - name: signature_data
       description: The signature to upload to Pyxis signature.
     - name: pipeline_image
+    - name: sig_key_pub_key
+      description: Env var that points to the location of the signing key's public key,
+        to be imported to gpg for verification.
+      default: ISVSIGN_PUB_KEY
     - name: pyxis_ssl_secret_name
       description: Kubernetes secret name that contains the Pyxis SSL files.
     - name: pyxis_ssl_cert_secret_key
@@ -41,9 +45,7 @@ spec:
           echo "Verifying signature before upload"
           echo $(params.signature_data) | base64 --decode > decoded_signed_claim
 
-          # import containerisvsign pub key
-          curl -O https://www.redhat.com/security/data/55A34A82.txt
-          gpg --import 55A34A82.txt
+          gpg --import $(printenv $(params.sig_key_pub_key))
           gpg --verify decoded_signed_claim
         fi
 
