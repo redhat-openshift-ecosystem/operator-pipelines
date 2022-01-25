@@ -39,7 +39,7 @@ def setup_argparser() -> Any:  # pragma: no cover
     )
     parser.add_argument(
         "--repository",
-        help="Repository for the signed content",
+        help="Name of the repository that hosts the signed content, e.g. redhat/community-operator-index",
         required=True,
     )
     parser.add_argument(
