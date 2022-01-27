@@ -16,6 +16,7 @@ spec:
     - name: signature_data
       description: The signature to upload to Pyxis signature.
     - name: pipeline_image
+      description: A docker image of operator-pipeline-images for the steps to run in.
     - name: sig_key_pub_key
       description: Env var that points to the location of the signing key's public key,
         to be imported to gpg for verification.

@@ -1,9 +1,8 @@
 import argparse
-import base64
-import json
 import logging
 from typing import Any
 from urllib.parse import urljoin
+from requests.exceptions import HTTPError
 
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
@@ -70,8 +69,17 @@ def upload_signature(args: Any) -> None:
         "signature_data": args.signature_data,
     }
 
-    rsp_json = pyxis.post(urljoin(args.pyxis_url, "v1/signatures"), payload)
-    LOGGER.info("Signature successfully created on Pyxis: %s", rsp_json)
+    try:
+        rsp_json = pyxis.post(urljoin(args.pyxis_url, "v1/signatures"), payload)
+        LOGGER.info("Signature successfully created on Pyxis: %s", rsp_json)
+    except HTTPError as err:
+        if err.response.status_code == 409:
+            LOGGER.warning(
+                "Pyxis POST request resulted in 409 Conflict Error. Signature may have "
+                "already been uploaded previously."
+            )
+        else:
+            raise
 
 
 def main():  # pragma: no cover
