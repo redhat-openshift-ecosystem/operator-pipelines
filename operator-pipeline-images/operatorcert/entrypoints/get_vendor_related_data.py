@@ -3,6 +3,7 @@ import logging
 from urllib.parse import urljoin
 
 from operatorcert import pyxis, store_results
+from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -52,7 +53,7 @@ def main() -> None:  # pragma: no cover
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     get_vendor_related_data(args.pyxis_url, args.org_id)
 

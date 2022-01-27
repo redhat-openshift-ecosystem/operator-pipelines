@@ -6,6 +6,9 @@ from operatorcert import (
     verify_changed_files_location,
     get_repo_and_org_from_github_url,
 )
+from operatorcert.logger import setup_logger
+
+LOGGER = logging.getLogger("operator-cert")
 
 
 def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
@@ -45,7 +48,7 @@ def main() -> None:
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     # Logic
     organization, repository = get_repo_and_org_from_github_url(args.git_repo_url)

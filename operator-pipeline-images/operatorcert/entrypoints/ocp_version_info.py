@@ -5,6 +5,9 @@ import pathlib
 import sys
 
 from operatorcert import ocp_version_info
+from operatorcert.logger import setup_logger
+
+LOGGER = logging.getLogger("operator-cert")
 
 
 def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
@@ -22,19 +25,21 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
         default="https://catalog.redhat.com/api/containers/",
         help="Base URL for Pyxis container metadata API",
     )
+    parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     return parser
 
 
 def main() -> None:
-    logging.basicConfig(stream=sys.stdout, level="INFO", format="%(message)s")
 
     parser = setup_argparser()
     args = parser.parse_args()
+    log_level = "DEBUG" if args.verbose else "INFO"
+    setup_logger(level=log_level, log_format="%(message)s")
 
     bundle_path = pathlib.Path(args.bundle_path)
     version_info = ocp_version_info(bundle_path, args.pyxis_url, args.organization)
-    logging.info(json.dumps(version_info))
+    LOGGER.info(json.dumps(version_info))
 
 
 if __name__ == "__main__":  # pragma: no cover

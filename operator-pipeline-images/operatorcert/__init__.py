@@ -20,6 +20,8 @@ PACKAGE_ANNOTATION = "operators.operatorframework.io.bundle.package.v1"
 OLM_PROPS_ANNOTATION = "olm.properties"
 MAX_OCP_VERSION_PROPERTY = "olm.maxOpenShiftVersion"
 
+LOGGER = logging.getLogger("operator-cert")
+
 
 def get_bundle_annotations(bundle_path: pathlib.Path) -> Dict:
     """
@@ -235,7 +237,7 @@ def get_files_added_in_pr(
     if modified_files:
         for modified_file in modified_files:
             if not modified_file["filename"].endswith("ci.yaml"):
-                logging.error(
+                LOGGER.error(
                     f"Change not permitted: file: {modified_file['filename']}, status: {modified_file['status']}"
                 )
                 raise RuntimeError("There are changes done to previously merged files")
@@ -257,7 +259,7 @@ def verify_changed_files_location(
     path = parent_path + "/" + bundle_version
     config_path = parent_path + "/ci.yaml"
 
-    logging.info(
+    LOGGER.info(
         f"Changes for operator {operator_name} in version {bundle_version}"
         f" are expected to be in paths: \n"
         f" {path}/* \n"
@@ -267,9 +269,9 @@ def verify_changed_files_location(
     wrong_changes = False
     for file_path in changed_files:
         if file_path.startswith(path) or file_path == config_path:
-            logging.info(f"Permitted change: {file_path}")
+            LOGGER.info(f"Permitted change: {file_path}")
         else:
-            logging.error(f"Unpermitted change: {file_path}")
+            LOGGER.error(f"Unpermitted change: {file_path}")
             wrong_changes = True
 
     if wrong_changes:
@@ -304,7 +306,7 @@ def validate_user(git_username: str, contacts: List[str]):
             f"User {git_username} doesn't have permissions to submit the bundle."
         )
     else:
-        logging.info(f"User {git_username} has permission to submit the bundle.")
+        LOGGER.info(f"User {git_username} has permission to submit the bundle.")
 
 
 def verify_pr_uniqueness(
@@ -342,11 +344,11 @@ def verify_pr_uniqueness(
 
         # Log duplicates and exit with error
         if duplicate_prs:
-            logging.error(
+            LOGGER.error(
                 f"There is more than one pull request for the Operator Bundle {base_pr_bundle_name}"
             )
             for duplicate in duplicate_prs:
-                logging.error(f"DUPLICATE: {duplicate}")
+                LOGGER.error(f"DUPLICATE: {duplicate}")
             raise RuntimeError("Multiple pull requests for one Operator Bundle")
 
 
@@ -373,7 +375,7 @@ def download_test_results(args) -> Optional[str]:
     query_results = rsp.json()["data"]
 
     if len(query_results) == 0:
-        logging.error(f"There is no test results for given parameters")
+        LOGGER.error(f"There is no test results for given parameters")
         return None
 
     # Get needed data from the query result
@@ -392,5 +394,5 @@ def download_test_results(args) -> Optional[str]:
     with open(file_path, "w") as file:
         file.write(result)
 
-    logging.info(f"Test results retrieved successfully for given parameters")
+    LOGGER.info(f"Test results retrieved successfully for given parameters")
     return query_results[0]["_id"]
