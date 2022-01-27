@@ -1,12 +1,12 @@
 import argparse
 import logging
+import os
+import time
+from datetime import datetime, timedelta
+from typing import Any, List
 
 from operatorcert import iib, utils
-from typing import Any, List
-import time
-import os
-from datetime import datetime, timedelta
-
+from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -163,7 +163,7 @@ def main() -> None:  # pragma: no cover
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     utils.set_client_keytab(os.environ.get("KRB_KEYTAB_FILE", "/etc/krb5.krb"))
 

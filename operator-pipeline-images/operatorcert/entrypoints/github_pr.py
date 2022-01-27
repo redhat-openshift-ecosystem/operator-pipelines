@@ -9,6 +9,7 @@ from typing import Any, Dict
 import giturlparse
 import operatorcert
 from operatorcert import github
+from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -151,7 +152,7 @@ def main() -> None:  # pragma: no cover
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     pr_body = get_pr_body(args)
     head = get_head(args.git_repo_url, args.source_branch)

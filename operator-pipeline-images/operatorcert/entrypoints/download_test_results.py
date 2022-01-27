@@ -2,6 +2,7 @@ import argparse
 import logging
 
 from operatorcert import download_test_results
+from operatorcert.logger import setup_logger
 from operatorcert.utils import store_results
 
 
@@ -38,7 +39,7 @@ def main() -> None:
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     # Logic
     test_results_id = download_test_results(args)

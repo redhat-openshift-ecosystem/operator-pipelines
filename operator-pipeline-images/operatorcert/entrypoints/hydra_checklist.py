@@ -115,7 +115,7 @@ def main() -> None:
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    setup_logger(log_level)
+    setup_logger(level=log_level)
 
     check_hydra_checklist_status(
         args.cert_project_id, args.hydra_url, args.ignore_publishing_checklist == "true"

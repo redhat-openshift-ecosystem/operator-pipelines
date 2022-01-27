@@ -84,7 +84,7 @@ def main():  # pragma: no cover
     parser = setup_argparser()
     args = parser.parse_args()
     log_level = "DEBUG" if args.verbose else "INFO"
-    setup_logger(log_level)
+    setup_logger(level=log_level)
 
     link_pr_to_test_results(
         args.pyxis_url,

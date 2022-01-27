@@ -2,7 +2,8 @@ import argparse
 import logging
 from urllib.parse import urljoin
 
-from operatorcert import github, get_repo_and_org_from_github_url
+from operatorcert import get_repo_and_org_from_github_url, github
+from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -65,7 +66,7 @@ def main() -> None:
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     set_github_status(args)
 

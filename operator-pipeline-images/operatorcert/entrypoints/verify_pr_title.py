@@ -2,7 +2,10 @@ import argparse
 import logging
 
 from operatorcert import parse_pr_title
+from operatorcert.logger import setup_logger
 from operatorcert.utils import store_results
+
+LOGGER = logging.getLogger("operator-cert")
 
 
 def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
@@ -24,7 +27,7 @@ def main() -> None:
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     # Logic- verify the pr title
     bundle_name, bundle_version = parse_pr_title(args.pr_title)
