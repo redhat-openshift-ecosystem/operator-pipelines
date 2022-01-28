@@ -2,11 +2,12 @@ import json
 import logging
 import pathlib
 import re
+from datetime import datetime, timezone
 from urllib.parse import urljoin
 from typing import Dict, List, Optional, Tuple
 
-import requests
 import yaml
+from dateutil.parser import isoparse
 
 from operatorcert import github
 from operatorcert import pyxis
@@ -115,7 +116,7 @@ def get_supported_indices(
         "ocp_versions_range": ocp_versions_range,
         "page_size": 500,
         "sort_by": "ocp_version[desc]",
-        "include": "data.ocp_version,data.path",
+        "include": "data.ocp_version,data.path,data.end_of_life",
     }
 
     rsp = pyxis.get(url, params=params, auth_required=False)
@@ -165,6 +166,19 @@ def ocp_version_info(
 
     if not indices:
         raise ValueError("No supported indices found")
+
+    # Raise an error if any of the supported OCP versions have reached their EOL
+    now = datetime.now(timezone.utc)
+    for index in indices:
+        eol = index.get("end_of_life")
+        if not eol:
+            continue
+
+        eol_datetime = isoparse(eol).astimezone(timezone.utc)
+        if eol_datetime <= now:
+            raise ValueError(
+                f"OpenShift {index['ocp_version']} has reached its end of life"
+            )
 
     return {
         "versions_annotation": ocp_versions_range,
