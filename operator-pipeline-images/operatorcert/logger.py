@@ -1,4 +1,5 @@
 import logging
+import sys
 from typing import Any
 
 STREAM_FORMAT = "%(asctime)s [%(name)s] %(levelname)s %(message)s"
@@ -24,7 +25,7 @@ def setup_logger(level: str = "INFO", log_format: Any = None) -> Any:
         log_format = STREAM_FORMAT
 
     stream_formatter = logging.Formatter(log_format)
-    stream_handler = logging.StreamHandler()
+    stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setLevel(level)
     stream_handler.setFormatter(stream_formatter)
     logger.addHandler(stream_handler)
