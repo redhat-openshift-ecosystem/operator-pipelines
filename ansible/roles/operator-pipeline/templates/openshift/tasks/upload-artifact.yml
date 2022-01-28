@@ -38,6 +38,8 @@ spec:
     - name: log_url
     - name: result_url
       description: URL to the Pyxis test results endpoint
+    - name: test_result_id
+      description: Test result identifier
     - name: result_spa_url
       description: URL to the Connect SPA test results page
   workspaces:
@@ -118,6 +120,7 @@ spec:
         if [ $PREFLIGHT_RESULTS_EXISTS == "true" ]; then
           echo "Preflight results already exists - skipping"
           echo "none" | tee $(results.result_url.path)
+          echo "none" | tee $(results.test_result_id.path)
           exit 0
         fi
 
@@ -136,6 +139,8 @@ spec:
 
         RESULTS_ID=$(cat preflight-results.json| jq -r "._id")
         RESULT_URL="$(params.pyxis_url)v1/projects/certification/test-results/id/$RESULTS_ID"
+
+        echo -n $RESULTS_ID | tee $(results.test_result_id.path)
 
         echo "Test result URL: "
         echo -n $RESULT_URL | tee $(results.result_url.path)

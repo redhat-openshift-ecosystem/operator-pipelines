@@ -406,7 +406,7 @@ spec:
           workspace: pipeline
           subPath: preflight
 
-    - name: open-pr
+    - name: open-pull-request
       runAfter:
         - upload-artifacts
       taskRef:
@@ -438,6 +438,28 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
+
+    # link pull request details to test results
+    - name: link-pull-request-with-open-status
+      runAfter:
+        - open-pull-request
+      taskRef:
+        name: link-pull-request
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: test_result_id
+          value: "$(tasks.upload-artifacts.results.test_result_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pyxis_api_key_secret_name
+          value: "$(params.pyxis_api_key_secret_name)"
+        - name: pyxis_api_key_secret_key
+          value: "$(params.pyxis_api_key_secret_key)"
+        - name: pull_request_url
+          value: "$(tasks.open-pull-request.results.pr_url)"
+        - name: pull_request_status
+          value: "open"
 
   finally:
     - name: upload-pipeline-logs
