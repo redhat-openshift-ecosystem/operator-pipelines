@@ -1,3 +1,4 @@
+from datetime import timezone
 from pathlib import Path
 from unittest import mock
 from unittest.mock import patch, MagicMock, call
@@ -5,6 +6,8 @@ from typing import Dict
 
 import pytest
 import yaml
+from dateutil.parser import isoparse
+
 import operatorcert
 
 Bundle = Dict[str, Path]
@@ -77,11 +80,18 @@ def test_get_supported_indices(mock_get: MagicMock) -> None:
     assert result == ["foo", "bar"]
 
 
+@patch("operatorcert.datetime")
 @patch("operatorcert.get_supported_indices")
-def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
-    bundle_root = bundle["root"]
-    mock_indices.return_value = [{"ocp_version": "4.7", "path": "quay.io/foo:4.7"}]
+def test_ocp_version_info(
+    mock_indices: MagicMock, mock_datetime: MagicMock, bundle: Bundle
+) -> None:
+    timestamp = "2022-01-01T00:00:00.000000+00:00"
+    mock_datetime.now.return_value = isoparse(timestamp).astimezone(timezone.utc)
     organization = "certified-operators"
+    bundle_root = bundle["root"]
+
+    # Happy path
+    mock_indices.return_value = [{"ocp_version": "4.7", "path": "quay.io/foo:4.7"}]
     info = operatorcert.ocp_version_info(bundle_root, "", organization)
     assert info == {
         "versions_annotation": "4.6-4.8",
@@ -90,10 +100,24 @@ def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
         "max_version_index": mock_indices.return_value[0],
     }
 
+    # No supported indices found
     mock_indices.return_value = []
     with pytest.raises(ValueError):
         operatorcert.ocp_version_info(bundle_root, "", organization)
 
+    # Index EOL reached
+    mock_indices.return_value = [
+        {
+            "ocp_version": "4.7",
+            "path": "quay.io/foo:4.7",
+            "end_of_life": timestamp,
+        }
+    ]
+    with pytest.raises(ValueError) as err_info:
+        operatorcert.ocp_version_info(bundle_root, "", organization)
+    assert str(err_info.value) == "OpenShift 4.7 has reached its end of life"
+
+    # Missing version range annotation
     annotations = {
         "annotations": {
             "operators.operatorframework.io.bundle.package.v1": "foo-operator",
@@ -102,15 +126,23 @@ def test_ocp_version_info(mock_indices: MagicMock, bundle: Bundle) -> None:
     with bundle["annotations"].open("w") as fh:
         yaml.safe_dump(annotations, fh)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as err_info:
         operatorcert.ocp_version_info(bundle_root, "", organization)
+    assert (
+        str(err_info.value) == "'com.redhat.openshift.versions' annotation not defined"
+    )
 
+    # Missing package name annotation
     annotations["annotations"] = {"com.redhat.openshift.versions": "4.6-4.8"}
     with bundle["annotations"].open("w") as fh:
         yaml.safe_dump(annotations, fh)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as err_info:
         operatorcert.ocp_version_info(bundle_root, "", organization)
+    assert (
+        str(err_info.value)
+        == "'operators.operatorframework.io.bundle.package.v1' annotation not defined"
+    )
 
 
 def test_get_repo_and_org_from_github_url():
