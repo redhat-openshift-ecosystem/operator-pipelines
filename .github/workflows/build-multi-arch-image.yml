@@ -1,0 +1,70 @@
+---
+name: Build and Push Multi-arch Image
+
+on:  # yamllint disable-line rule:truthy
+  workflow_run:
+    workflows:
+      - validation
+    branches:
+      - main
+    types:
+      - completed
+  workflow_dispatch:
+
+  env:
+  IMAGE_TAG: multi-arch
+  IMAGE_NAME: operator-pipelines-images
+  IMAGE_REGISTRY: quay.io
+  IMAGE_NAMESPACE: redhat-isv
+
+  jobs:
+  build-multiarch-images:
+    name: Build and push multi-architecture image
+    runs-on: ubuntu-20.04
+    steps:
+      - name: add checkout action...
+        uses: actions/checkout@v2
+
+      - name: Install qemu dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+
+      - name: Build image linux/amd64
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: linux-amd64
+          arch: amd64
+          containerfiles: |
+            ./operator-pipeline-images/Dockerfile
+
+      - name: Build image linux/ppc64le
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: linux-ppc64le
+          arch: ppc64le
+          containerfiles: |
+            ./operator-pipeline-images/Dockerfile-ppc64le
+
+      - name: Check images created
+        run: buildah images | grep '${{ env.IMAGE_NAME }}'
+
+      - name: Create and add to manifest
+        run: |
+          buildah manifest create ${{ env.IMAGE_NAME }}
+          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-amd64
+          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-ppc64le
+
+     # Authenticate to container image registry to push the image
+      - name: Podman Login
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Push manifest
+        run: |
+            podman manifest push ${{ env.IMAGE_NAME }}  ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}  --all
