@@ -4,6 +4,7 @@ import sys
 from urllib.parse import urljoin
 
 from operatorcert import pyxis
+from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -86,7 +87,7 @@ def main() -> None:  # pragma: no cover
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     check_operator_name(args)
     reserve_operator_name(args)

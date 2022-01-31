@@ -2,6 +2,9 @@ import argparse
 import logging
 
 from operatorcert import validate_user
+from operatorcert.logger import setup_logger
+
+LOGGER = logging.getLogger("operator-cert")
 
 
 def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
@@ -28,7 +31,7 @@ def main() -> None:
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     # Logic
     # Validate the Github user which created the PR

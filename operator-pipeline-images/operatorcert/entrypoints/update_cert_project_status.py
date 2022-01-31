@@ -3,11 +3,12 @@ Script for updating the cert project status
 """
 import argparse
 import logging
-from typing import Any
 from datetime import datetime, timezone
+from typing import Any
 from urllib.parse import urljoin
 
 from operatorcert import pyxis
+from operatorcert.logger import setup_logger
 from operatorcert.utils import store_results
 
 LOGGER = logging.getLogger("operator-cert")
@@ -68,7 +69,7 @@ def main() -> None:  # pragma: no cover
     log_level = "INFO"
     if args.verbose:
         log_level = "DEBUG"
-    logging.basicConfig(level=log_level)
+    setup_logger(level=log_level)
 
     update_cert_project_status(args)
 

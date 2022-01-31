@@ -6,24 +6,44 @@ metadata:
 spec:
   params:
     - name: pipeline_image
+      description: A docker image of operator-pipeline-images for the steps to run in.
+
+    - name: pyxis_api_key_secret_name
+      default: default-api-secret
+      description: Kubernetes secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+
+    - name: pyxis_api_key_secret_key
+      default: pyxis_api_key
+      description: The key within the Kubernetes secret that contains Pyxis API key. Valid only when external Pyxis is used.
+
     - name: pyxis_ssl_secret_name
+      default: default-api-certs
       description: Kubernetes secret name that contains the Pyxis SSL files. Valid only when internal Pyxis is used.
+
     - name: pyxis_ssl_cert_secret_key
+      default: default-ssl-cert
       description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
+
     - name: pyxis_ssl_key_secret_key
+      default: default-ssl-key
       description: The key within the Kubernetes secret that contains the Pyxis SSL key. Valid only when internal Pyxis is used.
+
     - name: test_result_id
       description: Identifier of preflight certification uploaded in Pyxis API.
+
     - name: pyxis_url
       description: Base URL of Pyxis container API.
+
     - name: pull_request_url
       description: URL to Github pull request with a new bundle submission.
+
     - name: pull_request_status
       description: Status of Github pull request.
   volumes:
     - name: pyxis-ssl-volume
       secret:
         secretName: "$(params.pyxis_ssl_secret_name)"
+        optional: true
   steps:
     - name: link-pull-request-details-to-test-results
       image: "$(params.pipeline_image)"
@@ -32,6 +52,12 @@ spec:
           value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
         - name: PYXIS_KEY_PATH
           value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+        - name: PYXIS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.pyxis_api_key_secret_name)
+              key: $(params.pyxis_api_key_secret_key)
+              optional: true
       volumeMounts:
         - name: pyxis-ssl-volume
           readOnly: true

@@ -77,4 +77,4 @@ spec:
 
         PR_URL=$(cat pull-request.logs | grep "Pull request URL" | sed 's/.*URL: //')
 
-        echo $PR_URL | tee $(results.pr_url.path)
+        echo -n $PR_URL | tee $(results.pr_url.path)
