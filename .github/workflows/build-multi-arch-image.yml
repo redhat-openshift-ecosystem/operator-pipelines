@@ -11,13 +11,13 @@ on:  # yamllint disable-line rule:truthy
       - completed
   workflow_dispatch:
 
-  env:
+env:
   IMAGE_TAG: multi-arch
   IMAGE_NAME: operator-pipelines-images
   IMAGE_REGISTRY: quay.io
   IMAGE_NAMESPACE: redhat-isv
 
-  jobs:
+jobs:
   build-multiarch-images:
     name: Build and push multi-architecture image
     runs-on: ubuntu-20.04
