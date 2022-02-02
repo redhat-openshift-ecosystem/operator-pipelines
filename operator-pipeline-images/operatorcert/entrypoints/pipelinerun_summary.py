@@ -31,4 +31,8 @@ def main() -> None:
     setup_logger(level=log_level, log_format="%(message)s")
     pr = PipelineRun.from_files(args.pr_path, args.trs_path)
 
-    logging.info(pr.markdown_summary(include_final_tasks=args.include_final_tasks))
+    LOGGER.info(pr.markdown_summary(include_final_tasks=args.include_final_tasks))
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()
