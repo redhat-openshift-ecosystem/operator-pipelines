@@ -43,8 +43,8 @@ def store_results(results: Dict[str, str]):
     for result_name, result_value in results.items():
         if result_value is None:
             result_value = ""
-            logging.error(f"Result {result_name} is empty")
-        logging.debug(f"Storing {result_name}")
+            LOGGER.error(f"Result {result_name} is empty")
+        LOGGER.debug(f"Storing {result_name}")
         with open(result_name, "w") as result_file:
             if type(result_value) is dict:
                 json.dump(result_value, result_file)

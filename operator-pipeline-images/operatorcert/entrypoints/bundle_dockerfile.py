@@ -7,6 +7,8 @@ import operatorcert
 from operatorcert.logger import setup_logger
 from operatorcert.utils import store_results
 
+LOGGER = logging.getLogger("operator-cert")
+
 
 class AnnotationFileNotFound(Exception):
     """
@@ -45,7 +47,7 @@ def generate_dockerfile_content(args: Any) -> str:
     Returns:
         str: Content of generated Dockerfile
     """
-    logging.debug("Generating a dockerfile...")
+    LOGGER.debug("Generating a dockerfile...")
     dockerfile_content = "FROM scratch\n\n"
 
     bundle_path = pathlib.Path(args.bundle_path)
