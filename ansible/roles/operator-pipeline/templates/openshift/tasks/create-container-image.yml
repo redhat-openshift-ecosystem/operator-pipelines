@@ -6,24 +6,47 @@ metadata:
 spec:
   params:
     - name: pipeline_image
+      description: A docker image of operator-pipeline-images for the steps to run in.
+
     - name: pyxis_ssl_secret_name
-      description: Kubernetes secret name that contains the Pyxis SSL files. Valid only when internal Pyxis is used.
+      description: |
+        Kubernetes secret name that contains the Pyxis SSL files.
+        Valid only when internal Pyxis is used.
+
     - name: pyxis_ssl_cert_secret_key
-      description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
+      description: |
+        The key within the Kubernetes secret that contains the Pyxis SSL cert.
+        Valid only when internal Pyxis is used.
+
     - name: pyxis_ssl_key_secret_key
-      description: The key within the Kubernetes secret that contains the Pyxis SSL key. Valid only when internal Pyxis is used.
+      description: |
+        The key within the Kubernetes secret that contains the Pyxis SSL key.
+        Valid only when internal Pyxis is used.
+
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
+
     - name: isv_pid
       description: isv_pid of the certification project from Red Hat Connect
+
     - name: repository
-      description: Repository path, including namespace, assigned to certification project from Red Hat Connect
+      description: |
+        Repository path, including namespace, assigned to certification
+        project from Red Hat Connect
+
     - name: container_digest
       description: imagestream container_digest
+
     - name: bundle_version
       description: Operator bundle version
+
     - name: is_latest
       description: If explicitly set to "true", resulting image will be tagged as "latest"
+
+    - name: environment
+      default: prod
+      description: Environment where the pipeline runs
+
   workspaces:
     - name: image-data
       description: JSON files with data about image retrieved with Skopeo and Podman
@@ -43,6 +66,8 @@ spec:
           value: $(params.pyxis_url)
         - name: ISV_PID
           value: $(params.isv_pid)
+        - name: ENVIRONMENT
+          value: $(params.environment)
         - name: REPOSITORY
           value: $(params.repository)
         - name: CONTAINER_DIGEST
@@ -62,9 +87,9 @@ spec:
 
         create-container-image \
           --pyxis-url $PYXIS_URL \
+          --environment $ENVIRONMENT \
           --isv-pid $ISV_PID \
           --repo-published "true" \
-          --registry "registry.connect.redhat.com" \
           --repository $REPOSITORY \
           --certified "true" \
           --docker-image-digest $CONTAINER_DIGEST \
