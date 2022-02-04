@@ -365,6 +365,8 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
+        - name: environment
+          value: "$(params.env)"
         - name: isv_pid
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: repository
