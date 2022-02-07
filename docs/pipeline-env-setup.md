@@ -29,7 +29,8 @@ registry to take advantage of the built-in credentials for Red Hat's terms-based
 registry (registry.redhat.io). This saves the user from needing to provide such
 credentials. The index generation task will always pull published index images
 through imagestreams of the same name in the current namespace. As a result,
-there is a one time configuration for each desired distribution catalog.
+there is a one time configuration for each desired distribution catalog. Replace
+the `from` argument when configuring this for pre-production environments.
 
 ```bash
 # Must be run once before certifying against the certified catalog.
