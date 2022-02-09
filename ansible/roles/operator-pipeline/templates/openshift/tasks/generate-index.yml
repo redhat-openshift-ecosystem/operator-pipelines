@@ -40,7 +40,7 @@ spec:
         # Copy the default credentials to the "output" workspace so they can be
         # accessed without root access in other steps.
         mkdir -p $DOCKER_CONFIG
-        chmod 775 $DOCKER_CONFIG
+        chmod 777 $DOCKER_CONFIG
         cp $HOME/.docker/config.json $DOCKER_CONFIG/config.json
         chmod 664 $DOCKER_CONFIG/config.json
 
