@@ -70,7 +70,7 @@ spec:
                     PYXIS_URL="https://pyxis.qa.engineering.redhat.com"
                     ;;
                     external)
-                    PYXIS_URL="https://pyxis-qa-ext.int.us-west.dc.preprod.paas.redhat.com"
+                    PYXIS_URL="https://catalog.qa.redhat.com/api/containers/v1"
                     ;;
                 esac
                 TARGET_BRANCH="qa"
@@ -84,7 +84,7 @@ spec:
                     PYXIS_URL="https://pyxis.dev.engineering.redhat.com"
                     ;;
                     external)
-                    PYXIS_URL="https://pyxis-dev-ext.int.us-west.dc.preprod.paas.redhat.com"
+                    PYXIS_URL="https://catalog.dev.redhat.com/api/containers/v1"
                     ;;
                 esac
                 TARGET_BRANCH="dev"
