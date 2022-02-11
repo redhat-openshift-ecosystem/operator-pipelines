@@ -151,8 +151,6 @@ def github_add_comment(
         )
 
 
-def github_add_comment():
-
 def main() -> None:
     parser = setup_argparser()
     args = parser.parse_args()
