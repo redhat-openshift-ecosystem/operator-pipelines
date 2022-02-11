@@ -27,7 +27,7 @@
 You may use any OpenShift 4.7+ cluster (including [CodeReady Containers](#using-codeready-containers)).
 
 The hosted and release pipelines require a considerable amount of dependencies which
-are tedious to [configure manually](docs/pipeline-env-setup.sh). Luckily these
+are tedious to [configure manually](pipeline-env-setup.md). Luckily these
 steps have been automated and can be executed by anyone with access to the Ansible
 vault password.
 
