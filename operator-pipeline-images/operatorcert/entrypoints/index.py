@@ -124,7 +124,8 @@ def publish_bundle(
     resp = iib.add_builds(iib_url, payload)
 
     batch_id = resp[0]["batch"]
-    response = wait_for_results(iib_url, batch_id)
+    delay = 3600    #60(minutes)x60(seconds)
+    response = wait_for_results(iib_url, batch_id, delay) # delay incremented to 60 minutes 
     if response is None or not all(
         [build.get("state") == "complete" for build in response["items"]]
     ):
