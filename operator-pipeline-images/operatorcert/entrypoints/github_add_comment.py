@@ -1,9 +1,10 @@
-""" 
+"""
 Script for adding a comment to a pull request or an issue.
 It can take either a filename or a comment as input and can
 post the comment back to GitHub accordingly.
 """
 import argparse
+from ast import arg
 import logging
 import json
 import os
@@ -11,7 +12,7 @@ import http.client
 import sys
 import urllib.parse
 
-from operatorcert import github
+from operatorcert import github, store_results
 from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
@@ -30,7 +31,7 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser.add_argument(
         "--github-host-url",
         default="api.github.com",
-        help="The GitHub host, default: api.github.com"
+        help="The GitHub host, default: api.github.com",
     )
     parser.add_argument(
         "--request-url",
@@ -50,6 +51,7 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
         default="false",
         help="When a tag is specified, and `REPLACE` is `true`, look for a comment with a matching tag and replace it with the new comment.",
     )
+    parser.add_argument("--verbose", action="store_true", help="Verbose output")
     return parser
 
 
@@ -69,10 +71,8 @@ def github_add_comment(
     )
 
     commentParamValue = comment_or_file
-    # check if workspace is bound and parameter passed is a filename or not
-    if "$(workspaces.comment-file.bound)" == "true" and os.path.exists(
-        commentParamValue
-    ):
+    # check if parameter passed is a filename or not
+    if os.path.exists(commentParamValue):
         commentParamValue = open(commentParamValue, "r").read()
 
     # If a tag was specified, append it to the comment
@@ -83,9 +83,7 @@ def github_add_comment(
     }
     # This is for our fake github server
     if github_host_url.startswith("http://"):
-        conn = http.client.HTTPConnection(
-            github_host_url.replace("http://", "")
-        )
+        conn = http.client.HTTPConnection(github_host_url.replace("http://", ""))
     else:
         conn = http.client.HTTPSConnection(github_host_url)
 
@@ -112,12 +110,9 @@ def github_add_comment(
         comments = json.loads(resp.read())
         print(comments)
         # If more than one comment is found take the last one
-        matching_comment = [
-            x for x in comments if commen_tag in x["body"]
-        ][-1:]
+        matching_comment = [x for x in comments if commen_tag in x["body"]][-1:]
         if matching_comment:
-            with open("$(results.OLD_COMMENT.path)", "w") as result_old:
-                result_old.write(str(matching_comment[0]))
+            store_results({"old_comment": str(matching_comment[0])})
             matching_comment = matching_comment[0]["url"]
 
     if matching_comment:
@@ -142,8 +137,7 @@ def github_add_comment(
         print("Error: %d" % (resp.status))
         print(resp.read())
     else:
-        with open("$(results.NEW_COMMENT.path)", "wb") as result_new:
-            result_new.write(resp.read())
+        store_results({"new_comment": resp.read()})
         print(
             "a GitHub comment has been {} to $(params.REQUEST_URL)".format(
                 "updated" if matching_comment else "added"
@@ -151,7 +145,7 @@ def github_add_comment(
         )
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     parser = setup_argparser()
     args = parser.parse_args()
 
@@ -160,7 +154,13 @@ def main() -> None:
         log_level = "DEBUG"
     setup_logger(level=log_level)
 
-    github_add_comment(args)
+    github_add_comment(
+        args.github_host_url,
+        args.request_url,
+        args.comment_or_file,
+        args.comment_tag,
+        args.replace,
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover
