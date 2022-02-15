@@ -5,13 +5,11 @@ post the comment back to GitHub accordingly.
 """
 import argparse
 import logging
-import json
-import os
-import http.client
 import sys
+from urllib.error import HTTPError
 import urllib.parse
 
-from operatorcert import github, store_results
+from operatorcert import github
 from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
@@ -29,8 +27,8 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     )
     parser.add_argument(
         "--github-host-url",
-        default="api.github.com",
-        help="The GitHub host, default: api.github.com",
+        default="https://api.github.com",
+        help="The GitHub host, default: https://api.github.com",
     )
     parser.add_argument(
         "--request-url",
@@ -38,9 +36,9 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
         help="The GitHub issue or pull request URL where we want to add a new comment.",
     )
     parser.add_argument(
-        "--comment-or-file",
+        "--comment-file",
         required=True,
-        help="The actual comment to add or the filename containing comment to post.",
+        help="File with actual comment to post.",
     )
     parser.add_argument(
         "--comment-tag", help="An invisible tag to be added into the comment."
@@ -57,7 +55,7 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 def github_add_comment(
     github_host_url: str,
     request_url: str,
-    comment_or_file: str,
+    comment_file: str,
     commen_tag: str,
     replace: str,
 ) -> None:
@@ -65,28 +63,18 @@ def github_add_comment(
     split_url = urllib.parse.urlparse(request_url).path.split("/")
 
     # This will convert https://github.com/foo/bar/pull/202 to
-    # api url path /repos/foo/issues/
-    base = ""
+    # api url path https://api.github.com/repos/foo/issues/202/comments
     package = "/".join(split_url[1:3])
     id = split_url[-1]
-    api_url = f"{base}/repos/{package}/issues/{id}"
+    api_url = f"{github_host_url}/repos/{package}/issues/{id}/comments"
 
-    comment_param_value = comment_or_file
-    # check if parameter passed is a filename or not
-    if os.path.exists(comment_param_value):
-        with open(comment_param_value, "r") as f:
-            comment_param_value = f.read(comment_param_value)
+    with open(comment_file, "r") as f:
+        comment_param_value = f.read()
 
     # If a tag was specified, append it to the comment
     if commen_tag != "":
         comment_param_value += f"<!-- {commen_tag} -->"
     data = {"body": comment_param_value}
-
-    # This is for our fake github server
-    if github_host_url.startswith("http://"):
-        conn = http.client.HTTPConnection(github_host_url.replace("http://", ""))
-    else:
-        conn = http.client.HTTPSConnection(github_host_url)
 
     # If 'replace' is true, we need to search for comments first
     matching_comment = ""
@@ -94,58 +82,37 @@ def github_add_comment(
         if not commen_tag:
             LOGGER.error("replace requested but no comment_tag specified")
             sys.exit(1)
-
-        """ resp2 = github.get(f"http://{github_host_url}{api_url}/comments") """
-        r = conn.request(
-            "GET",
-            api_url + "/comments",
-            headers={
-                "User-Agent": "TektonCD, the peaceful cat",
-                "Authorization": "Bearer " + os.environ["GITHUB_TOKEN"],
-            },
-        )
-        resp = conn.getresponse()
-        if not str(resp.status).startswith("2"):
-            LOGGER.error(f"Error: {resp.status}")
-            LOGGER.error(resp.read())
+        try:
+            comments = github.get(api_url)
+        except HTTPError:
+            LOGGER.error(
+                f"GitHub query failed with {api_url}, check if address is corect."
+            )
             sys.exit(1)
-        LOGGER.debug(resp.status)
-        comments = json.loads(resp.read())
-        LOGGER.debug(comments)
 
         # If more than one comment is found take the last one
         matching_comment = [x for x in comments if commen_tag in x["body"]][-1:]
         if matching_comment:
-            store_results({"old_comment": str(matching_comment[0])})
             matching_comment = matching_comment[0]["url"]
 
     if matching_comment:
-        method = "PATCH"
-        target_url = urllib.parse.urlparse(matching_comment).path
+        LOGGER.info("Updating this data on GitHub with PATCH")
+        LOGGER.info(data)
+        target_url = f"{github_host_url}{urllib.parse.urlparse(matching_comment).path}"
+        try:
+            github.patch(target_url, data)
+        except HTTPError:
+            LOGGER.error(f"GitHub query failed with {target_url}.")
     else:
-        method = "POST"
-        target_url = api_url + "/comments"
+        LOGGER.info("Sending this data to GitHub with POST")
+        LOGGER.info(data)
+        try:
+            github.post(api_url, data)
+        except HTTPError:
+            LOGGER.error(f"GitHub query failed with {api_url}.")
 
-    LOGGER.info(f"Sending this data to GitHub with {method}")
-    LOGGER.info(data)
-
-    r = conn.request(
-        method,
-        target_url,
-        body=json.dumps(data),
-        headers={
-            "User-Agent": "TektonCD, the peaceful cat",
-            "Authorization": "Bearer " + os.environ["GITHUB_TOKEN"],
-        },
-    )
-    resp = conn.getresponse()
-    if not str(resp.status).startswith("2"):
-        LOGGER.debug(f"Error: {resp.status}")
-        LOGGER.debug(resp.read())
-    else:
-        store_results({"new_comment": resp.read()})
-        method_used = "updated" if matching_comment else "added"
-        LOGGER.info(f"a GitHub comment has been {method_used} to {request_url}")
+    method_used = "updated" if matching_comment else "added"
+    LOGGER.info(f"a GitHub comment has been {method_used} to {request_url}")
 
 
 def main() -> None:  # pragma: no cover
@@ -160,7 +127,7 @@ def main() -> None:  # pragma: no cover
     github_add_comment(
         args.github_host_url,
         args.request_url,
-        args.comment_or_file,
+        args.comment_file,
         args.comment_tag,
         args.replace,
     )
