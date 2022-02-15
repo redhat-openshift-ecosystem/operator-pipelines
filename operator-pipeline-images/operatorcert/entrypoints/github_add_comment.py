@@ -4,7 +4,6 @@ It can take either a filename or a comment as input and can
 post the comment back to GitHub accordingly.
 """
 import argparse
-from ast import arg
 import logging
 import json
 import os
@@ -49,7 +48,7 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser.add_argument(
         "--replace",
         default="false",
-        help="When a tag is specified, and `REPLACE` is `true`, look for a comment with a matching tag and replace it with the new comment.",
+        help="When a tag is specified, and `replace` is `true`, look for a comment with a matching tag and replace it with the new comment.",
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     return parser
@@ -62,37 +61,41 @@ def github_add_comment(
     commen_tag: str,
     replace: str,
 ) -> None:
+
     split_url = urllib.parse.urlparse(request_url).path.split("/")
 
     # This will convert https://github.com/foo/bar/pull/202 to
     # api url path /repos/foo/issues/
-    api_url = "{base}/repos/{package}/issues/{id}".format(
-        base="", package="/".join(split_url[1:3]), id=split_url[-1]
-    )
+    base = ""
+    package = "/".join(split_url[1:3])
+    id = split_url[-1]
+    api_url = f"{base}/repos/{package}/issues/{id}"
 
-    commentParamValue = comment_or_file
+    comment_param_value = comment_or_file
     # check if parameter passed is a filename or not
-    if os.path.exists(commentParamValue):
-        commentParamValue = open(commentParamValue, "r").read()
+    if os.path.exists(comment_param_value):
+        with open(comment_param_value, "r") as f:
+            comment_param_value = f.read(comment_param_value)
 
     # If a tag was specified, append it to the comment
     if commen_tag != "":
-        commentParamValue += "<!-- {tag} -->".format(tag=commen_tag)
-    data = {
-        "body": commentParamValue,
-    }
+        comment_param_value += f"<!-- {commen_tag} -->"
+    data = {"body": comment_param_value}
+
     # This is for our fake github server
     if github_host_url.startswith("http://"):
         conn = http.client.HTTPConnection(github_host_url.replace("http://", ""))
     else:
         conn = http.client.HTTPSConnection(github_host_url)
 
-    # If REPLACE is true, we need to search for comments first
+    # If 'replace' is true, we need to search for comments first
     matching_comment = ""
     if replace == "true":
         if not commen_tag:
-            print("REPLACE requested but no COMMENT_TAG specified")
+            LOGGER.error("replace requested but no comment_tag specified")
             sys.exit(1)
+
+        """ resp2 = github.get(f"http://{github_host_url}{api_url}/comments") """
         r = conn.request(
             "GET",
             api_url + "/comments",
@@ -103,12 +106,13 @@ def github_add_comment(
         )
         resp = conn.getresponse()
         if not str(resp.status).startswith("2"):
-            print("Error: %d" % (resp.status))
-            print(resp.read())
+            LOGGER.error(f"Error: {resp.status}")
+            LOGGER.error(resp.read())
             sys.exit(1)
-        print(resp.status)
+        LOGGER.debug(resp.status)
         comments = json.loads(resp.read())
-        print(comments)
+        LOGGER.debug(comments)
+
         # If more than one comment is found take the last one
         matching_comment = [x for x in comments if commen_tag in x["body"]][-1:]
         if matching_comment:
@@ -121,8 +125,10 @@ def github_add_comment(
     else:
         method = "POST"
         target_url = api_url + "/comments"
-    print("Sending this data to GitHub with {}: ".format(method))
-    print(data)
+
+    LOGGER.info(f"Sending this data to GitHub with {method}")
+    LOGGER.info(data)
+
     r = conn.request(
         method,
         target_url,
@@ -134,15 +140,12 @@ def github_add_comment(
     )
     resp = conn.getresponse()
     if not str(resp.status).startswith("2"):
-        print("Error: %d" % (resp.status))
-        print(resp.read())
+        LOGGER.debug(f"Error: {resp.status}")
+        LOGGER.debug(resp.read())
     else:
         store_results({"new_comment": resp.read()})
-        print(
-            "a GitHub comment has been {} to $(params.REQUEST_URL)".format(
-                "updated" if matching_comment else "added"
-            )
-        )
+        method_used = "updated" if matching_comment else "added"
+        LOGGER.info(f"a GitHub comment has been {method_used} to {request_url}")
 
 
 def main() -> None:  # pragma: no cover
