@@ -1,0 +1,73 @@
+---
+kind: DeploymentConfig
+apiVersion: v1
+metadata:
+  labels:
+    app: "{{ nginx_proxy_name }}"
+    env: "{{ env }}"
+    suffix: "{{ suffix }}"
+  name: "{{ nginx_proxy_name }}-{{ suffix }}"
+spec:
+  replicas: {{ nginx_proxy_replicas | int }}  # yamllint disable-line rule:braces
+  strategy:
+    type: Rolling
+    rollingParams:
+      timeoutSeconds: 3600
+  triggers:
+    - type: ConfigChange
+  template:
+    metadata:
+      labels:
+        app: "{{ nginx_proxy_name }}"
+        env: "{{ env }}"
+        suffix: "{{ suffix }}"
+      name: "{{ nginx_proxy_name }}-{{ suffix }}"
+    spec:
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: "{{ nginx_proxy_name }}-{{ suffix }}"
+        - name: nginx-htpasswd
+          secret:
+            secretName: "{{ nginx_proxy_name }}-htpasswd-{{ suffix }}"
+
+      containers:
+        - name: "{{ nginx_proxy_name }}"
+          image: "{{ nginx_proxy_image }}"
+          command:
+            - /bin/bash
+            - '-c'
+          args:
+            - 'nginx -g "daemon off;error_log /dev/stdout debug;" -c /etc/nginx/nginx-config/nginx.conf'
+          ports:
+            - containerPort: {{ nginx_port | int }} # yamllint disable-line rule:braces
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /_proxy/ping
+              port: {{ nginx_port | int }} # yamllint disable-line rule:braces
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /_proxy/ping
+              port: {{ nginx_port | int }} # yamllint disable-line rule:braces
+            initialDelaySeconds: 15
+            timeoutSeconds: 20
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx-config/
+              readOnly: true
+            - name: nginx-htpasswd
+              mountPath: "{{ nginx_basic_user_dir_path }}"
+              readOnly: true
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
