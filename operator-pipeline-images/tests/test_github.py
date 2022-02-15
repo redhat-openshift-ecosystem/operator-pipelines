@@ -58,3 +58,22 @@ def test_post_with_error(mock_session: MagicMock) -> None:
     )
     with pytest.raises(HTTPError):
         github.post("https://foo.com/v1/bar", {})
+
+
+@patch("operatorcert.github._get_session")
+def test_patch(mock_session: MagicMock) -> None:
+    mock_session.return_value.patch.return_value.json.return_value = {"key": "val"}
+    resp = github.patch("https://foo.com/v1/bar", {})
+
+    assert resp == {"key": "val"}
+
+
+@patch("operatorcert.github._get_session")
+def test_patch_with_error(mock_session: MagicMock) -> None:
+    response = Response()
+    response.status_code = 400
+    mock_session.return_value.patch.return_value.raise_for_status.side_effect = (
+        HTTPError(response=response)
+    )
+    with pytest.raises(HTTPError):
+        github.patch("https://foo.com/v1/bar", {})
