@@ -40,7 +40,7 @@ RUN dnf update -y && \
 
 COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 
-# Install opm CLI for ppc64le   
+# Install opm CLI for s390x   
 RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.20.0/linux-s390x-opm && \
     chmod +x linux-s390x-opm && \
     mv linux-s390x-opm /usr/local/bin/opm
