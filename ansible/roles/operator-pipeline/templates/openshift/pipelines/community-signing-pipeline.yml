@@ -1,0 +1,102 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: community-signing-pipeline
+spec:
+  params:
+    - name: env
+      description: Which environment to run in. Can be one of [dev, qa, stage, prod]
+      default: "dev"
+    - name: pipeline_image
+      description: An image of operator-pipeline-images.
+      default: "quay.io/redhat-isv/operator-pipelines-images:released"
+    - name: manifest_digest
+      description: Manifest digest for the signed content, usually in the format sha256:xxx
+    - name: reference
+      description: Docker reference for the signed content, e.g. registry.redhat.io/redhat/community-operator-index:v4.9
+    - name: repository
+      description: Name of the repository that hosts the signed content, e.g. redhat/community-operator-index
+    - name: requester
+      description: Name of the user that requested the signing, for auditing purposes
+    - name: ssl_cert_secret_name
+      default: community-operator-signing-pipeline-certs
+    - name: ssl_cert_secret_key
+      default: community-operator-signing-pipeline.pem
+    - name: ssl_key_secret_key
+      default: community-operator-signing-pipeline.key
+    - name: umb_client_name
+      default: community-operator-signing-pipeline
+  workspaces:
+    - name: pipeline
+  tasks:
+    - name: set-env
+      taskRef:
+        name: set-env
+        kind: Task
+      params:
+        - name: env
+          value: $(params.env)
+        - name: access_type
+          value: "internal"
+
+    - name: request-signature
+      taskRef:
+        name: request-signature
+        kind: Task
+      runAfter:
+        - set-env
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: manifest_digest
+          value: "$(params.manifest_digest)"
+        - name: reference
+          value: "$(params.reference)"
+        - name: requester
+          value: "$(params.requester)"
+        - name: sig_key_id
+          value: "$(tasks.set-env.results.sig_key_id)"
+        - name: sig_key_name
+          value: "$(tasks.set-env.results.sig_key_name)"
+        - name: umb_ssl_secret_name
+          value: "$(params.ssl_cert_secret_name)"
+        - name: umb_ssl_cert_secret_key
+          value: "$(params.ssl_cert_secret_key)"
+        - name: umb_ssl_key_secret_key
+          value: "$(params.ssl_key_secret_key)"
+        - name: umb_client_name
+          value: "$(params.umb_client_name)"
+        - name: umb_url
+          value: "$(tasks.set-env.results.umb_url)"
+
+    - name: upload-signature
+      taskRef:
+        name: upload-signature
+        kind: Task
+      runAfter:
+        - request-signature
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: docker_reference
+          value: "$(params.reference)"
+        - name: manifest_digest
+          value: "$(params.manifest_digest)"
+        - name: repository
+          value: $(params.repository)
+        - name: sig_key_id
+          value: "$(tasks.set-env.results.sig_key_id)"
+        - name: signature_data
+          value: "$(tasks.request-signature.results.signed_claim)"
+        - name: pyxis_ssl_secret_name
+          value: "$(params.ssl_cert_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.ssl_key_secret_key)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        # TODO: remove it after ISV-1798 is done
+        - name: verify_signature
+          value: "false"

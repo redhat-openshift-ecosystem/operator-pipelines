@@ -15,6 +15,7 @@ ENV=$2
 PIPELINE_IMAGE_TAG=${4:-released}
 SECRET=$(dirname "$0")/vaults/custom/ocp-token.yml
 PASSWD_FILE=$3
+SUFFIX=${5:-foo}
 
 # Initialize the environment by creating the service account and giving for it admin permissions
 initialize_environment() {
@@ -54,7 +55,9 @@ execute_playbook() {
     -e "oc_namespace=$NAMESPACE" \
     -e "env=$ENV" \
     -e "ocp_host=`oc whoami --show-server`" \
-    -e "custom=true"
+    -e "operator_pipeline_image_tag=$PIPELINE_IMAGE_TAG" \
+    -e "custom=true" \
+    -e "suffix=$SUFFIX"
 }
 
 main() {

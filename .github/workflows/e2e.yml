@@ -33,6 +33,7 @@ jobs:
           echo "::set-output name=oc_project::test-e2e-${GITHUB_SHA::7}"
           echo "::set-output name=test_pr_base_branch::${GITHUB_SHA::7}-base"
 
+
   # Create a Pull Request with the fake version of fake operator in the repository operator-pipelines-test.
   # Pipelines will run against this PR.
   prepare-test-data:
@@ -139,7 +140,7 @@ jobs:
         run: |
           oc new-project $OC_PROJECT
           pushd ansible
-          bash init-custom-env.sh $OC_PROJECT stage vault-password ${{ github.sha }}
+          bash -x init-custom-env.sh $OC_PROJECT integration-tests vault-password ${{ github.sha }} $SHORT_SHA
           popd
 
       - name: Run CI pipeline

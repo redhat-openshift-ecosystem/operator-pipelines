@@ -36,3 +36,16 @@ e2e_kubeconfig_path: ../../vaults/common/kubeconfig-e2e
 
 pyxis_api_key_path: ../../vaults/{{ env }}/pyxis_api_key
 e2e_gh_account_path: ../../vaults/{{ env }}/e2e-gh-account-pat
+
+community_signing_pipeline_name: community-signing-pipeline
+community_signing_pipeline_private_key_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.key
+community_signing_pipeline_private_cert_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.pem
+community_signing_umb_client_name: community-operator-signing-pipeline-nonprod
+
+community_signing_pipeline_route_name: "{{ community_signing_pipeline_name }}"
+community_signing_pipeline_url: "{{ community_signing_pipeline_name }}-tekton-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
+
+
+nginx_basic_user_file_local_path: ../../vaults/{{ env }}/htpasswd
+nginx_proxy_service_url: "https://{{ community_signing_pipeline_url }}"
+nginx_proxy_url: "{{ community_signing_pipeline_name }}-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"

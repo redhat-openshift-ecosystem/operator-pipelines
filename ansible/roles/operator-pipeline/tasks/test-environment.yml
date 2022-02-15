@@ -1,0 +1,100 @@
+---
+
+# Deploying CI pipeline- with tag "ci", that usually is explicitly included
+# desired only for local dev and for E2E tests
+- name: Deploy CI pipeline
+  block:
+    - name: Deploy CI pipeline
+      k8s:
+        state: present
+        apply: yes
+        namespace: "{{ oc_namespace }}"
+        definition: "{{ lookup('template', '{{ item }}') }}"
+      with_items:
+        - ../templates/openshift/pipelines/operator-ci-pipeline.yml
+
+    - name: Create GitHub SSH Credentials secret
+      no_log: yes
+      tags:
+        - secrets
+      k8s:
+        state: present
+        force: yes
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: opaque
+          metadata:
+            name: github-ssh-credentials
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          data:
+            id_rsa: "{{ lookup('file', github_ssh_credentials_path, rstrip=False) | b64encode }}"
+
+    - name: Create Kubeconfig secret
+      no_log: yes
+      tags:
+        - secrets
+      k8s:
+        state: present
+        force: yes
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: opaque
+          metadata:
+            name: kubeconfig
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          data:
+            kubeconfig: "{{ lookup('file', e2e_kubeconfig_path, rstrip=False) | b64encode }}"
+
+    - name: Create Pyxis-API-Key secret (only stage, for sake of E2E CI pipeline)
+      no_log: yes
+      tags:
+        - secrets
+      k8s:
+        state: present
+        force: yes
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: opaque
+          metadata:
+            name: pyxis-api-secret
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          data:
+            pyxis_api_key: "{{ lookup('file', pyxis_api_key_path, rstrip=False) | b64encode }}"
+
+    - name: Create Github-API-key secret (only stage, for sake of E2E CI pipeline)
+      no_log: yes
+      tags:
+        - secrets
+      k8s:
+        state: present
+        force: yes
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: opaque
+          metadata:
+            name: github-api-token
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          data:
+            GITHUB_TOKEN: "{{ lookup('file', e2e_gh_account_path, rstrip=False) | b64encode }}"
+  tags:
+    - ci

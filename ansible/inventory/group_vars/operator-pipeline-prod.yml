@@ -26,3 +26,7 @@ operator_pipeline_ibm_webhook_token_local_path: ../../vaults/prod/nonprod-ibm-we
 # Settings for importing index imagestreams
 certified_operator_index: registry.redhat.io/redhat/certified-operator-index
 redhat_marketplace_index: registry.redhat.io/redhat/redhat-marketplace-index
+
+community_signing_umb_client_name: community-operator-signing-pipeline
+community_signing_pipeline_url: "{{ community_signing_pipeline_name }}-tekton-{{ env }}.apps.pipelines-prod.ijdb.p1.openshiftapps.com"
+nginx_proxy_url: "{{ community_signing_pipeline_name }}-{{ env }}.apps.pipelines-prod.ijdb.p1.openshiftapps.com"

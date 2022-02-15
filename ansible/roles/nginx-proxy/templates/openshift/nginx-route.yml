@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Route
+metadata:
+  name: "{{ nginx_proxy_name }}"
+  labels:
+    app: "{{ nginx_proxy_name }}"
+    env: "{{ env }}"
+spec:
+  host: "{{ nginx_proxy_url }}"
+  to:
+    kind: Service
+    name: "{{ nginx_proxy_name }}"
+  port:
+    targetPort: http
+  tls:
+    termination: edge

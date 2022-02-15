@@ -1,0 +1,17 @@
+---
+- include: tasks/community-signing-secrets.yml
+
+- name: Deploy signing pipeline
+  tags:
+    - tekton-pipeline
+    - community-signing
+  k8s:
+    state: present
+    apply: yes
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipelines/community-signing-pipeline.yml
+
+- include: tasks/webhook-community-signing-event-listener.yml
+- include: tasks/webhook-community-signing-trigger.yml
