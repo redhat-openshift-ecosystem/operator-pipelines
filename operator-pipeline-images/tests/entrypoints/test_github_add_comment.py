@@ -31,9 +31,9 @@ def test_github_add_comment_POST(mock_post: MagicMock) -> None:
         },
     )
 
-
+@patch("operatorcert.entrypoints.github_add_comment.github.get")
 @patch("operatorcert.entrypoints.github_add_comment.github.patch")
-def test_github_add_comment_PATCH(mock_post: MagicMock) -> None:
+def test_github_add_comment_PATCH(mock_get: MagicMock, mock_patch: MagicMock) -> None:
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = REQUEST_URL
@@ -41,6 +41,12 @@ def test_github_add_comment_PATCH(mock_post: MagicMock) -> None:
     args.comment_tag = "test_tag_2"
     args.replace = "true"
 
+    mock_get.return_value = [
+        {
+            "body": "Test comment.<!-- test_tag_2 -->",
+            "url": "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456"
+        }
+    ]
     github_add_comment.github_add_comment(
         args.github_host_url,
         args.request_url,
@@ -48,8 +54,11 @@ def test_github_add_comment_PATCH(mock_post: MagicMock) -> None:
         args.comment_tag,
         args.replace
     )
-    mock_post.assert_called_once_with(
-        "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/issues/252/comments",
+    mock_get.assert_called_once_with(
+        "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456",
+    )
+    mock_patch.assert_called_once_with(
+        "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456",
         {
             "body": "Test comment.<!-- test_tag_2 -->"
         },

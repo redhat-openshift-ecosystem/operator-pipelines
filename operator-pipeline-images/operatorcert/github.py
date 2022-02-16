@@ -119,7 +119,7 @@ def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Github POST query failed with {url} - {resp.status_code} - {resp.text}"
+            f"Github PATCH query failed with {url} - {resp.status_code} - {resp.text}"
         )
         raise
     return resp.json()
