@@ -8,7 +8,9 @@ import pytest
 GITHUB_HOST_URL = "https://api.github.com"
 PARENT_DIR = pathlib.Path(__file__).parent.resolve()
 COMMENT_PATH = PARENT_DIR.joinpath("../data/comment.txt")
-REQUEST_URL = "https://github.com/redhat-openshift-ecosystem/operator-pipelines/pull/252"
+REQUEST_URL = (
+    "https://github.com/redhat-openshift-ecosystem/operator-pipelines/pull/252"
+)
 
 
 @patch("operatorcert.entrypoints.github_add_comment.github.post")
@@ -24,13 +26,11 @@ def test_github_add_comment_post(mock_post: MagicMock) -> None:
         args.request_url,
         args.comment_file,
         args.comment_tag,
-        args.replace
+        args.replace,
     )
     mock_post.assert_called_once_with(
         "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/issues/252/comments",
-        {
-            "body": "Test comment.<!-- test_tag -->"
-        },
+        {"body": "Test comment.<!-- test_tag -->"},
     )
 
 
@@ -47,7 +47,7 @@ def test_github_add_comment_patch(mock_patch: MagicMock, mock_get: MagicMock) ->
     mock_get.return_value = [
         {
             "body": "Test comment.<!-- test_tag_2 -->",
-            "url": "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456"
+            "url": "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456",
         }
     ]
     github_add_comment.github_add_comment(
@@ -55,16 +55,14 @@ def test_github_add_comment_patch(mock_patch: MagicMock, mock_get: MagicMock) ->
         args.request_url,
         args.comment_file,
         args.comment_tag,
-        args.replace
+        args.replace,
     )
     mock_get.assert_called_once_with(
         "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/issues/252/comments",
     )
     mock_patch.assert_called_once_with(
         "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456",
-        {
-            "body": "Test comment.<!-- test_tag_2 -->"
-        },
+        {"body": "Test comment.<!-- test_tag_2 -->"},
     )
 
 
@@ -82,7 +80,7 @@ def test_github_add_comment_no_tag_replace_true() -> None:
             args.request_url,
             args.comment_file,
             args.comment_tag,
-            args.replace
+            args.replace,
         )
     assert notag_exit.type == SystemExit
 
@@ -99,7 +97,7 @@ def test_github_add_comment_bad_address_post() -> None:
             args.request_url,
             args.comment_file,
             args.comment_tag,
-            args.replace
+            args.replace,
         )
     assert bad_address.type == SystemExit
 
@@ -116,7 +114,7 @@ def test_github_add_comment_bad_address_patch(mock_get: MagicMock) -> None:
     mock_get.return_value = [
         {
             "body": "Test comment.<!-- test_tag_3 -->",
-            "url": "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456"
+            "url": "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456",
         }
     ]
 
@@ -126,7 +124,7 @@ def test_github_add_comment_bad_address_patch(mock_get: MagicMock) -> None:
             args.request_url,
             args.comment_file,
             args.comment_tag,
-            args.replace
+            args.replace,
         )
     assert bad_address.type == SystemExit
 
@@ -145,6 +143,6 @@ def test_github_add_comment_bad_address_replace() -> None:
             args.request_url,
             args.comment_file,
             args.comment_tag,
-            args.replace
+            args.replace,
         )
     assert bad_address.type == SystemExit
