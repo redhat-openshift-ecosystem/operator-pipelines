@@ -1,7 +1,9 @@
+from logging import raiseExceptions
 import pathlib
 from unittest.mock import MagicMock, patch
 
 from operatorcert.entrypoints import github_add_comment
+import pytest
 
 GITHUB_HOST_URL = "https://api.github.com"
 PARENT_DIR = pathlib.Path(__file__).parent.resolve()
@@ -31,9 +33,10 @@ def test_github_add_comment_POST(mock_post: MagicMock) -> None:
         },
     )
 
+
 @patch("operatorcert.entrypoints.github_add_comment.github.get")
 @patch("operatorcert.entrypoints.github_add_comment.github.patch")
-def test_github_add_comment_PATCH(mock_get: MagicMock, mock_patch: MagicMock) -> None:
+def test_github_add_comment_PATCH(mock_patch: MagicMock, mock_get: MagicMock) -> None:
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = REQUEST_URL
@@ -55,7 +58,7 @@ def test_github_add_comment_PATCH(mock_get: MagicMock, mock_patch: MagicMock) ->
         args.replace
     )
     mock_get.assert_called_once_with(
-        "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456",
+        "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/issues/252/comments",
     )
     mock_patch.assert_called_once_with(
         "https://api.github.com/repos/redhat-openshift-ecosystem/operator-pipelines/test/comment/123456",
@@ -63,3 +66,22 @@ def test_github_add_comment_PATCH(mock_get: MagicMock, mock_patch: MagicMock) ->
             "body": "Test comment.<!-- test_tag_2 -->"
         },
     )
+
+
+def test_github_add_comment_no_tag_replace_true() -> None:
+    args = MagicMock()
+    args.github_host_url = GITHUB_HOST_URL
+    args.request_url = REQUEST_URL
+    args.comment_file = COMMENT_PATH
+    args.comment_tag = ""
+    args.replace = "true"
+
+    with pytest.raises(SystemExit) as notag_exit:
+        github_add_comment.github_add_comment(
+            args.github_host_url,
+            args.request_url,
+            args.comment_file,
+            args.comment_tag,
+            args.replace
+        )
+    assert notag_exit.type == SystemExit
