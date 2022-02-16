@@ -84,7 +84,7 @@ def github_add_comment(
             sys.exit(1)
         try:
             comments = github.get(api_url)
-        except HTTPError:
+        except Exception:
             LOGGER.error(
                 f"GitHub query failed with {api_url}, check if address is corect."
             )
@@ -101,15 +101,17 @@ def github_add_comment(
         target_url = f"{github_host_url}{urllib.parse.urlparse(matching_comment).path}"
         try:
             github.patch(target_url, data)
-        except HTTPError:
+        except Exception:
             LOGGER.error(f"GitHub query failed with {target_url}.")
+            sys.exit(1)
     else:
         LOGGER.info("Sending this data to GitHub with POST")
         LOGGER.info(data)
         try:
             github.post(api_url, data)
-        except HTTPError:
+        except Exception:
             LOGGER.error(f"GitHub query failed with {api_url}.")
+            sys.exit(1)
 
     method_used = "updated" if matching_comment else "added"
     LOGGER.info(f"a GitHub comment has been {method_used} to {request_url}")
