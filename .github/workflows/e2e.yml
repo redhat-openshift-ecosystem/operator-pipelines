@@ -13,6 +13,7 @@ on:  # yamllint disable-line rule:truthy
     types:
       - completed
   workflow_dispatch:
+  pull_request:
 jobs:
 
   # envs  for other jobs are prepared as outputs of this task. Outputs are a good way to
