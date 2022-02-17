@@ -6,8 +6,8 @@ post the comment back to GitHub accordingly.
 import argparse
 import logging
 import sys
-from urllib.error import HTTPError
 import urllib.parse
+from requests import HTTPError
 
 from operatorcert import github
 from operatorcert.logger import setup_logger
@@ -84,7 +84,7 @@ def github_add_comment(
             sys.exit(1)
         try:
             comments = github.get(api_url)
-        except Exception:
+        except HTTPError:
             LOGGER.error(
                 f"GitHub query failed with {api_url}, check if address is corect."
             )
@@ -101,7 +101,7 @@ def github_add_comment(
         target_url = f"{github_host_url}{urllib.parse.urlparse(matching_comment).path}"
         try:
             github.patch(target_url, data)
-        except Exception:
+        except HTTPError:
             LOGGER.error(f"GitHub query failed with {target_url}.")
             sys.exit(1)
     else:
@@ -109,7 +109,7 @@ def github_add_comment(
         LOGGER.info(data)
         try:
             github.post(api_url, data)
-        except Exception:
+        except HTTPError:
             LOGGER.error(f"GitHub query failed with {api_url}.")
             sys.exit(1)
 

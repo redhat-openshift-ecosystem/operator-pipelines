@@ -17,6 +17,7 @@ spec:
     post the comment back to GitHub accordingly.
 
   params:
+    - name: pipeline_image
     - name: GITHUB_HOST_URL
       description: |
         The GitHub host, adjust this if you run a GitHub enteprise.
@@ -29,7 +30,7 @@ spec:
         comment.
       type: string
 
-    - name: COMMENT_OR_FILE
+    - name: COMMENT
       description: |
         The actual comment to add or the filename containing comment to post.
       type: string
@@ -71,15 +72,15 @@ spec:
               name: $(params.GITHUB_TOKEN_SECRET_NAME)
               key: $(params.GITHUB_TOKEN_SECRET_KEY)
 
-      image: registry.access.redhat.com/ubi8/ubi-minimal:8.2
+      image: "$(params.pipeline_image)"
       script: |
         #! /usr/bin/env bash
         set -xe -o pipefail
 
-        echo $params.COMMENT_OR_FILE > comment_file
+        echo $params.COMMENT > comment_file
 
         echo "Posting/patching GitHub comment to issue (or PR) $(params.REQUEST_URL)"
-        echo "Comment text: ($params.COMMENT_OR_FILE)"
+        echo "Comment text: ($params.COMMENT)"
 
         github-add-comment \
           --github-host-url "$(params.GITHUB_HOST_URL)" \

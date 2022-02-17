@@ -44,7 +44,7 @@ spec:
   steps:
     - name: gather-info
       workingDir: $(workspaces.output.path)
-      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
+      image: "$(params.pipeline_image)"
       script: |
         #! /usr/bin/env bash
         set -xe
