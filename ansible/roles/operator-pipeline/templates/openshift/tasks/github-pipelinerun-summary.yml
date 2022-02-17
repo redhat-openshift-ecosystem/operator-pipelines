@@ -96,5 +96,5 @@ spec:
 
         github-add-comment \
           --github-host-url "$(params.github_host_url)" \
-          --request-url "$(params.request_url)"
+          --request-url "$(params.request_url)" \
           --comment-file "$(params.pipelinerun)/comment.md"

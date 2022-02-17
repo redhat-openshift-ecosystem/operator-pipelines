@@ -84,7 +84,7 @@ spec:
 
         github-add-comment \
           --github-host-url "$(params.GITHUB_HOST_URL)" \
-          --request-url "$(params.REQUEST_URL)"
-          --comment-file comment_file
-          --comment-tag "$(params.COMMENT_TAG)"
+          --request-url "$(params.REQUEST_URL)" \
+          --comment-file comment_file \
+          --comment-tag "$(params.COMMENT_TAG)" \
           --replace "$(params.REPLACE)"
