@@ -1,6 +1,7 @@
 from logging import raiseExceptions
 import pathlib
 from unittest.mock import MagicMock, patch
+from requests import HTTPError
 
 from operatorcert.entrypoints import github_add_comment
 import pytest
@@ -85,11 +86,14 @@ def test_github_add_comment_no_tag_replace_true() -> None:
     assert notag_exit.type == SystemExit
 
 
-def test_github_add_comment_bad_address_post() -> None:
+@patch("operatorcert.entrypoints.github_add_comment.github.post")
+def test_github_add_comment_bad_address_post(mock_post: MagicMock) -> None:
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = "https://github.com/foo/bar/pull/202"
     args.comment_file = COMMENT_PATH
+
+    mock_post.side_effect = HTTPError
 
     with pytest.raises(SystemExit) as bad_address:
         github_add_comment.github_add_comment(
@@ -102,8 +106,11 @@ def test_github_add_comment_bad_address_post() -> None:
     assert bad_address.type == SystemExit
 
 
+@patch("operatorcert.entrypoints.github_add_comment.github.patch")
 @patch("operatorcert.entrypoints.github_add_comment.github.get")
-def test_github_add_comment_bad_address_patch(mock_get: MagicMock) -> None:
+def test_github_add_comment_bad_address_patch(
+    mock_get: MagicMock, mock_patch: MagicMock
+) -> None:
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = "https://github.com/foo/bar/pull/202"
@@ -118,6 +125,8 @@ def test_github_add_comment_bad_address_patch(mock_get: MagicMock) -> None:
         }
     ]
 
+    mock_patch.side_effect = HTTPError
+
     with pytest.raises(SystemExit) as bad_address:
         github_add_comment.github_add_comment(
             args.github_host_url,
@@ -129,13 +138,16 @@ def test_github_add_comment_bad_address_patch(mock_get: MagicMock) -> None:
     assert bad_address.type == SystemExit
 
 
-def test_github_add_comment_bad_address_replace() -> None:
+@patch("operatorcert.entrypoints.github_add_comment.github.get")
+def test_github_add_comment_bad_address_replace(mock_get: MagicMock) -> None:
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = "https://github.com/foo/bar/pull/202"
     args.comment_file = COMMENT_PATH
     args.comment_tag = "test_tag_4"
     args.replace = "true"
+
+    mock_get.side_effect = HTTPError
 
     with pytest.raises(SystemExit) as bad_address:
         github_add_comment.github_add_comment(
