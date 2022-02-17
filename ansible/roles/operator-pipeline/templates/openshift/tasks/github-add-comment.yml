@@ -16,11 +16,6 @@ spec:
     It can take either a filename or a comment as input and can
     post the comment back to GitHub accordingly.
 
-  workspaces:
-    - name: comment-file
-      optional: true
-      description: The optional workspace containing comment file to be posted.
-
   params:
     - name: GITHUB_HOST_URL
       description: |
@@ -77,8 +72,6 @@ spec:
               key: $(params.GITHUB_TOKEN_SECRET_KEY)
 
       image: registry.access.redhat.com/ubi8/ubi-minimal:8.2
-      # TODO: Store this script elsewhere
-      # https://issues.redhat.com/browse/ISV-1386
       script: |
         #! /usr/bin/env bash
         set -xe -o pipefail
@@ -87,7 +80,6 @@ spec:
 
         echo "Posting/patching GitHub comment to issue (or PR) $(params.REQUEST_URL)"
         echo "Comment text: ($params.COMMENT_OR_FILE)"
-
 
         github-add-comment \
           --github-host-url "$(params.GITHUB_HOST_URL)" \
