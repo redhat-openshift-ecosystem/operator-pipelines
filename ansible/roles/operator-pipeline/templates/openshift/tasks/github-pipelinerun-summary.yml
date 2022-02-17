@@ -87,7 +87,7 @@ spec:
             secretKeyRef:
               name: $(params.github_token_secret_name)
               key: $(params.github_token_secret_key)
-      image: registry.access.redhat.com/ubi8/ubi-minimal:8.2
+      image: "$(params.pipeline_image)"
       script: |
         #! /usr/bin/env bash
         set -xe -o pipefail
