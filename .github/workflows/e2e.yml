@@ -202,7 +202,6 @@ jobs:
           fi
 
       - name: Run Release pipeline
-        # TODO: REMOVE THE COMMENT AFTER TESTING.
         run: |
           tkn pipeline start operator-release-pipeline \
             --use-param-defaults \
