@@ -10,6 +10,7 @@ on:  # yamllint disable-line rule:truthy
       - Build
     branches:
       - main
+      - haripate:ISV-1504
     types:
       - completed
   workflow_dispatch:
