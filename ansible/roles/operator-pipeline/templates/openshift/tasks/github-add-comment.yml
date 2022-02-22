@@ -76,7 +76,7 @@ spec:
         #! /usr/bin/env bash
         set -xe -o pipefail
 
-        echo $(params.COMMENT) > comment_file
+        echo "$(params.COMMENT)" > comment_file
 
         echo "Posting/patching GitHub comment to issue (or PR) $(params.REQUEST_URL)"
         echo "Comment text: $(params.COMMENT)"
