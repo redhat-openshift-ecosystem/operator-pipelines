@@ -1,0 +1,79 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: request-signature
+spec:
+  params:
+    - name: pipeline_image
+      description: A docker image of operator-pipeline-images for the steps to run in.
+    - name: manifest_digest
+      description: Manifest digest for the signed content, usually in the format sha256:xxx
+    - name: reference
+      description: Docker reference for the signed content, e.g. registry.redhat.io/redhat/community-operator-index:v4.9
+    - name: requester
+      description: Name of the user that requested the signing, for auditing purposes
+    - name: sig_key_id
+      description: The signing key id that the content is signed with
+      default: "4096R/55A34A82 SHA-256"
+    - name: sig_key_name
+      description: The signing key name that the content is signed with
+      default: containerisvsign
+    - name: umb_ssl_secret_name
+      description: Kubernetes secret name that contains the umb SSL files
+    - name: umb_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the umb SSL cert.
+    - name: umb_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the umb SSL key.
+    - name: umb_client_name
+      description: Client name to connect to umb, usually a service account name
+      default: operatorpipelines
+    - name: umb_listen_topic
+      description: umb topic to listen to for responses with signed content
+      default: VirtualTopic.eng.robosignatory.isv.sign
+    - name: umb_publish_topic
+      description: umb topic to publish to for requesting signing
+      default: VirtualTopic.eng.operatorpipelines.isv.sign
+    - name: umb_url
+      description: umb host to connect to for messaging
+      default: umb.api.redhat.com
+  results:
+    - name: signed_claim
+  volumes:
+    - name: umb-ssl-volume
+      secret:
+        secretName: "$(params.umb_ssl_secret_name)"
+        optional: false
+  steps:
+    - name: request-signature
+      image: "$(params.pipeline_image)"
+      env:
+        - name: UMB_CERT_PATH
+          value: /etc/umb-ssl-volume/$(params.umb_ssl_cert_secret_key)
+        - name: UMB_KEY_PATH
+          value: /etc/umb-ssl-volume/$(params.umb_ssl_key_secret_key)
+      volumeMounts:
+        - name: umb-ssl-volume
+          readOnly: true
+          mountPath: "/etc/umb-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        echo "Requesting signing from RADAS"
+        request-signature \
+          --manifest-digest "$(params.manifest_digest)" \
+          --output signing_response.json \
+          --reference "$(params.reference)" \
+          --requester "$(params.requester)" \
+          --sig-key-id "$(params.sig_key_id)" \
+          --sig-key-name "$(params.sig_key_name)" \
+          --umb-client-name "$(params.umb_client_name)" \
+          --umb-listen-topic "$(params.umb_listen_topic)" \
+          --umb-publish-topic "$(params.umb_publish_topic)" \
+          --umb-url "$(params.umb_url)" \
+          --verbose
+
+        SIGNED_CLAIM=$(cat signing_response.json | jq -r ".signed_claim")
+        echo "Signed claim: "
+        echo -n $SIGNED_CLAIM | tee $(results.signed_claim.path)
