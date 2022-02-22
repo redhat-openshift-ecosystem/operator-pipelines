@@ -81,7 +81,7 @@
                 metadata:
                   generateName: operator-hosted-pipeline-run
                 spec:
-                  timeout: "1.5h"
+                  timeout: "2h"
                   pipelineRef:
                     name: operator-hosted-pipeline
                   params:
