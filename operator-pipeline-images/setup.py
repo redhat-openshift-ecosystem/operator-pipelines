@@ -43,6 +43,7 @@ setup(
             "marketplace-replication=operatorcert.entrypoints.marketplace_replication:main",
             "pipelinerun-summary=operatorcert.entrypoints.pipelinerun_summary:main",
             "upload-signature=operatorcert.entrypoints.upload_signature:main",
+            "github-add-comment=operatorcert.entrypoints.github_add_comment:main",
         ],
     },
 )
