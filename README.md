@@ -2,11 +2,11 @@
 
 Red Hat OpenShift pipelines for certifying ISV Operator Bundles.
 
-<<<<<<< HEAD
+
 ## Getting Started
-=======
+
 **To run any of the pipelines for the first time, multiple cluster resources have to be created.**
->>>>>>> bbfeffc (Added an article and changed verb form)
+
 
 Refer to the [developer guide](docs/developer-guide.md).
 
@@ -29,8 +29,8 @@ certification workflow.
 
 > **Note:** Execution of the CI pipeline is NOT required in the overall certification workflow.
 
-<<<<<<< HEAD
-=======
+
+
 Operator CI pipeline is a pipeline that can be triggered by a partner on on-premise
 infrastructure. The pipeline does a basic check of a new operator, build it and install
 it in ocp environment. After an operator is installed pre-flight tests are executed
@@ -44,7 +44,7 @@ oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
 ```
 
 ### Execution
->>>>>>> bbfeffc (Added an article and changed verb form)
+
 If using the default internal registry, the CI pipeline can be triggered using the tkn CLI like so:
 
 ```bash
@@ -97,13 +97,13 @@ To enable digest pinning, pass the following arguments:
   --workspace name=ssh-dir,secret=github-ssh-credentials
 ```
 
-<<<<<<< HEAD
+
 > **Note:** The `git_repo_url` param needs an SSH URL to commit the pinned digests.
-=======
+
 If any of the bundle's related images are stored in a private registry user needs to
 provide registry tokens for all used private registries. See more details about
 how to provide registry token in [first-time-run.md](docs/first-time-run.md).
->>>>>>> bbfeffc (Added an article and changed verb form)
+
 
 If any of bundle's related images are stored in a private registry the user needs to provide tokens
 to pull from those registries. See more details about how to provide registry tokens in the
@@ -156,12 +156,12 @@ the bundle and index images are pushed.
 
 ### Operator Release Pipeline
 
-<<<<<<< HEAD
+
 The release pipeline is responsible for releasing a bundle image which has passed certification.
 It's intended to be triggered by the merge of a bundle pull request by the hosted pipeline.
 It successfully completes once the bundle has been distributed to all relevant Operator catalogs
 and appears in the Red Hat Ecosystem Catalog.
-=======
+
 ## Operator Release pipeline
 The Release pipeline runs after the layers of validation (CI (optionally) and Hosted pipeline).
 It is used to certify and publish the submitted bundle version.
@@ -176,7 +176,7 @@ once the bundle has been distributed to all relevant Operator catalogs and appea
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-release-pipeline.yml
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
 ```
->>>>>>> bbfeffc (Added an article and changed verb form)
+
 
 > **Note:** Execution of the release pipeline is ALWAYS required in the overall certification workflow.
 
