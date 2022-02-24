@@ -480,9 +480,11 @@ spec:
       taskRef:
         name: github-add-comment
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: REQUEST_URL
           value: "$(params.git_pr_url)"
-        - name: COMMENT_OR_FILE
+        - name: COMMENT
           value: "There were errors while publishing your Operator bundle. You can use [this support case]($(tasks.create-support-link-for-pr.results.comment)) to contact the Red Hat certification team for review."
         - name: GITHUB_TOKEN_SECRET_NAME
           value: "$(params.github_token_secret_name)"
