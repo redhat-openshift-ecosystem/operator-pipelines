@@ -32,7 +32,7 @@ spec:
         registry)
       name: TLSVERIFY
       type: string
-    - default: oci
+    - default: docker
       description: The format of the built container, oci or docker
       name: FORMAT
       type: string
