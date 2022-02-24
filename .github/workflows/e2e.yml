@@ -156,7 +156,6 @@ jobs:
             --param bundle_path=operators/test-e2e-operator/0.0.7-$SHORT_SHA \
             --param env=stage \
             --param submit=false \
-            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
             --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=kubeconfig,secret=kubeconfig \
             --workspace name=ssh-dir,secret=github-ssh-credentials \
@@ -188,7 +187,6 @@ jobs:
             --param env=stage \
             --param preflight_min_version=0.0.0 \
             --param ci_min_version=0.0.0 \
-            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
             --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
@@ -212,7 +210,6 @@ jobs:
             --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
             --param git_pr_title="${{needs.prepare-env-job.outputs.pr_title}}" \
-            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
             --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
             --param is_latest=true \
             --param env=stage \
