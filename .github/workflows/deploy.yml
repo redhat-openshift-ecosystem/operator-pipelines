@@ -9,6 +9,7 @@ on:  # yamllint disable-line rule:truthy
       - main
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
 
