@@ -3,7 +3,7 @@
 Red Hat OpenShift pipelines for certifying ISV Operator Bundles.
 
 ## Getting Started
-=======
+
 **To run any of the pipelines for the first time, multiple cluster resources have to be created.**
 
 Refer to the [developer guide](docs/developer-guide.md).
@@ -169,7 +169,6 @@ once the bundle has been distributed to all relevant Operator catalogs and appea
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/pipelines/operator-release-pipeline.yml
 oc apply -R -f ansible/roles/operator-pipeline/templates/openshift/tasks
 ```
->>>>>>> bbfeffc (Added an article and changed verb form)
 
 > **Note:** Execution of the release pipeline is ALWAYS required in the overall certification workflow.
 
