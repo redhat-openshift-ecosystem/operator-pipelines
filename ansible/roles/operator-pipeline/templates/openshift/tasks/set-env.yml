@@ -20,6 +20,14 @@ spec:
       description: Connect container registry proxy based on selected environment
     - name: iib_url
       description: IIB URL based on selected environment
+    - name: sig_key_id
+      description: The signing key id that index image claims are signed with
+    - name: sig_key_name
+      description: The signing key name that index image claims are signed with
+    - name: umb_url
+      description: umb host to connect to for messaging, e.g. for signing
+    - name: umb_client_name
+      description: Client name to connect to umb, usually a service account name
   steps:
     - name: set-env
       image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
@@ -49,6 +57,10 @@ spec:
                 CONNECT_URL="https://connect.redhat.com"
                 CONNECT_REGISTRY="registry.connect.redhat.com"
                 IIB_URL="https://iib.engineering.redhat.com"
+                SIG_KEY_ID="4096R/55A34A82 SHA-256"
+                SIG_KEY_NAME="containerisvsign"
+                UMB_URL="umb.api.redhat.com"
+                UMB_CLIENT_NAME="operatorpipelines"
             ;;
             stage)
                 case $ACCESS_TYPE in
@@ -63,6 +75,10 @@ spec:
                 CONNECT_URL="https://connect.stage.redhat.com"
                 CONNECT_REGISTRY="registry.connect.stage.redhat.com"
                 IIB_URL="https://iib.stage.engineering.redhat.com"
+                SIG_KEY_ID="4096R/37036783 SHA-256"
+                SIG_KEY_NAME="redhate2etesting"
+                UMB_URL="umb.stage.api.redhat.com"
+                UMB_CLIENT_NAME="nonprod-operatorpipelines"
             ;;
             qa)
                 case $ACCESS_TYPE in
@@ -77,6 +93,10 @@ spec:
                 CONNECT_URL="https://connect.qa.redhat.com"
                 CONNECT_REGISTRY="registry.connect.qa.redhat.com"
                 IIB_URL="https://iib.stage.engineering.redhat.com"
+                SIG_KEY_ID="4096R/37036783 SHA-256"
+                SIG_KEY_NAME="redhate2etesting"
+                UMB_URL="umb.stage.api.redhat.com"
+                UMB_CLIENT_NAME="nonprod-operatorpipelines"
             ;;
             dev)
                 case $ACCESS_TYPE in
@@ -91,6 +111,10 @@ spec:
                 CONNECT_URL="https://connect.dev.redhat.com"
                 CONNECT_REGISTRY="registry.connect.dev.redhat.com"
                 IIB_URL="https://iib.stage.engineering.redhat.com"
+                SIG_KEY_ID="4096R/37036783 SHA-256"
+                SIG_KEY_NAME="redhate2etesting"
+                UMB_URL="umb.stage.api.redhat.com"
+                UMB_CLIENT_NAME="nonprod-operatorpipelines"
             ;;
             *)
                 echo "Unknown environment."
@@ -103,3 +127,7 @@ spec:
         echo -n $CONNECT_URL | tee $(results.connect_url.path)
         echo -n $CONNECT_REGISTRY | tee $(results.connect_registry.path)
         echo -n $IIB_URL | tee $(results.iib_url.path)
+        echo -n $SIG_KEY_ID | tee $(results.sig_key_id.path)
+        echo -n $SIG_KEY_NAME | tee $(results.sig_key_name.path)
+        echo -n $UMB_URL | tee $(results.umb_url.path)
+        echo -n $UMB_CLIENT_NAME | tee $(results.umb_client_name.path)
