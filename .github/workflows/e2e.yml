@@ -216,8 +216,8 @@ jobs:
             --param is_latest=true \
             --param env=stage \
             --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:latest \
-            --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
-            --workspace name=results,volumeClaimTemplateFile=templates/workspace-template-small.yml \
+            --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
+            --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
             --showlog
