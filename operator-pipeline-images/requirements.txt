@@ -9,3 +9,4 @@ twirp==0.0.4
 google-api-core==2.0.1
 python-dateutil==2.8.2
 humanize==3.12.0
+stomp.py==7.0.0
