@@ -57,42 +57,10 @@ execute_playbook() {
     -e "custom=true"
 }
 
-pull_parent_index() {
-  local certified_repo="registry.redhat.io/redhat/certified-operator-index"
-  local marketplace_repo="registry.redhat.io/redhat/redhat-marketplace-index"
-  local extra_args=()
-
-  if [ "$ENV" != "prod" ]; then
-      certified_repo="registry.stage.redhat.io/redhat/certified-operator-index"
-      marketplace_repo="registry.stage.redhat.io/redhat/redhat-marketplace-index"
-      extra_args+=(--insecure)
-  fi
-
-  oc project $NAMESPACE
-  # Must be run once before certifying against the certified catalog.
-  oc --request-timeout 10m import-image certified-operator-index \
-    --from=$certified_repo \
-    --reference-policy local \
-    --scheduled \
-    --confirm \
-    --all \
-    "${extra_args[@]}"
-
-  # Must be run once before certifying against the Red Hat Martketplace catalog.
-  oc --request-timeout 10m import-image redhat-marketplace-index \
-    --from=$marketplace_repo \
-    --reference-policy local \
-    --scheduled \
-    --confirm \
-    --all \
-    "${extra_args[@]}"
-}
-
 main() {
   initialize_environment
   update_token
   execute_playbook
-  pull_parent_index
 }
 
 main
