@@ -21,6 +21,9 @@ initialize_environment() {
     if [ ! -f $SECRET ]; then
         touch $SECRET
         echo "File $SECRET was not found, empty one was created"
+    else
+        echo '' > $SECRET
+        echo "New empty $SECRET was created"
     fi
 
     ansible-playbook -i inventory/operator-pipeline playbooks/deploy.yml \
@@ -50,6 +53,7 @@ execute_playbook() {
     --vault-password-file=$PASSWD_FILE \
     -e "oc_namespace=$NAMESPACE" \
     -e "env=$ENV" \
+    -e "ocp_host=`oc whoami --show-server`" \
     -e "custom=true"
 }
 

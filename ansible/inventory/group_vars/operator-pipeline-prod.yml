@@ -22,6 +22,3 @@ github_ssh_credentials_path: ../../vaults/prod/github-bot-ssh
 e2e_kubeconfig_path: ../../vaults/prod/kubeconfig-e2e
 
 operator_pipeline_ibm_webhook_token_local_path: ../../vaults/prod/nonprod-ibm-webhook-token
-
-operator_pipeline_hydra_username_local_path: ../../vaults/prod/nonprod-hydra-username
-operator_pipeline_hydra_password_local_path: ../../vaults/prod/nonprod-hydra-password
