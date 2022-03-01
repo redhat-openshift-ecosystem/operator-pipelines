@@ -22,3 +22,7 @@ github_ssh_credentials_path: ../../vaults/prod/github-bot-ssh
 e2e_kubeconfig_path: ../../vaults/prod/kubeconfig-e2e
 
 operator_pipeline_ibm_webhook_token_local_path: ../../vaults/prod/nonprod-ibm-webhook-token
+
+# Settings for importing index imagestreams
+certified_operator_index: registry.redhat.io/redhat/certified-operator-index
+redhat_marketplace_index: registry.redhat.io/redhat/redhat-marketplace-index
