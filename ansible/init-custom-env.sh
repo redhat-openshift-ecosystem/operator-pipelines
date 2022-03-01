@@ -47,7 +47,7 @@ update_token() {
 # Install all the other resources (pipelines, tasks, secrets etc..)
 execute_playbook() {
   ansible-playbook -i inventory/operator-pipeline playbooks/deploy.yml \
-    --vault-password-file vault-password \
+    --vault-password-file=$PASSWD_FILE \
     -e "oc_namespace=$NAMESPACE" \
     -e "env=$ENV" \
     -e "custom=true"

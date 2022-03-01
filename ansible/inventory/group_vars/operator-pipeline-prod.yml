@@ -11,3 +11,17 @@ preserve_after_cleanup: "10"
 
 operator_pipeline_hydra_username_local_path: ../../vaults/prod/hydra-username
 operator_pipeline_hydra_password_local_path: ../../vaults/prod/hydra-password
+
+operator_pipeline_kubeconfig_prow_local_path: ../../vaults/prod/kubeconfig-prow
+operator_pipeline_github_bot_token: ../../vaults/prod/github-bot-token.txt
+
+operator_pipeline_preflight_decryption_key_private_local_path: ../../vaults/prod/preflight-decryption-key-priv.gpg
+operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/prod/preflight-decryption-key-pub.gpg
+
+github_ssh_credentials_path: ../../vaults/prod/github-bot-ssh
+e2e_kubeconfig_path: ../../vaults/prod/kubeconfig-e2e
+
+operator_pipeline_ibm_webhook_token_local_path: ../../vaults/prod/nonprod-ibm-webhook-token
+
+operator_pipeline_hydra_username_local_path: ../../vaults/prod/nonprod-hydra-username
+operator_pipeline_hydra_password_local_path: ../../vaults/prod/nonprod-hydra-password

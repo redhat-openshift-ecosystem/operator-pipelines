@@ -101,7 +101,7 @@ jobs:
           playbook: playbooks/deploy.yml
           directory: ./ansible
           requirements: playbooks/requirements.yml
-          vault_password: ${{secrets.VAULT_PASSWORD}}
+          vault_password: ${{secrets.VAULT_PASSWORD_PROD}}
           options: |
             --inventory inventory/operator-pipeline
             --extra-vars "env=prod operator_pipeline_image_tag=${{ github.sha }}"
