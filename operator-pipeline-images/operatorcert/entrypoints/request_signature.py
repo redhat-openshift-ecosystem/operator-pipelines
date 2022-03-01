@@ -87,10 +87,7 @@ def setup_argparser() -> Any:  # pragma: no cover
     return parser
 
 
-global umb
 umb = None
-
-global result_file
 result_file = None
 
 # wait for signing response for a total of 5 min, at 5 second intervals
