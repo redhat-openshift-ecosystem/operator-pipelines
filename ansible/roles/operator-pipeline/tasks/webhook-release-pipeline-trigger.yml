@@ -63,6 +63,7 @@
                 metadata:
                   generateName: operator-release-pipeline-run
                 spec:
+                  timeout: "1h30m0s"
                   pipelineRef:
                     name: operator-release-pipeline
                   params:
