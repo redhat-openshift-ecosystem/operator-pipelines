@@ -13,6 +13,7 @@ on:  # yamllint disable-line rule:truthy
     types:
       - completed
   workflow_dispatch:
+
 jobs:
 
   # envs  for other jobs are prepared as outputs of this task. Outputs are a good way to
@@ -195,6 +196,34 @@ jobs:
       - name: Check if Hosted pipeline passed
         run: |
           PIPELINERUN_NAME=$(oc get pr --no-headers -l tekton.dev/pipeline=operator-hosted-pipeline -o custom-columns=":metadata.name")
+          PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
+          if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
+            oc get pr
+            exit 1
+          fi
+
+      - name: Run Release pipeline
+        run: |
+          tkn pipeline start operator-release-pipeline \
+            --use-param-defaults \
+            --param image_namespace=operator-pipeline-stage \
+            --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
+            --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
+            --param git_pr_title="${{needs.prepare-env-job.outputs.pr_title}}" \
+            --param git_base_branch=${{needs.prepare-env-job.outputs.test_pr_base_branch}} \
+            --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
+            --param is_latest=true \
+            --param env=stage \
+            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
+            --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
+            --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
+            --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
+            --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+            --showlog
+
+      - name: Check if Release pipeline passed
+        run: |
+          PIPELINERUN_NAME=$(oc get pr --no-headers -l tekton.dev/pipeline=operator-release-pipeline -o custom-columns=":metadata.name")
           PIPELINERUN_SUCCEEDED=$(oc get pr $PIPELINERUN_NAME -o jsonpath={'.status.conditions[].status'})
           if [[ "$PIPELINERUN_SUCCEEDED" != "True" ]]; then
             oc get pr
