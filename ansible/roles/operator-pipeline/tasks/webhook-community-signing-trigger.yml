@@ -25,8 +25,6 @@
                 value: $(body.manifest_digest)
               - name: reference
                 value: $(body.reference)
-              - name: repository
-                value: $(body.repository)
               - name: requester
                 value: $(body.requester)
               - name: umb_client_name
@@ -52,7 +50,6 @@
               - name: env
               - name: manifest_digest
               - name: reference
-              - name: repository
               - name: requester
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
@@ -70,8 +67,6 @@
                       value: $(tt.params.manifest_digest)
                     - name: reference
                       value: $(tt.params.reference)
-                    - name: repository
-                      value: $(tt.params.repository)
                     - name: requester
                       value: $(tt.params.requester)
                   workspaces:

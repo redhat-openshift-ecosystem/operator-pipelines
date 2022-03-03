@@ -9,8 +9,6 @@ spec:
       description: Docker reference for the signed content, e.g. registry.redhat.io/redhat/community-operator-index:v4.9
     - name: manifest_digest
       description: Manifest digest for the signed content, usually in the format sha256:xxx
-    - name: repository
-      description: Name of the repository that hosts the signed content, e.g. redhat/community-operator-index
     - name: sig_key_id
       description: The signing key id that the content was signed with.
     - name: signature_data
@@ -73,7 +71,6 @@ spec:
           --pyxis-url "$(params.pyxis_url)" \
           --manifest-digest "$(params.manifest_digest)" \
           --reference "$(params.docker_reference)" \
-          --repository "$(params.repository)" \
           --sig-key-id "$(params.sig_key_id)" \
           --signature-data "$(params.signature_data)" \
           --verbose
