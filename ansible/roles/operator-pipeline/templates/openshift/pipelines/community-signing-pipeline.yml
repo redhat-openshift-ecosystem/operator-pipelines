@@ -15,8 +15,6 @@ spec:
       description: Manifest digest for the signed content, usually in the format sha256:xxx
     - name: reference
       description: Docker reference for the signed content, e.g. registry.redhat.io/redhat/community-operator-index:v4.9
-    - name: repository
-      description: Name of the repository that hosts the signed content, e.g. redhat/community-operator-index
     - name: requester
       description: Name of the user that requested the signing, for auditing purposes
     - name: ssl_cert_secret_name
@@ -83,8 +81,6 @@ spec:
           value: "$(params.reference)"
         - name: manifest_digest
           value: "$(params.manifest_digest)"
-        - name: repository
-          value: $(params.repository)
         - name: sig_key_id
           value: "$(tasks.set-env.results.sig_key_id)"
         - name: signature_data

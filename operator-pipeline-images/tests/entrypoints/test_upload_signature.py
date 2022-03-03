@@ -16,6 +16,19 @@ def test_main(
     mock_upload_signature.assert_called_once()
 
 
+def test_parse_repository_name():
+    test_data = {
+        "registry.com/repo": "repo",
+        "registry.com/namespace/repo": "namespace/repo",
+        "registry.com/namespace/repo2:latest": "namespace/repo2",
+        "registry.com/namespace/repo3@sha256:123": "namespace/repo3",
+        "docker://registry.com/namespace/repo4@sha256:123": "namespace/repo4",
+    }
+    for pull_spec, expected_repo in test_data.items():
+        result = upload_signature.parse_repository_name(pull_spec)
+        assert result == expected_repo
+
+
 @patch("operatorcert.entrypoints.upload_signature.pyxis.post")
 def test_upload_signature(mock_post: MagicMock) -> None:
     args = MagicMock()

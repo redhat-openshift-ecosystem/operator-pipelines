@@ -3,6 +3,7 @@ import logging
 from typing import Any
 from urllib.parse import urljoin
 from requests.exceptions import HTTPError
+from urllib.parse import urlparse
 
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
@@ -37,11 +38,6 @@ def setup_argparser() -> Any:  # pragma: no cover
         required=True,
     )
     parser.add_argument(
-        "--repository",
-        help="Name of the repository that hosts the signed content, e.g. redhat/community-operator-index",
-        required=True,
-    )
-    parser.add_argument(
         "--sig-key-id",
         help="The signing key id that the content was signed with",
         required=True,
@@ -49,6 +45,28 @@ def setup_argparser() -> Any:  # pragma: no cover
     parser.add_argument("--signature-data", help="The signed content", required=True)
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     return parser
+
+
+def parse_repository_name(pull_spec_reference: str) -> str:
+    """
+    Parse repository name from container pull spec
+
+    Args:
+        pull_spec_reference (str): Container pull specification
+
+    Returns:
+        str: Repository name
+    """
+    pull_spec = pull_spec_reference
+    if not pull_spec_reference.startswith("docker://"):
+        pull_spec = f"docker://{pull_spec_reference}"
+    parsed_reference = urlparse(pull_spec)
+    path = parsed_reference.path.lstrip("/")
+    if "@" in path:
+        return path.split("@")[0]
+    if ":" in path:
+        return path.split(":")[0]
+    return path
 
 
 def upload_signature(args: Any) -> None:
@@ -64,7 +82,7 @@ def upload_signature(args: Any) -> None:
     payload = {
         "manifest_digest": args.manifest_digest,
         "reference": args.reference,
-        "repository": args.repository,
+        "repository": parse_repository_name(args.reference),
         "sig_key_id": args.sig_key_id,
         "signature_data": args.signature_data,
     }
