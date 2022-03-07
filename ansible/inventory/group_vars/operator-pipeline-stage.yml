@@ -8,3 +8,8 @@ operator_pipeline_image_tag: "v1.0.8"
 
 # how many of newest pipelineruns should be preserved on cleanup?
 preserve_after_cleanup: "5"
+
+# Settings for importing index imagestreams
+insecure_index_import: true
+certified_operator_index: registry.stage.redhat.io/redhat/certified-operator-index
+redhat_marketplace_index: registry.stage.redhat.io/redhat/redhat-marketplace-index

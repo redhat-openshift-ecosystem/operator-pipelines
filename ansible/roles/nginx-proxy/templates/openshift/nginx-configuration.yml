@@ -1,0 +1,46 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  labels:
+    app: "{{ nginx_proxy_name }}"
+    env: "{{ env }}"
+    suffix: "{{ suffix }}"
+  name: "{{ nginx_proxy_name }}-{{ suffix }}"
+data:
+  nginx.conf: |-
+    worker_processes auto;
+    pid /tmp/nginx.pid;
+
+    include /usr/share/nginx/modules/*.conf;
+
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+
+      log_format compression '$remote_addr - $remote_user [$time_local] '
+                           '"$request" $status $body_bytes_sent '
+                           '"$http_referer" "$http_user_agent" "$gzip_ratio"';
+
+      server {
+
+          listen 8080;
+
+          # enable compression
+          gzip on;
+          gzip_types text/plain application/json;
+          gzip_min_length 1024;
+
+          location /_proxy/ping {
+              return 200 'pong';
+          }
+
+          location / {
+              auth_basic "Community signing pipeline";
+              auth_basic_user_file {{ nginx_basic_user_file_path }};
+              proxy_pass {{ nginx_proxy_service_url }};
+          }
+      }
+    }

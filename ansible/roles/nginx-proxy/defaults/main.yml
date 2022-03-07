@@ -1,0 +1,19 @@
+---
+nginx_proxy_image: registry.access.redhat.com/ubi8/nginx-120:1-10
+nginx_proxy_replicas: 1
+
+nginx_proxy_name: "nging-proxy"
+
+nginx_proxy_log_dir: /logs
+nginx_proxy_access_log_location: "{{ nginx_proxy_log_dir }}/nginx.access"
+nginx_proxy_error_log_location: "{{ nginx_proxy_log_dir }}/nginx.error"
+nginx_basic_user_file_local_path: /tmp/htpasswd
+
+nginx_basic_user_dir_path: /etc/nginx
+nginx_basic_user_file_path: /etc/nginx/htpasswd
+nginx_proxy_service_url: https://example.com
+
+nginx_port: 8080
+
+env: "none"
+suffix: "nginx"

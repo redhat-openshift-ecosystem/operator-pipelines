@@ -97,3 +97,29 @@ def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
         )
         raise
     return resp.json()
+
+
+def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    PATCH GitHub API request to given URL with given payload
+
+    Args:
+        url (str): Github API URL
+        body (Dict[str, Any]): Request payload
+
+    Returns:
+        Dict[str, Any]: Github response
+    """
+    session = _get_session(auth_required=True)
+
+    LOGGER.debug(f"PATCH Github request: {url}")
+    resp = session.patch(url, json=body)
+
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError:
+        LOGGER.exception(
+            f"Github PATCH query failed with {url} - {resp.status_code} - {resp.text}"
+        )
+        raise
+    return resp.json()

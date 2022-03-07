@@ -1,0 +1,53 @@
+---
+
+- include: tasks/secrets.yml
+
+- name: Create nginx config
+  k8s:
+    state: present
+    apply: yes
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/nginx-configuration.yml
+
+- name: Deploy nginx
+  k8s:
+    state: present
+    apply: yes
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/nginx-deployment.yml
+
+
+- name: Create service
+  k8s:
+    state: present
+    apply: yes
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/nginx-service.yml
+
+- name: Create route
+  k8s:
+    state: present
+    apply: yes
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/nginx-route.yml
+
+- name: Remove previous NginX deployments
+  loop:
+    - DeploymentConfig
+    - Secret
+    - ConfigMap
+  vars:
+    object_kind: '{{ item }}'
+    label_selectors:
+      - app={{ nginx_proxy_name }}
+      - env={{ env }}
+      - suffix!={{ suffix }}
+  include_tasks: remove-objects.yml

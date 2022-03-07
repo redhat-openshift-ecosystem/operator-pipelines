@@ -1,0 +1,52 @@
+---
+- name: Create event listener allowing triggering the community signing pipelines via webhook
+  tags:
+    - webhook
+    - community-signing
+  block:
+    - name: Create event listener
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: EventListener
+          metadata:
+            name: "{{ community_signing_pipeline_name }}-listener"
+            labels:
+              app: "{{ community_signing_pipeline_name }}"
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            serviceAccountName: pipeline
+            triggers:
+              - name: webhook
+                bindings:
+                  - ref: "{{ community_signing_pipeline_name }}-trigger-binding"
+                template:
+                  ref: "{{ community_signing_pipeline_name }}-trigger-template"
+
+    - name: Create pipeline trigger route
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: route.openshift.io/v1
+          kind: Route
+          metadata:
+            labels:
+              eventlistener: "{{ community_signing_pipeline_name }}-listener"
+              app: "{{ community_signing_pipeline_name }}"
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+            name: "{{ community_signing_pipeline_route_name }}"
+          spec:
+            host: "{{ community_signing_pipeline_url }}"
+            port:
+              targetPort: http-listener
+            tls:
+              termination: edge
+            to:
+              kind: Service
+              # el- prefix means, that the service was created by EventListener.
+              name: "el-{{ community_signing_pipeline_name }}-listener"

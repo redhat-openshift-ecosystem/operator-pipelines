@@ -1,8 +1,12 @@
 [operator-pipeline:children]
+operator-pipeline-integration-tests
 operator-pipeline-dev
 operator-pipeline-qa
 operator-pipeline-stage
 operator-pipeline-prod
+
+[operator-pipeline-integration-tests]
+operator-pipeline-integration-tests-project ansible_connection=local
 
 [operator-pipeline-dev]
 operator-pipeline-dev-project ansible_connection=local
