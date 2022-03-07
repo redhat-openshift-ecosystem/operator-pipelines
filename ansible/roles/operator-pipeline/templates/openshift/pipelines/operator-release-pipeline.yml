@@ -30,6 +30,9 @@ spec:
     - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
+    - name: metrics_endpoint
+      description: Prometheus metrics endpoint
+      default: http://pipeline-metrics.pipeline-metrics-prod
     # Kubernetes secrets related params, usually with default values
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
@@ -70,15 +73,15 @@ spec:
       description: >-
         The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
       default: krb5.keytab
-    - name: metrics_endpoint
-      description: Prometheus metrics endpoint
-      default: http://pipeline-metrics.pipeline-metrics-prod
-    - name: signing_pub_secret_name
-      description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
-      default: signing-pub-key
-    - name: signing_pub_secret_key
-      description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
-      default: sig-key.pub
+    - name: umb_ssl_secret_name
+      description: Kubernetes secret name that contains the UMB SSL files.
+      default: operator-pipeline-api-certs
+    - name: umb_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the UMB SSL cert.
+      default: operator-pipeline.pem
+    - name: umb_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the UMB SSL key.
+      default: operator-pipeline.key
   workspaces:
     - name: repository
     - name: results
@@ -423,10 +426,70 @@ spec:
         - name: kerberos_keytab_secret_key
           value: "$(params.kerberos_keytab_secret_key)"
 
+    # send UMB message for RADAS to sign the container image
+    - name: request-signature
+      runAfter:
+        - publish-bundle
+      taskRef:
+        name: request-signature
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: manifest_digest
+          value: "$(tasks.publish-bundle.results.manifest_digests)"
+        - name: reference
+          value: "$(tasks.publish-bundle.results.docker_references)"
+        - name: requester
+          value: "amisstea"
+        - name: sig_key_id
+          value: "$(tasks.set-env.results.sig_key_id)"
+        - name: sig_key_name
+          value: "$(tasks.set-env.results.sig_key_name)"
+        - name: umb_ssl_secret_name
+          value: "$(params.umb_ssl_secret_name)"
+        - name: umb_ssl_cert_secret_key
+          value: "$(params.umb_ssl_cert_secret_key)"
+        - name: umb_ssl_key_secret_key
+          value: "$(params.umb_ssl_key_secret_key)"
+        - name: umb_client_name
+          value: "$(tasks.set-env.results.umb_client_name)"
+        - name: umb_url
+          value: "$(tasks.set-env.results.umb_url)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: signing
+
+    - name: upload-signature
+      runAfter:
+        - request-signature
+      taskRef:
+        name: upload-signature
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: signature_data_file
+          value: "$(tasks.request-signature.results.signature_data_file)"
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        # TODO: remove it after ISV-1798 is done
+        - name: verify_signature
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: signing
+
     # Publish Vendor, Repository
     - name: publish-resources
       runAfter:
-        - publish-bundle
+        - upload-signature
       taskRef:
         name: publish-resources
       params:
