@@ -31,7 +31,6 @@
                 value: "{{ community_signing_umb_client_name }}"
               - name: pipeline_image
                 value: "{{ operator_pipeline_image_pull_spec }}"
-
     - name: Create Community signing pipeline Trigger Template
       k8s:
         state: present
