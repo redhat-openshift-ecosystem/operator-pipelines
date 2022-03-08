@@ -19,7 +19,3 @@ spec:
           echo "The index image is not white listed."
           exit 1
         fi
-
-        
-
-        
