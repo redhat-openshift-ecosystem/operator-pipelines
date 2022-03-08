@@ -28,10 +28,20 @@ spec:
   workspaces:
     - name: pipeline
   tasks:
+    - name: verify-whitelisted-index-image
+      taskref:
+        name: verify-whitelisted-index-image
+        kind: Task
+      params:
+        - name: reference
+          value: $(params.reference)
+
     - name: set-env
       taskRef:
         name: set-env
         kind: Task
+      runAfter:
+        - verify-whitelisted-index-image
       params:
         - name: env
           value: $(params.env)

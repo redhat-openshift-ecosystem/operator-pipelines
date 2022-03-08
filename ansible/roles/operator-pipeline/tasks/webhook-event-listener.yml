@@ -101,24 +101,6 @@
                   - ref: operator-release-pipeline-trigger-binding
                 template:
                   ref: operator-release-pipeline-trigger-template
-              # run Community Signing pipeline only with whitelisted index images
-              - name: whitelisted-set-of-index-images-listener
-                interceptors:
-                  - github:
-                      secretRef:
-                        secretName: github-webhook-secret
-                        secretKey: webhook-secret
-                      eventTypes:
-                        - pull_request
-                  - cel:
-                      filter: >-
-                        (
-                          ((body.reference).split(':'))[0] == "registry.redhat.io/redhat/community-operator-index"
-                        )
-                bindings:
-                  - ref: "{{ community_signing_pipeline_name }}-trigger-binding"
-                template:
-                  ref: "{{ community_signing_pipeline_name }}-trigger-template"
 
     - name: Create pipeline trigger route
       k8s:
