@@ -5,14 +5,8 @@ metadata:
   name: upload-signature
 spec:
   params:
-    - name: docker_reference
-      description: Docker reference for the signed content, e.g. registry.redhat.io/redhat/community-operator-index:v4.9
-    - name: manifest_digest
-      description: Manifest digest for the signed content, usually in the format sha256:xxx
-    - name: sig_key_id
-      description: The signing key id that the content was signed with.
     - name: signature_data
-      description: The signature to upload to Pyxis signature.
+      description: The list of signature data to upload to Pyxis signature, must be valid json.
     - name: pipeline_image
       description: A docker image of operator-pipeline-images for the steps to run in.
     - name: sig_key_pub_key
@@ -43,6 +37,8 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        # TODO extract list of signed claims and loop through
+
         if [[ "$(params.verify_signature)" == "true" ]]; then
           echo "Verifying signature before upload"
           echo $(params.signature_data) | base64 --decode > decoded_signed_claim
@@ -69,8 +65,5 @@ spec:
         echo "Signature verified. Uploading to Pyxis sigstore"
         upload-signature \
           --pyxis-url "$(params.pyxis_url)" \
-          --manifest-digest "$(params.manifest_digest)" \
-          --reference "$(params.docker_reference)" \
-          --sig-key-id "$(params.sig_key_id)" \
           --signature-data "$(params.signature_data)" \
           --verbose

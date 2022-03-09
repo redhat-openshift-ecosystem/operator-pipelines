@@ -77,14 +77,8 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: docker_reference
-          value: "$(params.reference)"
-        - name: manifest_digest
-          value: "$(params.manifest_digest)"
-        - name: sig_key_id
-          value: "$(tasks.set-env.results.sig_key_id)"
         - name: signature_data
-          value: "$(tasks.request-signature.results.signed_claim)"
+          value: "$(tasks.request-signature.results.signature_data)"
         - name: pyxis_ssl_secret_name
           value: "$(params.ssl_cert_secret_name)"
         - name: pyxis_ssl_cert_secret_key
