@@ -1,0 +1,21 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: verify-whitelisted-index-image
+spec:
+  params:
+    - name: reference
+  steps:
+    - name: check-index-image
+      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      script: |
+        #! /usr/bin/env bash
+        INDEX_IMAGE="$(cut -d':' -f1 <<< '$(params.reference)')"
+        echo $INDEX_IMAGE
+        if [ $INDEX_IMAGE == "registry.redhat.io/redhat/community-operator-index" ]; then
+          echo "The index image is white listed."
+        else
+          echo "The index image is not white listed."
+          exit 1
+        fi
