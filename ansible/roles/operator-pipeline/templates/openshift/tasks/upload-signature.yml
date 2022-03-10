@@ -5,14 +5,8 @@ metadata:
   name: upload-signature
 spec:
   params:
-    - name: docker_reference
-      description: Docker reference for the signed content, e.g. registry.redhat.io/redhat/community-operator-index:v4.9
-    - name: manifest_digest
-      description: Manifest digest for the signed content, usually in the format sha256:xxx
-    - name: sig_key_id
-      description: The signing key id that the content was signed with.
-    - name: signature_data
-      description: The signature to upload to Pyxis signature.
+    - name: signature_data_file
+      description: Json file containing the list of signature data to upload to Pyxis signature.
     - name: pipeline_image
       description: A docker image of operator-pipeline-images for the steps to run in.
     - name: sig_key_pub_key
@@ -36,6 +30,8 @@ spec:
       secret:
         secretName: "$(params.pyxis_ssl_secret_name)"
         optional: false
+  workspaces:
+    - name: source
   steps:
     - name: verify-signature
       image: "$(params.pipeline_image)"
@@ -43,13 +39,21 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        if [[ "$(params.verify_signature)" == "true" ]]; then
-          echo "Verifying signature before upload"
-          echo $(params.signature_data) | base64 --decode > decoded_signed_claim
+        if [[ "$(params.verify_signature)" != "true" ]]; then
+          exit 0
+        fi
+
+        echo "Verifying signature before upload"
+        # Extract list of signed claims and loop through
+        SIGNED_CLAIMS=$(cat $(params.signature_data_file) | jq -r '.[].signed_claim')
+
+        for CLAIM in $SIGNED_CLAIMS; do
+          echo "$CLAIM" | base64 --decode > decoded_signed_claim
 
           gpg --import $(printenv $(params.sig_key_pub_key))
           gpg --verify decoded_signed_claim
-        fi
+        done
+      workingDir: $(workspaces.source.path)
 
     - name: upload-signature
       image: "$(params.pipeline_image)"
@@ -69,8 +73,6 @@ spec:
         echo "Signature verified. Uploading to Pyxis sigstore"
         upload-signature \
           --pyxis-url "$(params.pyxis_url)" \
-          --manifest-digest "$(params.manifest_digest)" \
-          --reference "$(params.docker_reference)" \
-          --sig-key-id "$(params.sig_key_id)" \
-          --signature-data "$(params.signature_data)" \
+          --signature-data "$(params.signature_data_file)" \
           --verbose
+      workingDir: $(workspaces.source.path)

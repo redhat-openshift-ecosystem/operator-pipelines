@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 from typing import Any
 from urllib.parse import urljoin
@@ -28,21 +29,10 @@ def setup_argparser() -> Any:  # pragma: no cover
         help="Base URL for Pyxis container metadata API",
     )
     parser.add_argument(
-        "--manifest-digest",
-        help="Manifest digest for the signed content, usually in the format sha256:xxx",
+        "--signature-data",
+        help="Path to a json file that contains signed content and related metadata",
         required=True,
     )
-    parser.add_argument(
-        "--reference",
-        help="Docker reference for the signed content, e.g. registry.redhat.io/redhat/community-operator-index:v4.9",
-        required=True,
-    )
-    parser.add_argument(
-        "--sig-key-id",
-        help="The signing key id that the content was signed with",
-        required=True,
-    )
-    parser.add_argument("--signature-data", help="The signed content", required=True)
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     return parser
 
@@ -69,26 +59,27 @@ def parse_repository_name(pull_spec_reference: str) -> str:
     return path
 
 
-def upload_signature(args: Any) -> None:
+def upload_signature(data: Any, pyxis_url: str) -> None:
     """
     Upload signature to Pyxis
 
     Args:
-        args (Any): CLI arguments
+        data (Any): Signature metadata
+        pyxis_url (str): URL of Pyxis instance to upload signature to
 
     Returns:
         Dict[str, Any]]: Pyxis respones
     """
     payload = {
-        "manifest_digest": args.manifest_digest,
-        "reference": args.reference,
-        "repository": parse_repository_name(args.reference),
-        "sig_key_id": args.sig_key_id,
-        "signature_data": args.signature_data,
+        "manifest_digest": data["manifest_digest"],
+        "reference": data["docker_reference"],
+        "repository": parse_repository_name(data["docker_reference"]),
+        "sig_key_id": data["sig_key_id"],
+        "signature_data": data["signed_claim"],
     }
 
     try:
-        rsp_json = pyxis.post(urljoin(args.pyxis_url, "v1/signatures"), payload)
+        rsp_json = pyxis.post(urljoin(pyxis_url, "v1/signatures"), payload)
         LOGGER.info("Signature successfully created on Pyxis: %s", rsp_json)
     except HTTPError as err:
         if err.response.status_code == 409:
@@ -110,7 +101,10 @@ def main():  # pragma: no cover
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(log_level)
 
-    upload_signature(args)
+    with open(args.signature_data, "r") as f:
+        signature_data = json.load(f)
+    for data in signature_data:
+        upload_signature(data, args.pyxis_url)
 
 
 if __name__ == "__main__":  # pragma: no cover
