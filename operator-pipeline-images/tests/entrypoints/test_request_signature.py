@@ -244,28 +244,30 @@ def test_request_signature_timeout(
     mock_umb.stop.assert_called_once()
     mock_exit.assert_called_once_with(1)
 
-    # check case where result files are found but signing failed
-    mock_umb.reset_mock()
-    mock_sleep.reset_mock()
-    mock_exit.reset_mock()
+    # check case where result files are found but signing failed or is unknown
 
-    mock_path_exists.return_value = True
-    mock_json_load.return_value = {
-        "request_id": "request_id123",
-        "signing_status": "failure",
-    }
+    for signing_status in ["failure", "unknown"]:
+        mock_umb.reset_mock()
+        mock_sleep.reset_mock()
+        mock_exit.reset_mock()
 
-    with mock.patch("builtins.open", mock_open):
-        request_signature.request_signature(args)
+        mock_path_exists.return_value = True
+        mock_json_load.return_value = {
+            "request_id": "request_id123",
+            "signing_status": signing_status,
+        }
 
-    mock_umb.connect_and_subscribe.assert_called_once_with(args.umb_listen_topic)
-    mock_umb.send.assert_called_with(
-        args.umb_publish_topic, json.dumps({"request_id": "request_id123"})
-    )
-    # 1 initial send + 3 retries
-    assert mock_umb.send.call_count == 4
-    # 1 sleep per try
-    assert mock_sleep.call_count == 4
-    mock_umb.unsubscribe.assert_called_once_with(args.umb_listen_topic)
-    mock_umb.stop.assert_called_once()
-    mock_exit.assert_called_once_with(1)
+        with mock.patch("builtins.open", mock_open):
+            request_signature.request_signature(args)
+
+        mock_umb.connect_and_subscribe.assert_called_once_with(args.umb_listen_topic)
+        mock_umb.send.assert_called_with(
+            args.umb_publish_topic, json.dumps({"request_id": "request_id123"})
+        )
+        # 1 initial send + 3 retries
+        assert mock_umb.send.call_count == 4
+        # 1 sleep per try
+        assert mock_sleep.call_count == 4
+        mock_umb.unsubscribe.assert_called_once_with(args.umb_listen_topic)
+        mock_umb.stop.assert_called_once()
+        mock_exit.assert_called_once_with(1)

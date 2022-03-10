@@ -261,12 +261,18 @@ def request_signature(args: Any) -> None:
                     if os.path.exists(f"{request_id}-{result_file}"):
                         with open(f"{request_id}-{result_file}", "r") as f:
                             result_json = json.load(f)
-                            if result_json["signing_status"] == "success":
+                            signing_status = result_json["signing_status"]
+                            if signing_status == "success":
                                 results.append(result_json)
                                 sig_received.add(request_id)
-                            else:
+                            elif signing_status == "failure":
                                 LOGGER.error(
                                     f"Signing failure received for request {request_id}"
+                                )
+                            else:
+                                LOGGER.warning(
+                                    f"Unknown signing status received for request "
+                                    f"{request_id}: {signing_status}"
                                 )
 
                 request_ids = request_ids - sig_received
@@ -274,7 +280,7 @@ def request_signature(args: Any) -> None:
                 # exit retry loop if all response files detected
                 break
 
-            LOGGER.info(f"Not all successful signing response received. Retrying.")
+            LOGGER.info(f"Not all successful signing responses received. Retrying.")
     finally:
         # unsubscribe to free up the queue
         LOGGER.info("Unsubscribing from queue and disconnecting from UMB...")
