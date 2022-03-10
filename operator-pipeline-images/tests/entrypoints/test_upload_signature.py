@@ -6,17 +6,17 @@ from unittest.mock import MagicMock, patch
 from operatorcert.entrypoints import upload_signature
 
 
-@patch("json.loads")
+@patch("json.load")
 @patch("operatorcert.entrypoints.upload_signature.setup_argparser")
 @patch("operatorcert.entrypoints.upload_signature.upload_signature")
 def test_main(
     mock_upload_signature: MagicMock,
     mock_arg_parser: MagicMock,
-    mock_json_loads: MagicMock,
+    mock_json_load: MagicMock,
 ) -> None:
     mock_arg_parser.parse_args = MagicMock
     mock_arg_parser.parse_args.pyxis_url = "https://test-pyxis.fake.url"
-    mock_json_loads.return_value = [{"request_id": "request_id123"}]
+    mock_json_load.return_value = [{"request_id": "request_id123"}]
     upload_signature.main()
     mock_upload_signature.assert_called_once_with(
         {"request_id": "request_id123"}, "https://test-pyxis.fake.url"

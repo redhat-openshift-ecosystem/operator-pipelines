@@ -38,12 +38,14 @@ spec:
       description: umb host to connect to for messaging
       default: umb.api.redhat.com
   results:
-    - name: signature_data
+    - name: signature_data_file
   volumes:
     - name: umb-ssl-volume
       secret:
         secretName: "$(params.umb_ssl_secret_name)"
         optional: false
+  workspaces:
+    - name: source
   steps:
     - name: request-signature
       image: "$(params.pipeline_image)"
@@ -75,5 +77,7 @@ spec:
           --verbose
 
         SIG_DATA=$(cat signing_response.json)
-        echo "Signed claim and its metadata: "
-        echo -n $SIG_DATA | tee $(results.signature_data.path)
+        echo "Signed claims and their metadata: "
+        echo -n $SIG_DATA
+        echo -n signing_response.json | tee $(results.signature_data_file.path)
+      workingDir: $(workspaces.source.path)

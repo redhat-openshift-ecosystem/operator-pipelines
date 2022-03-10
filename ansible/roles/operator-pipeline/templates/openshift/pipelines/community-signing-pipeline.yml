@@ -67,6 +67,10 @@ spec:
           value: "$(params.umb_client_name)"
         - name: umb_url
           value: "$(tasks.set-env.results.umb_url)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: signing
 
     - name: upload-signature
       taskRef:
@@ -77,8 +81,8 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: signature_data
-          value: "$(tasks.request-signature.results.signature_data)"
+        - name: signature_data_file
+          value: "$(tasks.request-signature.results.signature_data_file)"
         - name: pyxis_ssl_secret_name
           value: "$(params.ssl_cert_secret_name)"
         - name: pyxis_ssl_cert_secret_key
@@ -90,3 +94,7 @@ spec:
         # TODO: remove it after ISV-1798 is done
         - name: verify_signature
           value: "false"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: signing

@@ -30,7 +30,7 @@ def setup_argparser() -> Any:  # pragma: no cover
     )
     parser.add_argument(
         "--signature-data",
-        help="A json string that contains signed content and related metadata",
+        help="Path to a json file that contains signed content and related metadata",
         required=True,
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
@@ -101,7 +101,8 @@ def main():  # pragma: no cover
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(log_level)
 
-    signature_data = json.loads(args.signature_data)
+    with open(args.signature_data, "r") as f:
+        signature_data = json.load(f)
     for data in signature_data:
         upload_signature(data, args.pyxis_url)
 

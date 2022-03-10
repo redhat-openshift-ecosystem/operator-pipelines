@@ -5,8 +5,8 @@ metadata:
   name: upload-signature
 spec:
   params:
-    - name: signature_data
-      description: The list of signature data to upload to Pyxis signature, must be valid json.
+    - name: signature_data_file
+      description: Json file containing the list of signature data to upload to Pyxis signature.
     - name: pipeline_image
       description: A docker image of operator-pipeline-images for the steps to run in.
     - name: sig_key_pub_key
@@ -30,6 +30,8 @@ spec:
       secret:
         secretName: "$(params.pyxis_ssl_secret_name)"
         optional: false
+  workspaces:
+    - name: source
   steps:
     - name: verify-signature
       image: "$(params.pipeline_image)"
@@ -37,15 +39,21 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        # TODO extract list of signed claims and loop through
+        if [[ "$(params.verify_signature)" != "true" ]]; then
+          exit 0
+        fi
 
-        if [[ "$(params.verify_signature)" == "true" ]]; then
-          echo "Verifying signature before upload"
-          echo $(params.signature_data) | base64 --decode > decoded_signed_claim
+        echo "Verifying signature before upload"
+        # Extract list of signed claims and loop through
+        SIGNED_CLAIMS=$(cat $(params.signature_data_file) | jq -r '.[].signed_claim')
+
+        for CLAIM in $SIGNED_CLAIMS; do
+          echo "$CLAIM" | base64 --decode > decoded_signed_claim
 
           gpg --import $(printenv $(params.sig_key_pub_key))
           gpg --verify decoded_signed_claim
-        fi
+        done
+      workingDir: $(workspaces.source.path)
 
     - name: upload-signature
       image: "$(params.pipeline_image)"
@@ -65,5 +73,6 @@ spec:
         echo "Signature verified. Uploading to Pyxis sigstore"
         upload-signature \
           --pyxis-url "$(params.pyxis_url)" \
-          --signature-data "$(params.signature_data)" \
+          --signature-data "$(params.signature_data_file)" \
           --verbose
+      workingDir: $(workspaces.source.path)

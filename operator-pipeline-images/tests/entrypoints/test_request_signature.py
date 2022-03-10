@@ -86,7 +86,7 @@ def test_gen_request_msg(
 
     request_msg = request_signature.gen_request_msg(
         args,
-        manifest_digest="test-digest",
+        digest="test-digest",
         reference="test-reference",
         request_id="request_id123",
     )

@@ -171,23 +171,26 @@ def gen_image_name(reference: str) -> str:
     return "/".join(image_parts[1:])
 
 
-def gen_request_msg(args, manifest_digest, reference, request_id):
+def gen_request_msg(args, digest, reference, request_id):
     """
     Generate the request message to send to RADAS.
     Args:
         args: Args from script input.
+        digest: Manifest digest for the signed content, usually in the format sha256:xxx
+        reference: Docker reference for the signed content,
+            e.g. registry.redhat.io/redhat/community-operator-index:v4.9
         request_id: UUID to identify match the request with RADAS's response.
 
     Returns:
 
     """
-    claim = gen_sig_claim_file(reference, manifest_digest, args.requester)
+    claim = gen_sig_claim_file(reference, digest, args.requester)
     image_name = gen_image_name(reference)
     request_msg = {
         "claim_file": claim,
         "docker_reference": reference,
         "image_name": image_name,
-        "manifest_digest": manifest_digest,
+        "manifest_digest": digest,
         "request_id": request_id,
         "requested_by": args.requester,
         "sig_keyname": args.sig_key_name,
@@ -221,7 +224,10 @@ def request_signature(args: Any) -> None:
     for i in range(len(manifests)):
         request_id = str(uuid.uuid4())
         request_msgs[request_id] = gen_request_msg(
-            args, references[i], manifests[i], request_id
+            args=args,
+            digest=manifests[i],
+            reference=references[i],
+            request_id=request_id,
         )
         request_ids.add(request_id)
 
