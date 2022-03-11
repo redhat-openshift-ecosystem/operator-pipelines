@@ -1,3 +1,4 @@
+---
 ##### General settings
 env: unset
 oc_namespace: "operator-pipeline-{{ env }}"
@@ -36,6 +37,8 @@ e2e_kubeconfig_path: ../../vaults/common/kubeconfig-e2e
 
 pyxis_api_key_path: ../../vaults/{{ env }}/pyxis_api_key
 e2e_gh_account_path: ../../vaults/{{ env }}/e2e-gh-account-pat
+
+pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-nonprod
 
 community_signing_pipeline_name: community-signing-pipeline
 community_signing_pipeline_private_key_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.key

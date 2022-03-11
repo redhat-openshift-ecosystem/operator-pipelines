@@ -34,6 +34,8 @@
                 value: "{{ env }}"
               - name: pipeline_image
                 value: "{{ operator_pipeline_image_pull_spec }}"
+              - name: metrics_endpoint
+                value: "{{ pipelines_metrics_endpoint }}"
     - name: Create Release pipeline Trigger Template
       k8s:
         state: present
@@ -57,6 +59,7 @@
               - name: is_latest
               - name: env
               - name: pipeline_image
+              - name: metrics_endpoint
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
@@ -83,6 +86,8 @@
                       value: $(tt.params.env)
                     - name: pipeline_image
                       value: $(tt.params.pipeline_image)
+                    - name: metrics_endpoint
+                      value: $(tt.params.metrics_endpoint)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:

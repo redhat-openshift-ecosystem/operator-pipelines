@@ -1,3 +1,4 @@
+---
 env: prod
 ocp_host: https://api.pipelines-prod.ijdb.p1.openshiftapps.com:6443
 branch: main
@@ -20,6 +21,8 @@ operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/prod/
 
 github_ssh_credentials_path: ../../vaults/prod/github-bot-ssh
 e2e_kubeconfig_path: ../../vaults/prod/kubeconfig-e2e
+
+pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-prod
 
 operator_pipeline_ibm_webhook_token_local_path: ../../vaults/prod/nonprod-ibm-webhook-token
 

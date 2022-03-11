@@ -1,0 +1,50 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-metrics
+spec:
+  description: >-
+    This task updates a Prometheus metrics.
+
+  workspaces:
+    - name: output
+      description: Scratch space and storage for the metrics
+
+  params:
+    - name: metrics_url
+      description: |
+        A metrics collector route.
+      default: "http://pipeline-metrics.pipeline-metrics-prod"
+
+    - name: pipelinerun
+      description: The name of the PipelineRun to summarize.
+
+  steps:
+    - name: gather-info
+      workingDir: $(workspaces.output.path)
+      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+        PR_NAME="$(params.pipelinerun)"
+        PR_NAME_PATH="metrics/$(params.pipelinerun)"
+        mkdir -p $PR_NAME_PATH
+
+        echo "Getting PipelineRun details"
+        tkn pipelinerun describe $PR_NAME -o json > $PR_NAME_PATH/pipelinerun.json
+
+        chmod -R 777 $PR_NAME_PATH
+
+    - name: submit-metrics
+      workingDir: $(workspaces.output.path)
+      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        PR_NAME_PATH="metrics/$(params.pipelinerun)"
+        METRICS_URL="$(params.metrics_url)"
+
+        # This is an optional steps so if the destination is not available don't fail the pipeline
+        curl -X POST $METRICS_URL/v1/metrics/pipelinerun -H "Content-Type:application/json" -d @$PR_NAME_PATH/pipelinerun.json || true

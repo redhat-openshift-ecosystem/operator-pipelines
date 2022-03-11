@@ -46,6 +46,8 @@
                 value: "{{ ci_min_version }}"
               - name: pipeline_image
                 value: "{{ operator_pipeline_image_pull_spec }}"
+              - name: metrics_endpoint
+                value: "{{ pipelines_metrics_endpoint }}"
 
     - name: Create Hosted pipeline Trigger Template
       k8s:
@@ -75,6 +77,7 @@
               - name: preflight_min_version
               - name: ci_min_version
               - name: pipeline_image
+              - name: metrics_endpoint
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
@@ -111,6 +114,8 @@
                       value: $(tt.params.git_commit)
                     - name: pipeline_image
                       value: $(tt.params.pipeline_image)
+                    - name: metrics_endpoint
+                      value: $(tt.params.metrics_endpoint)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
