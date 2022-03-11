@@ -25,6 +25,9 @@ spec:
       default: community-operator-signing-pipeline.key
     - name: umb_client_name
       default: community-operator-signing-pipeline
+    - name: metrics_endpoint
+      description: Prometheus metrics endpoint
+      default: http://pipeline-metrics.pipeline-metrics-prod
   workspaces:
     - name: pipeline
   tasks:
@@ -108,3 +111,17 @@ spec:
         - name: source
           workspace: pipeline
           subPath: signing
+  finally:
+    # Submit a pipeline metrics to a collector
+    - name: update-metrics
+      taskRef:
+        name: update-metrics
+      params:
+        - name: pipelinerun
+          value: "$(context.pipelineRun.name)"
+        - name: metrics_url
+          value: "$(params.metrics_endpoint)"
+      workspaces:
+        - name: output
+          workspace: pipeline
+          subPath: metrics
