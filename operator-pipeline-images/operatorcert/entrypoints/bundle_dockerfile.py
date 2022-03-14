@@ -54,7 +54,7 @@ def generate_dockerfile_content(args: Any) -> str:
     annotations = operatorcert.get_bundle_annotations(bundle_path)
 
     for annotation_key, annotation_value in annotations.items():
-        dockerfile_content += f"LABEL {annotation_key}={annotation_value}\n"
+        dockerfile_content += f"LABEL {annotation_key}='{annotation_value}'\n"
 
     dockerfile_content += "\n"
 
