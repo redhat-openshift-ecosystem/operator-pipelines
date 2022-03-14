@@ -17,10 +17,6 @@ from operatorcert.utils import find_file, store_results
 OCP_VERSIONS_ANNOTATION = "com.redhat.openshift.versions"
 PACKAGE_ANNOTATION = "operators.operatorframework.io.bundle.package.v1"
 
-# ClusterServiceVersion annotations & properties
-OLM_PROPS_ANNOTATION = "olm.properties"
-MAX_OCP_VERSION_PROPERTY = "olm.maxOpenShiftVersion"
-
 LOGGER = logging.getLogger("operator-cert")
 
 
@@ -70,26 +66,10 @@ def get_csv_content(bundle_path: pathlib.Path, package: str) -> Dict:
         return yaml.safe_load(fh)
 
 
-def get_csv_annotations(bundle_path: pathlib.Path, package: str) -> Dict:
-    """
-    Gets all the annotations from the bundle CSV
-
-    Args:
-        bundle_path (Path): A path to the bundle version
-        package (str): Operator package name
-
-    Returns:
-        A dict of all the annotation keys and values
-    """
-    content = get_csv_content(bundle_path, package)
-    return content.get("metadata", {}).get("annotations", {})
-
-
 def get_supported_indices(
     pyxis_url: str,
     ocp_versions_range: str,
     organization: str,
-    max_ocp_version: str = None,
 ) -> List[str]:
     """
     Gets all the known supported OCP indices for this bundle.
@@ -98,7 +78,6 @@ def get_supported_indices(
         pyxis_url (str): Base URL to Pyxis
         ocp_versions_range (str): OpenShift version annotation
         organization (str): Organization of the index (e.g. "certified-operators")
-        max_ocp_version (str): OLM property in the bundle CSV
 
     Returns:
         A list of supported OCP versions in descending order
@@ -106,8 +85,6 @@ def get_supported_indices(
     url = urljoin(pyxis_url, "v1/operators/indices")
 
     filter_ = f"organization=={organization}"
-    if max_ocp_version:
-        filter_ += f";ocp_version=le={max_ocp_version}"
 
     # Ignoring pagination. 500 OCP versions would be a lot for a single
     # version of an operator to support.
@@ -149,20 +126,7 @@ def ocp_version_info(
     if not package:
         raise ValueError(f"'{PACKAGE_ANNOTATION}' annotation not defined")
 
-    csv_annotations = get_csv_annotations(bundle_path, package)
-
-    olm_props_content = csv_annotations.get(OLM_PROPS_ANNOTATION, "[]")
-    olm_props = json.loads(olm_props_content)
-
-    max_ocp_version = None
-    for prop in olm_props:
-        if prop.get("type") == MAX_OCP_VERSION_PROPERTY:
-            max_ocp_version = str(prop["value"])
-            break
-
-    indices = get_supported_indices(
-        pyxis_url, ocp_versions_range, organization, max_ocp_version=max_ocp_version
-    )
+    indices = get_supported_indices(pyxis_url, ocp_versions_range, organization)
 
     if not indices:
         raise ValueError("No supported indices found")
@@ -182,7 +146,6 @@ def ocp_version_info(
 
     return {
         "versions_annotation": ocp_versions_range,
-        "max_version_property": max_ocp_version,
         "indices": indices,
         "max_version_index": indices[0],
     }
