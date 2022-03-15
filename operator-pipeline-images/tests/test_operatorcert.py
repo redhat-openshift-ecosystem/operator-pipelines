@@ -47,6 +47,17 @@ def bundle(tmp_path: Path) -> Bundle:
     }
 
 
+def test_get_csv_content(bundle: Bundle) -> None:
+    bundle_root = bundle["root"]
+    content = operatorcert.get_csv_content(bundle_root, "foo-operator")
+    assert content.get("metadata", {}).get("annotations", {}) == {
+        "olm.properties": '[{"type": "olm.maxOpenShiftVersion", "value": "4.7"}]'
+    }
+    bundle["csv"].unlink()
+    with pytest.raises(RuntimeError):
+        operatorcert.get_csv_content(bundle_root, "foo-operator")
+
+
 def test_get_bundle_annotations(bundle: Bundle) -> None:
     bundle_root = bundle["root"]
     assert operatorcert.get_bundle_annotations(bundle_root) == {
@@ -58,16 +69,6 @@ def test_get_bundle_annotations(bundle: Bundle) -> None:
         operatorcert.get_bundle_annotations(bundle_root)
 
 
-def test_get_csv_annotations(bundle: Bundle) -> None:
-    bundle_root = bundle["root"]
-    assert operatorcert.get_csv_annotations(bundle_root, "foo-operator") == {
-        "olm.properties": '[{"type": "olm.maxOpenShiftVersion", "value": "4.7"}]'
-    }
-    bundle["csv"].unlink()
-    with pytest.raises(RuntimeError):
-        operatorcert.get_csv_annotations(bundle_root, "foo-operator")
-
-
 @patch("operatorcert.pyxis.get")
 def test_get_supported_indices(mock_get: MagicMock) -> None:
     mock_rsp = MagicMock()
@@ -75,7 +76,7 @@ def test_get_supported_indices(mock_get: MagicMock) -> None:
     mock_get.return_value = mock_rsp
 
     result = operatorcert.get_supported_indices(
-        "https://foo.bar", "4.6-4.8", "certified-operators", max_ocp_version="4.7"
+        "https://foo.bar", "4.6-4.8", "certified-operators"
     )
     assert result == ["foo", "bar"]
 
@@ -95,7 +96,6 @@ def test_ocp_version_info(
     info = operatorcert.ocp_version_info(bundle_root, "", organization)
     assert info == {
         "versions_annotation": "4.6-4.8",
-        "max_version_property": "4.7",
         "indices": mock_indices.return_value,
         "max_version_index": mock_indices.return_value[0],
     }
