@@ -154,8 +154,8 @@ def extract_manifest_digests(
     # go through each version to ensure order is the same as the indices list
     for version in index_versions:
         for build in response["items"]:
-            if build["from_index"].endswith(version):
-                digest = build["from_index_resolved"].split("@")[-1]
+            if build["index_image"].endswith(version):
+                digest = build["index_image_resolved"].split("@")[-1]
                 manifest_digests.append(digest)
     with open(output, "w") as f:
         f.write(",".join(manifest_digests))

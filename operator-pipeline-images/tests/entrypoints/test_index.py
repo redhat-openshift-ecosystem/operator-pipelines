@@ -128,12 +128,12 @@ def test_extract_manifest_digests() -> None:
     response = {
         "items": [
             {
-                "from_index": "registry.test/test:v4.8",
-                "from_index_resolved": "registry.test/test@sha256:1234",
+                "index_image": "registry.test/test:v4.8",
+                "index_image_resolved": "registry.test/test@sha256:1234",
             },
             {
-                "from_index": "registry.test/test:v4.9",
-                "from_index_resolved": "registry.test/test@sha256:5678",
+                "index_image": "registry.test/test:v4.9",
+                "index_image_resolved": "registry.test/test@sha256:5678",
             },
         ]
     }
