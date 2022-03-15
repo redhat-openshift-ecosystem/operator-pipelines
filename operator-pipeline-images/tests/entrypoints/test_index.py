@@ -1,4 +1,5 @@
 from functools import partial
+from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -86,8 +87,11 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
 
 
 @patch("operatorcert.iib.add_builds")
+@patch("operatorcert.entrypoints.index.extract_manifest_digests")
 @patch("operatorcert.entrypoints.index.wait_for_results")
-def test_publish_bundle(mock_results: MagicMock, mock_iib_builds: MagicMock) -> None:
+def test_publish_bundle(
+    mock_results: MagicMock, mock_manifests: MagicMock, mock_iib_builds: MagicMock
+) -> None:
     mock_iib_builds.return_value = [{"state": "complete", "batch": "some_batch_id"}]
     mock_results.return_value = {
         "items": [{"state": "complete", "batch": "some_batch_id"}]
@@ -97,6 +101,10 @@ def test_publish_bundle(mock_results: MagicMock, mock_iib_builds: MagicMock) -> 
         "redhat-isv/some-pullspec",
         "https://iib.engineering.redhat.com",
         ["v4.9", "v4.8"],
+        "test.txt",
+    )
+    mock_manifests.assert_called_once_with(
+        ["v4.9", "v4.8"], "test.txt", mock_results.return_value
     )
 
     mock_iib_builds.return_value = [{"state": "failed", "batch": "some_batch_id"}]
@@ -110,4 +118,29 @@ def test_publish_bundle(mock_results: MagicMock, mock_iib_builds: MagicMock) -> 
             "redhat-isv/some-pullspec",
             "https://iib.engineering.redhat.com",
             ["v4.9", "v4.8"],
+            "test.txt",
         )
+
+
+def test_extract_manifest_digests() -> None:
+    index_versions = ["v4.9", "v4.8"]
+    output = "test.txt"
+    response = {
+        "items": [
+            {
+                "index_image": "registry.test/test:v4.8",
+                "index_image_resolved": "registry.test/test@sha256:1234",
+            },
+            {
+                "index_image": "registry.test/test:v4.9",
+                "index_image_resolved": "registry.test/test@sha256:5678",
+            },
+        ]
+    }
+    mock_open = mock.mock_open()
+
+    with mock.patch("builtins.open", mock_open):
+        index.extract_manifest_digests(index_versions, output, response)
+
+    mock_open.assert_called_once_with("test.txt", "w")
+    mock_open.return_value.write.assert_called_once_with("sha256:5678,sha256:1234")
