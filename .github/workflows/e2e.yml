@@ -77,7 +77,7 @@ jobs:
           pushd operators/test-e2e-operator
 
           # Modify the test operator version
-          mv 0.0.7 0.0.8-$VERSION_PREFIX
+          mv 0.0.8 0.0.8-$VERSION_PREFIX
           find ./ -type f -exec sed -i "s/0.0.8/0.0.8-$VERSION_PREFIX/g" {} \;
 
           popd
