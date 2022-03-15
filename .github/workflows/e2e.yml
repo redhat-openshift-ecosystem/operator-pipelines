@@ -24,17 +24,17 @@ jobs:
   prepare-env-job:
     runs-on: ubuntu-latest
     outputs:
-      short_sha: ${{ steps.prepare.outputs.short_sha }}
+      version_prefix: ${{ steps.prepare.outputs.version_prefix }}
       pr_title: ${{ steps.prepare.outputs.pr_title }}
       oc_project: ${{ steps.prepare.outputs.oc_project }}
       test_pr_base_branch: ${{ steps.prepare.outputs.test_pr_base_branch }}
     steps:
       - id: prepare
         run: |
-          echo "::set-output name=short_sha::${{ github.run_id }}"
-          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.8-${{ github.run_id }})"
-          echo "::set-output name=oc_project::test-e2e-${{ github.run_id }}"
-          echo "::set-output name=test_pr_base_branch::${{ github.run_id }}-base"
+          echo "::set-output name=version_prefix::${{ github.run_id }}${{ github.run_attempt }}"
+          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.8-${{ github.run_id }}${{ github.run_attempt }})"
+          echo "::set-output name=oc_project::test-e2e-${{ github.run_id }}${{ github.run_attempt }}"
+          echo "::set-output name=test_pr_base_branch::${{ github.run_id }}${{ github.run_attempt }}-base"
 
 
   # Create a Pull Request with the fake version of fake operator in the repository operator-pipelines-test.
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-env-job
     env:
-      SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
+      VERSION_PREFIX: ${{needs.prepare-env-job.outputs.version_prefix}}
       PR_BASE_BRANCH: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
     outputs:
       test_pr_number: ${{ steps.create_pull_request.outputs.pull-request-number }}
@@ -77,8 +77,8 @@ jobs:
           pushd operators/test-e2e-operator
 
           # Modify the test operator version
-          mv 0.0.7 0.0.8-$SHORT_SHA
-          find ./ -type f -exec sed -i "s/0.0.8/0.0.8-$SHORT_SHA/g" {} \;
+          mv 0.0.7 0.0.8-$VERSION_PREFIX
+          find ./ -type f -exec sed -i "s/0.0.8/0.0.8-$VERSION_PREFIX/g" {} \;
 
           popd
 
@@ -99,7 +99,7 @@ jobs:
           author: 'rh-operator-bundle-test-e2e <exd-guild-isv+operators-test-e2e@redhat.com>'
           commit-message: 'Preparing the data for E2E tests'
           base: ${{needs.prepare-env-job.outputs.test_pr_base_branch}}
-          branch: ${{needs.prepare-env-job.outputs.short_sha}}
+          branch: ${{needs.prepare-env-job.outputs.version_prefix}}
           title: ${{needs.prepare-env-job.outputs.pr_title}}
           delete-branch: true
           body: 'This is PR used for E2E tests of the operator pipelines'
@@ -111,7 +111,7 @@ jobs:
       - prepare-env-job
       - prepare-test-data
     env:
-      SHORT_SHA: ${{needs.prepare-env-job.outputs.short_sha}}
+      VERSION_PREFIX: ${{needs.prepare-env-job.outputs.version_prefix}}
       OC_PROJECT: ${{needs.prepare-env-job.outputs.oc_project}}
     steps:
       # Clone repo
@@ -143,7 +143,7 @@ jobs:
         run: |
           oc new-project $OC_PROJECT
           pushd ansible
-          bash -x init-custom-env.sh $OC_PROJECT integration-tests vault-password ${{ github.sha }} $SHORT_SHA
+          bash -x init-custom-env.sh $OC_PROJECT integration-tests vault-password ${{ github.sha }} $VERSION_PREFIX
           popd
 
       - name: Run CI pipeline
@@ -153,11 +153,11 @@ jobs:
             --use-param-defaults \
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param upstream_repo_name=redhat-openshift-ecosystem/operator-pipelines-test \
-            --param git_branch=$SHORT_SHA \
-            --param bundle_path=operators/test-e2e-operator/0.0.8-$SHORT_SHA \
+            --param git_branch=$VERSION_PREFIX \
+            --param bundle_path=operators/test-e2e-operator/0.0.8-$VERSION_PREFIX \
             --param env=stage \
             --param submit=false \
-            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
+            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:latest \
             --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=kubeconfig,secret=kubeconfig \
             --workspace name=ssh-dir,secret=github-ssh-credentials \
@@ -176,7 +176,7 @@ jobs:
         run: |
           tkn pipeline start operator-hosted-pipeline \
             --use-param-defaults \
-            --param git_pr_branch=$SHORT_SHA \
+            --param git_pr_branch=$VERSION_PREFIX \
             --param image_namespace=operator-pipeline-stage \
             --param git_pr_title="${{needs.prepare-env-job.outputs.pr_title}}" \
             --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
@@ -185,11 +185,11 @@ jobs:
             --param git_username=rh-operator-bundle-bot \
             --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
             --param git_base_branch=${{needs.prepare-env-job.outputs.test_pr_base_branch}} \
-            --param pr_head_label=$SHORT_SHA \
+            --param pr_head_label=$VERSION_PREFIX \
             --param env=stage \
             --param preflight_min_version=0.0.0 \
             --param ci_min_version=0.0.0 \
-            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
+            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:latest \
             --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
@@ -217,7 +217,7 @@ jobs:
             --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
             --param is_latest=true \
             --param env=stage \
-            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
+            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:latest \
             --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
@@ -267,5 +267,5 @@ jobs:
           github_token: ${{ secrets.BOT_TOKEN }}
           owner: redhat-openshift-ecosystem
           repository: operator-pipelines-test
-          branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}},${{needs.prepare-env-job.outputs.short_sha}}
+          branches: ${{needs.prepare-env-job.outputs.test_pr_base_branch}},${{needs.prepare-env-job.outputs.version_prefix}}
           soft_fail: true
