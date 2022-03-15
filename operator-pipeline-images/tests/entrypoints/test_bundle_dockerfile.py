@@ -18,5 +18,5 @@ def test_generate_dockerfile_content(
     dockerfile = generate_dockerfile_content(args)
     assert (
         dockerfile
-        == "FROM scratch\n\nLABEL operators.operatorframework.io.bundle.manifests.v1=demo1\nLABEL operators.operatorframework.io.bundle.metadata.v1=demo2\n\nCOPY demo1 /manifests/\nCOPY demo2 /metadata/\n\n"
+        == "FROM scratch\n\nLABEL operators.operatorframework.io.bundle.manifests.v1='demo1'\nLABEL operators.operatorframework.io.bundle.metadata.v1='demo2'\n\nCOPY demo1 /manifests/\nCOPY demo2 /metadata/\n\n"
     )
