@@ -31,10 +31,10 @@ jobs:
     steps:
       - id: prepare
         run: |
-          echo "::set-output name=short_sha::${github.run_id}"
-          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.8-${github.run_id})"
-          echo "::set-output name=oc_project::test-e2e-${github.run_id}"
-          echo "::set-output name=test_pr_base_branch::${github.run_id}-base"
+          echo "::set-output name=short_sha::${{ github.run_id }}"
+          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.8-${{ github.run_id }})"
+          echo "::set-output name=oc_project::test-e2e-${{ github.run_id }}"
+          echo "::set-output name=test_pr_base_branch::${{ github.run_id }}-base"
 
 
   # Create a Pull Request with the fake version of fake operator in the repository operator-pipelines-test.
@@ -77,7 +77,7 @@ jobs:
           pushd operators/test-e2e-operator
 
           # Modify the test operator version
-          mv 0.0.8 0.0.8-$SHORT_SHA
+          mv 0.0.7 0.0.8-$SHORT_SHA
           find ./ -type f -exec sed -i "s/0.0.8/0.0.8-$SHORT_SHA/g" {} \;
 
           popd
