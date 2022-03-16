@@ -31,10 +31,10 @@ jobs:
     steps:
       - id: prepare
         run: |
-          echo "::set-output name=version_prefix::${{ github.event.number }}"
-          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.8-${{ github.event.number }})"
-          echo "::set-output name=oc_project::test-e2e-${{ github.event.number }}"
-          echo "::set-output name=test_pr_base_branch::${{ github.event.number }}-base"
+          echo "::set-output name=version_prefix::${{ github.run_number }}"
+          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.8-${{ github.run_number }})"
+          echo "::set-output name=oc_project::test-e2e-${{ github.run_number }}"
+          echo "::set-output name=test_pr_base_branch::${{ github.run_number }}-base"
 
 
   # Create a Pull Request with the fake version of fake operator in the repository operator-pipelines-test.
