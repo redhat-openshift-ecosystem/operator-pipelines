@@ -32,7 +32,7 @@ jobs:
       - id: prepare
         run: |
           echo "::set-output name=version_prefix::${{ github.run_id }}${{ github.run_attempt }}"
-          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.7-${{ github.run_id }}${{ github.run_attempt }})"
+          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.8-${{ github.run_id }}${{ github.run_attempt }})"
           echo "::set-output name=oc_project::test-e2e-${{ github.run_id }}${{ github.run_attempt }}"
           echo "::set-output name=test_pr_base_branch::${{ github.run_id }}${{ github.run_attempt }}-base"
 
@@ -77,8 +77,8 @@ jobs:
           pushd operators/test-e2e-operator
 
           # Modify the test operator version
-          mv 0.0.7 0.0.7-$VERSION_PREFIX
-          find ./ -type f -exec sed -i "s/0.0.7/0.0.7-$VERSION_PREFIX/g" {} \;
+          mv 0.0.8 0.0.8-$VERSION_PREFIX
+          find ./ -type f -exec sed -i "s/0.0.8/0.0.8-$VERSION_PREFIX/g" {} \;
 
           popd
 
@@ -154,7 +154,7 @@ jobs:
             --param git_repo_url=git@github.com:redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param upstream_repo_name=redhat-openshift-ecosystem/operator-pipelines-test \
             --param git_branch=$VERSION_PREFIX \
-            --param bundle_path=operators/test-e2e-operator/0.0.7-$VERSION_PREFIX \
+            --param bundle_path=operators/test-e2e-operator/0.0.8-$VERSION_PREFIX \
             --param env=stage \
             --param submit=false \
             --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:latest \
