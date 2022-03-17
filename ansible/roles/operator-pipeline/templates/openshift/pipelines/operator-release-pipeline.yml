@@ -73,15 +73,6 @@ spec:
       description: >-
         The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
       default: krb5.keytab
-    - name: umb_ssl_secret_name
-      description: Kubernetes secret name that contains the UMB SSL files.
-      default: operator-pipeline-api-certs
-    - name: umb_ssl_cert_secret_key
-      description: The key within the Kubernetes secret that contains the UMB SSL cert.
-      default: operator-pipeline.pem
-    - name: umb_ssl_key_secret_key
-      description: The key within the Kubernetes secret that contains the UMB SSL key.
-      default: operator-pipeline.key
   workspaces:
     - name: repository
     - name: results
@@ -446,11 +437,11 @@ spec:
         - name: sig_key_name
           value: "$(tasks.set-env.results.sig_key_name)"
         - name: umb_ssl_secret_name
-          value: "$(params.umb_ssl_secret_name)"
+          value: "$(params.pyxis_ssl_secret_name)"
         - name: umb_ssl_cert_secret_key
-          value: "$(params.umb_ssl_cert_secret_key)"
+          value: "$(params.pyxis_ssl_cert_secret_key)"
         - name: umb_ssl_key_secret_key
-          value: "$(params.umb_ssl_key_secret_key)"
+          value: "$(params.pyis_ssl_key_secret_key)"
         - name: umb_client_name
           value: "$(tasks.set-env.results.umb_client_name)"
         - name: umb_url
