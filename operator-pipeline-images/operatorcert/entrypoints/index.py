@@ -3,7 +3,7 @@ import logging
 import os
 import time
 from datetime import datetime, timedelta
-from typing import Any, List
+from typing import Any, Dict, List
 
 from operatorcert import iib, utils
 from operatorcert.logger import setup_logger
@@ -30,6 +30,11 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
         required=True,
         nargs="+",
         help="List of indices the bundle supports, e.g --indices registry/index:v4.9 registry/index:v4.8",
+    )
+    parser.add_argument(
+        "--output",
+        default="manifest-digests.txt",
+        help="File name to output comma-separated list of manifest digests to.",
     )
     parser.add_argument(
         "--iib-url",
@@ -91,7 +96,11 @@ def wait_for_results(iib_url: str, batch_id: int, timeout=60 * 60, delay=20) -> 
 
 
 def publish_bundle(
-    from_index: str, bundle_pullspec: str, iib_url: str, index_versions: List[str]
+    from_index: str,
+    bundle_pullspec: str,
+    iib_url: str,
+    index_versions: List[str],
+    output: str,
 ) -> None:
     """
     Publish a bundle to index image using IIB
@@ -101,6 +110,7 @@ def publish_bundle(
         bundle_pullspec: bundle pullspec
         from_index: target index pullspec
         index_versions: list of index versions (tags)
+        output: file name to output resulting manifest digests to
     Raises:
         Exception: Exception is raised when IIB build fails
     """
@@ -129,6 +139,27 @@ def publish_bundle(
         [build.get("state") == "complete" for build in response["items"]]
     ):
         raise Exception("IIB build failed")
+    else:
+        extract_manifest_digests(index_versions, output, response)
+
+
+def extract_manifest_digests(
+    index_versions: List[str],
+    output: str,
+    response: Dict[str, Any],
+):
+
+    LOGGER.info("Extracting manifest digests for signing...")
+    manifest_digests = []
+    # go through each version to ensure order is the same as the indices list
+    for version in index_versions:
+        for build in response["items"]:
+            if build["index_image"].endswith(version):
+                digest = build["index_image_resolved"].split("@")[-1]
+                manifest_digests.append(digest)
+    with open(output, "w") as f:
+        f.write(",".join(manifest_digests))
+    LOGGER.info(f"Manifest digests written to output file {output}.")
 
 
 def parse_indices(indices: List[str]) -> List[str]:
@@ -168,7 +199,11 @@ def main() -> None:  # pragma: no cover
     utils.set_client_keytab(os.environ.get("KRB_KEYTAB_FILE", "/etc/krb5.krb"))
 
     publish_bundle(
-        args.from_index, args.bundle_pullspec, args.iib_url, parse_indices(args.indices)
+        args.from_index,
+        args.bundle_pullspec,
+        args.iib_url,
+        parse_indices(args.indices),
+        args.output,
     )
 
 
