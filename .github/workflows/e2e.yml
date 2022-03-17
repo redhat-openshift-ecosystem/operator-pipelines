@@ -78,7 +78,7 @@ jobs:
 
           # Modify the test operator version
           mv 0.0.8 0.0.8-$VERSION_SUFFIX
-          find ./ -type f -exec sed -i "s/0.0.8/0.0.8-$VERSION_SUFFIX/g" {} \;
+          find ./ -type f -exec sed -i "s/0\.0\.8/0.0.8-$VERSION_SUFFIX/g" {} \;
 
           popd
 
