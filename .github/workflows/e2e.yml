@@ -10,9 +10,11 @@ on:  # yamllint disable-line rule:truthy
       - Build
     branches:
       - main
+      - ISV-1856
     types:
       - completed
   workflow_dispatch:
+  pull_request:
 
 jobs:
 
@@ -75,8 +77,15 @@ jobs:
           pushd operators/test-e2e-operator
 
           # Modify the test operator version
-          mv 0.0.8 0.0.8-$VERSION_SUFFIX
+          cp -avr 0.0.8 0.0.8-$VERSION_SUFFIX
+          echo "what is in the folder?"
+          ls
           find ./ -type f -exec sed -i "s/0\.0\.8/0.0.8-$VERSION_SUFFIX/g" {} \;
+          diff -bur 0.0.8/ 0.0.8-$VERSION_SUFFIX/
+          rmdir 0.0.8
+          echo "what is in the folder?"
+          ls
+
 
           popd
 
@@ -155,7 +164,7 @@ jobs:
             --param bundle_path=operators/test-e2e-operator/0.0.8-$VERSION_SUFFIX \
             --param env=stage \
             --param submit=false \
-            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
+            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:latest \
             --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=kubeconfig,secret=kubeconfig \
             --workspace name=ssh-dir,secret=github-ssh-credentials \
@@ -187,7 +196,7 @@ jobs:
             --param env=stage \
             --param preflight_min_version=0.0.0 \
             --param ci_min_version=0.0.0 \
-            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
+            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:latest \
             --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
@@ -215,7 +224,7 @@ jobs:
             --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/${{needs.prepare-test-data.outputs.test_pr_number}} \
             --param is_latest=true \
             --param env=stage \
-            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
+            --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:latest \
             --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
