@@ -78,14 +78,9 @@ jobs:
 
           # Modify the test operator version
           cp -avr 0.0.8 0.0.8-$VERSION_SUFFIX
-          whoami
-          echo "what is in the folder?"
-          ls -l ./0.0.8
           find 0.0.8-$VERSION_SUFFIX/ -type f -exec sed -i "s/0\.0\.8/0.0.8-$VERSION_SUFFIX/g" {} \;
           diff -bur 0.0.8/ 0.0.8-$VERSION_SUFFIX/ || true
           rm -rv ./0.0.8
-          echo "what is in the folder?"
-          ls
 
 
           popd
