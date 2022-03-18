@@ -31,10 +31,10 @@ jobs:
     steps:
       - id: prepare
         run: |
-          echo "::set-output name=version_suffix::${{ github.run_number }}"
-          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.8-${{ github.run_number }})"
-          echo "::set-output name=oc_project::test-e2e-${{ github.run_number }}"
-          echo "::set-output name=test_pr_base_branch::${{ github.run_number }}-base"
+          echo "::set-output name=version_suffix::${{ github.run_number }}${{ github.run_attempt }}"
+          echo "::set-output name=pr_title::operator test-e2e-operator (0.0.8-${{ github.run_number }}${{ github.run_attempt }})"
+          echo "::set-output name=oc_project::test-e2e-${{ github.run_number }}${{ github.run_attempt }}"
+          echo "::set-output name=test_pr_base_branch::${{ github.run_number }}${{ github.run_attempt }}-base"
 
 
   # Create a Pull Request with the fake version of fake operator in the repository operator-pipelines-test.
@@ -78,11 +78,7 @@ jobs:
 
           # Modify the test operator version
           mv 0.0.8 0.0.8-$VERSION_SUFFIX
-          echo "What is in the folder?"
-          ls
           find ./ -type f -exec sed -i "s/0\.0\.8/0.0.8-$VERSION_SUFFIX/g" {} \;
-          echo "where are we?"
-          pwd
 
           popd
 
