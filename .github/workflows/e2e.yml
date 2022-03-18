@@ -83,8 +83,7 @@ jobs:
           ls -l ./0.0.8
           find 0.0.8-$VERSION_SUFFIX/ -type f -exec sed -i "s/0\.0\.8/0.0.8-$VERSION_SUFFIX/g" {} \;
           diff -bur 0.0.8/ 0.0.8-$VERSION_SUFFIX/ || true
-          rm -rfv ./0.0.8/*
-          rmdir ./0.0.8
+          rm -rv ./0.0.8
           echo "what is in the folder?"
           ls
 
