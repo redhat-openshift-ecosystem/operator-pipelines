@@ -109,7 +109,7 @@ spec:
           --iib-url "$(params.iib_url)" \
           --from-index $FROM_INDEX \
           --indices $INDICES \
-          --bundle-pullspec "$(params.bundle_pullspec)"
+          --bundle-pullspec "$(params.bundle_pullspec)" \
           --output manifest-digests.txt
 
 
