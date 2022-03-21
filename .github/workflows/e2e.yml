@@ -191,6 +191,7 @@ jobs:
             --param preflight_min_version=0.0.0 \
             --param ci_min_version=0.0.0 \
             --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
+            --param metrics_endpoint=http://pipeline-metrics.pipeline-metrics-nonprod \
             --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
@@ -219,6 +220,7 @@ jobs:
             --param is_latest=true \
             --param env=stage \
             --param pipeline_image=quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} \
+            --param metrics_endpoint=http://pipeline-metrics.pipeline-metrics-nonprod \
             --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
