@@ -44,13 +44,13 @@ jobs:
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
             --inventory inventory/operator-pipeline
-            --extra-vars "env=dev operator_pipeline_image_tag=${{ github.sha }} suffix=$SHORT_SHA"
+            --extra-vars "env=dev operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
             --skip-tags ci
             --verbose
 
   deploy-qa:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    # if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     needs:
       - prepare-env
     environment:
@@ -71,7 +71,7 @@ jobs:
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
             --inventory inventory/operator-pipeline
-            --extra-vars "env=qa operator_pipeline_image_tag=${{ github.sha }} suffix=$SHORT_SHA"
+            --extra-vars "env=qa operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
             --skip-tags ci
             --verbose
 
@@ -99,7 +99,7 @@ jobs:
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
             --inventory inventory/operator-pipeline
-            --extra-vars "env=stage operator_pipeline_image_tag=${{ github.sha }} suffix=$SHORT_SHA"
+            --extra-vars "env=stage operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
             --skip-tags ci
             --verbose
 
@@ -126,7 +126,7 @@ jobs:
           vault_password: ${{secrets.VAULT_PASSWORD_PROD}}
           options: |
             --inventory inventory/operator-pipeline
-            --extra-vars "env=prod operator_pipeline_image_tag=${{ github.sha }} suffix=$SHORT_SHA"
+            --extra-vars "env=prod operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
             --skip-tags ci
             --verbose
 
