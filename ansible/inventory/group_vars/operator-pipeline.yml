@@ -52,3 +52,5 @@ community_signing_pipeline_url: "{{ community_signing_pipeline_name }}-tekton-{{
 nginx_basic_user_file_local_path: ../../vaults/{{ env }}/htpasswd
 nginx_proxy_service_url: "https://{{ community_signing_pipeline_url }}"
 nginx_proxy_url: "{{ community_signing_pipeline_name }}-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
+
+signing_pub_key_local_path: ../../vaults/{{ env }}/sig-key.pub

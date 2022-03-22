@@ -73,6 +73,12 @@ spec:
     - name: metrics_endpoint
       description: Prometheus metrics endpoint
       default: http://pipeline-metrics.pipeline-metrics-prod
+    - name: signing_pub_secret_name
+      description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
+      default: signing-pub-key
+    - name: signing_pub_secret_key
+      description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
+      default: sig-key.pub
   workspaces:
     - name: repository
     - name: results
