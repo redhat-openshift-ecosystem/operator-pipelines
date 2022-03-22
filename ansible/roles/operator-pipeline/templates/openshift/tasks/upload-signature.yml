@@ -9,10 +9,6 @@ spec:
       description: Json file containing the list of signature data to upload to Pyxis signature.
     - name: pipeline_image
       description: A docker image of operator-pipeline-images for the steps to run in.
-    - name: sig_key_pub_key
-      description: Env var that points to the location of the signing key's public key,
-        to be imported to gpg for verification.
-      default: ISVSIGN_PUB_KEY
     - name: pyxis_ssl_secret_name
       description: Kubernetes secret name that contains the Pyxis SSL files.
     - name: pyxis_ssl_cert_secret_key
@@ -25,16 +21,28 @@ spec:
     - name: verify_signature
       description: Whether to verify that the signature data is signed with the right key.
       default: "true"
+    - name: signing_pub_secret_name
+      description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
+    - name: signing_pub_secret_key
+      description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
   volumes:
     - name: pyxis-ssl-volume
       secret:
         secretName: "$(params.pyxis_ssl_secret_name)"
         optional: false
+    - name: signing-pub-key-volume
+      secret:
+        secretName: "$(params.signing_pub_secret_name)"
+        optional: true
   workspaces:
     - name: source
   steps:
     - name: verify-signature
       image: "$(params.pipeline_image)"
+      volumeMounts:
+        - name: signing-pub-key-volume
+          readOnly: true
+          mountPath: "/etc/signing-pub-key-volume"
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -47,10 +55,10 @@ spec:
         # Extract list of signed claims and loop through
         SIGNED_CLAIMS=$(cat $(params.signature_data_file) | jq -r '.[].signed_claim')
 
+        gpg --import /etc/signing-pub-key-volume/$(params.signing_pub_secret_key)
+
         for CLAIM in $SIGNED_CLAIMS; do
           echo "$CLAIM" | base64 --decode > decoded_signed_claim
-
-          gpg --import $(printenv $(params.sig_key_pub_key))
           gpg --verify decoded_signed_claim
         done
       workingDir: $(workspaces.source.path)

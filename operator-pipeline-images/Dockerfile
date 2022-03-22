@@ -41,11 +41,6 @@ RUN curl -LO https://github.com/operator-framework/operator-registry/releases/do
     chmod +x linux-amd64-opm && \
     mv linux-amd64-opm /usr/local/bin/opm
 
-# Download ISV Container Signing Pub Key for signature verification
-RUN curl https://www.redhat.com/security/data/55A34A82.txt -o /etc/containerisvsign.txt  && \
-    chmod go=r /etc/containerisvsign.txt
-ENV ISVSIGN_PUB_KEY=/etc/containerisvsign.txt
-
 RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
 WORKDIR /home/user
