@@ -82,7 +82,7 @@ def test_create_container_image(
                     "tags": [
                         {
                             "added_date": "1970-10-10T10:10:10.000000+00:00",
-                            "name": "some_version-1",
+                            "name": "some_version",
                         }
                     ],
                 }
@@ -137,7 +137,7 @@ def test_create_container_image_latest(
                     "tags": [
                         {
                             "added_date": "1970-10-10T10:10:10.000000+00:00",
-                            "name": "some_version-1",
+                            "name": "some_version",
                         },
                         {
                             "added_date": "1970-10-10T10:10:10.000000+00:00",
