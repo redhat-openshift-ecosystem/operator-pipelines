@@ -138,9 +138,7 @@ def create_container_image(
                 "tags": [
                     {
                         "added_date": date_now,
-                        # suffix -1 is added to indicate,
-                        # that it's non- floating tag
-                        "name": args.bundle_version + "-1",
+                        "name": args.bundle_version,
                     },
                 ],
             }
