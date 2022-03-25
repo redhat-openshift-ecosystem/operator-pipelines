@@ -14,7 +14,7 @@
 1. [Prepare a development environment](#prepare-a-development-environment)
 1. [Prepare a certification project](#prepare-a-certification-project)
 1. [Prepare an Operator bundle](#prepare-an-operator-bundle)
-1. [Prepare your `ci.yaml`](#prepare-your-ci.yaml)
+1. [Prepare your `ci.yaml`](#prepare-your-ciyaml)
 1. [Create a bundle pull request](#create-a-bundle-pull-request) (optional)
     - Required for testing hosted or release pipelines
 1. [Create an API key](#create-an-api-key) (optional)
