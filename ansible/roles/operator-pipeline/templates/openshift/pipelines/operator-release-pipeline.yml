@@ -73,6 +73,12 @@ spec:
       description: >-
         The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
       default: krb5.keytab
+    - name: signing_pub_secret_name
+      description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
+      default: signing-pub-key
+    - name: signing_pub_secret_key
+      description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
+      default: sig-key.pub
   workspaces:
     - name: repository
     - name: results
@@ -469,9 +475,12 @@ spec:
           value: "$(params.pyxis_ssl_key_secret_key)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
-        # TODO: remove it after ISV-1798 is done
+        - name: signing_pub_secret_name
+          value: "$(params.signing_pub_secret_name)"
+        - name: signing_pub_secret_key
+          value: "$(params.signing_pub_secret_key)"
         - name: verify_signature
-          value: "false"
+          value: "true"
       workspaces:
         - name: source
           workspace: repository
