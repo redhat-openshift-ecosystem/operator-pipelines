@@ -116,5 +116,5 @@ spec:
         echo -n "success" | tee "$(results.status.path)"
         # comma-separate list for signing input
         REFERENCES="$(echo $(params.bundle_versions) | tr -d '[ ]')"
-        echo $REFERENCE | tee "$(results.docker_references.path)"
+        echo $REFERENCES | tee "$(results.docker_references.path)"
         cat manifest-digests.txt | tee "$(results.manifest_digests.path)"
