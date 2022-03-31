@@ -484,6 +484,8 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
+          value: "$(context.pipeline.name)"
+        - name: pipelinerun_name
           value: "$(context.pipelineRun.name)"
         - name: pyxis_api_key_secret_name
           value: "$(params.pyxis_api_key_secret_name)"
