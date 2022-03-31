@@ -893,11 +893,15 @@ spec:
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
           value: "$(tasks.validate-pr-title.results.bundle_version)"
+        - name: git_pr_url
+          value: $(params.git_pr_url)
         - name: package_name
           value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name
+          value: "$(context.pipeline.name)"
+        - name: pipelinerun_name
           value: "$(context.pipelineRun.name)"
         - name: pyxis_ssl_secret_name
           value: "$(params.pyxis_ssl_secret_name)"

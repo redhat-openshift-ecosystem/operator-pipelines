@@ -39,6 +39,10 @@ def setup_argparser() -> Any:  # pragma: no cover
     parser.add_argument("--operator-version", help="Operator version", required=True)
     parser.add_argument("--path", help="Path to artifact", required=True)
     parser.add_argument(
+        "--pull-request-url",
+        help="URL to the pull request associated with the cert project.",
+    )
+    parser.add_argument(
         "--type",
         choices=[
             "preflight-logs",
@@ -113,6 +117,8 @@ def upload_artifact(args: Any, file_path: str, org_id: Any = None) -> Dict[str, 
     }
     if org_id:
         artifact_payload["org_id"] = org_id
+    if args.pull_request_url:
+        artifact_payload["pull_request_url"] = args.pull_request_url
     return pyxis.post(upload_url, artifact_payload)
 
 

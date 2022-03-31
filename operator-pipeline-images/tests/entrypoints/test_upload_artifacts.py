@@ -23,6 +23,7 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
     args.operator_package_name = "foo"
     args.operator_version = "1.0"
     args.cert_project_id = "123123"
+    args.pull_request_url = "http://bar.com/"
 
     mock_b64.return_value = b"a"
     filename = "operator-pipeline-images/tests/data/preflight.log"
@@ -39,6 +40,7 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
             "operator_package_name": args.operator_package_name,
             "version": args.operator_version,
             "org_id": 1,
+            "pull_request_url": args.pull_request_url,
         },
     )
 

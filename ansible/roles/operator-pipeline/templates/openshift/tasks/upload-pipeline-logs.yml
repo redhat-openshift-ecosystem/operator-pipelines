@@ -33,7 +33,12 @@ spec:
     - name: package_name
       description: Operator package name
     - name: pipeline_name
+      description: Tekton pipeline name to identify which pipeline the logs are coming from
+    - name: pipelinerun_name
       description: Tekton pipeline run name where logs will be gathered from
+    - name: git_pr_url
+      description: URL to the pull request associated with the pipeline run
+      default: ""
   results:
     - name: pipeline_log_url
   workspaces:
@@ -52,7 +57,7 @@ spec:
 
         echo "Getting pipeline logs"
 
-        tkn pipelinerun logs "$(params.pipeline_name)" > $(workspaces.source.path)/pipeline.logs
+        tkn pipelinerun logs "$(params.pipelinerun_name)" > $(workspaces.source.path)/$(params.pipeline_name).log
 
     - name: upload-pipeline-logs
       image: "$(params.pipeline_image)"
@@ -81,8 +86,9 @@ spec:
           --operator-version "$(params.bundle_version)" \
           --operator-package-name "$(params.package_name)" \
           --certification-hash "$(params.md5sum)" \
+          --pull-request-url "$(params.git_pr_url)" \
           --pyxis-url "$(params.pyxis_url)" \
-          --path $(workspaces.source.path)/pipeline.logs \
+          --path $(workspaces.source.path)/$(params.pipeline_name).log \
           --type pipeline-logs \
           --output pipeline-logs-artifact.json \
           --verbose
