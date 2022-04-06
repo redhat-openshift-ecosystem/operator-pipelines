@@ -1,0 +1,45 @@
+---
+- name: "Install {{ package_binary }} ({{ package_version }})"
+  block:
+    - name: "Verify {{ package_binary }}"
+      ansible.builtin.include_tasks:
+        file: verify.yml
+      vars:
+        package_verify_msg: false
+
+    - name: "Install {{ package_binary }} ({{ package_version }})"
+      block:
+        - name: "Remove {{ package_binary }}"
+          ansible.builtin.include_tasks:
+            file: remove.yml
+
+        - name: "Install {{ package_binary }} ({{ package_version }})"
+          ansible.builtin.get_url:
+            url: "{{ package_url }}"
+            dest: "{{ op_bin_dir }}/{{ package_binary }}"
+            mode: "0755"
+            validate_certs: "{{ package_validate_certs }}"
+          register: package_install_result
+          until: package_install_result.status_code is undefined or package_install_result.status_code == 200
+          retries: "{{ op_retries }}"
+          delay: "{{ op_delay }}"
+          failed_when: package_install_result is failure
+          when: not package_extract|bool
+
+        - name: "Download and extract OpenShift {{ package_binary }} ({{ package_version }} to {{ op_bin_dir }}/{{ package_binary }}"
+          ansible.builtin.unarchive:
+            src: "{{ package_url }}"
+            dest: "{{ op_bin_dir }}"
+            remote_src: true
+            exclude: "{{ package_extract_exclude }}"
+            validate_certs: "{{ package_validate_certs }}"
+          register: download_and_unpack_result
+          until: download_and_unpack_result is succeeded
+          retries: "{{ op_retries }}"
+          delay: "{{ op_delay }}"
+          when: package_extract|bool
+
+      when: binary_needs_install|bool
+
+  tags:
+    - install

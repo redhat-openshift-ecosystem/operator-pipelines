@@ -1,0 +1,67 @@
+---
+- name: "Remove registry '{{ registry_name }}'"
+  ansible.builtin.command: "{{ container_tool }} rm -f {{ registry_name }}"
+  failed_when: false
+  changed_when: true
+  tags:
+    - kind-delete
+    - clean
+    - install
+
+- name: "Install registry '{{ registry_name }}'"
+  block:
+    - name: "Ensure that the '{{ registry_cert_dir }}' directory exists and is empty"
+      ansible.builtin.file:
+        state: "{{ item }}"
+        path: "{{ registry_cert_dir }}"
+        mode: "0755"
+      with_items:
+        - absent
+        - directory
+
+    - name: "Generate certificate in to '{{ registry_cert_dir }}'"
+      ansible.builtin.command: 'openssl req -newkey rsa:4096 -nodes -sha256 -keyout {{ registry_cert_dir }}/domain.key -x509 -days 365 -subj ''/CN=${reg_name}'' -addext "subjectAltName=DNS:{{ registry_hostname }},DNS:localhost,DNS:host.containers.internal" -out {{ registry_cert_dir }}/domain.crt -batch'
+      failed_when: false
+      changed_when: true
+
+    - name: "Setting registry arguments in case of ssl support"
+      ansible.builtin.set_fact:
+        ikc_registry_args: "-v {{ registry_cert_dir }}:/certs:Z -e REGISTRY_HTTP_ADDR=0.0.0.0:5000 -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key"
+      when: registry_ssl|bool
+
+    - name: "Start registry '{{ registry_name }}' at port '{{ registry_port }}'"
+      ansible.builtin.command: "{{ container_tool }} run -d --restart=always --name {{ registry_name }} {{ ikc_registry_args | default('') }} -p {{ registry_port }}:5000 registry:2"
+      # failed_when: false
+      changed_when: true
+
+    - name: "Connect registry '{{ registry_name }}' to kind network"
+      ansible.builtin.command: "{{ container_tool }} network connect kind {{ registry_name }}"
+      when: ansible_facts['user_uid'] == "0"
+
+    - name: "Get list of nodes ib kind cluster '{{ kind_cluster_name }}'"
+      ansible.builtin.command: "{{ kind_binary }} get nodes --name {{ kind_cluster_name }}"
+      register: ikc_kind_nodes_result
+      changed_when: false
+
+    - name: "Set list of nodes to 'ikc_kind_nodes'"
+      ansible.builtin.set_fact:
+        ikc_kind_nodes: "{{ ikc_kind_nodes_result.stdout.split('\n') }}"
+
+    - name: "Apply changes on kind nodes"
+      ansible.builtin.include_tasks: kind_node_changes.yml
+      loop: "{{ ikc_kind_nodes }}"
+      loop_control:
+        loop_var: node_item
+
+    - name: "Generating config map for registry file to '{{ kind_config_map_registry_path }}'"
+      ansible.builtin.template:
+        src: kind_config_map_registry.yaml.j2
+        dest: "{{ kind_config_map_registry_path }}"
+        mode: "0644"
+
+    - name: "Apply '{{ kind_config_map_registry_path }}' to k8s"
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ kind_config_map_registry_path }}"
+  tags:
+    - install

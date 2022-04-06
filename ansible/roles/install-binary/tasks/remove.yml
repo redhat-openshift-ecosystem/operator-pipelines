@@ -1,0 +1,9 @@
+---
+- name: "Remove {{ package_binary }}"
+  block:
+    - name: "Remove {{ op_bin_dir }}/{{ package_binary }}"
+      ansible.builtin.file:
+        path: "{{ op_bin_dir }}/{{ package_binary }}"
+        state: absent
+  tags:
+    - clean

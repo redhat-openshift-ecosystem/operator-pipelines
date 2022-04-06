@@ -1,0 +1,77 @@
+---
+- name: "Install kind"
+  ansible.builtin.include_role:
+    name: install-binary
+  vars:
+    package_binary: "kind"
+    package_version: "{{ kind_version }}"
+    package_url: "https://github.com/kubernetes-sigs/kind/releases/download/{{ package_version }}/kind-linux-amd64"
+    package_parse_delimeter: " "
+    package_parse_index: 1
+  tags:
+    - clean
+    - install
+    - verify
+
+- name: "Install oc"
+  ansible.builtin.include_role:
+    name: install-binary
+  vars:
+    package_binary: "oc"
+    package_version: "{{ oc_version }}"
+    package_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ package_version }}/openshift-client-linux-{{ package_version }}.tar.gz"
+    package_parse_delimeter: " "
+    package_parse_index: 2
+    package_extract: true
+    package_extract_exclude: ["kubectl", "README.md"]
+    package_version_rcs: [0, 1]
+  tags:
+    - clean
+    - install
+    - verify
+
+- name: "Install kubectl"
+  ansible.builtin.include_role:
+    name: install-binary
+  vars:
+    package_binary: "kubectl"
+    package_version: "{{ kubectl_version }}"
+    package_url: "https://storage.googleapis.com/kubernetes-release/release/{{ package_version }}/bin/linux/amd64/kubectl"
+    package_parse_delimeter: '"'
+    package_parse_index: 5
+    package_version_rcs: [0, 1]
+  tags:
+    - clean
+    - install
+    - verify
+
+- name: "Install operator-sdk"
+  ansible.builtin.include_role:
+    name: install-binary
+  vars:
+    package_binary: "operator-sdk"
+    package_version: "{{ operator_sdk_version }}"
+    package_url: "https://github.com/operator-framework/operator-sdk/releases/download/{{ package_version }}/operator-sdk_linux_amd64"
+    package_parse_delimeter: '"'
+    package_parse_index: 1
+  tags:
+    - clean
+    - install
+    - verify
+
+- name: "Install tkn"
+  ansible.builtin.include_role:
+    name: install-binary
+  vars:
+    package_binary: "tkn"
+    package_version: "{{ tkn_version }}"
+    package_url: "https://github.com/tektoncd/cli/releases/download/v{{ package_version }}/tkn_{{ package_version }}_Linux_x86_64.tar.gz"
+    package_parse_delimeter: " "
+    package_parse_index: 2
+    package_extract: true
+    package_extract_exclude: ["LICENSE", "README.md"]
+    package_version_rcs: [0, 1]
+  tags:
+    - clean
+    - install
+    - verify

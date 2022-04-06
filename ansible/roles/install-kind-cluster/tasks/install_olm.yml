@@ -1,0 +1,15 @@
+---
+- name: "Uninstall OLM"
+  ansible.builtin.command: "{{ op_bin_dir }}/{{ operator_sdk_binary }} olm uninstall --version {{ olm_version }} --timeout 5m0s"
+  changed_when: true
+  failed_when: false
+  register: olm_uninstall_rc
+  tags:
+    - clean
+
+- name: "Installing OLM ({{ olm_version }})"
+  ansible.builtin.command: "{{ op_bin_dir }}/{{ operator_sdk_binary }} olm install --version {{ olm_version }} --timeout 5m0s"
+  changed_when: true
+  register: olm_install_rc
+  tags:
+    - install

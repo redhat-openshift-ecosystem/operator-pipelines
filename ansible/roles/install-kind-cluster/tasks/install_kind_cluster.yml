@@ -1,0 +1,34 @@
+---
+- name: "Delete kind cluster '{{ kind_cluster_name }}'"
+  ansible.builtin.command: "{{ kind_binary }} delete cluster --name {{ kind_cluster_name }}"
+  changed_when: true
+  tags:
+    - kind-delete
+    - install
+
+- name: "Generating kind config file"
+  ansible.builtin.template:
+    src: kind_config.yaml.j2
+    dest: "{{ kind_config_path }}"
+    mode: "0644"
+  tags:
+    - install
+
+- name: "Create kind cluster '{{ kind_cluster_name }}'"
+  ansible.builtin.command: "{{ kind_binary }} create cluster --name {{ kind_cluster_name }} --image kindest/node:{{ kind_kube_version }} --config={{ kind_config_path }}"
+  changed_when: true
+  tags:
+    - install
+
+- name: "Get kind cluster information"
+  kubernetes.core.k8s_cluster_info:
+  register: api_status
+  tags:
+    - install
+
+- name: "Failing when cluster failed to start"
+  ansible.builtin.fail:
+    msg: "Kind cluster was not able to start !!!"
+  when: api_status.failed is undefined or api_status.failed|bool
+  tags:
+    - install

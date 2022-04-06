@@ -1,0 +1,84 @@
+---
+- name: "Download tekton k8s files"
+  block:
+    - name: "Download tekton pipeline '{{ tekton_pipeline_version }}' to {{ kind_tekton_pipeline_path }}"
+      ansible.builtin.get_url:
+        url: "https://storage.googleapis.com/tekton-releases/pipeline/previous/{{ tekton_pipeline_version }}/release.yaml"
+        dest: "{{ kind_tekton_pipeline_path }}"
+        mode: "0664"
+        validate_certs: "{{ tekton_validate_certs }}"
+
+    - name: "Download tekton triggers '{{ tekton_triggers_version }}' to {{ kind_tekton_triggers_path }}"
+      ansible.builtin.get_url:
+        url: "https://storage.googleapis.com/tekton-releases/triggers/previous/{{ tekton_triggers_version }}/release.yaml"
+        dest: "{{ kind_tekton_triggers_path }}"
+        mode: "0664"
+        validate_certs: "{{ tekton_validate_certs }}"
+
+    - name: "Download tekton dashboard '{{ tekton_dashboard_version }}' to '{{ kind_tekton_dashboard_path }}'"
+      ansible.builtin.get_url:
+        url: "https://github.com/tektoncd/dashboard/releases/download/{{ tekton_dashboard_version }}/tekton-dashboard-release.yaml"
+        dest: "{{ kind_tekton_dashboard_path }}"
+        mode: "0664"
+        validate_certs: "{{ tekton_validate_certs }}"
+  tags:
+    - clean
+    - install
+
+- name: "Remove tekton"
+  block:
+    - name: "Remove tekton dashboard {{ tekton_dashboard_version }}"
+      kubernetes.core.k8s:
+        state: absent
+        src: "{{ kind_tekton_dashboard_path }}"
+        wait: true
+        wait_sleep: 1
+        wait_timeout: 360
+
+    - name: "Remove tekton triggers {{ tekton_triggers_version }}"
+      kubernetes.core.k8s:
+        state: absent
+        src: "{{ kind_tekton_triggers_path }}"
+        wait: true
+        wait_sleep: 1
+        wait_timeout: 360
+
+    - name: "Remove tekton pipeline {{ tekton_pipeline_version }}"
+      kubernetes.core.k8s:
+        state: absent
+        src: "{{ kind_tekton_pipeline_path }}"
+        wait: true
+        wait_sleep: 1
+        wait_timeout: 360
+
+  tags:
+    - clean
+    - install
+
+- name: "Install tekton"
+  block:
+    - name: "Install tekton pipeline {{ tekton_pipeline_version }}"
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ kind_tekton_pipeline_path }}"
+        wait: true
+        wait_sleep: 1
+        wait_timeout: 360
+
+    - name: "Install tekton triggers {{ tekton_triggers_version }}"
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ kind_tekton_triggers_path }}"
+        wait: true
+        wait_sleep: 1
+        wait_timeout: 360
+
+    - name: "Install tekton dashboard {{ tekton_dashboard_version }}"
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ kind_tekton_dashboard_path }}"
+        wait: true
+        wait_sleep: 1
+        wait_timeout: 360
+  tags:
+    - install

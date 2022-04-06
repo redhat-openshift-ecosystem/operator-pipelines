@@ -1,0 +1,40 @@
+---
+- name: "Using default 'include_vars'"
+  block:
+    - name: "Include vars of '{{ var_file }}' into the '{{ var_name }}' variable."
+      ansible.builtin.include_vars:
+        file: "{{ var_file }}"
+        name: "{{ var_name }}"
+
+  when: not var_remote_src|bool
+
+- name: "Using 'include-vars' via 'var_remote_src=true'"
+  block:
+    - name: "Check if '{{ var_file }}' var_file exists"
+      ansible.builtin.stat:
+        path: "{{ var_file }}"
+      register: var_file_st
+
+    - name: "Fail when var_file '{{ var_file }}' doesn't exists"
+      ansible.builtin.fail:
+        msg: "Config var_file '{{ var_file }}' doens't exists !!!"
+      when: not var_file_st.stat.exists
+
+    - name: "Getting content from '{{ var_file }}'"
+      ansible.builtin.command: "cat {{ var_file }}"
+      register: var_file_data
+      changed_when: false
+
+    - name: "Sets config variables from '{{ var_file }}' to '{{ var_name }}'"
+      ansible.builtin.set_fact:
+        "{{ var_name }}": "{{ var_file_data.stdout | from_yaml }}"
+      when:
+        - var_file_data.rc is defined
+        - var_file_data.rc == 0
+
+  when: var_remote_src|bool
+
+- name: "Print variable '{{ var_name }}'"
+  ansible.builtin.debug:
+    var: "{{ var_name }}"
+  when: var_verbose|bool
