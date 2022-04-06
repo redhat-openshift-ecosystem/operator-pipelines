@@ -1,0 +1,11 @@
+---
+op_work_dir: "/tmp/.op"
+op_bin_dir: "{{ op_work_dir }}/bin"
+op_retries: 3
+op_delay: 15
+kind_version: v0.12.0
+kind_kube_version: v1.23.4
+kubectl_version: v1.23.5
+oc_version: 4.3.5
+operator_sdk_version: v1.18.1
+tkn_version: 0.23.1

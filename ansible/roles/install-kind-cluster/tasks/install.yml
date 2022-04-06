@@ -1,0 +1,63 @@
+---
+- name: "Install kind cluster '{{ kind_cluster_name }}' (Wait until success)"
+  block:
+    - name: "Install core kind cluster '{{ kind_cluster_name }}'"
+      ansible.builtin.include_tasks:
+        file: install_kind_cluster.yml
+      tags:
+        - kind-delete
+        - clean
+        - install
+
+    - name: "Install registry"
+      ansible.builtin.include_tasks:
+        file: install_registry.yml
+      when: registry_enable|bool
+      tags:
+        - kind-delete
+        - clean
+        - install
+
+    - name: "Install olm"
+      ansible.builtin.include_tasks:
+        file: install_olm.yml
+      tags:
+        - clean
+        - install
+
+    - name: "Install tekton"
+      ansible.builtin.include_tasks:
+        file: install_tekton.yml
+      tags:
+        - clean
+        - install
+
+  rescue:
+    - name: "Fail after {{ kund_cluster_install_retries }} retries"
+      ansible.builtin.fail:
+        msg: "Failed to install kind cluster '{{ kind_cluster_name }}' after ({{ kind_cluster_install_retry|int }}/{{ kund_cluster_install_retries }}) retries"
+      when: kind_cluster_install_retry|int >= kund_cluster_install_retries|int
+      tags:
+        - clean
+        - install
+
+    - name: "Printing process info"
+      ansible.builtin.debug:
+        msg: "Failed to install kind - Going to retry ({{ kind_cluster_install_retry|int + 1 }}/{{ kund_cluster_install_retries }}) ..."
+      tags:
+        - clean
+        - install
+
+    - name: "Increase 'kind_cluster_install_retry' by 1"
+      ansible.builtin.set_fact:
+        kind_cluster_install_retry: "{{ kind_cluster_install_retry|int + 1 }}"
+      tags:
+        - clean
+        - install
+
+    - name: "Install cluster '{{ kind_cluster_name }}'"
+      ansible.builtin.include_tasks:
+        file: install.yml
+      tags:
+        - clean
+        - install

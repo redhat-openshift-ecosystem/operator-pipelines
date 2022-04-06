@@ -1,0 +1,56 @@
+---
+- name: "Upstream community main playbook"
+  hosts: all
+  become: false
+  gather_facts: true
+  vars:
+    op_work_dir: "{{ ansible_env.HOME }}/.op"
+    op_bin_dir: "{{ op_work_dir }}/bin"
+    registry_cert_dir: "{{ op_work_dir }}/certs"
+    run_cleanup: false
+    oc_namespace: default
+
+  environment:
+    # User has to do 'export SSL_CERT_DIR=$HOME/.op/certs' when running in rootless mode
+    SSL_CERT_DIR: "{{ registry_cert_dir }}"
+    PATH: "{{ op_bin_dir }}:{{ ansible_env.PATH }}"
+
+  tasks:
+    - name: "Base"
+      import_role:
+        name: base
+      tags:
+        - always
+
+    - name: "Install prerequisites"
+      include_role:
+        name: install-prerequisites
+      when: prerequisites is undefined or prerequisites|bool
+      tags:
+        - clean
+        - install
+        - verify
+
+    - name: "Install kind cluster"
+      include_role:
+        name: install-kind-cluster
+      when: kind_cluster is undefined or kind_cluster|bool
+      tags:
+        - clean
+        - install
+        - verify
+
+    - name: "Install operator pipeline"
+      include_role:
+        name: operator-pipeline
+      # when: operator-pipeline is defined and operator-pipeline|bool
+      tags:
+        - tekton-task
+        - tekton-pipeline
+
+    - name: "Delete kind cluster"
+      include_role:
+        name: install-kind-cluster
+      tags:
+        - never
+        - kind-delete

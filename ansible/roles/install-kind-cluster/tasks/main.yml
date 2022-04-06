@@ -1,0 +1,97 @@
+---
+- name: "Install kind cluster"
+  block:
+    - name: "Ensure that the '{{ ikc_tmp_dir }}' directory exists and is empty"
+      ansible.builtin.file:
+        state: "{{ item }}"
+        path: "{{ ikc_tmp_dir }}"
+        mode: "755"
+      with_items:
+        - absent
+        - directory
+      tags:
+        - clean
+        - install
+
+    - name: "Set initial 'kind_cluster_install_retry'"
+      ansible.builtin.set_fact:
+        kind_cluster_install_retry: 1
+      tags:
+        - clean
+        - install
+
+    - name: "Install cluster '{{ kind_cluster_name }}'"
+      ansible.builtin.include_tasks:
+        file: install.yml
+      tags:
+        - kind-delete
+        - clean
+        - install
+
+- name: "Verify kind cluster"
+  block:
+    - name: "Verify kind cluster"
+      kubernetes.core.k8s_cluster_info:
+      register: api_status
+
+    - name: "Failing when cluster is not running"
+      ansible.builtin.fail:
+        msg: "Kind cluster is not running !!!"
+      when: api_status.failed is undefined or api_status.failed|bool
+
+    - name: "Pull index image '{{ kind_verify_index_image }}'"
+      ansible.builtin.command: "{{ container_tool }} pull {{ kind_verify_index_image }}"
+      changed_when: true
+
+    - name: "Retag index image '{{ kind_verify_index_image }}' to '{{ kind_verify_index_image_local }}'"
+      ansible.builtin.command: "{{ container_tool }} tag {{ kind_verify_index_image }} {{ kind_verify_index_image_local }}"
+      changed_when: true
+
+    - name: "Push index image to '{{ kind_verify_index_image_local }}'"
+      ansible.builtin.command: "{{ container_tool }} push {{ kind_verify_index_image_local }}"
+      changed_when: true
+
+
+    - name: "Delete existing index pod"
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Pod
+        namespace: default
+        name: index
+        state: absent
+        wait: true
+        wait_sleep: 1
+        wait_timeout: 30
+
+    - name: "Start index pod in kind cluster via '{{ kind_verify_index_image_local }}'"
+      kubernetes.core.k8s:
+        state: present
+        wait: true
+        wait_sleep: 1
+        wait_timeout: 30
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: index
+            namespace: default
+          spec:
+            containers:
+              - name: index-local
+                image: "{{ kind_verify_index_image_local }}"
+                ports:
+                  - containerPort: 50051
+
+    - name: "Delete index pod"
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Pod
+        namespace: default
+        name: index
+        state: absent
+        wait: true
+        wait_sleep: 1
+        wait_timeout: 30
+
+  tags:
+    - verify

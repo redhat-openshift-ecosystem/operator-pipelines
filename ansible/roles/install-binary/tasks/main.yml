@@ -1,0 +1,20 @@
+---
+
+- name: "Remove previous {{ package_binary }}"
+  ansible.builtin.include_tasks:
+    file: remove.yml
+  tags:
+    - clean
+
+- name: "Install {{ package_binary }}"
+  ansible.builtin.include_tasks:
+    file: install.yml
+  tags:
+    - install
+
+- name: "Verify {{ package_binary }}"
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags:
+    - install
+    - verify

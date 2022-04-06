@@ -1,0 +1,21 @@
+---
+- name: "Handle on kind nodes changes"
+  block:
+    - name: "Copy certificate to {{ node_item }}"
+      ansible.builtin.command: "{{ container_tool }} cp {{ registry_cert_dir }}/domain.crt {{ node_item }}:/usr/local/share/ca-certificates/ca.crt"
+      changed_when: true
+
+    - name: "Update certificates in {{ node_item }}"
+      ansible.builtin.command: "{{ container_tool }} exec {{ node_item }} update-ca-certificates --fresh"
+      changed_when: true
+
+    - name: "Restart containerd in {{ node_item }}"
+      ansible.builtin.command: "{{ container_tool }} exec {{ node_item }} systemctl restart containerd"
+      changed_when: true
+
+
+    - name: "Apply hosts settings to {{ node_item }}"
+      ansible.builtin.command: "{{ container_tool }} exec -t {{ node_item }} /bin/bash -c 'echo {{ registry_ip }} {{ registry_hostname }} >> /etc/hosts'"
+      changed_when: true
+  tags:
+    - install

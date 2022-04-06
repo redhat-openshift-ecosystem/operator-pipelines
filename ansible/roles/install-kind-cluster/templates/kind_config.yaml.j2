@@ -1,0 +1,30 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+{% if registry_enable|bool == true %}
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:{{ registry_port }}"]
+{% if ansible_facts['os_family'] == "Debian" %}
+{% if registry_ssl|bool == false %}
+    endpoint = ["http://{{ registry_hostname }}:{{ registry_port }}"]
+{% else %}
+    endpoint = ["https://{{ registry_hostname }}:{{ registry_port }}"]
+{% endif %}
+{% elif ansible_facts['os_family'] == "RedHat" %}
+{% if ansible_facts['user_uid'] == "0" %}
+{% if registry_ssl|bool == false %}
+    endpoint = ["http://host.containers.internal:{{ registry_port }}"]
+{% else %}
+    endpoint = ["https://host.containers.internal:{{ registry_port }}"]
+{% endif %}
+{% else %}
+{% if registry_ssl|bool == false %}
+    endpoint = ["http://{{ registry_hostname }}:{{ registry_port }}"]
+{% else %}
+    endpoint = ["https://{{ registry_hostname }}:{{ registry_port }}"]
+{% endif %}
+{% endif %}
+
+
+{% endif %}
+{% endif %}

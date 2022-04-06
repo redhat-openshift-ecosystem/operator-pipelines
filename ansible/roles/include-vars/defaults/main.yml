@@ -1,0 +1,5 @@
+---
+var_remote_src: false
+var_name: "data"
+var_file: "file.yaml"
+var_verbose: false
