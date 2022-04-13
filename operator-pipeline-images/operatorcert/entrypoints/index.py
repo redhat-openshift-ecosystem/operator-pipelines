@@ -99,7 +99,7 @@ def publish_bundle(
     from_index: str,
     bundle_pullspec: str,
     iib_url: str,
-    index_versions: List[str],
+    indices: List[str],
     output: str,
 ) -> None:
     """
@@ -109,7 +109,7 @@ def publish_bundle(
         iib_url: url of IIB instance
         bundle_pullspec: bundle pullspec
         from_index: target index pullspec
-        index_versions: list of index versions (tags)
+        indices: list of original indices
         output: file name to output resulting manifest digests to
     Raises:
         Exception: Exception is raised when IIB build fails
@@ -120,6 +120,7 @@ def publish_bundle(
 
     payload = {"build_requests": []}
 
+    index_versions = parse_indices(indices)
     for version in index_versions:
         payload["build_requests"].append(
             {
@@ -140,10 +141,11 @@ def publish_bundle(
     ):
         raise Exception("IIB build failed")
     else:
-        extract_manifest_digests(index_versions, output, response)
+        extract_manifest_digests(indices, index_versions, output, response)
 
 
 def extract_manifest_digests(
+    indices: List[str],
     index_versions: List[str],
     output: str,
     response: Dict[str, Any],
@@ -152,11 +154,13 @@ def extract_manifest_digests(
     LOGGER.info("Extracting manifest digests for signing...")
     manifest_digests = []
     # go through each version to ensure order is the same as the indices list
-    for version in index_versions:
+    for i in range(0, len(index_versions)):
+        index = indices[i]
+        version = index_versions[i]
         for build in response["items"]:
             if build["index_image"].endswith(version):
                 digest = build["index_image_resolved"].split("@")[-1]
-                manifest_digests.append(digest)
+                manifest_digests.append(f"{index}@{digest}")
     with open(output, "w") as f:
         f.write(",".join(manifest_digests))
     LOGGER.info(f"Manifest digests written to output file {output}.")
@@ -202,7 +206,7 @@ def main() -> None:  # pragma: no cover
         args.from_index,
         args.bundle_pullspec,
         args.iib_url,
-        parse_indices(args.indices),
+        args.indices,
         args.output,
     )
 

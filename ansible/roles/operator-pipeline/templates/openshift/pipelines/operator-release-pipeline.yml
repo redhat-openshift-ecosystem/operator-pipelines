@@ -423,68 +423,85 @@ spec:
         - name: kerberos_keytab_secret_key
           value: "$(params.kerberos_keytab_secret_key)"
 
-    # send UMB message for RADAS to sign the container image
-    # - name: request-signature
-    #   runAfter:
-    #     - publish-bundle
-    #   taskRef:
-    #     name: request-signature
-    #   params:
-    #     - name: pipeline_image
-    #       value: "$(params.pipeline_image)"
-    #     - name: manifest_digest
-    #       value: "$(tasks.publish-bundle.results.manifest_digests)"
-    #     - name: reference
-    #       value: "$(tasks.publish-bundle.results.docker_references)"
-    #     - name: requester
-    #       value: "amisstea"
-    #     - name: sig_key_id
-    #       value: "$(tasks.set-env.results.sig_key_id)"
-    #     - name: sig_key_name
-    #       value: "$(tasks.set-env.results.sig_key_name)"
-    #     - name: umb_ssl_secret_name
-    #       value: "$(params.pyxis_ssl_secret_name)"
-    #     - name: umb_ssl_cert_secret_key
-    #       value: "$(params.pyxis_ssl_cert_secret_key)"
-    #     - name: umb_ssl_key_secret_key
-    #       value: "$(params.pyxis_ssl_key_secret_key)"
-    #     - name: umb_client_name
-    #       value: "$(tasks.set-env.results.umb_client_name)"
-    #     - name: umb_url
-    #       value: "$(tasks.set-env.results.umb_url)"
-    #   workspaces:
-    #     - name: source
-    #       workspace: repository
-    #       subPath: signing
+    # use manifest digests from IIB output and get the manifest list digests
+    - name: get-manifest-list-digests
+      runAfter:
+        - publish-bundle
+      taskRef:
+        name: get-manifest-list-digests
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: manifest_digests
+          value: "$(tasks.publish-bundle.results.manifest_digests)"
+        - name: environment
+          value: "$(params.env)"
+      workspaces:
+        - name: registry-credentials
+          workspace: registry-credentials
 
-    # - name: upload-signature
-    #   runAfter:
-    #     - request-signature
-    #   taskRef:
-    #     name: upload-signature
-    #   params:
-    #     - name: pipeline_image
-    #       value: "$(params.pipeline_image)"
-    #     - name: signature_data_file
-    #       value: "$(tasks.request-signature.results.signature_data_file)"
-    #     - name: pyxis_ssl_secret_name
-    #       value: "$(params.pyxis_ssl_secret_name)"
-    #     - name: pyxis_ssl_cert_secret_key
-    #       value: "$(params.pyxis_ssl_cert_secret_key)"
-    #     - name: pyxis_ssl_key_secret_key
-    #       value: "$(params.pyxis_ssl_key_secret_key)"
-    #     - name: pyxis_url
-    #       value: "$(tasks.set-env.results.pyxis_url)"
-    #     - name: signing_pub_secret_name
-    #       value: "$(params.signing_pub_secret_name)"
-    #     - name: signing_pub_secret_key
-    #       value: "$(params.signing_pub_secret_key)"
-    #     - name: verify_signature
-    #       value: "true"
-    #   workspaces:
-    #     - name: source
-    #       workspace: repository
-    #       subPath: signing
+    # send UMB message for RADAS to sign the container image
+    - name: request-signature
+      runAfter:
+        - get-manifest-list-digests
+      taskRef:
+        name: request-signature
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: manifest_digest
+          value: "$(tasks.get-manifest-list-digests.results.manifest_list_digests)"
+        - name: reference
+          value: "$(tasks.get-manifest-list-digests.results.docker_references)"
+        - name: requester
+          value: "amisstea"
+        - name: sig_key_id
+          value: "$(tasks.set-env.results.sig_key_id)"
+        - name: sig_key_name
+          value: "$(tasks.set-env.results.sig_key_name)"
+        - name: umb_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: umb_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: umb_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
+        - name: umb_client_name
+          value: "$(tasks.set-env.results.umb_client_name)"
+        - name: umb_url
+          value: "$(tasks.set-env.results.umb_url)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: signing
+
+    - name: upload-signature
+      runAfter:
+        - request-signature
+      taskRef:
+        name: upload-signature
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: signature_data_file
+          value: "$(tasks.request-signature.results.signature_data_file)"
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: signing_pub_secret_name
+          value: "$(params.signing_pub_secret_name)"
+        - name: signing_pub_secret_key
+          value: "$(params.signing_pub_secret_key)"
+        - name: verify_signature
+          value: "true"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: signing
 
     # Publish Vendor, Repository
     - name: publish-resources
