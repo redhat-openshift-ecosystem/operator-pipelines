@@ -38,7 +38,7 @@ spec:
             > "$REGISTRY_AUTH_FILE"
         fi
     - name: pin-digest
-      image: quay.io/redhat-isv/digest-pinning-tool@sha256:5527689fd6e26d5240ecb3acf2e341750285c6c179a44ba368354957fe6f1617
+      image: quay.io/redhat-isv/digest-pinning-tool@sha256:7e9dd84000e597e5591d94e791e7c0be1f1efe7e60ab915b200c5c0dff2fa6ba
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
