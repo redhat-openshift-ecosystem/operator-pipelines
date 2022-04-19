@@ -423,17 +423,17 @@ spec:
         - name: kerberos_keytab_secret_key
           value: "$(params.kerberos_keytab_secret_key)"
 
-    # use manifest digests from IIB output and get the manifest list digests
-    - name: get-manifest-list-digests
+    # use manifest list digests from IIB output and get the manifest digests from registry
+    - name: get-manifest-digests
       runAfter:
         - publish-bundle
       taskRef:
-        name: get-manifest-list-digests
+        name: get-manifest-digests
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: manifest_digests
-          value: "$(tasks.publish-bundle.results.manifest_digests)"
+        - name: manifest_list_digests
+          value: "$(tasks.publish-bundle.results.manifest_list_digests)"
         - name: environment
           value: "$(params.env)"
       workspaces:
@@ -443,16 +443,16 @@ spec:
     # send UMB message for RADAS to sign the container image
     - name: request-signature
       runAfter:
-        - get-manifest-list-digests
+        - get-manifest-digests
       taskRef:
         name: request-signature
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: manifest_digest
-          value: "$(tasks.get-manifest-list-digests.results.manifest_list_digests)"
+          value: "$(tasks.get-manifest-digests.results.manifest_digests)"
         - name: reference
-          value: "$(tasks.get-manifest-list-digests.results.docker_references)"
+          value: "$(tasks.get-manifest-digests.results.docker_references)"
         - name: requester
           value: "amisstea"
         - name: sig_key_id
