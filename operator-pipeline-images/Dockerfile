@@ -4,6 +4,8 @@ LABEL description="Cli tools for operator certification pipeline"
 LABEL summary="This image contains tools required for operator bundle certification pipeline."
 
 ARG USER_UID=1000
+ARG PODMAN_USER_UID=1001
+
 
 USER root
 
@@ -31,6 +33,7 @@ RUN dnf update -y && \
     origin-clients \
     pinentry \
     pip \
+    podman \
     python3-devel && \
     dnf clean all
 
@@ -42,6 +45,11 @@ RUN curl -LO https://github.com/operator-framework/operator-registry/releases/do
     mv linux-amd64-opm /usr/local/bin/opm
 
 RUN useradd -ms /bin/bash -u "${USER_UID}" user
+
+RUN useradd -u "${PODMAN_USER_UID}" podman; \
+    echo podman:10000:5000 > /etc/subuid; \
+    echo podman:10000:5000 > /etc/subgid;
+
 
 WORKDIR /home/user
 

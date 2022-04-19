@@ -10,7 +10,7 @@ from operatorcert.entrypoints import index
 def test_parse_indices() -> None:
     indices = ["registry/index:v4.9", "registry/index:v4.8"]
     rsp = index.parse_indices(indices)
-    rsp == ["v4.9", "v4.8"]
+    assert rsp == ["v4.9", "v4.8"]
 
     # if there is no version
     with pytest.raises(Exception):
@@ -87,12 +87,17 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
 
 
 @patch("operatorcert.iib.add_builds")
+@patch("operatorcert.entrypoints.index.parse_indices")
 @patch("operatorcert.entrypoints.index.extract_manifest_digests")
 @patch("operatorcert.entrypoints.index.wait_for_results")
 def test_publish_bundle(
-    mock_results: MagicMock, mock_manifests: MagicMock, mock_iib_builds: MagicMock
+    mock_results: MagicMock,
+    mock_manifests: MagicMock,
+    mock_parse_indices: MagicMock,
+    mock_iib_builds: MagicMock,
 ) -> None:
     mock_iib_builds.return_value = [{"state": "complete", "batch": "some_batch_id"}]
+    mock_parse_indices.return_value = ["v4.9", "v4.8"]
     mock_results.return_value = {
         "items": [{"state": "complete", "batch": "some_batch_id"}]
     }
@@ -100,11 +105,17 @@ def test_publish_bundle(
         "registry/index",
         "redhat-isv/some-pullspec",
         "https://iib.engineering.redhat.com",
-        ["v4.9", "v4.8"],
+        ["registry/index:v4.9", "registry/index:v4.8"],
         "test.txt",
     )
     mock_manifests.assert_called_once_with(
-        ["v4.9", "v4.8"], "test.txt", mock_results.return_value
+        ["registry/index:v4.9", "registry/index:v4.8"],
+        ["v4.9", "v4.8"],
+        "test.txt",
+        mock_results.return_value,
+    )
+    mock_parse_indices.assert_called_once_with(
+        ["registry/index:v4.9", "registry/index:v4.8"]
     )
 
     mock_iib_builds.return_value = [{"state": "failed", "batch": "some_batch_id"}]
@@ -117,12 +128,13 @@ def test_publish_bundle(
             "registry/index",
             "redhat-isv/some-pullspec",
             "https://iib.engineering.redhat.com",
-            ["v4.9", "v4.8"],
+            ["registry/index:v4.9", "registry/index:v4.8"],
             "test.txt",
         )
 
 
 def test_extract_manifest_digests() -> None:
+    indices = ["registry/index:v4.9", "registry/index:v4.8"]
     index_versions = ["v4.9", "v4.8"]
     output = "test.txt"
     response = {
@@ -140,7 +152,9 @@ def test_extract_manifest_digests() -> None:
     mock_open = mock.mock_open()
 
     with mock.patch("builtins.open", mock_open):
-        index.extract_manifest_digests(index_versions, output, response)
+        index.extract_manifest_digests(indices, index_versions, output, response)
 
     mock_open.assert_called_once_with("test.txt", "w")
-    mock_open.return_value.write.assert_called_once_with("sha256:5678,sha256:1234")
+    mock_open.return_value.write.assert_called_once_with(
+        "registry/index:v4.9@sha256:5678,registry/index:v4.8@sha256:1234"
+    )
