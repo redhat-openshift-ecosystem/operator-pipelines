@@ -284,7 +284,9 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
+          # adding in `-bundles` to the bundleImage path to support users that use quay for their operator image,
+          # otherwise this would overwrite their operator image
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-bundle:$(tasks.bundle-path-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
       workspaces:
