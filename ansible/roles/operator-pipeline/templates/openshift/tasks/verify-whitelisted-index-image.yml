@@ -13,7 +13,9 @@ spec:
         #! /usr/bin/env bash
         INDEX_IMAGE="$(cut -d':' -f1 <<< '$(params.reference)')"
         echo $INDEX_IMAGE
-        if [ $INDEX_IMAGE == "registry.redhat.io/redhat/community-operator-index" ]; then
+        if [[ $INDEX_IMAGE == "registry.redhat.io/redhat/community-operator-index" ||
+              $INDEX_IMAGE == "registry.redhat.io/redhat/redhat-marketplace-index" ||
+              $INDEX_IMAGE == "registry.redhat.io/redhat/certified-operator-index" ]]; then
           echo "The index image is white listed."
         else
           echo "The index image is not white listed."
