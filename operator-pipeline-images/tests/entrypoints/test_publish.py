@@ -118,7 +118,7 @@ def test_create_repository(mock_get_vendor: MagicMock, mock_post: MagicMock) -> 
         "protected_for_search": False,
         "registry": "registry.connect.dev.redhat.com",
         "repository": "my_label/repo_name",
-        "build_categories": ["Operator Bundle Image"],
+        "build_categories": ["Operator bundle"],
         "isv_pid": "pid",
         "application_categories": "app_cat",
         "includes_multiple_content_streams": False,

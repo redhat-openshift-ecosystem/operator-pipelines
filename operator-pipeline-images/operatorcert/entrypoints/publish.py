@@ -170,7 +170,7 @@ def create_repository(args: Any, project: Dict[str, Any]) -> Any:
         "protected_for_search": False,
         "registry": utils.get_registry_for_env(args.environment),
         "repository": repository,
-        "build_categories": ["Operator Bundle Image"],
+        "build_categories": ["Operator bundle"],
         "isv_pid": container.get("isv_pid"),
         "application_categories": container.get("application_categories", []),
         "includes_multiple_content_streams": False,
