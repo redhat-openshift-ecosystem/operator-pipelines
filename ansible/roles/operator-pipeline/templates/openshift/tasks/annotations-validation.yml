@@ -58,7 +58,7 @@ spec:
           if [[ $MARKETPLACE_SUPPORT_WORKFLOW != $EXPECTED_MARKETPLACE_SUPPORT_WORKFLOW ]]; then
             echo "Missing or incorrect 'marketplace.openshift.io/support-workflow' annotation."
             echo "To fix this issue define the annotation in 'manifests/*.clusterserviceversion.yaml' file."
-            echo "The correct value for the annotation is: $EXPECTED_MARKETPLACE_REMOTE_WORKFLOW"
+            echo "The correct value for the annotation is: $EXPECTED_MARKETPLACE_SUPPORT_WORKFLOW"
             exit 1
           fi
         fi
