@@ -123,6 +123,8 @@ The pipelines depend on the following certification project fields:
   "container": {
     "type": "operator bundle image",
 
+    "build_catagories":"Operator bundle",
+
     // Required but always "rhcc"
     "distribution_method": "rhcc",
 
