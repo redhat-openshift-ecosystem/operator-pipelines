@@ -40,7 +40,6 @@ setup(
             "update-cert-project-status=operatorcert.entrypoints.update_cert_project_status:main",
             "hydra-checklist=operatorcert.entrypoints.hydra_checklist:main",
             "create-container-image=operatorcert.entrypoints.create_container_image:main",
-            "marketplace-replication=operatorcert.entrypoints.marketplace_replication:main",
             "pipelinerun-summary=operatorcert.entrypoints.pipelinerun_summary:main",
             "request-signature=operatorcert.entrypoints.request_signature:main",
             "upload-signature=operatorcert.entrypoints.upload_signature:main",

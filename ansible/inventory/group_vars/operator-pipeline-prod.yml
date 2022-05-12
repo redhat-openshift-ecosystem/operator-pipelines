@@ -24,8 +24,6 @@ e2e_kubeconfig_path: ../../vaults/prod/kubeconfig-e2e
 
 pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-prod
 
-operator_pipeline_ibm_webhook_token_local_path: ../../vaults/prod/nonprod-ibm-webhook-token
-
 # Settings for importing index imagestreams
 certified_operator_index: registry.redhat.io/redhat/certified-operator-index
 redhat_marketplace_index: registry.redhat.io/redhat/redhat-marketplace-index

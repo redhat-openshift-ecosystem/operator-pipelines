@@ -40,12 +40,6 @@ spec:
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: github_bot_token
-    - name: ibm_webhook_token_secret_name
-      description: The name of the Kubernetes Secret that contains the IBM webhook token.
-      default: ibm-webhook-token
-    - name: ibm_webhook_token_secret_key
-      description: The key within the Kubernetes Secret that contains the IBM webhook token.
-      default: token
     - name: pyxis_ssl_secret_name
       description: Kubernetes secret name that contains the Pyxis SSL files.
       default: operator-pipeline-api-certs
@@ -334,36 +328,6 @@ spec:
         - name: ocp_registry_kubeconfig_secret_key
           value: "$(params.ocp_registry_kubeconfig_secret_key)"
 
-    # Trigger IBM webhook for marketplace replication
-    - name: trigger-marketplace-replication
-      runAfter:
-        - publish-to-ocp-registry
-        - get-supported-versions
-        - bundle-path-validation
-      taskRef:
-        name: trigger-marketplace-replication
-      params:
-        - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
-        - name: ibm_webhook_token_secret_name
-          value: "$(params.ibm_webhook_token_secret_name)"
-        - name: ibm_webhook_token_secret_key
-          value: "$(params.ibm_webhook_token_secret_key)"
-        - name: package
-          value: "$(tasks.bundle-path-validation.results.package_name)"
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: ocp_version
-          value: "$(tasks.get-supported-versions.results.ocp_version)"
-        - name: organization
-          value: "$(tasks.get-organization.results.organization)"
-        - name: version
-          value: "$(tasks.bundle-path-validation.results.bundle_version)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
     # create container image
     - name: create-container-image
       runAfter:
@@ -402,7 +366,7 @@ spec:
     - name: publish-bundle
       runAfter:
         - create-container-image
-        - trigger-marketplace-replication
+        - get-supported-versions
       taskRef:
         name: publish-bundle
       params:

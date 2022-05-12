@@ -197,10 +197,3 @@ oc create secret generic ocp-registry-kubeconfig \
 
 Additional setup instructions for this cluster are documented [here](rhc4tp-cluster.md).
 
-### IBM webhook token
-The Release pipeline needs to call an IBM webhook to trigger marketplace replication. To
-authenticate with the webhook, a token is needed.
-
-```bash
-oc create secret generic ibm-webhook-token --from-literal token=< TOKEN >
-```
