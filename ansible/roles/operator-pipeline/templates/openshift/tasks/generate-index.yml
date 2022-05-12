@@ -67,6 +67,8 @@ spec:
 
     - name: extract-database
       image: "$(params.from_index)"
+      # Ensure OpenShift doesn't use a cached image tag
+      imagePullPolicy: Always
       workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
