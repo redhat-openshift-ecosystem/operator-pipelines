@@ -10,18 +10,6 @@
 
 ## Common for all the pipelines:
 
-### Registry Credentials
-The pipelines can optionally be configured to push and pull images to/from a remote
-private registry. The user must create an auth secret containing the docker config.
-This secret can then be passed as a workspace named `registry-credentials` when invoking
-the pipeline.
-
-```bash
-oc create secret generic registry-dockerconfig-secret \
-  --type kubernetes.io/dockerconfigjson \
-  --from-file .dockerconfigjson=config.json
-```
-
 ### Red Hat Catalog Imagestreams
 
 The pipelines must pull the parent index images through the internal OpenShift
@@ -51,6 +39,18 @@ oc --request-timeout 10m import-image redhat-marketplace-index \
 ```
 
 ## Only CI pipeline:
+
+### Registry Credentials
+The CI pipeline can optionally be configured to push and pull images to/from a remote
+private registry. The user must create an auth secret containing the docker config.
+This secret can then be passed as a workspace named `registry-credentials` when invoking
+the pipeline.
+
+```bash
+oc create secret generic registry-dockerconfig-secret \
+  --type kubernetes.io/dockerconfigjson \
+  --from-file .dockerconfigjson=config.json
+```
 
 ### Git SSH Secret
 The pipelines requires git SSH credentials with 
@@ -102,6 +102,18 @@ oc create secret generic github-api-token --from-literal GITHUB_TOKEN=< GITHUB T
 ```
 
 ## Only Hosted pipeline:
+
+### Registry Credentials
+The hosted pipeline requires credentials to push/pull bundle and index images from a
+pre-release registry (quay.io). A registry auth secret must be created. This secret
+can then be passed as a workspace named `registry-credentials` when invoking
+the pipeline.
+
+```bash
+oc create secret generic hosted-pipeline-registry-auth-secret \
+  --type kubernetes.io/dockerconfigjson \
+  --from-file .dockerconfigjson=config.json
+```
 
 ### Container API access
 The hosted pipeline communicates with internal Container API that requires cert + key.
@@ -168,6 +180,23 @@ oc create secret generic quay-oauth-token --from-literal token=<token>
 ```
 
 ## Only Release pipeline:
+
+### Registry Credentials
+The release pipeline requires credentials to push and pull the bundle image built by
+the hosted pipeline. Two registry auth secrets must be specified since different
+credentials may be required for the same registry when copying the image. These
+secrets can then be passed as workspaces named `registry-pull-credentials` and
+`registry-push-credentials` when invoking the pipeline.
+
+```bash
+oc create secret generic release-pipeline-registry-auth-pull-secret \
+  --type kubernetes.io/dockerconfigjson \
+  --from-file .dockerconfigjson=pull-config.json
+
+oc create secret generic release-pipeline-registry-auth-push-secret \
+  --type kubernetes.io/dockerconfigjson \
+  --from-file .dockerconfigjson=push-config.json
+```
 
 ### Kerberos credentials
 For submitting the IIB build, you need kerberos keytab in a secret:

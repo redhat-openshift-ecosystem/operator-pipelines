@@ -18,12 +18,17 @@ spec:
       description: URL to the pull request
     - name: is_latest
       description: If explicitly set to "true", resulting image will be tagged as "latest"
-    - name: registry
-      description: temporary registry used by Hosted pipeline to pass the image to Release pipeline.
+    - name: src_registry
+      description: Source registry for the bundle image.
       default: quay.io
-    - name: image_namespace
-      description: The namespace/organization where images from Hosted pipeline are stored.
+    - name: dest_registry
+      description: Destination registry for the bundle image.
+      default: quay.io
+    - name: src_image_namespace
+      description: The namespace/organization where the bundle image from the Hosted pipeline are stored.
       default: $(context.pipelineRun.namespace)
+    - name: dest_image_namespace
+      description: The namespace/organization where the bundle image will be copied/released.
     - name: env
       description: Which environment to run in. Can be one of [dev, qa, stage, prod]
       default: "prod"
@@ -78,7 +83,8 @@ spec:
     - name: results
     - name: ssh-dir
       optional: true
-    - name: registry-credentials
+    - name: registry-pull-credentials
+    - name: registry-push-credentials
     - name: image-data
 
   tasks:
@@ -293,14 +299,30 @@ spec:
         kind: Task
       params:
         - name: image
-          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
+          value: &srcBundleImage "$(params.src_registry)/$(params.src_image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
         - name: registry
-          value: $(params.registry)
+          value: $(params.src_registry)
       workspaces:
         - name: registry-credentials
-          workspace: registry-credentials
+          workspace: registry-pull-credentials
         - name: image-data
           workspace: image-data
+
+    - name: copy-bundle-image-to-released-registry
+      runAfter:
+        - get-vendor-related-data
+      taskRef:
+        name: copy-image
+      params:
+        - name: src_image
+          value: *srcBundleImage
+        - name: dest_image
+          value: &destBundleImage "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
+      workspaces:
+        - name: src-registry-credentials
+          workspace: registry-pull-credentials
+        - name: dest-registry-credentials
+          workspace: registry-push-credentials
 
     # Publish image to OCP registry
     - name: publish-to-ocp-registry
@@ -316,7 +338,7 @@ spec:
         - name: repository_name
           value: "$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: image
-          value: *bundleImage
+          value: *srcBundleImage
         - name: is_latest
           value: "$(params.is_latest)"
         - name: bundle_version
@@ -331,6 +353,7 @@ spec:
     # create container image
     - name: create-container-image
       runAfter:
+        - copy-bundle-image-to-released-registry
         - publish-to-ocp-registry
         - inspect-image
       taskRef:
@@ -402,7 +425,7 @@ spec:
           value: "$(params.env)"
       workspaces:
         - name: registry-credentials
-          workspace: registry-credentials
+          workspace: registry-pull-credentials
 
     # send UMB message for RADAS to sign the container image
     - name: request-signature

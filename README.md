@@ -114,7 +114,7 @@ tkn pipeline start operator-hosted-pipeline \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
-  --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+  --workspace name=registry-credentials,secret=hosted-pipeline-registry-auth-secret \
   --showlog
 ```
 
@@ -145,10 +145,12 @@ tkn pipeline start operator-release-pipeline \
   --param git_pr_title="operator kogito-operator (1.6.1-ok)" \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
   --param is_latest=true \
+  --param dest_image_namespace=redhat-isv-operators \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
-  --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+  --workspace name=registry-pull-credentials,secret=release-pipeline-registry-auth-pull-secret \
+  --workspace name=registry-push-credentials,secret=release-pipeline-registry-auth-push-secret \
   --showlog
 ```
 
