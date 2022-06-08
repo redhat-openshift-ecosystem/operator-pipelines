@@ -317,7 +317,7 @@ spec:
         - name: src_image
           value: *srcBundleImage
         - name: dest_image
-          value: &destBundleImage "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
+          value: &destBundleImage "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id):$(tasks.bundle-path-validation.results.bundle_version)"
       workspaces:
         - name: src-registry-credentials
           workspace: registry-pull-credentials
