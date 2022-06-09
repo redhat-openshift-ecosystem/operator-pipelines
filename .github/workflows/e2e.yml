@@ -195,7 +195,7 @@ jobs:
             --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \
-            --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+            --workspace name=registry-credentials,secret=hosted-pipeline-registry-auth-secret \
             --showlog
 
       - name: Check if Hosted pipeline passed
@@ -211,7 +211,8 @@ jobs:
         run: |
           tkn pipeline start operator-release-pipeline \
             --use-param-defaults \
-            --param image_namespace=operator-pipeline-stage \
+            --param src_image_namespace=operator-pipeline-stage \
+            --param dest_image_namespace=redhat-isv-operators-stage \
             --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
             --param git_commit=${{needs.prepare-test-data.outputs.test_pr_head_sha}} \
             --param git_pr_title="${{needs.prepare-env-job.outputs.pr_title}}" \
@@ -224,7 +225,8 @@ jobs:
             --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
             --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
             --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
-            --workspace name=registry-credentials,secret=registry-dockerconfig-secret \
+            --workspace name=registry-pull-credentials,secret=release-pipeline-registry-auth-pull-secret \
+            --workspace name=registry-push-credentials,secret=release-pipeline-registry-auth-push-secret \
             --showlog
 
       - name: Check if Release pipeline passed

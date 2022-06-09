@@ -143,4 +143,4 @@
                               storage: 100Mi
                     - name: registry-credentials
                       secret:
-                        secretName: "registry-dockerconfig-secret"
+                        secretName: hosted-pipeline-registry-auth-secret

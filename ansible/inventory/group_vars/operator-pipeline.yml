@@ -17,7 +17,9 @@ operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipel
 
 operator_pipeline_kubeconfig_ocp_local_path: ../../vaults/{{ env }}/kubeconfig-ocp
 
-operator_pipeline_registry_token: ../../vaults/{{ env }}/dockerconfig.json
+operator_hosted_pipeline_registry_auth_path: ../../vaults/{{ env }}/registry-auth/hosted-pipeline.json
+operator_release_pipeline_registry_auth_pull_path: ../../vaults/{{ env }}/registry-auth/release-pipeline-pull.json
+operator_release_pipeline_registry_auth_push_path: ../../vaults/{{ env }}/registry-auth/release-pipeline-push.json
 
 operator_pipeline_kubeconfig_prow_local_path: ../../vaults/common/kubeconfig-prow
 operator_pipeline_github_bot_token: ../../vaults/common/github-bot-token.txt
