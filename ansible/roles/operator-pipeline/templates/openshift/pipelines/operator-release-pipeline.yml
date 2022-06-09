@@ -25,7 +25,7 @@ spec:
       description: Destination registry for the bundle image.
       default: quay.io
     - name: src_image_namespace
-      description: The namespace/organization where the bundle image from the Hosted pipeline are stored.
+      description: The namespace/organization where the bundle image from the Hosted pipeline is stored.
       default: $(context.pipelineRun.namespace)
     - name: dest_image_namespace
       description: The namespace/organization where the bundle image will be copied/released.
