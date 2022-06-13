@@ -18,7 +18,6 @@ kind_tekton_triggers_path: "{{ ikc_tmp_dir }}/kind_tekton_triggers.yaml"
 kind_tekton_dashboard_path: "{{ ikc_tmp_dir }}/kind_tekton_dashboard.yaml"
 registry_enable: false
 registry_name: kind-registry
-# registry_host: kind-registry
 registry_port: 5000
 registry_ssl: false
 registry_cert_dir: "{{ op_work_dir }}/certs"

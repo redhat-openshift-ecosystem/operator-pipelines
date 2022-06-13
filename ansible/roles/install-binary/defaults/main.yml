@@ -9,6 +9,3 @@ package_verify_msg: true
 package_extract: false
 package_extract_exclude: []
 package_validate_certs: true
-# package_binary: kind
-# package_version: v0.12.0
-# package_url: ""
