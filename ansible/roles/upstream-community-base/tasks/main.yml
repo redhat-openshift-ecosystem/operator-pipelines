@@ -30,7 +30,6 @@
     kind_kube_version: "{{ uc_config.kind.kube_version | default(kind_kube_version) }}"
     registry_enable: "{{ uc_config.registry.enable | default(registry_enable) }}"
     registry_name: "{{ uc_config.registry.name | default(registry_name) }}"
-    # registry_host: "{{ uc_config.registry.host | default(registry_host) }}"
     registry_port: "{{ uc_config.registry.port | default(registry_port) }}"
     registry_ssl: "{{ uc_config.registry.ssl | default(registry_ssl) }}"
     registry_hostname: "{{ ansible_facts['fqdn'] }}"

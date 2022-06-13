@@ -8,7 +8,6 @@ kind_cluster_name: "operator-test"
 kund_cluster_install_retries: 1
 registry_enable: false
 registry_name: kind-registry
-# registry_host: kind-registry
 registry_port: 5000
 registry_ssl: false
 registry_cert_dir: "{{ op_work_dir }}/certs"
