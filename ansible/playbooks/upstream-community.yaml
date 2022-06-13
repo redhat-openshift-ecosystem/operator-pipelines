@@ -16,15 +16,15 @@
     PATH: "{{ op_bin_dir }}:{{ ansible_env.PATH }}"
 
   tasks:
-    - name: "Base"
+    - name: "Upstream community base"
       import_role:
-        name: base
+        name: upstream-community-base
       tags:
         - always
 
-    - name: "Install prerequisites"
+    - name: "Install upstream community prerequisites"
       include_role:
-        name: install-prerequisites
+        name: install-upstream-community-prerequisites
       when: prerequisites is undefined or prerequisites|bool
       tags:
         - clean
