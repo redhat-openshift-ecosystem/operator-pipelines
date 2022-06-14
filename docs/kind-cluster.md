@@ -1,10 +1,10 @@
 # KIND Cluster Setup
 
-The testing pipeline is running in local kind cluster with registry and its dependencies like OLM, Tekton and others. The following steps must be performed
+The testing pipeline for community operators is running in local kind cluster with own local registry and its dependencies like OLM, Tekton and others. The following steps must be performed
 to prepare the kind clusters for use by the pipeline. 
 
 ## Prerequisites
-The KIND Cluster Setup is done by `ansible`. One can to install `ansible` via 
+The KIND Cluster Setup is done by `ansible`. One can install `ansible` via 
 ```
 $ pip3 install ansible
 ```
