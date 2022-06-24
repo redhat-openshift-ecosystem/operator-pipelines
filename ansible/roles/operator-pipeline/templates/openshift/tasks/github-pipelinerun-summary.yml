@@ -11,6 +11,9 @@ spec:
       description: Scratch space and storage for the comment
 
   params:
+    - name: pipelines_cli_tkn_image
+      description: Teknton cli image
+      default: "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49"
     - name: github_host_url
       description: |
         The GitHub host, adjust this if you run a GitHub enteprise.
@@ -44,7 +47,7 @@ spec:
   steps:
     - name: gather-info
       workingDir: $(workspaces.output.path)
-      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
+      image: "$(params.pipelines_cli_tkn_image)"
       script: |
         #! /usr/bin/env bash
         set -xe

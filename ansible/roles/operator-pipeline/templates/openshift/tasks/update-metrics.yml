@@ -12,18 +12,20 @@ spec:
       description: Scratch space and storage for the metrics
 
   params:
+    - name: ubi8_minimal_image
+      description: ubi8 minimal image
+      default: "registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe"
     - name: metrics_url
       description: |
         A metrics collector route.
       default: "http://pipeline-metrics.pipeline-metrics-prod"
-
     - name: pipelinerun
       description: The name of the PipelineRun to summarize.
 
   steps:
     - name: gather-info
       workingDir: $(workspaces.output.path)
-      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
+      image: "$(params.ubi8_minimal_image)"
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -38,7 +40,7 @@ spec:
 
     - name: submit-metrics
       workingDir: $(workspaces.output.path)
-      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      image: "$(params.ubi8_minimal_image)"
       script: |
         #! /usr/bin/env bash
         set -xe

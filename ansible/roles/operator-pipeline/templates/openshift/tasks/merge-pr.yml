@@ -6,6 +6,9 @@ metadata:
 spec:
   params:
     - name: pipeline_image
+    - name: ubi8_minimal_image
+      description: ubi8 minimal image
+      default: "registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe"
     - name: git_pr_url
     - name: bundle_path
     - name: github_token_secret_name
@@ -31,7 +34,7 @@ spec:
         echo -n "$BOOL_MERGE" | tee $(results.bool_merge.path)
 
     - name: review-pull-request
-      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      image: "$(params.ubi8_minimal_image)"
       env:
         - name: GITHUB_BOT_TOKEN
           valueFrom:
@@ -62,7 +65,7 @@ spec:
         echo "Merge request has been approved!"
 
     - name: merge-pull-request
-      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      image: "$(params.ubi8_minimal_image)"
       env:
         - name: GITHUB_BOT_TOKEN
           valueFrom:

@@ -5,10 +5,13 @@ metadata:
   name: verify-whitelisted-index-image
 spec:
   params:
+    - name: ubi8_minimal_image
+      description: ubi8 minimal image
+      default: "registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe"
     - name: reference
   steps:
     - name: check-index-image
-      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      image: "$(params.ubi8_minimal_image)"
       script: |
         #! /usr/bin/env bash
         INDEX_IMAGE="$(cut -d':' -f1 <<< '$(params.reference)')"

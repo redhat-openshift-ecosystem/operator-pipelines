@@ -6,6 +6,9 @@ metadata:
 spec:
   params:
     - name: pipeline_image
+    - name: podman_image
+      description: Podman image
+      default: "registry.redhat.io/rhel8/podman:8.5-13"
     - name: bundle_image
       description: Pull spec of a bundle image
     - name: from_index
@@ -31,7 +34,7 @@ spec:
         value: fbc.txt
   steps:
     - name: inspect-base-index
-      image: registry.redhat.io/rhel8/podman:8.5-13
+      image: "$(params.podman_image)"
       workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
