@@ -23,6 +23,9 @@ spec:
         Binding a Secret to this Workspace is strongly recommended over other
         volume types.
   params:
+    - name: gitInitImage
+      description: Git init image
+      default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9"
     - name: dirty_flag
     - name: git_branch
     - name: verbose
@@ -51,7 +54,7 @@ spec:
     - name: branch
   steps:
     - name: commit-changes
-      image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
+      image: "$(params.gitInitImage)"
       workingDir: $(workspaces.source.path)
       env:
         - name: CURRENT_BRANCH

@@ -5,6 +5,9 @@ metadata:
   name: publish-to-ocp-registry
 spec:
   params:
+    - name: ose_cli_image
+      description: OSE cli image
+      default: "registry.redhat.io/openshift4/ose-cli@sha256:eed7052f0013b85087cd9fa8e4b328f56a027846107d32a65daeb3a50cf23b49"
     - name: cert_project_id
       description: ID of the bundle Certification Project (as in bundle ci.yaml)
     - name: vendor_label
@@ -35,7 +38,7 @@ spec:
         secretName: "$(params.ocp_registry_kubeconfig_secret_name)"
   steps:
     - name: imagestream-manipulations
-      image: registry.redhat.io/openshift4/ose-cli@sha256:eed7052f0013b85087cd9fa8e4b328f56a027846107d32a65daeb3a50cf23b49
+      image: "$(params.ose_cli_image)"
       volumeMounts:
         - name: kubeconfig-volume
           readOnly: true

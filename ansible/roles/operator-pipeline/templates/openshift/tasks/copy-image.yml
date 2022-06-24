@@ -5,6 +5,9 @@ metadata:
   name: copy-image
 spec:
   params:
+    - name: skopeo_image
+      description: Skopeo image
+      default: "registry.redhat.io/rhel8/skopeo:8.4-13"
     - name: src_image
       description: reference to the source bundle image
     - name: dest_image
@@ -16,7 +19,7 @@ spec:
       description: Docker config for the destination registry
   steps:
     - name: skopeo-copy
-      image: registry.redhat.io/rhel8/skopeo:8.4-13
+      image: "$(params.skopeo_image)"
       script: |
         set -xe
 

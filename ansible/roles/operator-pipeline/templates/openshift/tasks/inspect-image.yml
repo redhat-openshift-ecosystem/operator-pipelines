@@ -5,6 +5,12 @@ metadata:
   name: inspect-image
 spec:
   params:
+    - name: skopeo_image
+      description: Skopeo image
+      default: "registry.redhat.io/rhel8/skopeo:8.4-13"
+    - name: podman_image
+      description: Podman image
+      default: "registry.redhat.io/rhel8/podman:8.4-14"
     - name: image
       description: reference to the existing bundle image
     - name: registry
@@ -16,7 +22,7 @@ spec:
       description: Workspace to store the large json files with the image data
   steps:
     - name: skopeo-inspect
-      image: registry.redhat.io/rhel8/skopeo:8.4-13
+      image: "$(params.skopeo_image)"
       script: |
         set -xe
 
@@ -24,7 +30,7 @@ spec:
 
         skopeo inspect docker://$(params.image) > $(workspaces.image-data.path)/skopeo.json
     - name: podman-inspect
-      image: registry.redhat.io/rhel8/podman:8.4-14
+      image: "$(params.podman_image)"
       script: |
         set -xe
 

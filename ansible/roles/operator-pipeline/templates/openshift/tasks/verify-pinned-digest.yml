@@ -5,11 +5,14 @@ metadata:
   name: verify-pinned-digest
 spec:
   params:
+    - name: ubi8_minimal_image
+      description: ubi8 minimal image
+      default: "registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe"
     - name: dirty_flag
     - name: related_images_flag
   steps:
     - name: check-dirty-flag
-      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      image: "$(params.ubi8_minimal_image)"
       script: |
         #! /usr/bin/env bash
         DIRTY_FLAG="$(params.dirty_flag)"
@@ -19,7 +22,7 @@ spec:
           exit 1
         fi
     - name: check-related-images
-      image: registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe
+      image: "$(params.ubi8_minimal_image)"
       script: |
         #! /usr/bin/env bash
         RELATED_IMAGES_FLAG="$(params.related_images_flag)"

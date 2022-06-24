@@ -4,6 +4,15 @@ metadata:
   name: preflight-trigger
 spec:
   params:
+    - name: fedora_image
+      description: Fedora image
+      default: "docker.io/library/fedora"
+    - name: go_toolset_image
+      description: GO toolset image
+      default: "registry.access.redhat.com/ubi8/go-toolset"
+    - name: preflight_trigger_image
+      description: Preflight trigger image
+      default: "quay.io/opdev/preflight-trigger"
     - default: '4.9'
       name: ocp_version
       type: string
@@ -50,7 +59,7 @@ spec:
           value: /etc/gpg-key/$(params.gpg_decryption_private_key_secret_key)
         - name: PIPELINE_GPG_DECRYPTION_PUBLIC_KEY
           value: /etc/gpg-key/$(params.gpg_decryption_public_key_secret_key)
-      image: docker.io/library/fedora
+      image: "$(params.fedora_image)"
       name: encrypt-and-encode-docker-config-json
       resources: {}
       volumeMounts:
@@ -78,7 +87,7 @@ spec:
               gpg --encrypt --sign --armor -r "$(gpg --list-keys|grep -B1 'Preflight Trigger'|awk 'NR==1 { print }'|tr -d '[:space:]')" -o- "$(workspaces.credentials.path)/project_dockerconfigjson" | basenc --base16 -w0 > "$(workspaces.credentials.path)/project_dockerconfigjson.gpg.b16"
           fi
       workingDir: $(workspaces.output.path)
-    - image: registry.access.redhat.com/ubi8/go-toolset
+    - image: "$(params.go_toolset_image)"
       name: clone-openshift-release-for-configs
       resources: {}
       script: |
@@ -95,7 +104,7 @@ spec:
     - env:
         - name: KUBECONFIG
           value: /etc/kubeconfig-volume/$(params.prow_kubeconfig_secret_key)
-      image: quay.io/opdev/preflight-trigger
+      image: "$(params.preflight_trigger_image)"
       name: create-openshift-ci-prowjob
       resources: {}
       volumeMounts:
@@ -163,7 +172,7 @@ spec:
           value: /etc/gpg-key/$(params.gpg_decryption_private_key_secret_key)
         - name: PIPELINE_GPG_DECRYPTION_PUBLIC_KEY
           value: /etc/gpg-key/$(params.gpg_decryption_public_key_secret_key)
-      image: docker.io/library/fedora
+      image: "$(params.fedora_image)"
       name: get-prowjob-artifacts-and-decrypt
       resources: {}
       volumeMounts:

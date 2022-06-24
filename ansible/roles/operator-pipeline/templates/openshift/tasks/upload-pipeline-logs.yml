@@ -6,6 +6,9 @@ metadata:
 spec:
   params:
     - name: pipeline_image
+    - name: pipelines_cli_tkn_image
+      description: Teknton cli image
+      default: "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49"
     - name: pyxis_api_key_secret_name
       default: default-api-secret
       description: Kubernetes secret name that contains Pyxis API key. Valid only when external Pyxis is used.
@@ -50,7 +53,7 @@ spec:
         optional: true
   steps:
     - name: get-pipeline-logs
-      image: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49
+      image: "$params.pipelines_cli_tkn_image)"
       script: |
         #! /usr/bin/env bash
         set -xe
