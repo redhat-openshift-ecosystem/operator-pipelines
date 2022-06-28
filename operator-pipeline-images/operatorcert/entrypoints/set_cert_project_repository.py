@@ -11,7 +11,7 @@ from operatorcert import pyxis
 from operatorcert.logger import setup_logger
 from operatorcert.utils import store_results
 
-LOGGER = logging.getLogger("set-cert-project-repository")
+LOGGER = logging.getLogger("operator-cert")
 
 
 def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
@@ -61,13 +61,21 @@ def set_cert_project_repository(args: Any) -> None:
             "docker_config_json": args.docker_config.read(),
         }
     }
-    LOGGER.debug("Setting repository info for cert project %s", args.cert_project_id)
+    LOGGER.debug(
+        "Setting repository info for cert project %s: registry=%s repository=%s",
+        args.cert_project_id,
+        args.registry,
+        args.repository,
+    )
     pyxis.patch(
         urljoin(
             args.pyxis_url,
             f"/v1/projects/certification/id/{args.cert_project_id}",
         ),
         payload,
+    )
+    LOGGER.debug(
+        "Repository info for cert project %s successfully updated", args.cert_project_id
     )
 
 

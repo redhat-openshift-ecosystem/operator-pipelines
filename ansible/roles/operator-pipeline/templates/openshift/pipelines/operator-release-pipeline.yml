@@ -381,7 +381,7 @@ spec:
     # create container image
     - name: create-container-image
       runAfter:
-        - copy-bundle-image-to-released-registry
+        - set-cert-project-repository
         - publish-to-ocp-registry
         - inspect-image
       taskRef:

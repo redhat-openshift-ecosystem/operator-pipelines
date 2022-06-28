@@ -6,6 +6,7 @@ metadata:
 spec:
   params:
     - name: pipeline_image
+      description: A docker image of operator-pipeline-images for the task to run in.
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
     - name: pyxis_ssl_secret_name
@@ -48,3 +49,4 @@ spec:
           --registry $(params.registry) \
           --repository $(params.repository) \
           --docker-config "$(workspaces.registry-credentials.path)/$(params.docker_config_file_name)"
+          --verbose
