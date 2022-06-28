@@ -18,7 +18,7 @@ YQ_IMG=quay.io/redhat-isv/operator-pipelines-images:latest
 # Default CLI arg values
 BUNDLE_IMAGE="quay.io/operator-pipeline-stage/test-e2e-operator:0.0.7"
 PKG_NAME="test-operator-$(whoami)"
-OCP_RANGE="v4.7"
+OCP_RANGE="v4.6-v4.10"
 BUNDLE_VERSION="0.0.1"
 OUTPUT_PATH="."
 
