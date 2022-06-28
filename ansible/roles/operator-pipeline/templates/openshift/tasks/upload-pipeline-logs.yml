@@ -53,7 +53,7 @@ spec:
         optional: true
   steps:
     - name: get-pipeline-logs
-      image: "$params.pipelines_cli_tkn_image)"
+      image: "$(params.pipelines_cli_tkn_image)"
       script: |
         #! /usr/bin/env bash
         set -xe
