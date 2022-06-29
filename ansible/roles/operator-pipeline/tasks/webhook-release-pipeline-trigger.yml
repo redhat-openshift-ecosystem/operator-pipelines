@@ -124,3 +124,6 @@
                     - name: registry-push-credentials
                       secret:
                         secretName: release-pipeline-registry-auth-push-secret
+                    - name: registry-read-credentials
+                      secret:
+                        secretName: release-pipeline-registry-auth-read-secret
