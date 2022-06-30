@@ -23,6 +23,9 @@ spec:
       description: Repository name (namespace/name)
     - name: docker_config_file_name
       description: Path to the file containing the registry credentials in json format
+  workspaces:
+    - name: registry-credentials
+      description: Docker config for read-only access to the image
   volumes:
     - name: pyxis-ssl-volume
       secret:
@@ -43,10 +46,10 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        set-cert-project-registry \
+        set-cert-project-repository \
           --pyxis-url $(params.pyxis_url) \
           --cert-project-id $(params.cert_project_id) \
           --registry $(params.registry) \
           --repository $(params.repository) \
-          --docker-config "$(workspaces.registry-credentials.path)/$(params.docker_config_file_name)"
+          --docker-config "$(workspaces.registry-credentials.path)/$(params.docker_config_file_name)" \
           --verbose
