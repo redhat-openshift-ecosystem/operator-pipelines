@@ -72,11 +72,14 @@ spec:
 
         buildah --storage-driver=$(params.STORAGE_DRIVER) push \
           $(params.PUSH_EXTRA_ARGS) $EXTRA_ARGS --tls-verify=$(params.TLSVERIFY) \
+          --cert-dir=/etc/openshift-service-ca \
           --digestfile $(workspaces.source.path)/image-digest $(params.IMAGE) \
           docker://$(params.IMAGE)
       volumeMounts:
         - mountPath: /var/lib/containers
           name: varlibcontainers
+        - mountPath: /etc/openshift-service-ca
+          name: openshift-service-ca-volume
       workingDir: $(workspaces.source.path)
     - image: $(params.BUILDER_IMAGE)
       name: digest-to-results
@@ -85,6 +88,12 @@ spec:
   volumes:
     - emptyDir: {}
       name: varlibcontainers
+    - name: openshift-service-ca-volume
+      configMap:
+        name: openshift-service-ca.crt
+        items:
+          - key: service-ca.crt
+            path: service-ca.crt
   workspaces:
     - name: source
     - name: credentials
