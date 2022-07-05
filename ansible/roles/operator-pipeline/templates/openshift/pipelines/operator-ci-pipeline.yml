@@ -54,6 +54,9 @@ spec:
     - name: kubeconfig_secret_key
       description: The key within the Kubernetes Secret that contains the kubeconfig.
       default: kubeconfig
+    - name: tlsverify
+      description: Enable TLS verification
+      default: "true"
   workspaces:
     - name: pipeline
     - name: ssh-dir
@@ -289,6 +292,8 @@ spec:
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-bundle:$(tasks.bundle-path-validation.results.bundle_version)"
         - name: CONTEXT
           value: "$(params.bundle_path)"
+        - name: TLSVERIFY
+          value: "$(params.tlsverify)"
       workspaces:
         - name: source
           workspace: pipeline
@@ -329,6 +334,8 @@ spec:
           value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-index:$(tasks.bundle-path-validation.results.bundle_version)"
         - name: DOCKERFILE
           value: "$(tasks.generate-index.results.index_dockerfile)"
+        - name: TLSVERIFY
+          value: "$(params.tlsverify)"
       workspaces:
         - name: source
           workspace: pipeline
