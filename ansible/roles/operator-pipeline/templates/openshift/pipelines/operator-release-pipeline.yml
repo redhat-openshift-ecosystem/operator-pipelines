@@ -85,6 +85,7 @@ spec:
       optional: true
     - name: registry-pull-credentials
     - name: registry-push-credentials
+    - name: registry-serve-credentials
     - name: image-data
 
   tasks:
@@ -324,6 +325,34 @@ spec:
         - name: dest-registry-credentials
           workspace: registry-push-credentials
 
+    - name: set-cert-project-repository
+      runAfter:
+        - copy-bundle-image-to-released-registry
+      taskRef:
+        name: set-cert-project-repository
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: registry
+          value: "$(params.dest_registry)"
+        - name: repository
+          value: "$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
+        - name: docker_config_file_name
+          value: ".dockerconfigjson"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
+      workspaces:
+        - name: registry-credentials
+          workspace: registry-serve-credentials
+
     # Publish image to OCP registry
     - name: publish-to-ocp-registry
       runAfter:
@@ -353,7 +382,7 @@ spec:
     # create container image
     - name: create-container-image
       runAfter:
-        - copy-bundle-image-to-released-registry
+        - set-cert-project-repository
         - publish-to-ocp-registry
         - inspect-image
       taskRef:

@@ -151,6 +151,7 @@ tkn pipeline start operator-release-pipeline \
   --workspace name=image-data,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=registry-pull-credentials,secret=release-pipeline-registry-auth-pull-secret \
   --workspace name=registry-push-credentials,secret=release-pipeline-registry-auth-push-secret \
+  --workspace name=registry-serve-credentials,secret=release-pipeline-registry-auth-serve-secret \
   --showlog
 ```
 

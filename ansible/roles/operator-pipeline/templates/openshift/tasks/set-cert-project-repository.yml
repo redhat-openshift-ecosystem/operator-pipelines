@@ -1,0 +1,55 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: set-cert-project-repository
+spec:
+  params:
+    - name: pipeline_image
+      description: A docker image of operator-pipeline-images for the task to run in.
+    - name: pyxis_url
+      default: https://pyxis.engineering.redhat.com
+    - name: pyxis_ssl_secret_name
+      description: Kubernetes secret name that contains the Pyxis SSL files. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
+    - name: pyxis_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key. Valid only when internal Pyxis is used.
+    - name: cert_project_id
+      description: Identifier of certification project from Red Hat Connect
+    - name: registry
+      description: Hostname of the registry
+    - name: repository
+      description: Repository name (namespace/name)
+    - name: docker_config_file_name
+      description: Path to the file containing the registry credentials in json format
+  workspaces:
+    - name: registry-credentials
+      description: Docker config for read-only access to the image
+  volumes:
+    - name: pyxis-ssl-volume
+      secret:
+        secretName: "$(params.pyxis_ssl_secret_name)"
+  steps:
+    - name: set-cert-project-repository
+      image: "$(params.pipeline_image)"
+      env:
+        - name: PYXIS_CERT_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
+        - name: PYXIS_KEY_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        set-cert-project-repository \
+          --pyxis-url $(params.pyxis_url) \
+          --cert-project-id $(params.cert_project_id) \
+          --registry $(params.registry) \
+          --repository $(params.repository) \
+          --docker-config "$(workspaces.registry-credentials.path)/$(params.docker_config_file_name)" \
+          --verbose

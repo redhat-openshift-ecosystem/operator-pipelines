@@ -44,6 +44,7 @@ setup(
             "request-signature=operatorcert.entrypoints.request_signature:main",
             "upload-signature=operatorcert.entrypoints.upload_signature:main",
             "github-add-comment=operatorcert.entrypoints.github_add_comment:main",
+            "set-cert-project-repository=operatorcert.entrypoints.set_cert_project_repository:main",
         ],
     },
 )

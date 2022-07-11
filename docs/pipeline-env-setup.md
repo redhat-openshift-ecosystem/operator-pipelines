@@ -183,10 +183,11 @@ oc create secret generic quay-oauth-token --from-literal token=<token>
 
 ### Registry Credentials
 The release pipeline requires credentials to push and pull the bundle image built by
-the hosted pipeline. Two registry auth secrets must be specified since different
-credentials may be required for the same registry when copying the image. These
-secrets can then be passed as workspaces named `registry-pull-credentials` and
-`registry-push-credentials` when invoking the pipeline.
+the hosted pipeline. Three registry auth secrets must be specified since different
+credentials may be required for the same registry when copying and serving the image.
+These secrets can then be passed as workspaces named `registry-pull-credentials`,
+`registry-push-credentials` and `registry-serve-credentials` when invoking the
+pipeline.
 
 ```bash
 oc create secret generic release-pipeline-registry-auth-pull-secret \
@@ -196,6 +197,10 @@ oc create secret generic release-pipeline-registry-auth-pull-secret \
 oc create secret generic release-pipeline-registry-auth-push-secret \
   --type kubernetes.io/dockerconfigjson \
   --from-file .dockerconfigjson=push-config.json
+
+oc create secret generic release-pipeline-registry-auth-serve-secret \
+  --type kubernetes.io/dockerconfigjson \
+  --from-file .dockerconfigjson=serve-config.json
 ```
 
 ### Kerberos credentials
