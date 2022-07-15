@@ -1,5 +1,5 @@
 ---
-nginx_proxy_image: registry.access.redhat.com/ubi8/nginx-120:1-10
+nginx_proxy_image: registry.access.redhat.com/ubi9/nginx-120:1-46
 nginx_proxy_replicas: 1
 
 nginx_proxy_name: "nging-proxy"
