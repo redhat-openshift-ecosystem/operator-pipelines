@@ -31,7 +31,9 @@ spec:
 
         case "$ORGANIZATION" in
           "certified-operators")
-            if [ "$OPERATOR_DISTRIBUTION" != "connect" ]; then
+            # Undistributed operators are certified against the certified-operators catalog
+            # even if they won't be distributed to the index.
+            if [ "$OPERATOR_DISTRIBUTION" != "connect" ] && [ "$OPERATOR_DISTRIBUTION" != "undistributed" ]; then
               echo "This project is not permitted to distribute to the $ORGANIZATION catalog."
               exit 1
             fi
