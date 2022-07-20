@@ -419,6 +419,11 @@ spec:
       runAfter:
         - create-container-image
         - get-supported-versions
+      when: &whenNotUndistributed
+        - input: &operatorDistribution "$(tasks.get-cert-project-related-data.results.operator_distribution)"
+          operator: notin
+          values:
+            - undistributed
       taskRef:
         name: publish-bundle
       params:
@@ -429,7 +434,7 @@ spec:
         - name: bundle_pullspec
           value: "$(tasks.publish-to-ocp-registry.results.image_pullspec)"
         - name: operator_distribution_method
-          value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
+          value: *operatorDistribution
         - name: iib_url
           value: "$(tasks.set-env.results.iib_url)"
         - name: environment
@@ -443,6 +448,7 @@ spec:
     - name: get-manifest-digests
       runAfter:
         - publish-bundle
+      when: *whenNotUndistributed
       taskRef:
         name: get-manifest-digests
       params:
@@ -460,6 +466,7 @@ spec:
     - name: request-signature
       runAfter:
         - get-manifest-digests
+      when: *whenNotUndistributed
       taskRef:
         name: request-signature
       params:
@@ -493,6 +500,7 @@ spec:
     - name: upload-signature
       runAfter:
         - request-signature
+      when: *whenNotUndistributed
       taskRef:
         name: upload-signature
       params:

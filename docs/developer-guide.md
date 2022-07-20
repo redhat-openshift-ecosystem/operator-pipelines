@@ -110,10 +110,11 @@ The pipelines depend on the following certification project fields:
   "name": "<insert-project-name>",
 
   /*
-   Either "connect" or "marketplace".
+   Either "connect", "marketplace" or "undistributed".
    This maps to the `organization` field in the bundle submission repo's config.yaml.
      connect -> certified-operators
      marketplace -> redhat-marketplace
+     undistributed -> certified-operators (certified against, but not distributed to)
   */
   "operator_distribution": "<insert-distribution>",
 
