@@ -25,9 +25,9 @@ spec:
     - name: jq_image
       description: Container image with jq installed
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
-    - name: pipelines_cli_tkn_image
-      description: Tekton cli image
-      default: "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49"
+    - name: ose_cli_image
+      description: OSE cli image
+      default: registry.redhat.io/openshift4/ose-cli
     - name: webhook_secret
       description:
         The name of the Kubernetes Secret that contains the Google Chat webhook.
@@ -41,16 +41,37 @@ spec:
       default: ""
 
   steps:
-    - name: describe-pipelinerun
-      image: "$(params.pipelines_cli_tkn_image)"
+    - name: build-message
+      image: "$(params.ose_cli_image)"
       script: |
         #!/usr/bin/env bash
         set +x -e -o pipefail
 
-        PR_NAME="$(params.pipelinerun)"
+        ns="$(params.namespace)"
+        pr="$(params.pipelinerun)"
+        echo "PipelineRun: $pr" >> pipelinerun.txt
+        echo "Namespace: $ns" >> pipelinerun.txt
 
-        echo "Getting PipelineRun details"
-        tkn pipelinerun describe -n $(params.namespace) $PR_NAME > pipelinerun.txt
+        echo "Getting PipelineRun info"
+        status=$(oc get pipelinerun $pr -n $ns -o 'jsonpath={.status.conditions[-1].reason}')
+        status_msg=$(oc get pipelinerun $pr -n $ns -o 'jsonpath={.status.conditions[-1].message}')
+        echo "Status: *$status*" >> pipelinerun.txt
+        echo "Message: $status_msg" >> pipelinerun.txt
+
+        echo "Building console URL"
+        base_url=$(oc whoami --show-console)
+        path="/k8s/ns/$ns/tekton.dev~v1beta1~PipelineRun/$pr/"
+        echo "Console: $base_url$path" >> pipelinerun.txt
+
+        echo "Getting TaskRun info"
+        echo '```' >> pipelinerun.txt
+        oc get taskrun -n $ns \
+          -l tekton.dev/pipelineRun=$pr \
+          -o "custom-columns=TASK:metadata.labels['tekton\.dev/pipelineTask'],STATUS:status.conditions[-1].reason" \
+          >> pipelinerun.txt
+        echo '```' >> pipelinerun.txt
+
+        cat pipelinerun.txt
 
     - name: post-message
       env:
@@ -63,10 +84,6 @@ spec:
       script: |
         #! /usr/bin/env bash
         set +x -e -o pipefail
-
-        # Wrap in triple backticks
-        sed -i '1s/^/```\n/' pipelinerun.txt
-        echo '```' >> pipelinerun.txt
 
         jq -n --rawfile summary pipelinerun.txt '{"text": $summary}' > payload.json
 
