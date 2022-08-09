@@ -1,0 +1,38 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: index-signature-verification-pipeline
+spec:
+  workspaces:
+    - name: registry-credentials
+  tasks:
+    - name: verify-signatures-certified-operators
+      taskRef:
+        name: verify-index-signatures
+      workspaces:
+        - name: registry-credentials
+          workspace: registry-credentials
+      params:
+        - name: organization
+          value: certified-operators
+
+    - name: verify-signatures-redhat-marketplace
+      taskRef:
+        name: verify-index-signatures
+      workspaces:
+        - name: registry-credentials
+          workspace: registry-credentials
+      params:
+        - name: organization
+          value: redhat-marketplace
+
+    - name: verify-signatures-community-operators
+      taskRef:
+        name: verify-index-signatures
+      workspaces:
+        - name: registry-credentials
+          workspace: registry-credentials
+      params:
+        - name: organization
+          value: community-operators

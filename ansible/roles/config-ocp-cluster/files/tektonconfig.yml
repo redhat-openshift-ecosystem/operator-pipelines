@@ -1,0 +1,14 @@
+---
+apiVersion: v1alpha1
+kind: TektonConfig
+metadata:
+  name: config
+spec:
+  pipeline:
+    scope-when-expressions-to-task: true
+  pruner:
+    keep: 100
+    resources:
+      - pipelinerun
+      - taskrun
+    schedule: "*/5 * * * *"

@@ -1,0 +1,76 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: google-chat-pipelinerun-summary
+spec:
+  description:
+    Send a PipelineRun summary message to a Google Chat space.
+
+  volumes:
+    - name: scratch
+      emptyDir: {}
+
+  stepTemplate:
+    volumeMounts:
+      - mountPath: /mnt/scratch
+        name: scratch
+    workingDir: /mnt/scratch
+
+  params:
+    - name: namespace
+      description: The namespace of the PipelineRun.
+    - name: pipelinerun
+      description: The name of the PipelineRun to summarize.
+    - name: jq_image
+      description: Container image with jq installed
+      default: "quay.io/redhat-isv/operator-pipelines-images:released"
+    - name: pipelines_cli_tkn_image
+      description: Tekton cli image
+      default: "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49"
+    - name: webhook_secret
+      description:
+        The name of the Kubernetes Secret that contains the Google Chat webhook.
+      default: google-chat
+    - name: webhook_secret_key
+      description:
+        The key within the Kubernetes Secret that contains the Google Chat webhook.
+      default: webhook
+    - name: thread_key
+      description: Optional thread key for the Google chat webhook
+      default: ""
+
+  steps:
+    - name: describe-pipelinerun
+      image: "$(params.pipelines_cli_tkn_image)"
+      script: |
+        #!/usr/bin/env bash
+        set +x -e -o pipefail
+
+        PR_NAME="$(params.pipelinerun)"
+
+        echo "Getting PipelineRun details"
+        tkn pipelinerun describe -n $(params.namespace) $PR_NAME > pipelinerun.txt
+
+    - name: post-message
+      env:
+        - name: WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: $(params.webhook_secret)
+              key: $(params.webhook_secret_key)
+      image: "$(params.jq_image)"
+      script: |
+        #! /usr/bin/env bash
+        set +x -e -o pipefail
+
+        # Wrap in triple backticks
+        sed -i '1s/^/```\n/' pipelinerun.txt
+        echo '```' >> pipelinerun.txt
+
+        jq -n --rawfile summary pipelinerun.txt '{"text": $summary}' > payload.json
+
+        echo "Posting message to Google Chat"
+        curl -s -X POST -H "Content-Type: application/json" \
+          --data @payload.json \
+          "$WEBHOOK_URL&threadKey=$(params.thread_key)"

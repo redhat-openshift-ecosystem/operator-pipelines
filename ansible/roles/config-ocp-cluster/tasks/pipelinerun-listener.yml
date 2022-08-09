@@ -1,0 +1,162 @@
+- name: Create PipelineRun listener resources
+  tags:
+    - pipelinerun-listener
+  block:
+    - name: Create Namespace
+      k8s:
+        state: present
+        apply: yes
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition:
+          kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: "{{ pipelinerun_listener_namespace }}"
+
+    - name: Create Tasks
+      k8s:
+        state: present
+        apply: yes
+        validate_certs: "{{ k8s_validate_certs }}"
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        definition: "{{ lookup('file', '{{ item }}') }}"
+      with_fileglob:
+        - ../files/tasks/*
+
+    - name: Create Google Chat webhook Secret
+      no_log: yes
+      k8s:
+        state: present
+        force: yes
+        validate_certs: "{{ k8s_validate_certs }}"
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: opaque
+          metadata:
+            name: google-chat
+          data:
+            webhook: "{{ google_chat_webhook | b64encode }}"
+
+    - name: Create TriggerBinding
+      k8s:
+        state: present
+        apply: yes
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerBinding
+          metadata:
+            name: pipelinerun-trigger-binding
+          spec:
+            params:
+              - name: namespace
+                value: $(body.pipelineRun.metadata.namespace)
+              - name: pipelinerun
+                value: $(body.pipelineRun.metadata.name)
+              - name: thread_key
+                value: "$(body.pipelineRun.metadata.namespace)-$(header['Ce-Type'])"
+
+    - name: Create TriggerTemplate
+      k8s:
+        state: present
+        apply: yes
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerTemplate
+          metadata:
+            name: pipelinerun-trigger-template
+          spec:
+            params:
+              - name: namespace
+              - name: pipelinerun
+              - name: thread_key
+            resourcetemplates:
+              - apiVersion: tekton.dev/v1beta1
+                kind: TaskRun
+                metadata:
+                  # Tekton may produce duplicate CloudEvents. Use a consistent Task
+                  # name to make this trigger idempotent.
+                  name: $(tt.params.pipelinerun)
+                spec:
+                  timeout: "5m"
+                  params:
+                    - name: namespace
+                      value: $(tt.params.namespace)
+                    - name: pipelinerun
+                      value: $(tt.params.pipelinerun)
+                    - name: thread_key
+                      value: $(tt.params.thread_key)
+                  taskRef:
+                    name: google-chat-pipelinerun-summary
+
+    # Hint: Set logLevel to debug in the config-logging-triggers ConfigMap to view the events
+    - name: Create EventListener
+      k8s:
+        state: present
+        apply: yes
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: EventListener
+          metadata:
+            name: pipelinerun-listener
+          spec:
+            triggers:
+              - name: pipelinerun-listener-trigger
+                interceptors:
+                  - cel:
+                      filter: >-
+                        (
+                          (
+                            header.match("Ce-Type", "dev.tekton.event.pipelinerun.successful.v1")
+                            || header.match("Ce-Type", "dev.tekton.event.pipelinerun.failed.v1")
+                          )
+                          &&
+                          (
+                            body.pipelineRun.metadata.namespace.startsWith("operator-pipeline-")
+                            || body.pipelineRun.metadata.namespace == "index-signature-verification"
+                          )
+                        )
+                bindings:
+                  - ref: pipelinerun-trigger-binding
+                template:
+                  ref: pipelinerun-trigger-template
+
+    - name: Create ClusterRoleBinding
+      k8s:
+        state: present
+        apply: yes
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: pipelinerun-listener-view-all-namespaces
+          subjects:
+            - kind: ServiceAccount
+              name: pipeline
+              namespace: "{{ pipelinerun_listener_namespace }}"
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: tekton-aggregate-view
+
+    - name: Set default Tekton CloudEvents sink
+      k8s:
+        state: present
+        validate_certs: "{{ k8s_validate_certs }}"
+        namespace: openshift-pipelines
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: config-defaults
+          data:
+            default-cloud-events-sink: "http://el-pipelinerun-listener.{{ pipelinerun_listener_namespace }}.svc.cluster.local:8080"

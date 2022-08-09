@@ -121,9 +121,11 @@
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
     - ../templates/openshift/pipelines/operator-release-pipeline.yml
 
+# TODO: Delete once this CronJob has been removed from all deployment environments.
+# Tekton provides automatic pruning of resources within its controller.
 - name: Create cleaning CronJob
   k8s:
-    state: present
+    state: absent
     namespace: "{{ oc_namespace }}"
     definition:
       apiVersion: batch/v1beta1
