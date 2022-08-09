@@ -1,0 +1,142 @@
+- name: Create Namespace
+  k8s:
+    state: present
+    apply: yes
+    validate_certs: "{{ k8s_validate_certs }}"
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ k8s_namespace }}"
+
+- name: Create ConfigMaps
+  k8s:
+    state: present
+    apply: yes
+    validate_certs: "{{ k8s_validate_certs }}"
+    namespace: "{{ k8s_namespace }}"
+    definition: "{{ lookup('file', '{{ item }}') }}"
+  with_fileglob:
+    - ../files/configmaps/*
+
+- name: Create Tasks
+  k8s:
+    state: present
+    apply: yes
+    validate_certs: "{{ k8s_validate_certs }}"
+    namespace: "{{ k8s_namespace }}"
+    definition: "{{ lookup('file', '{{ item }}') }}"
+  with_fileglob:
+    - ../files/tasks/*
+
+- name: Create Pipelines
+  k8s:
+    state: present
+    apply: yes
+    validate_certs: "{{ k8s_validate_certs }}"
+    namespace: "{{ k8s_namespace }}"
+    definition: "{{ lookup('file', '{{ item }}') }}"
+  with_fileglob:
+    - ../files/pipelines/*
+
+- name: Create EventListener
+  k8s:
+    state: present
+    apply: yes
+    validate_certs: "{{ k8s_validate_certs }}"
+    namespace: "{{ k8s_namespace }}"
+    definition:
+      apiVersion: triggers.tekton.dev/v1alpha1
+      kind: EventListener
+      metadata:
+        name: index-signature-verification-listener
+      spec:
+        triggers:
+          - name: index-signature-verification-trigger
+            bindings:
+              - ref: index-signature-verification-pipeline-trigger-binding
+            template:
+              ref: index-signature-verification-pipeline-trigger-template
+
+- name: Create TriggerBinding
+  k8s:
+    state: present
+    apply: yes
+    validate_certs: "{{ k8s_validate_certs }}"
+    namespace: "{{ k8s_namespace }}"
+    definition:
+      apiVersion: triggers.tekton.dev/v1alpha1
+      kind: TriggerBinding
+      metadata:
+        name: index-signature-verification-pipeline-trigger-binding
+
+- name: Create TriggerTemplate
+  k8s:
+    state: present
+    apply: yes
+    validate_certs: "{{ k8s_validate_certs }}"
+    namespace: "{{ k8s_namespace }}"
+    definition:
+      apiVersion: triggers.tekton.dev/v1alpha1
+      kind: TriggerTemplate
+      metadata:
+        name: index-signature-verification-pipeline-trigger-template
+      spec:
+        resourcetemplates:
+          - apiVersion: tekton.dev/v1beta1
+            kind: PipelineRun
+            metadata:
+              generateName: index-signature-verification-pipeline-run-
+            spec:
+              timeout: "30m"
+              pipelineRef:
+                name: index-signature-verification-pipeline
+              workspaces:
+                - name: registry-credentials
+                  secret:
+                    secretName: registry-auth-secret
+
+- name: Create registry auth Secret
+  no_log: yes
+  k8s:
+    state: present
+    force: yes
+    validate_certs: "{{ k8s_validate_certs }}"
+    namespace: "{{ k8s_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: kubernetes.io/dockerconfigjson
+      metadata:
+        name: registry-auth-secret
+      data:
+        .dockerconfigjson: "{{ lookup('file', registry_auth_local_path, rstrip=False) | b64encode }}"
+
+- name: Create CronJob
+  k8s:
+    state: present
+    apply: yes
+    validate_certs: "{{ k8s_validate_certs }}"
+    namespace: "{{ k8s_namespace }}"
+    definition:
+      apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: index-signature-verification-scheduler
+      spec:
+        schedule: "0 * * * *"
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: trigger-signature-verification-pipeline
+                    image: registry.redhat.io/ubi9
+                    args:
+                      - curl
+                      - -X
+                      - POST
+                      - --data
+                      - "{}"
+                      - "el-index-signature-verification-listener.{{ k8s_namespace }}.svc.cluster.local:8080"
+                restartPolicy: Never

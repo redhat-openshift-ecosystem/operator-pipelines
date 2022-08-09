@@ -1,0 +1,103 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: verify-index-signatures
+spec:
+  description:
+    Verifies index images are properly signed by Red Hat
+
+  params:
+    - name: organization
+      description: Index organization
+    - name: jq_image
+      description: Operator pipeline default image
+      default: "quay.io/redhat-isv/operator-pipelines-images:released"
+    - name: podman_image
+      description: Podman image
+      default: "registry.redhat.io/ubi9/podman:9.0.0"
+    - name: skopeo_image
+      description: Skopeo image
+      default: "registry.redhat.io/ubi9/skopeo:9.0.0"
+    - name: indices_api
+      description: Pyxis API endpoint for Operator index images
+      default: https://catalog.redhat.com/api/containers/v1/operators/indices
+    - name: keys_config_map
+      description: Name of the ConfigMap with the public keys
+      default: index-signature-verification-keys
+
+  workspaces:
+    - name: registry-credentials
+      description: Pull credentials to the container registry
+
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: keys
+      configMap:
+        name: "$(params.keys_config_map)"
+
+  stepTemplate:
+    volumeMounts:
+      - name: scratch
+        mountPath: /mnt/scratch
+      - name: keys
+        mountPath: /mnt/keys
+    workingDir: /mnt/scratch
+    env:
+      - name: REGISTRY_AUTH_FILE
+        value: "$(workspaces.registry-credentials.path)/.dockerconfigjson"
+
+  steps:
+    - name: get-index-images
+      image: "$(params.jq_image)"
+      script: |
+        #!/usr/bin/env bash
+        set +x -e -o pipefail
+
+        now=$(date --iso-8601=seconds)
+        curl -s --get \
+          --data-urlencode "filter=organization==$(params.organization);(end_of_life==null,end_of_life>$now)" \
+          --data-urlencode "page_size=500" \
+          --data-urlencode "include=data.path" \
+          $(params.indices_api) \
+          | jq -r '.data[].path' \
+          | tee image-tags.txt
+
+    - name: inspect-images
+      image: "$(params.skopeo_image)"
+      script: |
+        #!/usr/bin/env bash
+        set +x -e -o pipefail
+
+        for image in $(cat image-tags.txt); do
+          dest=$(echo -n $image | base64)
+          echo "Inspecting $image"
+          skopeo inspect --raw docker://$image > $dest.json
+        done
+
+    - name: get-digest-pull-specs
+      image: "$(params.jq_image)"
+      script: |
+        #!/usr/bin/env bash
+        set +x -e -o pipefail
+
+        for filename in *.json; do
+          image=$(basename $filename .json | base64 -d)
+          digests=$(jq -r '.manifests[].digest' $filename)
+          for digest in $digests; do
+            echo "$image@$digest" | tee -a image-digests.txt
+          done
+        done
+
+    - name: pull-images-by-digest
+      image: "$(params.podman_image)"
+      script: |
+        #!/usr/bin/env bash
+        set +x -e -o pipefail
+
+        podman image trust set -f /mnt/keys/pub.gpg registry.redhat.io
+
+        for pull_spec in $(cat image-digests.txt); do
+          podman pull $pull_spec
+        done

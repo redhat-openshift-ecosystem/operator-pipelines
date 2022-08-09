@@ -163,3 +163,8 @@ This image can be overridden by passing the following to any `tkn pipeline start
 ```bash
 --param pipeline_image=<image-pull-spec>
 ```
+
+## Additional Documentation
+
+- [OpenShift cluster configuration](docs/cluster-config.md)
+- [Index signature verification](docs/index-signature-verification.md)

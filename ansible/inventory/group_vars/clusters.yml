@@ -1,0 +1,4 @@
+ansible_connection: local
+
+# Index signature verification vars
+registry_auth_local_path: ../../vaults/index-signature-verification/registry-auth.json
