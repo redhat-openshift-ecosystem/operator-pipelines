@@ -20,6 +20,10 @@ env:
 jobs:
   build-multiarch-images:
     name: Build and push multi-architecture image
+    strategy:
+      matrix:
+        architecture: [amd64, ppc64le, s390x]
+        platform: [linux]
     runs-on: ubuntu-20.04
     steps:
       - name: add checkout action...
@@ -29,39 +33,35 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y qemu-user-static
-      - name: Build image linux/amd64
+      - name: Build image
         uses: redhat-actions/buildah-build@v2
         with:
           image: ${{ env.IMAGE_NAME }}
-          tags: linux-amd64
-          arch: amd64
+          tags: ${{ matrix.platform }}-${{ matrix.architecture }}
+          arch: ${{ matrix.architecture }}
+          build-args: |
+            ARCH=${{ matrix.architecture }}
           containerfiles: |
             ./operator-pipeline-images/Dockerfile
-      - name: Build image linux/ppc64le
-        uses: redhat-actions/buildah-build@v2
+      - name: Push Image
+        id: push-image
+        uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ env.IMAGE_NAME }}
-          tags: linux-ppc64le
-          arch: ppc64le
-          containerfiles: |
-            ./operator-pipeline-images/Dockerfile-ppc64le
-      - name: Build image linux/s390x
-        uses: redhat-actions/buildah-build@v2
-        with:
-          image: ${{ env.IMAGE_NAME }}
-          tags: linux-s390x
-          arch: s390x
-          containerfiles: |
-            ./operator-pipeline-images/Dockerfile-s390x
-      - name: Check images created
-        run: buildah images | grep '${{ env.IMAGE_NAME }}'
-
+          tags: ${{ matrix.platform }}-${{ matrix.architecture }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+  build-multiarch:
+    needs: build-multiarch-images
+    runs-on: ubuntu-20.04
+    steps:
       - name: Create and add to manifest
         run: |
           buildah manifest create ${{ env.IMAGE_NAME }}
-          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-amd64
-          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-ppc64le
-          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:linux-s390x
+          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:linux-amd64
+          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:linux-ppc64le
+          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:linux-s390x
      # Authenticate to container image registry to push the image
       - name: Podman Login
         uses: redhat-actions/podman-login@v1
