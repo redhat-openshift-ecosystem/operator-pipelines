@@ -5,6 +5,7 @@ LABEL summary="This image contains tools required for operator bundle certificat
 
 ARG USER_UID=1000
 ARG PODMAN_USER_UID=1001
+ARG ARCH=amd64
 
 
 USER root
@@ -26,6 +27,9 @@ RUN dnf update -y && \
     gcc \
     gnupg2 \
     jq \
+    cargo \
+    libffi-devel \
+    redhat-rpm-config \
     krb5-devel \
     krb5-workstation \
     yamllint \
@@ -40,9 +44,9 @@ RUN dnf update -y && \
 COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 
 # Install opm CLI
-RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.19.5/linux-amd64-opm && \
-    chmod +x linux-amd64-opm && \
-    mv linux-amd64-opm /usr/local/bin/opm
+RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.19.5/linux-${ARCH}-opm && \
+    chmod +x linux-${ARCH}-opm && \
+    mv linux-${ARCH}-opm /usr/local/bin/opm
 
 RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
