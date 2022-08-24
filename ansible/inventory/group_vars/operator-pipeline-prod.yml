@@ -8,9 +8,6 @@ kerberos_keytab: ../../vaults/prod/operatorpipelines.keytab
 operator_pipeline_image_tag: "v1.0.8"
 operator_pipeline_release_namespace: redhat-isv-operators
 
-# how many of newest pipelineruns should be preserved on cleanup?
-preserve_after_cleanup: "10"
-
 operator_pipeline_hydra_username_local_path: ../../vaults/prod/hydra-username
 operator_pipeline_hydra_password_local_path: ../../vaults/prod/hydra-password
 

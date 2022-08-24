@@ -8,9 +8,6 @@ kerberos_keytab: ../../vaults/common/nonprod-operatorpipelines.keytab
 operator_pipeline_image_tag: "v1.0.8"
 operator_pipeline_release_namespace: redhat-isv-operators-qa
 
-# how many of newest pipelineruns should be preserved on cleanup?
-preserve_after_cleanup: "5"
-
 # Settings for importing index imagestreams
 insecure_index_import: true
 certified_operator_index: registry.stage.redhat.io/redhat/certified-operator-index
