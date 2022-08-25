@@ -42,6 +42,8 @@
                 value: "{{ env }}"
               - name: preflight_min_version
                 value: "{{ preflight_min_version }}"
+              - name: preflight_trigger_environment
+                value: "{{ preflight_trigger_environment }}"
               - name: ci_min_version
                 value: "{{ ci_min_version }}"
               - name: pipeline_image
@@ -75,6 +77,7 @@
               - name: pr_head_label
               - name: env
               - name: preflight_min_version
+              - name: preflight_trigger_environment
               - name: ci_min_version
               - name: pipeline_image
               - name: metrics_endpoint

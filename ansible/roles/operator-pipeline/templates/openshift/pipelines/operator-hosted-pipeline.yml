@@ -21,6 +21,9 @@ spec:
       description: Which environment to run in. Can be one of [dev, qa, stage, prod]
       default: "prod"
     - name: preflight_min_version
+    - name: preflight_trigger_environment
+      description: Which openshift-ci step-registry steps and ProwJob templates to use. Can be one of [preprod, prod]
+      default: "prod"
     - name: ci_min_version
     - name: registry
       description: Must be some variety of quay registry.
@@ -656,6 +659,8 @@ spec:
         kind: Task
         name: preflight-trigger
       params:
+        - name: preflight_trigger_environment
+          value: "$(params.preflight_trigger_environment)"
         - name: ocp_version
           value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
         - name: asset_type
