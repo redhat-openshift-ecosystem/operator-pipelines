@@ -5,6 +5,7 @@ oc_namespace: "operator-pipeline-{{ env }}"
 service_account_name: operator-pipeline-admin
 suffix: "{{ env }}"
 preflight_min_version: 0.0.0
+preflight_trigger_environment: preprod
 ci_min_version: 0.0.0
 
 operator_pipeline_image_repo: quay.io/redhat-isv/operator-pipelines-images
