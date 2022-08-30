@@ -32,7 +32,7 @@ spec:
         # Grab only the major and minor version for comparison
         CLUSTER_VERSION=$(echo $CLUSTER_VERSION | cut -d. -f1,2)
         # parse indices into a list of strings with OCP versions
-        SUPPORTED_VERSIONS=$(echo '$(params.indices_ocp_versions)' | jq -r '.[]')
+        SUPPORTED_VERSIONS=$(echo '$(params.indices_ocp_versions)' | base64 -d | jq -r '.[]')
 
         for version in $SUPPORTED_VERSIONS; do
           if [ "$version" == "$CLUSTER_VERSION" ]; then

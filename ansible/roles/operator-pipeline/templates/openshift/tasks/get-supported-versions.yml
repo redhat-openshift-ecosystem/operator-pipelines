@@ -48,11 +48,13 @@ spec:
         echo $VERSION_INFO \
           | jq -r '[.indices[].path]' \
           | tr -d '\n\r' \
+          | base64 \
           | tee $(results.indices.path)
 
         echo $VERSION_INFO \
           | jq -r '[.indices[].ocp_version]' \
           | tr -d '\n\r' \
+          | base64 \
           | tee $(results.indices_ocp_versions.path)
 
         echo $VERSION_INFO \
