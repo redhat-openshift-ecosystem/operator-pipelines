@@ -33,19 +33,29 @@ spec:
       - name: FBC_FILE
         value: fbc.txt
   steps:
-    - name: inspect-base-index
+    - name: prepare
       image: "$(params.podman_image)"
       workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
-        set -exo pipefail
+        # This is needed to ensure the inspect-base-index step, which runs
+        # under a different UID, has access to its output file
+        truncate -s 0 podman-inspect.json
+        chmod 666 podman-inspect.json
 
-        # Copy the default credentials to the "output" workspace so they can be
-        # accessed without root access in other steps.
         mkdir -p $DOCKER_CONFIG
-        chmod 777 $DOCKER_CONFIG
+        chmod 755 $DOCKER_CONFIG
         cp $HOME/.docker/config.json $DOCKER_CONFIG/config.json
-        chmod 664 $DOCKER_CONFIG/config.json
+        chmod 644 $DOCKER_CONFIG/config.json
+
+    - name: inspect-base-index
+      image: "$(params.podman_image)"
+      workingDir: $(workspaces.output.path)
+      securityContext:
+        runAsUser: 1000
+      script: |
+        #! /usr/bin/env bash
+        set -exo pipefail
 
         # Pull the index image from a pre-configured imagestream in the current namespace.
         # It may be possible to eliminate this once sqlite-based index images are no
@@ -54,7 +64,7 @@ spec:
         FROM_INDEX="$(params.internal_registry)/$(context.taskRun.namespace)/$INDEX_IMG_STREAM"
 
         podman pull $FROM_INDEX
-        podman image inspect $FROM_INDEX | tee podman-inspect.json
+        podman image inspect $FROM_INDEX | tee -a podman-inspect.json
 
     - name: determine-index-format
       image: "$(params.pipeline_image)"
@@ -63,6 +73,7 @@ spec:
         #! /usr/bin/env bash
         set -x
 
+        chmod 644 podman-inspect.json
         # Create a special file in the workspace if this index uses file-based configs
         CONFIGS_QUERY='.[0].Labels."operators.operatorframework.io.index.configs.v1"'
         jq -e "$CONFIGS_QUERY" podman-inspect.json && touch $FBC_FILE
