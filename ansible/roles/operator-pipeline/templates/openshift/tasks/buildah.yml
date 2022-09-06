@@ -54,6 +54,7 @@ spec:
       script: |
         # This is needed to ensure the push step, which runs under a different
         # UID, has access to its output file
+        chmod go+rx $(workspaces.source.path)
         truncate -s 0 /digest/image-digest
         chmod 666 /digest/image-digest
       workingDir: $(workspaces.source.path)

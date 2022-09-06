@@ -47,6 +47,7 @@ spec:
         chmod 755 $DOCKER_CONFIG
         cp $HOME/.docker/config.json $DOCKER_CONFIG/config.json
         chmod 644 $DOCKER_CONFIG/config.json
+        chmod go+rx .
 
     - name: inspect-base-index
       image: "$(params.podman_image)"
