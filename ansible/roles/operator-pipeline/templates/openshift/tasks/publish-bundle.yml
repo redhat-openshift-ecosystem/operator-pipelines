@@ -76,7 +76,7 @@ spec:
                     ;;
                 esac
             ;;
-            stage)
+            stage | integration-tests)
                 case $DIST_METHOD in
                     connect)
                       FROM_INDEX="quay.io/redhat-pending/redhat----certified-operator-index"

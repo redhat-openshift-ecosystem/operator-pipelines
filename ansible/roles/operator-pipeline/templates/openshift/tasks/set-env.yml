@@ -15,8 +15,6 @@ spec:
   results:
     - name: pyxis_url
       description: Container API URL based for selected environment
-    - name: target_branch
-      description: Target branch for submitted PR in upstream repository
     - name: connect_url
       description: Connect SPA URL based on selected environment
     - name: connect_registry
@@ -56,7 +54,6 @@ spec:
                     PYXIS_URL="https://catalog.redhat.com/api/containers/"
                     ;;
                 esac
-                TARGET_BRANCH="main"
                 CONNECT_URL="https://connect.redhat.com"
                 CONNECT_REGISTRY="registry.connect.redhat.com"
                 IIB_URL="https://iib.engineering.redhat.com"
@@ -65,7 +62,7 @@ spec:
                 UMB_URL="umb.api.redhat.com"
                 UMB_CLIENT_NAME="operatorpipelines"
             ;;
-            stage)
+            stage | integration-tests)
                 case $ACCESS_TYPE in
                     internal)
                     PYXIS_URL="https://pyxis.stage.engineering.redhat.com"
@@ -74,7 +71,6 @@ spec:
                     PYXIS_URL="https://catalog.stage.redhat.com/api/containers/"
                     ;;
                 esac
-                TARGET_BRANCH="stage"
                 CONNECT_URL="https://connect.stage.redhat.com"
                 CONNECT_REGISTRY="registry.connect.stage.redhat.com"
                 IIB_URL="https://iib.stage.engineering.redhat.com"
@@ -92,7 +88,6 @@ spec:
                     PYXIS_URL="https://catalog.qa.redhat.com/api/containers/"
                     ;;
                 esac
-                TARGET_BRANCH="qa"
                 CONNECT_URL="https://connect.qa.redhat.com"
                 CONNECT_REGISTRY="registry.connect.qa.redhat.com"
                 IIB_URL="https://iib.stage.engineering.redhat.com"
@@ -110,7 +105,6 @@ spec:
                     PYXIS_URL="https://catalog.dev.redhat.com/api/containers/"
                     ;;
                 esac
-                TARGET_BRANCH="dev"
                 CONNECT_URL="https://connect.dev.redhat.com"
                 CONNECT_REGISTRY="registry.connect.dev.redhat.com"
                 IIB_URL="https://iib.stage.engineering.redhat.com"
@@ -126,7 +120,6 @@ spec:
         esac
 
         echo -n $PYXIS_URL | tee $(results.pyxis_url.path)
-        echo -n $TARGET_BRANCH | tee $(results.target_branch.path)
         echo -n $CONNECT_URL | tee $(results.connect_url.path)
         echo -n $CONNECT_REGISTRY | tee $(results.connect_registry.path)
         echo -n $IIB_URL | tee $(results.iib_url.path)

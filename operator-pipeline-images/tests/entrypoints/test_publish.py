@@ -100,7 +100,7 @@ def test_create_repository(mock_get_vendor: MagicMock, mock_post: MagicMock) -> 
     mock_get_vendor.return_value = {"label": "my_label"}
 
     args = MagicMock()
-    args.environment = "dev"
+    args.connect_registry = "registry.connect.dev.redhat.com"
     args.pyxis_url = "https://pyxis.com/"
 
     publish.create_repository(args, project)

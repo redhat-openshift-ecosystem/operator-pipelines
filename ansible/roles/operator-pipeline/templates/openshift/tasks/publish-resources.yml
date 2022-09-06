@@ -16,9 +16,8 @@ spec:
       description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
     - name: pyxis_ssl_key_secret_key
       description: The key within the Kubernetes secret that contains the Pyxis SSL key. Valid only when internal Pyxis is used.
-    - name: environment
-      default: prod
-      description: Environment where the pipeline runs
+    - name: connect_registry
+      description: Connect registry host
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
   volumes:
@@ -46,7 +45,6 @@ spec:
         publish \
           --verbose \
           --pyxis-url "$(params.pyxis_url)" \
-          --environment "$(params.environment)" \
             vendor \
               --org-id "$(params.org_id)"
     - name: publish-repository
@@ -69,6 +67,6 @@ spec:
         publish \
           --verbose \
           --pyxis-url "$(params.pyxis_url)" \
-          --environment "$(params.environment)" \
             repository \
+              --connect-registry "$(params.connect_registry)" \
               --cert-project-id "$(params.cert_project_id)"

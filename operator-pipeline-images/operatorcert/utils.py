@@ -52,26 +52,6 @@ def store_results(results: Dict[str, str]):
                 result_file.write(str(result_value))
 
 
-def get_registry_for_env(environment: str) -> str:
-    """
-    Mapping of container registry based on current environment
-
-    Args:
-        environment (str): Environment name
-
-    Returns:
-        str: Connect registry for current
-    """
-    env_to_registry = {
-        "prod": "registry.connect.redhat.com",
-        "stage": "registry.connect.stage.redhat.com",
-        "qa": "registry.connect.qa.redhat.com",
-        "dev": "registry.connect.dev.redhat.com",
-    }
-
-    return env_to_registry[environment]
-
-
 def set_client_keytab(keytab_file: str):
     """
     Set env variable with default client keytab.
