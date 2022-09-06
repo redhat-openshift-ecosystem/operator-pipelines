@@ -1,9 +1,9 @@
 ---
 ##### General settings
+ansible_connection: local
 env: unset
 oc_namespace: "operator-pipeline-{{ env }}"
-service_account_name: operator-pipeline-admin
-suffix: "{{ env }}"
+branch: "{{ env }}"
 preflight_min_version: 0.0.0
 preflight_trigger_environment: preprod
 ci_min_version: 0.0.0
@@ -11,6 +11,7 @@ ci_min_version: 0.0.0
 operator_pipeline_image_repo: quay.io/redhat-isv/operator-pipelines-images
 operator_pipeline_image_tag: latest
 operator_pipeline_image_pull_spec: "{{ operator_pipeline_image_repo }}:{{ operator_pipeline_image_tag }}"
+operator_pipeline_pending_namespace: "{{ oc_namespace }}"
 
 ##### Secrets locations
 operator_pipeline_private_key_local_path: ../../vaults/{{ env }}/operator-pipeline.key
@@ -35,11 +36,10 @@ operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/commo
 operator_pipeline_exd_guild_isv_key_path: ../../vaults/{{ env }}/exd-guild-isv.key
 operator_pipeline_exd_guild_isv_passphrase_path: ../../vaults/{{ env }}/exd-guild-isv.passphrase
 
-github_ssh_credentials_path: ../../vaults/common/github-bot-ssh
-e2e_kubeconfig_path: ../../vaults/common/kubeconfig-e2e
+operator_pipeline_url: "https://operator-pipeline-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
+operator_pipeline_webhook_secret: ../../vaults/common/github-webhook-secret-preprod.txt
 
-pyxis_api_key_path: ../../vaults/{{ env }}/pyxis_api_key
-e2e_gh_account_path: ../../vaults/{{ env }}/e2e-gh-account-pat
+kerberos_keytab: ../../vaults/common/nonprod-operatorpipelines.keytab
 
 pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-nonprod
 
@@ -50,7 +50,6 @@ community_signing_umb_client_name: community-operator-signing-pipeline-nonprod
 
 community_signing_pipeline_route_name: "{{ community_signing_pipeline_name }}"
 community_signing_pipeline_url: "{{ community_signing_pipeline_name }}-tekton-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
-
 
 nginx_basic_user_file_local_path: ../../vaults/{{ env }}/htpasswd
 nginx_proxy_service_url: "https://{{ community_signing_pipeline_url }}"

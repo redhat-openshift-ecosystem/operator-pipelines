@@ -4,7 +4,7 @@ name: Deployment
 on:  # yamllint disable-line rule:truthy
   workflow_run:
     workflows:
-      - E2E-CI
+      - Integration Tests
     branches:
       - main
     types:
@@ -43,8 +43,8 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            --inventory inventory/operator-pipeline
-            --extra-vars "env=dev operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --inventory inventory/operator-pipeline-dev
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
             --skip-tags ci
             --verbose
 
@@ -70,8 +70,8 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            --inventory inventory/operator-pipeline
-            --extra-vars "env=qa operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --inventory inventory/operator-pipeline-qa
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
             --skip-tags ci
             --verbose
 
@@ -98,8 +98,8 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            --inventory inventory/operator-pipeline
-            --extra-vars "env=stage operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --inventory inventory/operator-pipeline-stage
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
             --skip-tags ci
             --verbose
 
@@ -125,8 +125,8 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD_PROD}}
           options: |
-            --inventory inventory/operator-pipeline
-            --extra-vars "env=prod operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --inventory inventory/operator-pipeline-prod
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
             --skip-tags ci
             --verbose
 

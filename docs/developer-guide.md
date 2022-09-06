@@ -20,7 +20,7 @@
 1. [Create an API key](#create-an-api-key) (optional)
     - Required for testing submission with the CI pipeline
 1. [Prepare the CI to run from your fork](ci-cd.md) (optional)
-    - Required to run E2E testing on forks of this repo.
+    - Required to run integration testing on forks of this repo.
 
 ### Prepare a Development Environment
 
@@ -37,18 +37,28 @@ command can be obtained by clicking on your username in upper right corner, and
 selecting `copy login command`.
 
 ```bash
-# Assuming the current working directory is ansible/
-./init-custom-env.sh $PROJECT $ENVIRONMENT $PASSWD_FILE [$PIPELINE_IMAGE_TAG]
+ansible-playbook -v \
+  -i "ansible/inventory/operator-pipeline-$ENV" \
+  -e "oc_namespace=$NAMESPACE" \
+  -e "ocp_token=`oc whoami -t`" \
+  --vault-password-file $VAULT_PASSWORD_PATH \
+  ansible/playbooks/deploy.yml
 ```
 
-| Argument | Description |
-| -------- | ----------- |
-| PROJECT | An OpenShift project name (eg. `john-playground`). Pipeline resources will be installed here. |
-| ENVIRONMENT | The environmental dependencies and corresponding credentials to leverage. Can be one of `dev`, `qa`, `stage` or `prod`. |
-| PASSWD_FILE | File path containing the ansible vault password. |
-| PIPELINE_IMAGE_TAG | The tag name of operator pipeline image. (optional) |
-
 :warning: Conflicts may occur if the project already contains some resources. They may need to be removed first.
+
+Cleanup can be performed by specifying the `absent` state for some of the resources.
+
+```bash
+ansible-playbook -v \
+  -i "ansible/inventory/operator-pipeline-$ENV" \
+  -e "oc_namespace=$NAMESPACE" \
+  -e "ocp_token=`oc whoami -t`" \
+  -e "namespace_state=absent" \
+  -e "github_webhook_state=absent" \
+  --vault-password-file $VAULT_PASSWORD_PATH \
+  ansible/playbooks/deploy.yml
+```
 
 #### Install tkn
 

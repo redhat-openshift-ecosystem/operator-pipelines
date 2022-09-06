@@ -1,7 +1,7 @@
 ---
 - name: Create trigger enabling running Hosted pipeline via GitHub webhook
   tags:
-    - webhook-hosted
+    - triggers
   block:
     - name: Create Hosted pipeline Trigger Binding
       k8s:
@@ -50,6 +50,8 @@
                 value: "{{ operator_pipeline_image_pull_spec }}"
               - name: metrics_endpoint
                 value: "{{ pipelines_metrics_endpoint }}"
+              - name: image_namespace
+                value: "{{ operator_pipeline_pending_namespace }}"
 
     - name: Create Hosted pipeline Trigger Template
       k8s:
@@ -81,11 +83,20 @@
               - name: ci_min_version
               - name: pipeline_image
               - name: metrics_endpoint
+              - name: image_namespace
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
                 metadata:
                   generateName: operator-hosted-pipeline-run
+                  labels:
+                    app: operator-pipeline
+                    suffix: "{{ suffix }}"
+                    env: "{{ env }}"
+                    git_commit: $(tt.params.git_commit)
+                  annotations:
+                    git_pull_request_url: $(tt.params.git_pr_url)
+                    git_pull_request_title: $(tt.params.git_pr_title)
                 spec:
                   timeout: "2h"
                   pipelineRef:
@@ -119,6 +130,8 @@
                       value: $(tt.params.pipeline_image)
                     - name: metrics_endpoint
                       value: $(tt.params.metrics_endpoint)
+                    - name: image_namespace
+                      value: $(tt.params.image_namespace)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:

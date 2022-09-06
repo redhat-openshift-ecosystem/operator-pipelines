@@ -13,5 +13,5 @@
   with_items:
     - ../templates/openshift/pipelines/community-signing-pipeline.yml
 
-- include: tasks/webhook-community-signing-event-listener.yml
-- include: tasks/webhook-community-signing-trigger.yml
+- include: tasks/community-signing-event-listener.yml
+- include: tasks/community-signing-trigger.yml

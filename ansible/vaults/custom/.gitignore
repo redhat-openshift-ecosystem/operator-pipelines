@@ -1,5 +1,0 @@
-# This directory is included in git, even though the files inside such be ignored. It is destined to contain the token to
-# custom environment- each developer has his/ hers own.
-*
-*/
-!.gitignore

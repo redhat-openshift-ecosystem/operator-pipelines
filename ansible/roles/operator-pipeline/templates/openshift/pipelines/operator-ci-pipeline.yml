@@ -15,6 +15,9 @@ spec:
     - name: upstream_repo_name
       default: ""
       description: Upstream repository where the pull request will be opened (namespace/name)
+    - name: upstream_repo_branch
+      default: main
+      description: Branch in the upstream repo to use as the base for the pull request
     - name: bundle_path
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
@@ -432,7 +435,7 @@ spec:
         - name: digest_pinned_branch
           value: "$(tasks.commit-pinned-digest.results.branch)"
         - name: target_branch
-          value: "$(tasks.set-env.results.target_branch)"
+          value: "$(params.upstream_repo_branch)"
         - name: test_logs_url
           value: "$(tasks.upload-artifacts.results.log_url)"
         - name: test_result_url

@@ -4,5 +4,6 @@
 ## General settings
 env: unset
 oc_namespace: null
-service_account_name: operator-pipeline-admin
 suffix: unknown
+namespace_state: present
+github_webhook_state: present

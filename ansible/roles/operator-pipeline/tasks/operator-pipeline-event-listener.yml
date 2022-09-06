@@ -1,7 +1,7 @@
 ---
 - name: Create event listener allowing triggering the pipelines via Github webhook
   tags:
-    - webhook
+    - triggers
   block:
     - name: Create event listener
       k8s:

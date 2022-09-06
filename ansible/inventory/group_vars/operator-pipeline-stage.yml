@@ -1,11 +1,7 @@
 ---
 env: stage
 ocp_host: https://api.pipelines-stage.0ce8.p1.openshiftapps.com:6443
-branch: "{{ env }}"
-operator_pipeline_webhook_secret: ../../vaults/common/github-webhook-secret-preprod.txt
-kerberos_keytab: ../../vaults/common/nonprod-operatorpipelines.keytab
 
-operator_pipeline_image_tag: "v1.0.8"
 operator_pipeline_release_namespace: redhat-isv-operators-stage
 
 # Settings for importing index imagestreams

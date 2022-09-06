@@ -6,7 +6,6 @@ operator_pipeline_webhook_secret: ../../vaults/prod/github-webhook-secret-prod.t
 kerberos_keytab: ../../vaults/prod/operatorpipelines.keytab
 preflight_trigger_environment: prod
 
-operator_pipeline_image_tag: "v1.0.8"
 operator_pipeline_release_namespace: redhat-isv-operators
 
 operator_pipeline_hydra_username_local_path: ../../vaults/prod/hydra-username
@@ -17,9 +16,6 @@ operator_pipeline_github_bot_token: ../../vaults/prod/github-bot-token.txt
 
 operator_pipeline_preflight_decryption_key_private_local_path: ../../vaults/prod/preflight-decryption-key-priv.gpg
 operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/prod/preflight-decryption-key-pub.gpg
-
-github_ssh_credentials_path: ../../vaults/prod/github-bot-ssh
-e2e_kubeconfig_path: ../../vaults/prod/kubeconfig-e2e
 
 pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-prod
 

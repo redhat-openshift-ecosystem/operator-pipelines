@@ -1,0 +1,15 @@
+- name: Configure GitHub webhooks
+  loop: "{{ operator_pipeline_github_webhook_repos }}"
+  when: operator_pipeline_github_webhook_repos is defined
+  tags:
+    - webhooks
+  github_webhook:
+    state: "{{ github_webhook_state }}"
+    repository: "{{ item }}"
+    url: "{{ operator_pipeline_url }}"
+    secret: "{{ lookup('file', operator_pipeline_webhook_secret, rstrip=False) }}"
+    content_type: json
+    events:
+      - pull_request
+    user: "{{ operator_pipeline_github_webhook_admin_user }}"
+    token: "{{ operator_pipeline_github_webhook_admin_personal_access_token }}"
