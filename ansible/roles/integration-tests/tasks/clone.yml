@@ -1,0 +1,16 @@
+---
+- name: Clone the test repo
+  tags:
+    - clone
+  block:
+    - name: Create temporary directory
+      tempfile:
+        state: directory
+      register: git_temp_dir
+
+    - name: Clone repository
+      git:
+        repo: "{{ git_repo_url }}"
+        dest: "{{ git_temp_dir.path }}"
+        version: "{{ git_base_branch }}"
+        refspec: "refs/heads/{{ src_operator_git_branch }}"

@@ -1,0 +1,30 @@
+---
+# git repo SSH URL
+git_repo_url: null
+
+# The operator package to copy and use
+operator_package_name: null
+
+# Bundle version to copy from the package directory
+src_operator_bundle_version: null
+
+# Branch containing the source operator bundle to copy
+src_operator_git_branch: main
+
+# The branch representing the upstream/base state to copy
+git_base_branch: main
+
+# Replace the source bundle's version
+operator_bundle_version: 0.0.1
+
+# Copy the bundle into this branch
+git_bundle_branch: "{{ operator_package_name}}-{{ operator_bundle_version }}"
+
+# Raise pull requests against this upstream repo
+# Format: "{owner}/{repository}"
+git_upstream_repo: null
+
+# Raise pull requests against this upstream branch
+git_upstream_branch: "{{ operator_package_name }}-{{ operator_bundle_version }}-base"
+
+suffix: unknown

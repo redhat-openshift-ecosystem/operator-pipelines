@@ -1,0 +1,19 @@
+---
+- include_tasks: tasks/clone.yml
+
+- name: Delete remote branches
+  loop:
+    - "{{ git_bundle_branch }}"
+    - "{{ git_upstream_branch }}"
+  tags:
+    - delete-branches
+  shell: |
+    set +e
+    git ls-remote --exit-code origin "{{ item }}"
+    if [ $? -eq 0 ]; then
+      set -e
+      git push origin -d "{{ item }}"
+    fi
+  args:
+    executable: /bin/bash
+    chdir: "{{ git_temp_dir.path }}"

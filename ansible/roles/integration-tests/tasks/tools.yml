@@ -1,0 +1,17 @@
+---
+- name: Deploy tools to the host
+  tags:
+    - tools
+  block:
+    - name: Create temporary directory
+      tempfile:
+        state: directory
+      register: temp_tools_dir
+
+    - name: Download and extract the tkn binary
+      unarchive:
+        src: https://mirror.openshift.com/pub/openshift-v4/clients/pipeline/0.17.2/tkn-linux-amd64-0.17.2.tar.gz
+        dest: "{{ temp_tools_dir.path }}"
+        remote_src: yes
+        include:
+          - tkn
