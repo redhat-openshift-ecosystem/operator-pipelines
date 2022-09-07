@@ -24,7 +24,8 @@
       uri:
         url: "{{ ocp_host }}/apis/image.openshift.io/v1/namespaces/{{ oc_namespace }}/imagestreamimports"
         method: POST
-        validate_certs: "{{ lookup('env', 'K8S_AUTH_VERIFY_SSL', default='yes') }}"
+        # The 'or' condition is needed to support Ansible versions < 2.13
+        validate_certs: "{{ lookup('env', 'K8S_AUTH_VERIFY_SSL', default='yes') or 'yes' }}"
         status_code: 201
         body_format: json
         headers:
@@ -57,7 +58,8 @@
       uri:
         url: "{{ ocp_host }}/apis/image.openshift.io/v1/namespaces/{{ oc_namespace }}/imagestreamimports"
         method: POST
-        validate_certs: "{{ lookup('env', 'K8S_AUTH_VERIFY_SSL', default='yes') }}"
+        # The 'or' condition is needed to support Ansible versions < 2.13
+        validate_certs: "{{ lookup('env', 'K8S_AUTH_VERIFY_SSL', default='yes') or 'yes' }}"
         status_code: 201
         body_format: json
         headers:
