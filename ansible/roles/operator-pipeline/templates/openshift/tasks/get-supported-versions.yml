@@ -9,14 +9,18 @@ spec:
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
   results:
+    # NOTE: as a workaround for https://github.com/tektoncd/pipeline/issues/5414
+    # that affects recent versions of Tekton Pipelines, including the version
+    # shipped with Openshift Pipelines 1.8, all results containing JSON payload
+    # have been changed to be base64 encoded
     - name: max_supported_ocp_version
       description: Maximum version of OpenShift supported by this Operator
     - name: max_supported_index
       description: Pull spec for the index corresponding to the max OCP version
     - name: indices
-      description: All known supported OCP indices paths
+      description: All known supported OCP indices paths (base64 encoded, see NOTE)
     - name: indices_ocp_versions
-      description: All known supported OCP indices' OCP versions
+      description: All known supported OCP indices' OCP version (base64 encoded, see NOTE)s
     - name: max_version_indices
       description: Latest known supported OCP indices
     - name: ocp_version
@@ -48,11 +52,13 @@ spec:
         echo $VERSION_INFO \
           | jq -r '[.indices[].path]' \
           | tr -d '\n\r' \
+          | base64 \
           | tee $(results.indices.path)
 
         echo $VERSION_INFO \
           | jq -r '[.indices[].ocp_version]' \
           | tr -d '\n\r' \
+          | base64 \
           | tee $(results.indices_ocp_versions.path)
 
         echo $VERSION_INFO \

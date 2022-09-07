@@ -42,7 +42,13 @@ execute_playbook() {
 
 # update token for given environment
 update_token() {
-    local token=$(oc --namespace operator-pipeline-$1 serviceaccounts get-token operator-pipeline-admin)
+    # In openshift 4.11 we don't have `oc serviceaccount get-token` anymore
+    # because of the changes in the SA token API in k8s 1.24.
+    local token=$(oc --namespace operator-pipeline-$1 get secret \
+        -o custom-columns=NAME:.metadata.name,TYPE:.type,TOKEN:.data.token \
+        | awk '$2=="kubernetes.io/service-account-token" && $1~/^operator-pipeline-admin-token/ {print $3; exit}' \
+        | base64 -d)
+
     local secret=$(dirname "$0")/vaults/$env/secret-vars.yml
 
     echo "ocp_token: $token" > $secret

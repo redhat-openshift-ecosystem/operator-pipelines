@@ -49,19 +49,37 @@ spec:
       name: IMAGE_DIGEST
   steps:
     - image: $(params.BUILDER_IMAGE)
-      name: build
+      name: prepare
       resources: {}
       script: |
+        # This is needed to ensure the push step, which runs under a different
+        # UID, has access to its output file
+        chmod go+rx $(workspaces.source.path)
+        truncate -s 0 /digest/image-digest
+        chmod 666 /digest/image-digest
+      workingDir: $(workspaces.source.path)
+      volumeMounts:
+        - mountPath: /digest
+          name: digest
+    - image: $(params.BUILDER_IMAGE)
+      name: build
+      securityContext:
+        runAsUser: 1000
+      resources: {}
+      script: |
+        echo "Building $(params.IMAGE)"
         buildah --storage-driver=$(params.STORAGE_DRIVER) bud \
           $(params.BUILD_EXTRA_ARGS) --format=$(params.FORMAT) \
           --tls-verify=$(params.TLSVERIFY) --no-cache \
           -f $(params.DOCKERFILE) -t $(params.IMAGE) $(params.CONTEXT)
       volumeMounts:
-        - mountPath: /var/lib/containers
+        - mountPath: /home/build/.local/share/containers
           name: varlibcontainers
       workingDir: $(workspaces.source.path)
     - image: $(params.BUILDER_IMAGE)
       name: push
+      securityContext:
+        runAsUser: 1000
       resources: {}
       # Added authfile argument to support private registries
       script: |
@@ -70,21 +88,29 @@ spec:
           EXTRA_ARGS+=" --authfile $(workspaces.credentials.path)/.dockerconfigjson"
         fi
 
+        echo "Pushing $(params.IMAGE)"
         buildah --storage-driver=$(params.STORAGE_DRIVER) push \
           $(params.PUSH_EXTRA_ARGS) $EXTRA_ARGS --tls-verify=$(params.TLSVERIFY) \
-          --digestfile $(workspaces.source.path)/image-digest $(params.IMAGE) \
+          --digestfile /digest/image-digest $(params.IMAGE) \
           docker://$(params.IMAGE)
       volumeMounts:
-        - mountPath: /var/lib/containers
+        - mountPath: /home/build/.local/share/containers
           name: varlibcontainers
+        - mountPath: /digest
+          name: digest
       workingDir: $(workspaces.source.path)
     - image: $(params.BUILDER_IMAGE)
       name: digest-to-results
       resources: {}
-      script: cat $(workspaces.source.path)/image-digest | tee /tekton/results/IMAGE_DIGEST
+      script: cat /digest/image-digest | tee /tekton/results/IMAGE_DIGEST
+      volumeMounts:
+        - mountPath: /digest
+          name: digest
   volumes:
     - emptyDir: {}
       name: varlibcontainers
+    - emptyDir: {}
+      name: digest
   workspaces:
     - name: source
     - name: credentials
