@@ -52,13 +52,6 @@ def test_store_results() -> None:
     ]
 
 
-def test_get_registry_for_env() -> None:
-    assert utils.get_registry_for_env("prod") == "registry.connect.redhat.com"
-    assert utils.get_registry_for_env("stage") == "registry.connect.stage.redhat.com"
-    assert utils.get_registry_for_env("qa") == "registry.connect.qa.redhat.com"
-    assert utils.get_registry_for_env("dev") == "registry.connect.dev.redhat.com"
-
-
 def test_set_client_keytab() -> None:
     assert utils.set_client_keytab("") is None
 

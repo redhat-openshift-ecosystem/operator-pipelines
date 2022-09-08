@@ -30,7 +30,7 @@ spec:
     - name: dest_image_namespace
       description: The namespace/organization where the bundle image will be copied/released.
     - name: env
-      description: Which environment to run in. Can be one of [dev, qa, stage, prod]
+      description: Which environment to run in. Can be one of [dev, qa, stage, prod, integration-tests]
       default: "prod"
     - name: pipeline_image
       description: An image of operator-pipeline-images.
@@ -390,8 +390,8 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: environment
-          value: "$(params.env)"
+        - name: connect_registry
+          value: "$(tasks.set-env.results.connect_registry)"
         - name: isv_pid
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: repository
@@ -548,8 +548,8 @@ spec:
           value: "$(params.pyxis_ssl_cert_secret_key)"
         - name: pyxis_ssl_key_secret_key
           value: "$(params.pyxis_ssl_key_secret_key)"
-        - name: environment
-          value: "$(params.env)"
+        - name: connect_registry
+          value: "$(tasks.set-env.results.connect_registry)"
 
   finally:
 

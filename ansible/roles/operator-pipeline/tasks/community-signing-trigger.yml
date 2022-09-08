@@ -1,7 +1,7 @@
 ---
 - name: Create trigger enabling running Community signing pipeline via webhook
   tags:
-    - webhook
+    - triggers
     - community-signing
   block:
     - name: Create Community signing pipeline Trigger Binding

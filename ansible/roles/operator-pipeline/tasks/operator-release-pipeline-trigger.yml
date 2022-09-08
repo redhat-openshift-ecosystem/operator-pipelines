@@ -1,7 +1,7 @@
 ---
 - name: Create trigger enabling running Release pipeline via GitHub webhook
   tags:
-    - webhook-release
+    - triggers
   block:
     - name: Create Release pipeline Trigger Binding
       k8s:
@@ -36,6 +36,8 @@
                 value: "{{ operator_pipeline_image_pull_spec }}"
               - name: metrics_endpoint
                 value: "{{ pipelines_metrics_endpoint }}"
+              - name: src_image_namespace
+                value: "{{ operator_pipeline_pending_namespace }}"
               - name: dest_image_namespace
                 value: "{{ operator_pipeline_release_namespace }}"
     - name: Create Release pipeline Trigger Template
@@ -62,12 +64,21 @@
               - name: env
               - name: pipeline_image
               - name: metrics_endpoint
+              - name: src_image_namespace
               - name: dest_image_namespace
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
                 metadata:
                   generateName: operator-release-pipeline-run
+                  labels:
+                    app: operator-pipeline
+                    suffix: "{{ suffix }}"
+                    env: "{{ env }}"
+                    git_commit: $(tt.params.git_commit)
+                  annotations:
+                    git_pull_request_url: $(tt.params.git_pr_url)
+                    git_pull_request_title: $(tt.params.git_pr_title)
                 spec:
                   timeout: "1h30m0s"
                   pipelineRef:
@@ -91,6 +102,8 @@
                       value: $(tt.params.pipeline_image)
                     - name: metrics_endpoint
                       value: $(tt.params.metrics_endpoint)
+                    - name: src_image_namespace
+                      value: $(tt.params.src_image_namespace)
                     - name: dest_image_namespace
                       value: $(tt.params.dest_image_namespace)
                   workspaces:

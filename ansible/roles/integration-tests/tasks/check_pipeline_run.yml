@@ -1,0 +1,43 @@
+---
+- name: "Verify the {{ pipeline_name }} run succeeds"
+  tags:
+    - verify-pipeline
+  block:
+    - name: Find the {{ pipeline_name }} run
+      kubernetes.core.k8s_info:
+        api_version: tekton.dev/v1beta1
+        kind: PipelineRun
+        namespace: "{{ oc_namespace }}"
+        label_selectors:
+          - "tekton.dev/pipeline={{ pipeline_name }}"
+          - "suffix={{ suffix }}"
+      register: pipeline_run
+      failed_when: pipeline_run.resources | length == 0
+
+    - name: "Follow the {{ pipeline_name }} run logs"
+      shell: |
+        ./tkn pipeline logs \
+          {{ pipeline_name }} \
+          {{ pipeline_run.resources[0].metadata.name }} \
+          --namespace {{ oc_namespace }} \
+          --follow
+      args:
+        executable: /bin/bash
+        chdir: "{{ temp_tools_dir.path }}"
+      register: pipeline_run_log
+      retries: 5
+      until: pipeline_run_log.rc == 0
+
+    - name: Output the {{ pipeline_name }} run logs
+      debug:
+        msg: "{{ pipeline_run_log.stdout_lines }}"
+
+    - name: Verify the {{ pipeline_name }} run passed
+      kubernetes.core.k8s_info:
+        api_version: tekton.dev/v1beta1
+        kind: PipelineRun
+        namespace: "{{ oc_namespace }}"
+        name: "{{ pipeline_run.resources[0].metadata.name }}"
+      register: pipeline_run
+      failed_when: >
+        pipeline_run.resources[0].status.conditions[-1].status != "True"

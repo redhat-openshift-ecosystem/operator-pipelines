@@ -1,7 +1,7 @@
 ---
 - name: Create event listener allowing triggering the community signing pipelines via webhook
   tags:
-    - webhook
+    - triggers
     - community-signing
   block:
     - name: Create event listener

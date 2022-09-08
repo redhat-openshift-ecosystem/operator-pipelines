@@ -1,0 +1,57 @@
+---
+name: Integration Tests
+
+on:  # yamllint disable-line rule:truthy
+  workflow_run:
+    workflows:
+      - Build
+    branches:
+      - main
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  run-integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Prepare
+        id: prepare
+        run: |
+          echo "::set-output name=suffix::${GITHUB_SHA::7}"
+
+      - name: Install dependencies
+        run: |
+          # Install python dependencies
+          pip install --user openshift pygithub
+
+          echo ${{ secrets.VAULT_PASSWORD }} > $HOME/.vault-password
+
+          mkdir -p $HOME/.kube
+          ansible-vault decrypt \
+            --vault-password-file $HOME/.vault-password \
+            --output $HOME/.kube/config \
+            ansible/vaults/integration-tests/ci-pipeline-kubeconfig
+
+          mkdir -p $HOME/.ssh
+          ansible-vault decrypt \
+            --vault-password-file $HOME/.vault-password \
+            --output $HOME/.ssh/id_rsa \
+            ansible/vaults/integration-tests/ci-pipeline-github-ssh-key
+
+      - name: Run the integration tests ansible playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbooks/operator-pipeline-integration-tests.yml
+          directory: ./ansible
+          requirements: playbooks/requirements.yml
+          vault_password: ${{secrets.VAULT_PASSWORD}}
+          options: |
+            -i inventory/operator-pipeline-integration-tests
+            -e "oc_namespace=integration-tests-${{ github.run_number }}-${{ github.run_attempt }}"
+            -e "operator_bundle_version=0.0.${{ github.run_number }}-${{ github.run_attempt }}"
+            -e "operator_pipeline_image_tag=${{ github.sha }}"
+            -e "suffix=${{ steps.prepare.outputs.suffix }}"
+            -v

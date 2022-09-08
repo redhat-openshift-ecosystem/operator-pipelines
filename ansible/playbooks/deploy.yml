@@ -1,9 +1,9 @@
 ---
-- name: Deploy operator-pipeline {{ env }} instance
-  hosts: operator-pipeline-{{ env }}
+- name: Deploy all the operator pipelines
+  hosts: all
   vars_files:
-    - ../vaults/{{ 'custom' if (custom) is defined else (env) }}/ocp-token.yml
     - ../vaults/{{ env }}/secret-vars.yml
+    - ../vaults/{{ env }}/ocp-token.yml
   roles:
     - operator-pipeline
     - nginx-proxy

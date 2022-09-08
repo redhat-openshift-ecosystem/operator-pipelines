@@ -1,0 +1,40 @@
+---
+- include_tasks: tasks/clone.yml
+
+- name: Generate and push Operator Bundle
+  tags:
+    - prepare-bundle
+  shell: |
+    BASE_BRANCH="{{ git_base_branch }}"
+    UPSTREAM_BRANCH="{{ git_upstream_branch }}"
+    OPERATOR_PACKAGE_NAME="{{ operator_package_name }}"
+    SRC_BRANCH="{{ src_operator_git_branch }}"
+    BUNDLE_BRANCH="{{ git_bundle_branch }}"
+    SRC_VERSION="{{ src_operator_bundle_version }}"
+    DEST_VERSION="{{ operator_bundle_version }}"
+
+    git config user.name 'rh-operator-bundle-test-e2e'
+    git config user.email 'exd-guild-isv+operators-test-e2e@redhat.com'
+
+    git checkout -b $UPSTREAM_BRANCH $BASE_BRANCH
+    git push origin $UPSTREAM_BRANCH
+
+    git checkout -b $BUNDLE_BRANCH $BASE_BRANCH
+    git checkout origin/$SRC_BRANCH -- operators/$OPERATOR_PACKAGE_NAME
+
+    pushd operators/$OPERATOR_PACKAGE_NAME
+
+    # Modify the test operator version
+    cp -avr $SRC_VERSION $DEST_VERSION
+    find $DEST_VERSION/ -type f -exec sed -i "s/${SRC_VERSION//\./\\.}/$DEST_VERSION/g" {} \;
+    diff -bur $SRC_VERSION/ $DEST_VERSION/ || true
+    rm -rv ./$SRC_VERSION
+
+    popd
+
+    git add operators
+    git commit -m "[Integration Test] Add $OPERATOR_PACKAGE_NAME $DEST_VERSION"
+    git push origin $BUNDLE_BRANCH
+  args:
+    executable: /bin/bash
+    chdir: "{{ git_temp_dir.path }}"

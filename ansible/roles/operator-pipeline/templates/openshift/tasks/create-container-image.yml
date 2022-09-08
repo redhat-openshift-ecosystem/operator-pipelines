@@ -43,9 +43,8 @@ spec:
     - name: is_latest
       description: If explicitly set to "true", resulting image will be tagged as "latest"
 
-    - name: environment
-      default: prod
-      description: Environment where the pipeline runs
+    - name: connect_registry
+      description: Connect registry host
 
   workspaces:
     - name: image-data
@@ -66,8 +65,8 @@ spec:
           value: $(params.pyxis_url)
         - name: ISV_PID
           value: $(params.isv_pid)
-        - name: ENVIRONMENT
-          value: $(params.environment)
+        - name: REGISTRY
+          value: $(params.connect_registry)
         - name: REPOSITORY
           value: $(params.repository)
         - name: CONTAINER_DIGEST
@@ -87,7 +86,7 @@ spec:
 
         create-container-image \
           --pyxis-url $PYXIS_URL \
-          --environment $ENVIRONMENT \
+          --connect-registry $REGISTRY \
           --isv-pid $ISV_PID \
           --repo-published "true" \
           --repository $REPOSITORY \

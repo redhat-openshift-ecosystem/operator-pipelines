@@ -1,0 +1,53 @@
+---
+- name: Test the Operator CI Pipeline
+  tags:
+    - test-ci-pipeline
+  block:
+    - name: Start the Operator CI pipeline
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: tekton.dev/v1beta1
+          kind: PipelineRun
+          metadata:
+            name: "ci-pipeline-run-{{ suffix }}"
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            pipelineRef:
+              name: operator-ci-pipeline
+            params:
+              - name: env
+                value: integration-tests
+              - name: git_repo_url
+                value: "{{ git_repo_url }}"
+              - name: git_branch
+                value: "{{ git_bundle_branch }}"
+              - name: upstream_repo_name
+                value: "{{ git_upstream_repo }}"
+              - name: upstream_repo_branch
+                value: "{{ git_upstream_branch }}"
+              - name: bundle_path
+                value: "operators/{{ operator_package_name }}/{{ operator_bundle_version }}"
+              - name: pipeline_image
+                value: "{{ operator_pipeline_image_pull_spec }}"
+              - name: submit
+                value: "true"
+            workspaces:
+              - name: pipeline
+                volumeClaimTemplate:
+                  spec:
+                    accessModes:
+                      - ReadWriteOnce
+                    resources:
+                      requests:
+                        storage: 5Gi
+              - name: kubeconfig
+                secret:
+                  secretName: kubeconfig
+              - name: ssh-dir
+                secret:
+                  secretName: github-ssh-credentials

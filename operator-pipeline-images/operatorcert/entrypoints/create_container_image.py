@@ -37,10 +37,9 @@ def setup_argparser() -> Any:  # pragma: no cover
         required=True,
     )
     parser.add_argument(
-        "--environment",
-        help="Environment where a tool runs",
-        choices=["prod", "stage", "dev", "qa"],
-        default="dev",
+        "--connect-registry",
+        help="Connect registry host",
+        required=True,
     )
     parser.add_argument(
         "--repository",
@@ -126,13 +125,12 @@ def create_container_image(
     parsed_data = prepare_parsed_data(skopeo_result)
 
     upload_url = urljoin(args.pyxis_url, f"v1/images")
-    registry = utils.get_registry_for_env(args.environment)
     container_image_payload = {
         "isv_pid": args.isv_pid,
         "repositories": [
             {
                 "published": True,
-                "registry": registry,
+                "registry": args.connect_registry,
                 "repository": args.repository,
                 "push_date": date_now,
                 "tags": [

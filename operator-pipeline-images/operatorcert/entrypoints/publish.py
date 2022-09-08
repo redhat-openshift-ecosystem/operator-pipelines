@@ -29,12 +29,6 @@ def setup_argparser() -> Any:
         help="Base URL for Pyxis container metadata API",
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
-    parser.add_argument(
-        "--environment",
-        help="Environment where a tool runs",
-        choices=["prod", "stage", "dev", "qa"],
-        default="dev",
-    )
 
     sub_parsers = parser.add_subparsers()
     vendor_parser = sub_parsers.add_parser("vendor")
@@ -51,6 +45,10 @@ def setup_argparser() -> Any:
 
     repository_parser.add_argument(
         "--cert-project-id", help="Certification project ID", required=True
+    )
+
+    repository_parser.add_argument(
+        "--connect-registry", help="Connect registry host", required=True
     )
 
     return parser
@@ -168,7 +166,7 @@ def create_repository(args: Any, project: Dict[str, Any]) -> Any:
         "privileged_images_allowed": container.get("privileged", False),
         "protected_for_pull": False,
         "protected_for_search": False,
-        "registry": utils.get_registry_for_env(args.environment),
+        "registry": args.connect_registry,
         "repository": repository,
         "build_categories": ["Operator bundle"],
         "isv_pid": container.get("isv_pid"),
