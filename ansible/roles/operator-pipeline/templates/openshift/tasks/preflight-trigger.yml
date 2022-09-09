@@ -1,3 +1,4 @@
+---
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
@@ -74,14 +75,22 @@ spec:
 
           if [ -f "$(workspaces.credentials.path)/project_dockerconfigjson" ];
           then
-              preflight-trigger encrypt --gpg-encryption-private-key "${PIPELINE_GPG_DECRYPTION_PRIVATE_KEY}" --gpg-encryption-public-key "${PIPELINE_GPG_DECRYPTION_PUBLIC_KEY}" --file "$(workspaces.credentials.path)/project_dockerconfigjson" --output-path "$(workspace.credentials.path)/project_dockerconfigjson.gpg"
-              preflight-trigger encode --file "$(workspace.credentials.path)/project_dockerconfigjson.gpg" --output-path "$(workspace.credentials.path)/project_dockerconfigjson.gpg.b64"
+              preflight-trigger encrypt \
+              --gpg-encryption-private-key "${PIPELINE_GPG_DECRYPTION_PRIVATE_KEY}" \
+              --gpg-encryption-public-key "${PIPELINE_GPG_DECRYPTION_PUBLIC_KEY}" \
+              --file "$(workspaces.credentials.path)/project_dockerconfigjson" \
+              --output-path "$(workspaces.credentials.path)/project_dockerconfigjson.gpg"
+
+              preflight-trigger encode \
+              --file "$(workspaces.credentials.path)/project_dockerconfigjson.gpg" \
+              --output-path "$(workspaces.credentials.path)/project_dockerconfigjson.gpg.b64"
           fi
       workingDir: $(workspaces.output.path)
     - env:
         - name: KUBECONFIG
           value: /etc/kubeconfig-volume/$(params.prow_kubeconfig_secret_key)
       image: "$(params.preflight_trigger_image)"
+      imagePullPolicy: Always
       name: create-openshift-ci-prowjob
       resources: {}
       volumeMounts:
@@ -89,7 +98,7 @@ spec:
           readOnly: true
           mountPath: "/etc/kubeconfig-volume"
       script: |
-          #!/usr/bin/env sh
+          #!/usr/bin/env bash
 
           if [ "$(params.skip)" == "true" ]; then
               echo "Preflight testing has been skipped"
@@ -99,16 +108,10 @@ spec:
           DPTP_VER="4.9"
           CP_VER="$(params.ocp_version)"
 
-          if [ "$(printf '%s\n' "$DPTP_VER" "$CP_VER" | sort -V | head -n1)" = "$DPTP_VER" ]; then
+          if [ "$(printf '%s\n' "$DPTP_VER" "$CP_VER" | sort -V | head -n1)" == "$DPTP_VER" ]; then
               OCP_VER="${DPTP_VER}"
           else
               OCP_VER="${CP_VER}"
-          fi
-
-          if [ "$(params.ocp_version)" == "4.6" ] || [ "$(params.ocp_version)" == "4.7" ]; then
-              JOB_SUFFIX="aws"
-          else
-              JOB_SUFFIX="claim"
           fi
 
           set -e
@@ -118,24 +121,23 @@ spec:
               PFLT_DOCKERCONFIG="$(cat "$(workspaces.credentials.path)/project_dockerconfigjson.gpg.b64")"
               export PFLT_DOCKERCONFIG
 
-              preflight-trigger \
-          --environment "$(params.preflight_trigger_environment)" \
-          --ocp-version "${OCP_VER}" \
-          --pflt-docker-config "${PFLT_DOCKERCONFIG}" \
-          --pflt-log-level "$(params.log_level)" \
-          --pflt-index-image "$(params.bundle_index_image)" \
-          --test-asset "$(params.bundle_image)" \
-          --asset-type "$(params.asset_type)" \
-          --output-path prowjob-base-url
+              preflight-trigger create job \
+              --environment "$(params.preflight_trigger_environment)" \
+              --ocp-version "${OCP_VER}" \
+              --pflt-log-level "$(params.log_level)" \
+              --pflt-index-image "$(params.bundle_index_image)" \
+              --test-asset "$(params.bundle_image)" \
+              --asset-type "$(params.asset_type)" \
+              --output-path prowjob-base-url
           else
-              preflight-trigger \
-          --environment "$(params.preflight_trigger_environment)" \
-          --ocp-version "${OCP_VER}" \
-          --pflt-log-level "$(params.log_level)" \
-          --pflt-index-image "$(params.bundle_index_image)" \
-          --test-asset "$(params.bundle_image)" \
-          --asset-type "$(params.asset_type)" \
-          --output-path prowjob-base-url
+              preflight-trigger create job \
+              --environment "$(params.preflight_trigger_environment)" \
+              --ocp-version "${OCP_VER}" \
+              --pflt-log-level "$(params.log_level)" \
+              --pflt-index-image "$(params.bundle_index_image)" \
+              --test-asset "$(params.bundle_image)" \
+              --asset-type "$(params.asset_type)" \
+              --output-path prowjob-base-url
           fi
       workingDir: $(workspaces.output.path)
     - env:
@@ -154,36 +156,33 @@ spec:
           #!/usr/bin/env bash
 
           if [ "$(params.skip)" == "true" ]; then
-            echo "Preflight testing has been skipped"
-            echo -n "none" > "$(results.log_output_file.path)"
-            echo -n "none" > "$(results.result_output_file.path)"
-            echo -n "none" > "$(results.artifacts_output_dir.path)"
-            exit 0
+              echo "Preflight testing has been skipped"
+              echo -n "none" > "$(results.log_output_file.path)"
+              echo -n "none" > "$(results.result_output_file.path)"
+              echo -n "none" > "$(results.artifacts_output_dir.path)"
+              exit 0
           fi
 
           DPTP_VER="4.9"
           CP_VER="$(params.ocp_version)"
 
-          if [ "$(printf '%s\n' "$DPTP_VER" "$CP_VER" | sort -V | head -n1)" = "$DPTP_VER" ]; then
+          if [ "$(printf '%s\n' "$DPTP_VER" "$CP_VER" | sort -V | head -n1)" == "$DPTP_VER" ]; then
               OCP_VER="${DPTP_VER}"
           else
               OCP_VER="${CP_VER}"
           fi
 
-          if [ "$(params.ocp_version)" == "4.6" ] || [ "$(params.ocp_version)" == "4.7" ]; then
-              JOB_SUFFIX="aws"
-          else
-              JOB_SUFFIX="claim"
-          fi
+          preflight-trigger artifacts \
+          --environment "$(params.preflight_trigger_environment)" \
+          --ocp-version "${OCP_VER}"
 
-          BASE_URL="https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/origin-ci-test/logs/"
-          PROWJOB_URL=$(awk '/prowjob_url/ { gsub(/"/, ""); print $2 }' prowjob-base-url)
-          PROWJOB_ID=${PROWJOB_URL##*/}
-          ARTIFACTS_TARBALL_URI="${BASE_URL}periodic-ci-redhat-openshift-ecosystem-preflight-ocp-${OCP_VER}-preflight-common-${JOB_SUFFIX}/${PROWJOB_ID}/artifacts/preflight-common-${JOB_SUFFIX}/operator-pipelines-preflight-common-encrypt/artifacts/preflight.tar.gz.asc"
+          preflight-trigger decrypt \
+          --gpg-decryption-private-key "${PIPELINE_GPG_DECRYPTION_PRIVATE_KEY}" \
+          --gpg-decryption-public-key "${PIPELINE_GPG_DECRYPTION_PUBLIC_KEY}" \
+          --file preflight.tar.gz.asc \
+          --output-path preflight.tar.gz
 
-          curl -sLO "${ARTIFACTS_TARBALL_URI}"
-
-          preflight-trigger decrypt --gpg-decryption-private-key "${PIPELINE_GPG_DECRYPTION_PRIVATE_KEY}" --gpg-decryption-public-key "${PIPELINE_GPG_DECRYPTION_PUBLIC_KEY}" --file "${ARTIFACTS_TARBALL_URI}" | tar -xzf -
+          preflight-trigger artifacts --untar
 
           mv artifacts/results.json .
           mv preflight.stdout artifacts/
