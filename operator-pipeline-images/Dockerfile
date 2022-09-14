@@ -38,7 +38,8 @@ RUN dnf update -y && \
     pinentry \
     pip \
     podman \
-    python3-devel && \
+    python3-devel \
+    skopeo && \
     dnf clean all
 
 COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf

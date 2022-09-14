@@ -438,8 +438,8 @@ spec:
         - name: connect_registry
           value: "$(tasks.set-env.results.connect_registry)"
 
-    # call IIB to publish the bundle
-    - name: publish-bundle
+    # call IIB to add the bundle to index
+    - name: add-bundle-to-index
       runAfter:
         - publish-resources
         - get-supported-versions
@@ -449,7 +449,7 @@ spec:
           values:
             - undistributed
       taskRef:
-        name: publish-bundle
+        name: add-bundle-to-index
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -457,8 +457,6 @@ spec:
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: bundle_pullspec
           value: "$(tasks.publish-to-ocp-registry.results.image_pullspec)"
-        - name: operator_distribution_method
-          value: *operatorDistribution
         - name: iib_url
           value: "$(tasks.set-env.results.iib_url)"
         - name: environment
@@ -471,20 +469,17 @@ spec:
     # use manifest list digests from IIB output and get the manifest digests from registry
     - name: get-manifest-digests
       runAfter:
-        - publish-bundle
+        - add-bundle-to-index
       when: *whenNotUndistributed
       taskRef:
         name: get-manifest-digests
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: manifest_list_digests
-          value: "$(tasks.publish-bundle.results.manifest_list_digests)"
+        - name: index_image_paths
+          value: "$(tasks.add-bundle-to-index.results.index_image_paths)"
         - name: environment
           value: "$(params.env)"
-      workspaces:
-        - name: registry-credentials
-          workspace: registry-pull-credentials
 
     # send UMB message for RADAS to sign the container image
     - name: request-signature
@@ -550,6 +545,22 @@ spec:
         - name: source
           workspace: repository
           subPath: signing
+
+    - name: publish-to-index
+      runAfter:
+        - upload-signature
+      when: *whenNotUndistributed
+      taskRef:
+        name: publish-to-index
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: index_image_paths
+          value: "$(tasks.add-bundle-to-index.results.index_image_paths)"
+        - name: environment
+          value: "$(params.env)"
+        - name: operator_distribution_method
+          value: *operatorDistribution
 
 
   finally:
