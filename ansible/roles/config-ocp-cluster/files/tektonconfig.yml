@@ -7,7 +7,7 @@ spec:
   pipeline:
     scope-when-expressions-to-task: true
   pruner:
-    keep: 50
+    keep: 100
     resources:
       - pipelinerun
       - taskrun
