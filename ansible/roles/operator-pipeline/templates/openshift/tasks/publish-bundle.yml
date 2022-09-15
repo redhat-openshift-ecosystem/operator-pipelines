@@ -102,7 +102,8 @@ spec:
         # The base64 step here is part of the workaround for
         # https://github.com/tektoncd/pipeline/issues/5414 affecting new tekton
         # pipelines versions (Openshift Pipelines Operator v1.8)
-        INDICES="$(echo $(params.bundle_versions) | base64 -d | tr -d '[,]')"
+        RAW_BUNDLE_VERSIONS=$(echo '$(params.bundle_versions)' | base64 -d)
+        INDICES="$(echo "$RAW_BUNDLE_VERSIONS" | tr -d '[,]')"
 
         # DO NOT use `--verbose` to avoid auth headers appearing in logs
         index \
