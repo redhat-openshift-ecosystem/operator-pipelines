@@ -6,9 +6,9 @@ metadata:
 spec:
   pipeline:
     scope-when-expressions-to-task: true
+  # Default pruner settings. May be overridden using namespace annotations.
   pruner:
-    keep: 100
+    keep: 50
     resources:
       - pipelinerun
-      - taskrun
     schedule: "*/5 * * * *"
