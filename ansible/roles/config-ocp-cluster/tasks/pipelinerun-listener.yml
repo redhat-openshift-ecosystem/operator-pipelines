@@ -12,6 +12,10 @@
           apiVersion: v1
           metadata:
             name: "{{ pipelinerun_listener_namespace }}"
+            annotations:
+              # TaskRuns are created without a corresponding PipelineRun.
+              # Make sure the pruner cleans up both.
+              operator.tekton.dev/prune.resources: "pipelinerun, taskrun"
 
     - name: Create Tasks
       k8s:

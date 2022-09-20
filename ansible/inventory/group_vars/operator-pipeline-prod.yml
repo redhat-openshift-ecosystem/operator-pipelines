@@ -19,6 +19,8 @@ operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/prod/
 
 pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-prod
 
+tekton_pruner_keep: 50
+
 # Settings for importing index imagestreams
 certified_operator_index: registry.redhat.io/redhat/certified-operator-index
 redhat_marketplace_index: registry.redhat.io/redhat/redhat-marketplace-index

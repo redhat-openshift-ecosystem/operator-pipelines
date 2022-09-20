@@ -13,6 +13,8 @@ operator_pipeline_image_tag: latest
 operator_pipeline_image_pull_spec: "{{ operator_pipeline_image_repo }}:{{ operator_pipeline_image_tag }}"
 operator_pipeline_pending_namespace: "{{ oc_namespace }}"
 
+tekton_pruner_keep: 10
+
 ##### Secrets locations
 operator_pipeline_private_key_local_path: ../../vaults/{{ env }}/operator-pipeline.key
 operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipeline.pem
