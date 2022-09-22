@@ -62,3 +62,21 @@ ansible-pull \
   --vault-password-file $VAULT_PASSWORD_PATH \
   ansible/playbooks/operator-pipeline-integration-tests.yml
 ```
+
+It may be necessary to provide your own project and bundle to test certain
+aspects of the pipelines. This can be accomplished with the addition of a few
+extra vars (and proper configuration of the project).
+
+```bash
+ansible-pull \
+  -U "https://github.com/redhat-openshift-ecosystem/operator-pipelines.git" \
+  -i "ansible/inventory/operator-pipeline-integration-tests" \
+  -e "oc_namespace=$NAMESPACE" \
+  -e "src_operator_git_branch=$SRC_BRANCH" \
+  -e "src_operator_bundle_version=$SRC_VERSION" \
+  -e "operator_package_name=$PACKAGE_NAME" \
+  -e "operator_bundle_version=$NEW_VERSION" \
+  -e "ci_pipeline_pyxis_api_key=$API_KEY" \
+  --vault-password-file $VAULT_PASSWORD_PATH \
+  ansible/playbooks/operator-pipeline-integration-tests.yml
+```

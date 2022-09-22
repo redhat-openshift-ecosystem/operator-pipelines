@@ -7,7 +7,7 @@ spec:
   params:
     - name: pipeline_image
     - name: indices_ocp_versions
-      description: All known supported OCP indices' OCP versions
+      description: All known supported OCP versions (space separated)
     - name: kubeconfig_secret_name
       description: The name of the Kubernetes Secret that contains the kubeconfig.
     - name: kubeconfig_secret_key
@@ -31,14 +31,8 @@ spec:
         CLUSTER_VERSION=$(oc get clusterversion -o jsonpath="{.items[0].status.desired.version}" --kubeconfig $KUBECONFIG)
         # Grab only the major and minor version for comparison
         CLUSTER_VERSION=$(echo $CLUSTER_VERSION | cut -d. -f1,2)
-        # parse indices into a list of strings with OCP versions
-        # The base64 step here is part of the workaround for
-        # https://github.com/tektoncd/pipeline/issues/5414 affecting new tekton
-        # pipelines versions (Openshift Pipelines Operator v1.8)
-        RAW_INDICES_OCP_VERSIONS=$(echo '$(params.indices_ocp_versions)' | base64 -d)
-        SUPPORTED_VERSIONS=$(echo "$RAW_INDICES_OCP_VERSIONS" | jq -r '.[]')
 
-        for version in $SUPPORTED_VERSIONS; do
+        for version in $(params.indices_ocp_versions); do
           if [ "$version" == "$CLUSTER_VERSION" ]; then
             echo "The Operator does claim support for the provided cluster version ($CLUSTER_VERSION)."
             exit 0
