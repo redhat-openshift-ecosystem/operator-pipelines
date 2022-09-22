@@ -429,7 +429,7 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: bundle_versions
+        - name: index_images
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: bundle_pullspec
           value: "$(tasks.publish-to-ocp-registry.results.image_pullspec)"

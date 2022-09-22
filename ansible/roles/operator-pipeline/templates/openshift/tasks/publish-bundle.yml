@@ -8,8 +8,8 @@ spec:
     - name: pipeline_image
     - name: bundle_pullspec
       description: Bundle pullspec
-    - name: bundle_versions
-      description: All known supported OCP indices
+    - name: index_images
+      description: All known supported index image pull specs (space separated)
     - name: iib_url
       description: IIB API url
       default: https://iib.engineering.redhat.com
@@ -99,17 +99,11 @@ spec:
             ;;
         esac
 
-        # The base64 step here is part of the workaround for
-        # https://github.com/tektoncd/pipeline/issues/5414 affecting new tekton
-        # pipelines versions (Openshift Pipelines Operator v1.8)
-        RAW_BUNDLE_VERSIONS=$(echo '$(params.bundle_versions)' | base64 -d)
-        INDICES="$(echo "$RAW_BUNDLE_VERSIONS" | tr -d '[,]')"
-
         # DO NOT use `--verbose` to avoid auth headers appearing in logs
         index \
           --iib-url "$(params.iib_url)" \
           --from-index $FROM_INDEX \
-          --indices $INDICES \
+          --indices $(params.index_images) \
           --bundle-pullspec "$(params.bundle_pullspec)" \
           --output manifest-list-digests.txt
 
