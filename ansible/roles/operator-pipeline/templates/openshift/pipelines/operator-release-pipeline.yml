@@ -414,10 +414,34 @@ spec:
         - name: image-data
           workspace: image-data
 
+    # Publish Vendor, Repository
+    - name: publish-resources
+      runAfter:
+        - create-container-image
+      taskRef:
+        name: publish-resources
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: org_id
+          value: "$(tasks.get-cert-project-related-data.results.org_id)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
+        - name: connect_registry
+          value: "$(tasks.set-env.results.connect_registry)"
+
     # call IIB to publish the bundle
     - name: publish-bundle
       runAfter:
-        - create-container-image
+        - publish-resources
         - get-supported-versions
       when: &whenNotUndistributed
         - input: &operatorDistribution "$(tasks.get-cert-project-related-data.results.operator_distribution)"
@@ -527,29 +551,6 @@ spec:
           workspace: repository
           subPath: signing
 
-    # Publish Vendor, Repository
-    - name: publish-resources
-      runAfter:
-        - publish-bundle
-      taskRef:
-        name: publish-resources
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: org_id
-          value: "$(tasks.get-cert-project-related-data.results.org_id)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
-        - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
-        - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
-        - name: connect_registry
-          value: "$(tasks.set-env.results.connect_registry)"
 
   finally:
 
