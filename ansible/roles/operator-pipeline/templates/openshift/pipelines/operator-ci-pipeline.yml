@@ -12,6 +12,10 @@ spec:
       default: "digestPinning"
     - name: git_email
       default: "no-reply@redhat.com"
+    - name: gitInitImage
+      description: The image providing the git-init binary that this Task runs.
+      type: string
+      default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9"
     - name: upstream_repo_name
       default: ""
       description: Upstream repository where the pull request will be opened (namespace/name)
@@ -19,6 +23,8 @@ spec:
       default: main
       description: Branch in the upstream repo to use as the base for the pull request
     - name: bundle_path
+    - name: builder_image
+      default: "registry.redhat.io/rhel8/buildah@sha256:a1e5cc0fb334e333e5eab69689223e8bd1f0c060810d260603b26cf8c0da2023"
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
     - name: env
@@ -89,7 +95,7 @@ spec:
         - name: revision
           value: $(params.git_branch)
         - name: gitInitImage
-          value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
+          value: $(params.gitInitImage)
       workspaces:
         - name: output
           workspace: pipeline
@@ -146,6 +152,8 @@ spec:
           value: "$(params.git_email)"
         - name: dirty_flag
           value: "$(tasks.digest-pinning.results.dirty_flag)"
+        - name: gitInitImage
+          value: $(params.gitInitImage)
       workspaces:
         - name: source
           workspace: pipeline
@@ -297,6 +305,8 @@ spec:
           value: "$(params.bundle_path)"
         - name: TLSVERIFY
           value: "$(params.tlsverify)"
+        - name: BUILDER_IMAGE
+          value: "$(params.builder_image)"
       workspaces:
         - name: source
           workspace: pipeline

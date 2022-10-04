@@ -19,7 +19,7 @@
         - absent
         - directory
 
-    - name: "Generate certificate in to '{{ registry_cert_dir }}'"
+    - name: "Generate certificate in to '{{ registry_cert_dir }}' for host '{{ registry_hostname }}'"
       ansible.builtin.command: 'openssl req -newkey rsa:4096 -nodes -sha256 -keyout {{ registry_cert_dir }}/domain.key -x509 -days 365 -subj ''/CN=${reg_name}'' -addext "subjectAltName=DNS:{{ registry_hostname }},DNS:localhost,DNS:host.containers.internal" -out {{ registry_cert_dir }}/domain.crt -batch'
       failed_when: false
       changed_when: true
@@ -27,7 +27,7 @@
     - name: "Setting registry arguments in case of ssl support"
       ansible.builtin.set_fact:
         ikc_registry_args: "-v {{ registry_cert_dir }}:/certs:Z -e REGISTRY_HTTP_ADDR=0.0.0.0:5000 -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key"
-      when: registry_ssl|bool
+      when: registry_ssl | bool
 
     - name: "Start registry '{{ registry_name }}' at port '{{ registry_port }}'"
       ansible.builtin.command: "{{ container_tool }} run -d --restart=always --name {{ registry_name }} {{ ikc_registry_args | default('') }} -p {{ registry_port }}:5000 registry:2"
