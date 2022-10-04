@@ -47,6 +47,7 @@
       tags:
         - tekton-task
         - tekton-pipeline
+        - ci
 
     - name: "Delete kind cluster"
       include_role:

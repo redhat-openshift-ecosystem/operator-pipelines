@@ -92,3 +92,8 @@ $ ansible-pull ansible/playbooks/upstream-community.yaml \
   --tags tekton-task,tekton-pipeline
 ```
 
+## Enable tekton dashboard
+```
+kubectl port-forward -n tekton-pipelines service/tekton-dashboard 9097:9097
+```
+and then visit http://127.0.0.1:9097
