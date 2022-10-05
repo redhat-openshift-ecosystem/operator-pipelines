@@ -13,7 +13,7 @@ spec:
     - name: git_email
       default: "no-reply@redhat.com"
     - name: gitInitImage
-      description: The image providing the git-init binary that this Task runs.
+      description: The image providing the git-init binary that the checkout task runs.
       type: string
       default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9"
     - name: upstream_repo_name
