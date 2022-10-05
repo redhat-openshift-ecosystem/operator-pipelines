@@ -21,6 +21,9 @@ registry_name: kind-registry
 registry_port: 5000
 registry_ssl: false
 registry_cert_dir: "{{ op_work_dir }}/certs"
+registry_ca_cert_name: "registry-ca-cert"
+registry_ca_cert_namespace: "default"
+
 kubectl_binary: kubectl
 kubectl_version: v1.23.5
 oc_binary: oc

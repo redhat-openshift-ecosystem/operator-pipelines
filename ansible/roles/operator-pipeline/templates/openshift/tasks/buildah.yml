@@ -28,7 +28,8 @@ spec:
       name: CONTEXT
       type: string
     - default: "true"
-      description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+      description:
+        Verify the TLS on the registry endpoint (for push/pull to a non-TLS
         registry)
       name: TLSVERIFY
       type: string
@@ -88,6 +89,10 @@ spec:
           EXTRA_ARGS+=" --authfile $(workspaces.credentials.path)/.dockerconfigjson"
         fi
 
+        if [[ "$(workspaces.cacert.bound)" == "true" ]]; then
+          export SSL_CERT_FILE=$(workspaces.cacert.path)/domain.crt
+        fi
+
         echo "Pushing $(params.IMAGE)"
         buildah --storage-driver=$(params.STORAGE_DRIVER) push \
           $(params.PUSH_EXTRA_ARGS) $EXTRA_ARGS --tls-verify=$(params.TLSVERIFY) \
@@ -114,4 +119,6 @@ spec:
   workspaces:
     - name: source
     - name: credentials
+      optional: true
+    - name: cacert
       optional: true

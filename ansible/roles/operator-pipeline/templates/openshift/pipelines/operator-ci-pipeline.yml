@@ -72,6 +72,8 @@ spec:
       optional: true
     - name: registry-credentials
       optional: true
+    - name: registry-cacert
+      optional: true
   tasks:
     - name: set-env
       taskRef:
@@ -313,6 +315,9 @@ spec:
           subPath: src
         - name: credentials
           workspace: registry-credentials
+        - name: cacert
+          workspace: registry-cacert
+
 
     # Index image contains a record of bundle images from which
     # manifests could be extract in order to install an operator.
@@ -335,6 +340,8 @@ spec:
           subPath: index
         - name: credentials
           workspace: registry-credentials
+        - name: cacert
+          workspace: registry-cacert
 
     - name: build-index
       runAfter:
