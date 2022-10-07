@@ -26,7 +26,11 @@
           - "{{ registry_hostname }}"
           - "localhost"
           - "host.containers.internal"
-          - "{{ ansible_default_ipv4.address }}.sslip.io"
+
+    - name: "Add IPv4 if exists"
+      ansible.builtin.set_fact:
+        ikc_subjectAltName_values: "{{ ikc_subjectAltName_values | default([]) + [ansible_default_ipv4.address+'.sslip.io'] }}"
+      when: ansible_default_ipv4.address is defined and ansible_default_ipv4.address|length >0
 
     - name: "Add IPv6 if exists"
       ansible.builtin.set_fact:
@@ -42,7 +46,7 @@
       ansible.builtin.set_fact:
         ikc_subjectAltName: "{{ ikc_subjectAltName_list | join(',') }}"
 
-    - name: "Generate certificate in to '{{ registry_cert_dir }}' for host '{{ registry_hostname }}'"
+    - name: "Generate certificate in to '{{ registry_cert_dir }}' with subjectAltName='{{ ikc_subjectAltName }}'"
       ansible.builtin.command: 'openssl req -newkey rsa:4096 -nodes -sha256 -keyout {{ registry_cert_dir }}/domain.key -x509 -days 365 -subj ''/CN=${reg_name}'' -addext "subjectAltName={{ ikc_subjectAltName }}" -out {{ registry_cert_dir }}/domain.crt -batch'
       failed_when: false
       changed_when: true
