@@ -19,8 +19,31 @@
         - absent
         - directory
 
+    - name: "Reset subjectAltName and set 'ikc_subjectAltName_values'"
+      ansible.builtin.set_fact:
+        ikc_subjectAltName: ""
+        ikc_subjectAltName_values:
+          - "{{ registry_hostname }}"
+          - "localhost"
+          - "host.containers.internal"
+          - "{{ ansible_default_ipv4.address }}.sslip.io"
+
+    - name: "Add IPv6 if exists"
+      ansible.builtin.set_fact:
+        ikc_subjectAltName_values: "{{ ikc_subjectAltName_values | default([]) + [ansible_default_ipv6.address| replace(':','-')+'.sslip.io'] }}"
+      when: ansible_default_ipv6.address is defined and ansible_default_ipv6.address|length >0
+
+    - name: "Prepend 'DNS:'"
+      ansible.builtin.set_fact:
+        ikc_subjectAltName_list: "{{ ikc_subjectAltName_list | default([]) + ['DNS:'+item] }}"
+      loop: "{{ ikc_subjectAltName_values }}"
+
+    - name: "Join comma separated from 'ikc_subjectAltName_list'"
+      ansible.builtin.set_fact:
+        ikc_subjectAltName: "{{ ikc_subjectAltName_list | join(',') }}"
+
     - name: "Generate certificate in to '{{ registry_cert_dir }}' for host '{{ registry_hostname }}'"
-      ansible.builtin.command: 'openssl req -newkey rsa:4096 -nodes -sha256 -keyout {{ registry_cert_dir }}/domain.key -x509 -days 365 -subj ''/CN=${reg_name}'' -addext "subjectAltName=DNS:{{ registry_hostname }},DNS:localhost,DNS:host.containers.internal" -out {{ registry_cert_dir }}/domain.crt -batch'
+      ansible.builtin.command: 'openssl req -newkey rsa:4096 -nodes -sha256 -keyout {{ registry_cert_dir }}/domain.key -x509 -days 365 -subj ''/CN=${reg_name}'' -addext "subjectAltName={{ ikc_subjectAltName }}" -out {{ registry_cert_dir }}/domain.crt -batch'
       failed_when: false
       changed_when: true
 
