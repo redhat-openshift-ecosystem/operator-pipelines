@@ -27,6 +27,9 @@ spec:
       default: "registry.redhat.io/rhel8/buildah@sha256:a1e5cc0fb334e333e5eab69689223e8bd1f0c060810d260603b26cf8c0da2023"
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
+    - name: podman_image
+      description: Podman image
+      default: "registry.redhat.io/rhel8/podman:8.5-13"
     - name: env
       description: Which environment to run in. Can be one of [dev, qa, stage, prod]
       default: "prod"
@@ -71,6 +74,8 @@ spec:
     - name: ssh-dir
       optional: true
     - name: registry-credentials
+      optional: true
+    - name: registry-cacert
       optional: true
   tasks:
     - name: set-env
@@ -313,6 +318,8 @@ spec:
           subPath: src
         - name: credentials
           workspace: registry-credentials
+        - name: cacert
+          workspace: registry-cacert
 
     # Index image contains a record of bundle images from which
     # manifests could be extract in order to install an operator.
@@ -327,6 +334,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: bundle_image
           value: *bundleImage
+        - name: podman_image
+          value: "$(params.podman_image)"
         - name: from_index
           value: "$(tasks.get-supported-versions.results.max_supported_index)"
       workspaces:
