@@ -9,6 +9,20 @@
         - clean
         - install
 
+    - name: "Create secret 'kubeconfig'"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: "kubeconfig"
+            namespace: "default"
+          data:
+            kubeconfig: "{{ lookup('file', ansible_env.HOME + '/.kube/config') | b64encode }}"
+      tags:
+        - install
+
     - name: "Install registry"
       ansible.builtin.include_tasks:
         file: install_registry.yml

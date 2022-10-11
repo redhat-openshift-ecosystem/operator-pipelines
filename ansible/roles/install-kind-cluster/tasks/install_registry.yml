@@ -90,5 +90,17 @@
       kubernetes.core.k8s:
         state: present
         src: "{{ kind_config_map_registry_path }}"
+
+    - name: "Create configMap '{{ registry_ca_cert_name }}' in namespace '{{ registry_ca_cert_namespace }}' from file '{{ registry_cert_dir }}/domain.crt'"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "{{ registry_ca_cert_name }}"
+            namespace: "{{ registry_ca_cert_namespace }}"
+          data:
+            registry-ca.crt: "{{ lookup('file', registry_cert_dir + '/domain.crt') }}"
   tags:
     - install

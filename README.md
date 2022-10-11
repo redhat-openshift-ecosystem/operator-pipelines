@@ -53,6 +53,27 @@ tkn pipeline start operator-ci-pipeline \
   --showlog
 ```
 
+If using an kind cluster with registry, the CI pipeline can be triggered using the tkn CLI like so:
+> Warning: This mode is currently in development and it might not work yet.
+
+> Note: kind cluster with registry setup is documented [here](docs/kind-cluster.md#kind-cluster-setup)
+```bash
+tkn pipeline start operator-ci-pipeline \
+  --use-param-defaults \
+  --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
+  --param git_branch=main \
+  --param bundle_path=operators/kogito-operator/1.6.0-ok \
+  --param env=prod \
+  --param gitInitImage=quay.io/operator_testing/pipelines-git-init-rhel8:latest \
+  --param builder_image=quay.io/operator_testing/buildah:latest \
+  --param registry=$(hostname):5000 \
+  --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
+  --workspace name=registry-cacert,config=registry-ca-cert
+  --showlog
+```
+
+
+
 To enable opening the PR and uploading the pipeline logs (visible to the certification project
 owner in Red Hat Connect), pass the following argument:
 
