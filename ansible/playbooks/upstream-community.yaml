@@ -9,7 +9,6 @@
     registry_cert_dir: "{{ op_work_dir }}/certs"
     run_cleanup: false
     oc_namespace: default
-    cluster_flavor: k8s
 
   environment:
     # User has to do 'export SSL_CERT_DIR=$HOME/.op/certs' when running in rootless mode
