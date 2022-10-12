@@ -78,19 +78,8 @@ spec:
     - name: registry-cacert
       optional: true
   tasks:
-    - name: set-env
-      taskRef:
-        name: set-env
-        kind: Task
-      params:
-        - name: env
-          value: $(params.env)
-        - name: access_type
-          value: "external"
 
     - name: checkout
-      runAfter:
-        - set-env
       taskRef:
         name: git-clone
         kind: Task
@@ -108,10 +97,22 @@ spec:
         - name: ssh-directory
           workspace: ssh-dir
 
+    - name: set-env
+      runAfter:
+        - checkout
+      taskRef:
+        name: set-env
+        kind: Task
+      params:
+        - name: env
+          value: $(params.env)
+        - name: access_type
+          value: "external"
+
     # Verify the bundle path exists
     - name: bundle-path-validation
       runAfter:
-        - checkout
+        - set-env
       taskRef:
         name: bundle-path-validation
       params:
