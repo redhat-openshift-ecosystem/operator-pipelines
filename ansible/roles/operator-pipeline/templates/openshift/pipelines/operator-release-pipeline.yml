@@ -315,6 +315,8 @@ spec:
       taskRef:
         name: copy-image
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: src_image
           value: *srcBundleImage
         - name: is_latest
@@ -323,6 +325,8 @@ spec:
           value: "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
         - name: dest_image_tag
           value: "$(tasks.bundle-path-validation.results.bundle_version)"
+        - name: connect_repo_path
+          value: "$(tasks.set-env.results.connect_registry)/$(tasks.get-vendor-related-data.results.vendor_label)/$(tasks.get-cert-project-related-data.results.repo_name)"
       workspaces:
         - name: src-registry-credentials
           workspace: registry-pull-credentials
@@ -357,37 +361,10 @@ spec:
         - name: registry-credentials
           workspace: registry-serve-credentials
 
-    # Publish image to OCP registry
-    - name: publish-to-ocp-registry
-      runAfter:
-        - get-vendor-related-data
-      taskRef:
-        name: publish-to-ocp-registry
-      params:
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: vendor_label
-          value: "$(tasks.get-vendor-related-data.results.vendor_label)"
-        - name: repository_name
-          value: "$(tasks.get-cert-project-related-data.results.repo_name)"
-        - name: image
-          value: *srcBundleImage
-        - name: is_latest
-          value: "$(params.is_latest)"
-        - name: bundle_version
-          value: "$(tasks.bundle-path-validation.results.bundle_version)"
-        - name: connect_registry
-          value: "$(tasks.set-env.results.connect_registry)"
-        - name: ocp_registry_kubeconfig_secret_name
-          value: "$(params.ocp_registry_kubeconfig_secret_name)"
-        - name: ocp_registry_kubeconfig_secret_key
-          value: "$(params.ocp_registry_kubeconfig_secret_key)"
-
     # create container image
     - name: create-container-image
       runAfter:
         - set-cert-project-repository
-        - publish-to-ocp-registry
         - inspect-image
       taskRef:
         name: create-container-image
@@ -401,7 +378,7 @@ spec:
         - name: repository
           value: "$(tasks.get-vendor-related-data.results.vendor_label)/$(tasks.get-cert-project-related-data.results.repo_name)"
         - name: container_digest
-          value: "$(tasks.publish-to-ocp-registry.results.container_digest)"
+          value: "$(tasks.copy-bundle-image-to-released-registry.results.container_digest)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_ssl_secret_name
@@ -460,7 +437,7 @@ spec:
         - name: index_images
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: bundle_pullspec
-          value: "$(tasks.publish-to-ocp-registry.results.image_pullspec)"
+          value: "$(tasks.copy-bundle-image-to-released-registry.results.image_pullspec)"
         - name: iib_url
           value: "$(tasks.set-env.results.iib_url)"
         - name: environment
