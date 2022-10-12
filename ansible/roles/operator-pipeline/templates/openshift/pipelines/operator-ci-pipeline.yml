@@ -15,7 +15,7 @@ spec:
     - name: gitInitImage
       description: The image providing the git-init binary that the checkout task runs.
       type: string
-      default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9"
+      default: "{{ custom_gitInitImage }}"
     - name: upstream_repo_name
       default: ""
       description: Upstream repository where the pull request will be opened (namespace/name)
@@ -24,12 +24,12 @@ spec:
       description: Branch in the upstream repo to use as the base for the pull request
     - name: bundle_path
     - name: builder_image
-      default: "registry.redhat.io/rhel8/buildah@sha256:a1e5cc0fb334e333e5eab69689223e8bd1f0c060810d260603b26cf8c0da2023"
+      default: "{{ custom_builder_image }}"
     - name: registry
-      default: image-registry.openshift-image-registry.svc:5000
+      default: "{{ custom_registry }}"
     - name: env
       description: Which environment to run in. Can be one of [dev, qa, stage, prod]
-      default: "prod"
+      default: "{{ custom_env }}"
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.

@@ -87,6 +87,15 @@
               referencePolicy:
                 type: Local
 
+    - name: "Set k8s custom variables"
+      tags:
+        - tekton-task
+        - tekton-pipeline
+        - ci
+      ansible.builtin.include_tasks:
+        file: k8s_defaults.yml
+      when: cluster_flavor is defined and cluster_flavor == "k8s"
+
     - name: Deploy pipeline tasks
       tags:
         - tekton-task

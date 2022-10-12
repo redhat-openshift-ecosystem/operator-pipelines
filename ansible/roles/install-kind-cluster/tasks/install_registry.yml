@@ -29,7 +29,7 @@
 
     - name: "Add IPv4 if exists"
       ansible.builtin.set_fact:
-        ikc_subjectAltName_values: "{{ ikc_subjectAltName_values | default([]) + [ansible_default_ipv4.address+'.sslip.io'] }}"
+        ikc_subjectAltName_values: "{{ ikc_subjectAltName_values | default([]) + [ansible_default_ipv4.address| replace('.','-')+'.sslip.io'] }}"
       when: ansible_default_ipv4.address is defined and ansible_default_ipv4.address|length >0
 
     - name: "Add IPv6 if exists"

@@ -7,3 +7,7 @@ oc_namespace: null
 suffix: unknown
 namespace_state: present
 github_webhook_state: present
+custom_registry: image-registry.openshift-image-registry.svc:5000
+custom_builder_image: "registry.redhat.io/rhel8/buildah@sha256:a1e5cc0fb334e333e5eab69689223e8bd1f0c060810d260603b26cf8c0da2023"
+custom_gitInitImage: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9"
+custom_env: prod
