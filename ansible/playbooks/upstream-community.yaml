@@ -68,6 +68,15 @@
         - install
         - verify
 
+    - name: "Install iib"
+      include_role:
+        name: install_iib
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
     - name: "Install operator pipeline"
       include_role:
         name: operator-pipeline

@@ -1,0 +1,133 @@
+---
+- name: "Install iib (Wait until success)"
+  block:
+    - name: Set the retry count
+      ansible.builtin.set_fact:
+        iib_retry_count: "{{ 2 if iib_retry_count is undefined else iib_retry_count | int + 1 }}"
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+    - name: "Copy system ca certificate to {{ iib_project_dir }}/ca-bundle.crt"
+      ansible.builtin.copy:
+        src: /etc/ssl/certs/ca-certificates.crt
+        dest: "{{ iib_project_dir }}/ca-bundle.crt"
+        remote_src: true
+        backup: true
+      when:
+        - ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+    # - name: "Overwrite 'Dockerfile-workers' to fix PowerTools"
+    #   template:
+    #     src: Dockerfile-workers.j2
+    #     dest: "{{ iib_project_dir }}/docker/Dockerfile-workers"
+    #   when:
+    #     - not iib_run|bool
+
+    - name: "Running iib docker-compose via iib_run=false"
+      ansible.builtin.template:
+        src: docker-compose.yml.j2
+        dest: "{{ iib_project_dir }}/docker-compose.yml"
+      when:
+        - not iib_run|bool
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+    - name: "Running iib docker-compose via iib_run=true"
+      ansible.builtin.template:
+        src: docker-compose-run.yml.j2
+        dest: "{{ iib_project_dir }}/docker-compose.yml"
+      when:
+        - iib_run|bool
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+    - name: "Replace 'iib_registry' for to push to quay directly"
+      ansible.builtin.replace:
+        path: "{{ iib_project_dir }}/iib/workers/config.py"
+        regexp: "    iib_registry.*"
+        replace: "    iib_registry = '{{ iib_push_registry }}'"
+      when:
+        - iib_push_registry is defined
+        - iib_push_registry|length > 0
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+    - name: "Replace 'iib_image_push_template' for to push to quay directly"
+      ansible.builtin.replace:
+        path: "{{ iib_project_dir }}/iib/workers/config.py"
+        regexp: "    iib_image_push_template.*"
+        replace: "    iib_image_push_template = '{{ iib_push_image }}'"
+      when:
+        - iib_push_image is defined
+        - iib_push_image|length > 0
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+    - name: "Remove previous iib installation 'make down'"
+      ansible.builtin.shell:
+        cmd: "make down"
+        chdir: "{{ iib_project_dir }}"
+      environment:
+        IIB_COMPOSE_ENGINE: "{{ container_tool }}-compose"
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+    - name: "Building and starting iib {{ iib_version }} 'make up'"
+      ansible.builtin.shell:
+        cmd: "{{ container_tool }}-compose up minica ;make up"
+        chdir: "{{ iib_project_dir }}"
+      environment:
+        IIB_COMPOSE_ENGINE: "{{ container_tool }}-compose"
+      tags:
+        - install
+        - iib-install
+
+  rescue:
+    - name: "Fail when number of retries were reached"
+      ansible.builtin.fail:
+        msg: Ended after 5 retries
+      when: iib_retry_count | int > 5
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+    - name: "Print iib install message"
+      ansible.builtin.debug:
+        msg: "Failed to install iib - Retrying ({{ iib_retry_count }}/5) ..."
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+    - include_tasks: reset.yml
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete

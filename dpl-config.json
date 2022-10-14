@@ -1,0 +1,19 @@
+{
+    "internal-dpl-clock": "",
+    "internal-dpl-aod-reader": {
+        "time-limit": "0",
+        "orbit-offset-enumeration": "0",
+        "orbit-multiplier-enumeration": "0",
+        "start-value-enumeration": "0",
+        "end-value-enumeration": "-1",
+        "step-value-enumeration": "1",
+        "aod-file": "\/var\/home\/mvala\/alice\/o2tut\/AO2D-LHC21k6-1.root"
+    },
+    "internal-dpl-aod-spawner": "",
+    "root-histograms": "",
+    "output-objects": "",
+    "hist-registry": "",
+    "output-obj-set": "",
+    "internal-dpl-injected-dummy-sink": "",
+    "internal-dpl-aod-global-analysis-file-sink": ""
+}
