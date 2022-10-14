@@ -10,8 +10,12 @@ spec:
       default: "registry.redhat.io/rhel8/skopeo:8.4-13"
     - name: src_image
       description: reference to the source bundle image
-    - name: dest_image
-      description: reference to the destination bundle image
+    - name: dest_image_first_part
+      description: reference to the destination bundle image, part one
+    - name: dest_image_second_part
+      description: reference to the destination bundle image, part two
+    - name: is_latest
+      description: If explicitly set to "true", image will be tagged as "latest"
   workspaces:
     - name: src-registry-credentials
       description: Docker config for the source registry
@@ -23,8 +27,15 @@ spec:
       script: |
         set -xe
 
+        # optionally tag destination image as latest
+        if [ "$(params.is_latest)" = "true" ]; then
+          DEST_IMAGE="$(params.dest_image_first_part):latest"
+        else
+          DEST_IMAGE="$(params.dest_image_first_part):$(params.dest_image_second_part)"
+        fi
+
         skopeo copy \
           --src-authfile $(workspaces.src-registry-credentials.path)/.dockerconfigjson \
           --dest-authfile $(workspaces.dest-registry-credentials.path)/.dockerconfigjson \
           docker://$(params.src_image) \
-          docker://$(params.dest_image)
+          docker://$DEST_IMAGE
