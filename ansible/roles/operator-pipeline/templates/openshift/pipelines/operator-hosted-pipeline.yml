@@ -87,10 +87,10 @@ spec:
       default: isv-gpg-key
     - name: gpg_key_secret_key
       description: The key within the Kubernetes Secret that contains the gpg key.
-      default: exd-guild-isv.key
+      default: operator-pipeline-gpg.key
     - name: gpg_passphrase_secret_key
       description: The key within the Kubernetes Secret that contains the gpg passphrase.
-      default: exd-guild-isv.passphrase
+      default: operator-pipeline-gpg.passphrase
     - name: metrics_endpoint
       description: Prometheus metrics endpoint
       default: http://pipeline-metrics.pipeline-metrics-prod
