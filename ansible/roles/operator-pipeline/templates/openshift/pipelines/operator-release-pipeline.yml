@@ -319,9 +319,9 @@ spec:
           value: *srcBundleImage
         - name: is_latest
           value: "$(params.is_latest)"
-        - name: dest_image_first_part
+        - name: dest_image_registry_namespace_certproject
           value: "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
-        - name: dest_image_second_part
+        - name: dest_image_tag
           value: "$(tasks.bundle-path-validation.results.bundle_version)"
       workspaces:
         - name: src-registry-credentials
