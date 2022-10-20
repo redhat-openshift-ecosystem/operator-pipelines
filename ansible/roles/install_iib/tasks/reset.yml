@@ -1,59 +1,56 @@
 ---
+- name: "Remove previous iib installation 'make down'"
+  ansible.builtin.command:
+    cmd: "make down"
+    chdir: "{{ iib_project_dir }}"
+  environment:
+    IIB_COMPOSE_ENGINE: "{{ container_tool }}-compose"
+  changed_when: true
+  tags:
+    - install
+    - clean
+    - iib-install
+    - iib-delete
+
 - name: "Install iib (Wait until success)"
   block:
     - name: Set the retry count
       ansible.builtin.set_fact:
         iib_retry_count: "{{ 2 if iib_retry_count is undefined else iib_retry_count | int + 1 }}"
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
 
     - name: "Copy system ca certificate to {{ iib_project_dir }}/ca-bundle.crt"
       ansible.builtin.copy:
         src: /etc/ssl/certs/ca-certificates.crt
         dest: "{{ iib_project_dir }}/ca-bundle.crt"
+        mode: 0644
         remote_src: true
         backup: true
       when:
         - ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
 
-    # - name: "Overwrite 'Dockerfile-workers' to fix PowerTools"
-    #   template:
-    #     src: Dockerfile-workers.j2
-    #     dest: "{{ iib_project_dir }}/docker/Dockerfile-workers"
-    #   when:
-    #     - not iib_run|bool
+    - name: "Copy '{{ ansible_env.XDG_RUNTIME_DIR }}/containers/auth.json' to '{{ iib_project_dir }}'"
+      ansible.builtin.copy:
+        src: "{{ ansible_env.XDG_RUNTIME_DIR }}/containers/auth.json"
+        dest: "{{ iib_project_dir }}/docker.json.template"
+        mode: 0644
+        remote_src: true
+      failed_when: false
+      when: container_tool == "podman"
 
-    - name: "Running iib docker-compose via iib_run=false"
-      ansible.builtin.template:
-        src: docker-compose.yml.j2
-        dest: "{{ iib_project_dir }}/docker-compose.yml"
-      when:
-        - not iib_run|bool
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
+    - name: "Copy '{{ ansible_env.HOME }}/.docker/config.json' to '{{ iib_project_dir }}'"
+      ansible.builtin.copy:
+        src: "{{ ansible_env.HOME }}/.docker/config.json"
+        dest: "{{ iib_project_dir }}/docker.json.template"
+        mode: 0644
+        remote_src: true
+      failed_when: false
+      when: container_tool == "podman"
 
-    - name: "Running iib docker-compose via iib_run=true"
+    - name: "Generating iib 'docker-compose.yml'"
       ansible.builtin.template:
         src: docker-compose-run.yml.j2
         dest: "{{ iib_project_dir }}/docker-compose.yml"
-      when:
-        - iib_run|bool
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
+        mode: 0644
 
     - name: "Replace 'iib_registry' for to push to quay directly"
       ansible.builtin.replace:
@@ -63,11 +60,6 @@
       when:
         - iib_push_registry is defined
         - iib_push_registry|length > 0
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
 
     - name: "Replace 'iib_image_push_template' for to push to quay directly"
       ansible.builtin.replace:
@@ -77,33 +69,18 @@
       when:
         - iib_push_image is defined
         - iib_push_image|length > 0
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
-
-    - name: "Remove previous iib installation 'make down'"
-      ansible.builtin.shell:
-        cmd: "make down"
-        chdir: "{{ iib_project_dir }}"
-      environment:
-        IIB_COMPOSE_ENGINE: "{{ container_tool }}-compose"
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
 
     - name: "Building and starting iib {{ iib_version }} 'make up'"
-      ansible.builtin.shell:
-        cmd: "{{ container_tool }}-compose up minica ;make up"
+      ansible.builtin.command:
+        # cmd: "{{ container_tool }}-compose up minica ;make up"
+        cmd: "make up"
         chdir: "{{ iib_project_dir }}"
       environment:
         IIB_COMPOSE_ENGINE: "{{ container_tool }}-compose"
-      tags:
-        - install
-        - iib-install
+      changed_when: true
+  tags:
+    - install
+    - iib-install
 
   rescue:
     - name: "Fail when number of retries were reached"
@@ -111,8 +88,6 @@
         msg: Ended after 5 retries
       when: iib_retry_count | int > 5
       tags:
-        - clean
-        - install
         - iib-install
         - iib-delete
 
@@ -120,14 +95,10 @@
       ansible.builtin.debug:
         msg: "Failed to install iib - Retrying ({{ iib_retry_count }}/5) ..."
       tags:
-        - clean
-        - install
         - iib-install
         - iib-delete
 
     - include_tasks: reset.yml
       tags:
-        - clean
-        - install
         - iib-install
         - iib-delete

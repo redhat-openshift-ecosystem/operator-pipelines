@@ -1,26 +1,15 @@
 ---
-- name: "Install iib"
+- name: "Initialize iib"
   block:
     - name: "Remove iib project directory '{{ iib_project_dir }}'"
       ansible.builtin.file:
         path: "{{ iib_project_dir }}"
         state: absent
-      when: run_remove_iib_repo | bool
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
 
     - name: "Check if iib project directory '{{ iib_project_dir }}' directory exists"
       ansible.builtin.stat:
         path: "{{ iib_project_dir }}"
       register: iib_project_dir_st
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
 
     - name: "Git clone iib project : {{ iib_repo }} branch: {{ iib_version }} to '{{ iib_project_dir }}'"
       ansible.builtin.git:
@@ -29,12 +18,15 @@
         version: "{{ iib_version }}"
         force: true
       when: not iib_project_dir_st.stat.exists
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
+  when: not skip_iib | bool
+  tags:
+    - clean
+    - install
+    - iib-install
+    - iib-delete
 
+- name: "Install iib"
+  block:
     - name: "Running iib install task"
       include_tasks: reset.yml
       tags:
@@ -51,3 +43,13 @@
         - install
         - iib-install
         - iib-delete
+
+    - name: "Remove iib project directory '{{ iib_project_dir }}'"
+      ansible.builtin.file:
+        path: "{{ iib_project_dir }}"
+        state: absent
+      when: cleanup_iib_dir | bool
+      tags:
+        - clean
+        - iib-delete
+  when: not skip_iib | bool

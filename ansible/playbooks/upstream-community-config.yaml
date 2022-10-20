@@ -5,6 +5,9 @@ kind:
 registry:
   enable: true
   ssl: true
+iib:
+  enable: true
+  version: v6.3.0
 tekton:
   pipeline:
     version: v0.40.2

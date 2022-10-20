@@ -34,6 +34,8 @@
     registry_ssl: "{{ uc_config.registry.ssl | default(registry_ssl) }}"
     registry_hostname: "{{ ansible_facts['fqdn'] }}"
     registry_ip: "{{ ansible_facts['all_ipv4_addresses'][0] }}"
+    iib_version: "{{ uc_config.iib.version | default(iib_version) }}"
+    skip_iib: "{{ not uc_config.iib.enable | bool | default(skip_iib) }}"
     kubectl_version: "{{ uc_config.tools.kubectl.version | default(kubectl_version) }}"
     oc_version: "{{ uc_config.tools.oc.version | default(oc_version) }}"
     operator_sdk_version: "{{ uc_config.tools.operator_sdk.version | default(operator_sdk_version) }}"

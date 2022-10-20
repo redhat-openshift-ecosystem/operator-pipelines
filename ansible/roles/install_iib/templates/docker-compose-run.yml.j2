@@ -30,6 +30,8 @@ services:
       - ./iib_data/registry:/var/lib/registry:z
       - registry-certs-volume:/certs:z
       - ./docker/registry/auth:/auth:z
+    networks:
+      - com
     depends_on:
       - minica
 
@@ -40,12 +42,15 @@ services:
       POSTGRES_PASSWORD: iib
       POSTGRES_DB: iib
       POSTGRES_INITDB_ARGS: "--auth='ident' --auth='trust'"
+    networks:
+      - com
 
   memcached:
     image: memcached
     ports:
       - 11211:11211
-
+    networks:
+      - com
   rabbitmq:
     image: rabbitmq:3.7-management
     environment:
@@ -58,7 +63,8 @@ services:
     ports:
       # The RabbitMQ management console
       - 8081:15672
-
+    networks:
+      - com
   iib-api:
     image: quay.io/exd-guild-hello-operator/iib-api:{{ iib_version }}
     command:
@@ -85,6 +91,8 @@ services:
       - request-related-bundles-volume:/var/lib/requests/related_bundles:z
     ports:
       - 8080:8080
+    networks:
+      - com
     depends_on:
       - db
       - message-broker
@@ -95,6 +103,8 @@ services:
       - /bin/bash
       - -c
       - >-
+        [ -d ~/.docker ] || mkdir ~/.docker &&
+        [ -f /src/docker.json.template ] && cp /src/docker.json.template ~/.docker/config.json.template &&
         cp /host-ca-bundle.crt /etc/pki/tls/certs/ca-bundle.crt &&
         cat /registry-certs/minica.pem >> /etc/pki/tls/certs/ca-bundle.crt &&
         podman login --authfile ~/.docker/config.json.template -u iib \
@@ -115,6 +125,8 @@ services:
       - ./ca-bundle.crt:/host-ca-bundle.crt:ro
       - request-logs-volume:/var/log/iib/requests:z
       - request-related-bundles-volume:/var/lib/requests/related_bundles:z
+    networks:
+      - com
     depends_on:
       - rabbitmq
       - registry
@@ -131,6 +143,8 @@ services:
       - 5671:5671   # amqp+ssl
       - 5672:5672   # amqp
       - 8161:8161   # web console
+    networks:
+      - com
 
 volumes:
   registry-certs-volume:
@@ -138,3 +152,6 @@ volumes:
   request-logs-volume:
   request-related-bundles-volume:
   worker_container_storage:
+
+networks:
+  com: {}
