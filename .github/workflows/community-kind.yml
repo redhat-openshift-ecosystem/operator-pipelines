@@ -24,4 +24,4 @@ jobs:
           ANSIBLE_STDOUT_CALLBACK: "yaml"
         run: |
           ansible-galaxy collection install kubernetes.core
-          ansible-playbook -i ansible/inventory/local ansible/playbooks/upstream-community.yaml --tags install,tekton-task,tekton-pipeline,verify -e container_tool=docker -e package_validate_certs=false -e tekton_validate_certs=false
+          ansible-playbook -i ansible/inventory/local ansible/playbooks/upstream-community.yaml --tags install,tekton-task,tekton-pipeline,ci,verify -e container_tool=docker -e package_validate_certs=false -e tekton_validate_certs=false
