@@ -11,7 +11,6 @@
         - kubeconfig is defined
         - kubeconfig|length > 0
 
-
     - name: "Failing when cluster is not running"
       ansible.builtin.fail:
         msg: "Cluster is not running !!!"

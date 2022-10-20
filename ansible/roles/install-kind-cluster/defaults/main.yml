@@ -37,4 +37,4 @@ tekton_dashboard_version: v0.24.1
 tekton_validate_certs: true
 kind_verify_index_image: quay.io/operatorhubio/catalog_tmp:latest
 kind_verify_index_image_local: localhost:5000/operatorhubio/catalog_tmp:latest
-kubeconfig: "~/.kube/config"
+kubeconfig: "{{ ansible_env.HOME }}/.kube/config"
