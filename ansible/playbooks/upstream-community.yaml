@@ -25,7 +25,7 @@
     - name: "Install upstream community prerequisites"
       include_role:
         name: install-upstream-community-prerequisites
-      when: prerequisites is undefined or prerequisites|bool
+      when: prerequisites is undefined or prerequisites | bool
       tags:
         - clean
         - install
@@ -34,7 +34,35 @@
     - name: "Install kind cluster"
       include_role:
         name: install-kind-cluster
-      when: kind_cluster is undefined or kind_cluster|bool
+      when: kubeconfig is undefined or kubeconfig | length == 0
+      tags:
+        - clean
+        - install
+        - verify
+        - kind-install
+
+    - name: "Check cluster"
+      ansible.builtin.include_role:
+        name: install-kind-cluster
+        tasks_from: verify_cluster.yml
+      when: kubeconfig is defined or kubeconfig | length > 0
+      tags:
+        - clean
+        - install
+        - verify
+        - kind-install
+
+    - name: "Install OLM"
+      include_role:
+        name: install-olm
+      tags:
+        - clean
+        - install
+        - verify
+
+    - name: "Install Tekton"
+      include_role:
+        name: install-tekton
       tags:
         - clean
         - install
@@ -55,3 +83,12 @@
       tags:
         - never
         - kind-delete
+
+    - name: "Report community status"
+      debug:
+        var: community_final_report
+      when:
+        - community_final_report is defined
+        - community_final_report|length > 0
+      tags:
+        - always

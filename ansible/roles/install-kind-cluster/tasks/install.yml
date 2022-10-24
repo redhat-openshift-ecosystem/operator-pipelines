@@ -32,20 +32,6 @@
         - clean
         - install
 
-    - name: "Install olm"
-      ansible.builtin.include_tasks:
-        file: install_olm.yml
-      tags:
-        - clean
-        - install
-
-    - name: "Install tekton"
-      ansible.builtin.include_tasks:
-        file: install_tekton.yml
-      tags:
-        - clean
-        - install
-
   rescue:
     - name: "Fail after {{ kund_cluster_install_retries }} retries"
       ansible.builtin.fail:

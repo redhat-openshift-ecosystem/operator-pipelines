@@ -30,14 +30,9 @@
 
 - name: "Verify kind cluster"
   block:
-    - name: "Verify kind cluster"
-      kubernetes.core.k8s_cluster_info:
-      register: api_status
-
-    - name: "Failing when cluster is not running"
-      ansible.builtin.fail:
-        msg: "Kind cluster is not running !!!"
-      when: api_status.failed is undefined or api_status.failed | bool
+    - name: "Check cluster"
+      ansible.builtin.include_tasks:
+        file: verify_cluster.yml
 
     - name: "Pull index image '{{ kind_verify_index_image }}'"
       ansible.builtin.command: "{{ container_tool }} pull {{ kind_verify_index_image }}"
