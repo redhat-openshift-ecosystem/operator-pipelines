@@ -19,40 +19,40 @@
         - absent
         - directory
 
-    - name: "Reset subjectAltName and set 'ikc_subjectAltName_values'"
+    - name: "Reset 'subject_alt_name' and set 'ikc_subject_alt_name_values'"
       ansible.builtin.set_fact:
-        ikc_subjectAltName: ""
-        ikc_subjectAltName_values:
+        ikc_subject_alt_name: ""
+        ikc_subject_alt_name_values:
           - "{{ registry_hostname }}"
           - "localhost"
           - "host.containers.internal"
 
     - name: "Add IPv4 if exists"
       ansible.builtin.set_fact:
-        ikc_subjectAltName_values: "{{ ikc_subjectAltName_values | default([]) + [ansible_default_ipv4.address+'.sslip.io'] }}"
-      when: ansible_default_ipv4.address is defined and ansible_default_ipv4.address|length >0
+        ikc_subject_alt_name_values: "{{ ikc_subject_alt_name_values | default([]) + [ansible_default_ipv4.address + '.sslip.io'] }}"
+      when: ansible_default_ipv4.address is defined and ansible_default_ipv4.address | length > 0
 
     - name: "Add IPv4 base single level DNS if IPv4 exists"
       ansible.builtin.set_fact:
-        ikc_subjectAltName_values: "{{ ikc_subjectAltName_values | default([]) + [ansible_default_ipv4.address| replace('.','-')+'.sslip.io'] }}"
-      when: ansible_default_ipv4.address is defined and ansible_default_ipv4.address|length >0
+        ikc_subject_alt_name_values: "{{ ikc_subject_alt_name_values | default([]) + [ansible_default_ipv4.address | replace('.', '-') + '.sslip.io'] }}"
+      when: ansible_default_ipv4.address is defined and ansible_default_ipv4.address | length > 0
 
     - name: "Add IPv6 if exists"
       ansible.builtin.set_fact:
-        ikc_subjectAltName_values: "{{ ikc_subjectAltName_values | default([]) + [ansible_default_ipv6.address| replace(':','-')+'.sslip.io'] }}"
-      when: ansible_default_ipv6.address is defined and ansible_default_ipv6.address|length >0
+        ikc_subject_alt_name_values: "{{ ikc_subject_alt_name_values | default([]) + [ansible_default_ipv6.address | replace(':', '-') + '.sslip.io'] }}"
+      when: ansible_default_ipv6.address is defined and ansible_default_ipv6.address | length > 0
 
     - name: "Prepend 'DNS:'"
       ansible.builtin.set_fact:
-        ikc_subjectAltName_list: "{{ ikc_subjectAltName_list | default([]) + ['DNS:'+item] }}"
-      loop: "{{ ikc_subjectAltName_values }}"
+        ikc_subject_alt_name_list: "{{ ikc_subject_alt_name_list | default([]) + ['DNS:' + item] }}"
+      loop: "{{ ikc_subject_alt_name_values }}"
 
-    - name: "Join comma separated from 'ikc_subjectAltName_list'"
+    - name: "Join comma separated from 'ikc_subject_alt_name_list'"
       ansible.builtin.set_fact:
-        ikc_subjectAltName: "{{ ikc_subjectAltName_list | join(',') }}"
+        ikc_subject_alt_name: "{{ ikc_subject_alt_name_list | join(',') }}"
 
-    - name: "Generate certificate in to '{{ registry_cert_dir }}' with subjectAltName='{{ ikc_subjectAltName }}'"
-      ansible.builtin.command: 'openssl req -newkey rsa:4096 -nodes -sha256 -keyout {{ registry_cert_dir }}/domain.key -x509 -days 365 -subj ''/CN=${reg_name}'' -addext "subjectAltName={{ ikc_subjectAltName }}" -out {{ registry_cert_dir }}/domain.crt -batch'
+    - name: "Generate certificate in to '{{ registry_cert_dir }}' with subject_alt_name='{{ ikc_subject_alt_name }}'"
+      ansible.builtin.command: 'openssl req -newkey rsa:4096 -nodes -sha256 -keyout {{ registry_cert_dir }}/domain.key -x509 -days 365 -subj ''/CN=${reg_name}'' -addext "subjectAltName={{ ikc_subject_alt_name }}" -out {{ registry_cert_dir }}/domain.crt -batch'
       failed_when: false
       changed_when: true
 

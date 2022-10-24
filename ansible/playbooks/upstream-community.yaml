@@ -17,13 +17,13 @@
 
   tasks:
     - name: "Upstream community base"
-      import_role:
+      ansible.builtin.import_role:
         name: upstream-community-base
       tags:
         - always
 
     - name: "Install upstream community prerequisites"
-      include_role:
+      ansible.builtin.include_role:
         name: install-upstream-community-prerequisites
       when: prerequisites is undefined or prerequisites | bool
       tags:
@@ -32,7 +32,7 @@
         - verify
 
     - name: "Install kind cluster"
-      include_role:
+      ansible.builtin.include_role:
         name: install-kind-cluster
       when: kubeconfig is undefined or kubeconfig | length == 0
       tags:
@@ -53,7 +53,7 @@
         - kind-install
 
     - name: "Install OLM"
-      include_role:
+      ansible.builtin.include_role:
         name: install-olm
       tags:
         - clean
@@ -61,15 +61,24 @@
         - verify
 
     - name: "Install Tekton"
-      include_role:
+      ansible.builtin.include_role:
         name: install-tekton
       tags:
         - clean
         - install
         - verify
 
+    - name: "Install iib"
+      ansible.builtin.include_role:
+        name: install_iib
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
     - name: "Install operator pipeline"
-      include_role:
+      ansible.builtin.include_role:
         name: operator-pipeline
       # when: operator-pipeline is defined and operator-pipeline|bool
       tags:
@@ -78,14 +87,14 @@
         - ci
 
     - name: "Delete kind cluster"
-      include_role:
+      ansible.builtin.include_role:
         name: install-kind-cluster
       tags:
         - never
         - kind-delete
 
     - name: "Report community status"
-      debug:
+      ansible.builtin.debug:
         var: community_final_report
       when:
         - community_final_report is defined
