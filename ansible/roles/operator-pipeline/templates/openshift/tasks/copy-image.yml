@@ -5,9 +5,9 @@ metadata:
   name: copy-image
 spec:
   params:
-    - name: skopeo_image
-      description: Skopeo image
-      default: "registry.redhat.io/rhel8/skopeo:8.4-13"
+    - name: pipeline_image
+    - name: connect_repo_path
+      description: Combined path of the repo on the Connect registry
     - name: src_image
       description: reference to the source bundle image
     - name: dest_image_registry_namespace_certproject
@@ -21,23 +21,33 @@ spec:
       description: Docker config for the source registry
     - name: dest-registry-credentials
       description: Docker config for the destination registry
+  results:
+    - name: container_digest
+    - name: image_pullspec
   steps:
     - name: skopeo-copy
-      image: "$(params.skopeo_image)"
+      image: "$(params.pipeline_image)"
       script: |
         set -xe
 
+        SRC_AUTHFILE=$(workspaces.src-registry-credentials.path)/.dockerconfigjson
+        DEST_AUTHFILE=$(workspaces.dest-registry-credentials.path)/.dockerconfigjson
+
         skopeo copy \
-          --src-authfile $(workspaces.src-registry-credentials.path)/.dockerconfigjson \
-          --dest-authfile $(workspaces.dest-registry-credentials.path)/.dockerconfigjson \
+          --src-authfile $SRC_AUTHFILE \
+          --dest-authfile $DEST_AUTHFILE \
           docker://$(params.src_image) \
           docker://"$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag)"
 
         # optionally tag destination image as latest
         if [ "$(params.is_latest)" = "true" ]; then
           skopeo copy \
-            --src-authfile $(workspaces.src-registry-credentials.path)/.dockerconfigjson \
-            --dest-authfile $(workspaces.dest-registry-credentials.path)/.dockerconfigjson \
+            --src-authfile $SRC_AUTHFILE \
+            --dest-authfile $DEST_AUTHFILE \
             docker://$(params.src_image) \
             docker://"$(params.dest_image_registry_namespace_certproject):latest"
         fi
+
+        DIGEST=$(skopeo inspect --authfile $DEST_AUTHFILE docker://$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag) | jq -r .Digest)
+        echo -n $DIGEST | tee $(results.container_digest.path)
+        echo -n "$(params.connect_repo_path)@${DIGEST}" > $(results.image_pullspec.path)
