@@ -48,6 +48,6 @@ spec:
             docker://"$(params.dest_image_registry_namespace_certproject):latest"
         fi
 
-        DIGEST=$(skopeo inspect --authfile $DEST_AUTHFILE docker://$(params.dest_image) | jq -r .Digest)
+        DIGEST=$(skopeo inspect --authfile $DEST_AUTHFILE docker://$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag) | jq -r .Digest)
         echo -n $DIGEST | tee $(results.container_digest.path)
         echo -n "$(params.connect_repo_path)@${DIGEST}" > $(results.image_pullspec.path)
