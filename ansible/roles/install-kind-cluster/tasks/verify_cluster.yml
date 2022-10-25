@@ -1,0 +1,19 @@
+---
+- name: "Verify cluster availability"
+  block:
+
+    - name: "Verify cluster with kubeconfig"
+      kubernetes.core.k8s_cluster_info:
+        kubeconfig: "{{ kubeconfig }}"
+      register: api_status
+      failed_when: false
+      when:
+        - kubeconfig is defined
+        - kubeconfig|length > 0
+
+    - name: "Failing when cluster is not running"
+      ansible.builtin.fail:
+        msg: "Cluster is not running !!!"
+      when: api_status.failed is undefined or api_status.failed | bool
+  tags:
+    - always

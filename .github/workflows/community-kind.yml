@@ -13,7 +13,7 @@ jobs:
     name: Install kind cluster
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install dependencies
         run: python -m pip install --upgrade pip kubernetes
       - name: Install kind cluster with registry and tekton setup via ansible
@@ -24,4 +24,4 @@ jobs:
           ANSIBLE_STDOUT_CALLBACK: "yaml"
         run: |
           ansible-galaxy collection install kubernetes.core
-          ansible-playbook -i ansible/inventory/local ansible/playbooks/upstream-community.yaml --tags install,tekton-task,tekton-pipeline,verify -e container_tool=docker -e package_validate_certs=false -e tekton_validate_certs=false
+          ansible-playbook -i ansible/inventory/local ansible/playbooks/upstream-community.yaml --tags install,tekton-task,tekton-pipeline,ci,verify -e container_tool=docker -e package_validate_certs=false -e tekton_validate_certs=false

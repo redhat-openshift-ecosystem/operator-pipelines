@@ -34,6 +34,7 @@
         wait: true
         wait_sleep: 1
         wait_timeout: 360
+        kubeconfig: "{{ kubeconfig }}"
 
     - name: "Remove tekton triggers {{ tekton_triggers_version }}"
       kubernetes.core.k8s:
@@ -42,6 +43,7 @@
         wait: true
         wait_sleep: 1
         wait_timeout: 360
+        kubeconfig: "{{ kubeconfig }}"
 
     - name: "Remove tekton pipeline {{ tekton_pipeline_version }}"
       kubernetes.core.k8s:
@@ -50,6 +52,7 @@
         wait: true
         wait_sleep: 1
         wait_timeout: 360
+        kubeconfig: "{{ kubeconfig }}"
 
   tags:
     - clean
@@ -64,6 +67,7 @@
         wait: true
         wait_sleep: 1
         wait_timeout: 360
+        kubeconfig: "{{ kubeconfig }}"
 
     - name: "Install tekton triggers {{ tekton_triggers_version }}"
       kubernetes.core.k8s:
@@ -72,6 +76,7 @@
         wait: true
         wait_sleep: 1
         wait_timeout: 360
+        kubeconfig: "{{ kubeconfig }}"
 
     - name: "Install tekton dashboard {{ tekton_dashboard_version }}"
       kubernetes.core.k8s:
@@ -80,5 +85,6 @@
         wait: true
         wait_sleep: 1
         wait_timeout: 360
+        kubeconfig: "{{ kubeconfig }}"
   tags:
     - install

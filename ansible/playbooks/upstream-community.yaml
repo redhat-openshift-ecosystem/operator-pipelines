@@ -17,31 +17,68 @@
 
   tasks:
     - name: "Upstream community base"
-      import_role:
+      ansible.builtin.import_role:
         name: upstream-community-base
       tags:
         - always
 
     - name: "Install upstream community prerequisites"
-      include_role:
+      ansible.builtin.include_role:
         name: install-upstream-community-prerequisites
-      when: prerequisites is undefined or prerequisites|bool
+      when: prerequisites is undefined or prerequisites | bool
       tags:
         - clean
         - install
         - verify
 
     - name: "Install kind cluster"
-      include_role:
+      ansible.builtin.include_role:
         name: install-kind-cluster
-      when: kind_cluster is undefined or kind_cluster|bool
+      when: kubeconfig is undefined or kubeconfig | length == 0
+      tags:
+        - clean
+        - install
+        - verify
+        - kind-install
+
+    - name: "Check cluster"
+      ansible.builtin.include_role:
+        name: install-kind-cluster
+        tasks_from: verify_cluster.yml
+      when: kubeconfig is defined or kubeconfig | length > 0
+      tags:
+        - clean
+        - install
+        - verify
+        - kind-install
+
+    - name: "Install OLM"
+      ansible.builtin.include_role:
+        name: install-olm
       tags:
         - clean
         - install
         - verify
 
+    - name: "Install Tekton"
+      ansible.builtin.include_role:
+        name: install-tekton
+      tags:
+        - clean
+        - install
+        - verify
+
+    - name: "Install iib"
+      ansible.builtin.include_role:
+        name: install_iib
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
     - name: "Install operator pipeline"
-      include_role:
+      ansible.builtin.include_role:
         name: operator-pipeline
       # when: operator-pipeline is defined and operator-pipeline|bool
       tags:
@@ -50,8 +87,17 @@
         - ci
 
     - name: "Delete kind cluster"
-      include_role:
+      ansible.builtin.include_role:
         name: install-kind-cluster
       tags:
         - never
         - kind-delete
+
+    - name: "Report community status"
+      ansible.builtin.debug:
+        var: community_final_report
+      when:
+        - community_final_report is defined
+        - community_final_report|length > 0
+      tags:
+        - always
