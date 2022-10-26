@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:34
+FROM registry.fedoraproject.org/fedora:36
 
 LABEL description="Cli tools for operator certification pipeline"
 LABEL summary="This image contains tools required for operator bundle certification pipeline."
@@ -34,7 +34,6 @@ RUN dnf update -y && \
     krb5-workstation \
     yamllint \
     openssl-devel \
-    origin-clients \
     pinentry \
     pip \
     podman \
@@ -44,10 +43,12 @@ RUN dnf update -y && \
 
 COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 
-# Install opm CLI
+# Install oc and opm CLI
 RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.19.5/linux-${ARCH}-opm && \
     chmod +x linux-${ARCH}-opm && \
-    mv linux-${ARCH}-opm /usr/local/bin/opm
+    mv linux-${ARCH}-opm /usr/local/bin/opm && \
+    curl -LO https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest-4.10/openshift-client-linux.tar.gz && \
+    tar xzvf openshift-client-linux.tar.gz -C /usr/local/bin oc
 
 RUN useradd -ms /bin/bash -u "${USER_UID}" user
 
