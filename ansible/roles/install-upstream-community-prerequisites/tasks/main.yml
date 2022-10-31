@@ -1,4 +1,17 @@
 ---
+- name: "Check system binaries"
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  loop:
+    - openssl
+    - make
+    - "{{ container_tool }}-compose"
+  loop_control:
+    loop_var: sb_item
+  tags:
+    - install
+    - verify
+
 - name: "Install kind"
   ansible.builtin.include_role:
     name: install-binary
