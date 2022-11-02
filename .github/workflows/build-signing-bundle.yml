@@ -47,6 +47,7 @@ jobs:
         env:
           tag: ${{ github.run_id }}
         run: |
+          set -x
           cd ansible/roles/operator-pipeline/templates/openshift/tasks
           tkn bundle push ${registry}/signing-bundle:${tag} \
             -f verify-whitelisted-index-image.yml \
