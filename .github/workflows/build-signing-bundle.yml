@@ -27,7 +27,7 @@ jobs:
           version: 0.23.1
         run: |
           echo "Installing tkn@${version}"
-          
+
           curl -LO https://github.com/tektoncd/cli/releases/download/v${version}/tkn_${version}_Linux_x86_64.tar.gz
           sudo tar xvzf tkn_${version}_Linux_x86_64.tar.gz -C /usr/local/bin/ tkn
 
@@ -48,8 +48,8 @@ jobs:
           tkn bundle push ${registry}/signing-bundle:${tag} \
             -f verify-whitelisted-index-image.yml \
             -f request-signature.yml \
-            -f upload-signature.yml 
-          echo "pullspec=${registry}/signing-bundle:${tag}" >> $GITHUB_OUTPUT          
+            -f upload-signature.yml
+          echo "pullspec=${registry}/signing-bundle:${tag}" >> $GITHUB_OUTPUT
 
       - name: Print image url
         run: echo "Image pushed to ${{ steps.push-bundle.outputs.registry-paths }}"
