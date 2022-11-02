@@ -7,10 +7,6 @@ on:  # yamllint disable-line rule:truthy
       - validation
     types:
       - completed
-  pull_request_target:
-    branches:
-      - main
-      - upstream-community
   workflow_dispatch:
 
 jobs:
