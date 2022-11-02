@@ -7,7 +7,7 @@ on:  # yamllint disable-line rule:truthy
       - validation
     types:
       - completed
-  pull_request:
+  pull_request_target:
     branches:
       - main
       - upstream-community
@@ -32,6 +32,7 @@ jobs:
 
           curl -LO https://github.com/tektoncd/cli/releases/download/v${version}/tkn_${version}_Linux_x86_64.tar.gz
           sudo tar xvzf tkn_${version}_Linux_x86_64.tar.gz -C /usr/local/bin/ tkn
+          tkn -h
 
       - name: Login to quay.io
         id: registry-login
