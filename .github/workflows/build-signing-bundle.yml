@@ -47,13 +47,14 @@ jobs:
         env:
           tag: ${{ github.run_id }}
           registry: quay.io/redhat-isv
+          repository: tkn-signing-bundle
         run: |
           cd ansible/roles/operator-pipeline/templates/openshift/tasks
-          tkn bundle push ${registry}/signing-bundle:${tag} \
+          tkn bundle push ${registry}/${repository}:${tag} \
             -f verify-whitelisted-index-image.yml \
             -f request-signature.yml \
             -f upload-signature.yml
-          echo "pullspec=${registry}/signing-bundle:${tag}" >> $GITHUB_OUTPUT
+          echo "pullspec=${registry}/${repository}:${tag}" >> $GITHUB_OUTPUT
 
       - name: Print image url
         run: echo "Image pushed to ${{ steps.push-bundle.outputs.pullspec }}"
