@@ -1,0 +1,60 @@
+---
+name: Build signing bundle
+
+on:  # yamllint disable-line rule:truthy
+  workflow_run:
+    workflows:
+      - validation
+    branches:
+      - main
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and push signing bundle
+    runs-on: ubuntu-latest
+    outputs:
+      bundle_image: ${{ steps.push-bundle.outputs.pullspec }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install tekton CLI
+        id: install-deps
+        env:
+          # any version lower than 0.27.0 incorrectly requires kubeconfig to be present
+          # to be able to run `tkn bundle *` commands
+          version: 0.27.0
+        run: |
+          echo "Installing tkn@${version}"
+
+          curl -LO https://github.com/tektoncd/cli/releases/download/v${version}/tkn_${version}_Linux_x86_64.tar.gz
+          sudo tar xvzf tkn_${version}_Linux_x86_64.tar.gz -C /usr/local/bin/ tkn
+          tkn -h
+
+      - name: Login to quay.io
+        id: registry-login
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: quay.io/redhat-isv
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push bundle
+        id: push-bundle
+        env:
+          tag: ${{ github.run_id }}
+          registry: quay.io/redhat-isv
+          repository: tkn-signing-bundle
+        run: |
+          cd ansible/roles/operator-pipeline/templates/openshift/tasks
+          tkn bundle push ${registry}/${repository}:${tag} \
+            -f verify-whitelisted-index-image.yml \
+            -f request-signature.yml \
+            -f upload-signature.yml
+          echo "pullspec=${registry}/${repository}:${tag}" >> $GITHUB_OUTPUT
+
+      - name: Print image url
+        run: echo "Image pushed to ${{ steps.push-bundle.outputs.pullspec }}"
