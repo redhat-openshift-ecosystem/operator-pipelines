@@ -56,3 +56,6 @@ jobs:
             -f request-signature.yml \
             -f upload-signature.yml
           echo "pullspec=${registry}/signing-bundle:${tag}" >> $GITHUB_OUTPUT
+
+      - name: Print image url
+        run: echo "Image pushed to ${{ steps.push-bundle.outputs.pullspec }}"
