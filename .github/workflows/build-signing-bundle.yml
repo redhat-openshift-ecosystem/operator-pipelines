@@ -5,12 +5,10 @@ on:  # yamllint disable-line rule:truthy
   workflow_run:
     workflows:
       - validation
-    types:
-      - completed
-  pull_request:
     branches:
       - main
-      - upstream-community
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
