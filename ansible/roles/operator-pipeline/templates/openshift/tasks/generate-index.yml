@@ -41,12 +41,16 @@ spec:
         # This is needed to ensure the inspect-base-index step, which runs
         # under a different UID, has access to its output file
         truncate -s 0 podman-inspect.json
+        chown :1000 podman-inspect.json
         chmod 664 podman-inspect.json
 
         mkdir -p $DOCKER_CONFIG
+        chown :1000 $DOCKER_CONFIG
         chmod 775 $DOCKER_CONFIG
         cp $HOME/.docker/config.json $DOCKER_CONFIG/config.json
+        chown :1000 $DOCKER_CONFIG/config.json
         chmod 664 $DOCKER_CONFIG/config.json
+        chown :1000 .
         chmod go+rx .
 
     - name: inspect-base-index
