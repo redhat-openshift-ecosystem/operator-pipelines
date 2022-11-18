@@ -1,20 +1,17 @@
 ---
 - name: "OLM detection"
   block:
-
     - name: "Get all pods"
       kubernetes.core.k8s_info:
         kind: Pod
         kubeconfig: "{{ kubeconfig }}"
       register: io_olm_pods
-      # no_log: true
 
     - name: "Extract 'resources' and reset variables before looking for OLM pod"
       ansible.builtin.set_fact:
-        pod_list_extended: "{{ io_olm_pods.resources|list }}"
+        pod_list_extended: "{{ io_olm_pods.resources | list }}"
         iom_olm_operator_namespace:
         iom_olm_operator_name_space:
-      # no_log: true
 
     - name: "Loop over running operators"
       ansible.builtin.include_tasks:
@@ -42,7 +39,7 @@
 
     - name: "Set OLM detected version"
       ansible.builtin.set_fact:
-        olm_version_detected: "{{ (olm_version_detected_output.stdout_lines|first).split(': ')[1] }}"
+        olm_version_detected: "{{ (olm_version_detected_output.stdout_lines | first).split(': ')[1] }}"
       when:
         - olm_is_running is defined
         - olm_is_running|bool

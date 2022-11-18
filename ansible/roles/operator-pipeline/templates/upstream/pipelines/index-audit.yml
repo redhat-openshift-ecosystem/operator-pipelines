@@ -1,0 +1,101 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: index-audit
+spec:
+  params:
+    - name: ansible_pull_repo_url
+      default: https://github.com/redhat-openshift-ecosystem/operator-test-playbooks
+    - name: ansible_pull_branch
+      default: upstream-community
+    # - name: gitInitImage
+    #   description: The image providing the git-init binary that the checkout task runs.
+    #   type: string
+    #   default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9"
+  workspaces:
+    - name: pipeline
+  tasks:
+    - name: checkout
+      taskRef:
+        name: git-clone
+        kind: Task
+      params:
+        - name: url
+          value: $(params.ansible_pull_repo_url)
+        - name: revision
+          value: $(params.ansible_pull_branch)
+        # - name: gitInitImage
+        #   value: $(params.gitInitImage)
+      workspaces:
+        - name: output
+          workspace: pipeline
+          # subPath: src
+
+    - name: index-audit-prepare
+      runAfter:
+        - checkout
+      taskSpec:
+        params:
+          - name: project-dir
+            description: The project directory under the workspace runner-dir
+            default: 'upstream'
+        steps:
+          - name: debug
+            image: alpine:latest # contains bash
+            # image: quay.io/operator_testing/operator-test-playbooks:dev-tekton
+            script: |
+              ls -al workspace/runner-dir/upstream/
+              mkdir -p $(workspaces.runner-dir.path)/$(params.project-dir)/env || true
+              echo "--tags index_verify -e run_upstream=true -e run_prepare_catalog_repo_upstream=false -e container_tool=podman -e iv_indexes=quay.io/openshift-community-operators/catalog_tmp:v4.12,quay.io/openshift-community-operators/catalog_tmp:v4.12s" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/cmdline
+              echo "ansible_connection: local" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/extravars
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 65532
+              runAsGroup: 65532
+
+        workspaces:
+          - name: runner-dir
+      workspaces:
+        - name: runner-dir
+          workspace: pipeline
+          # subPath: src
+
+    # - name: index-audit-prepare-2
+    #   runAfter:
+    #     - index-audit-prepare
+    #   taskSpec:
+    #     steps:
+    #       - name: run-playbook
+    #         # image: quay.io/ansible/ansible-runner:stable-2.12-latest #tag: stable-2.12-latest
+    #         image: quay.io/operator_testing/operator-test-playbooks:dev-tekton
+    #         ImagePullPolicy: always
+    #         command: ['/bin/entrypoint']
+    #         args: [ "podman", "pull", "quay.io/openshift-community-operators/catalog_tmp:v4.12" ]
+    #         securityContext:
+    #           # runAsNonRoot: true
+    #           runAsUser: 65532
+    #           # runAsGroup: 65532
+    #     workspaces:
+    #       - name: runner-dir
+    #   workspaces:
+    #     - name: runner-dir
+    #       workspace: pipeline
+    #       # subPath: src
+
+
+    - name: index-audit
+      taskRef:
+        name: ansible-runner
+        kind: Task
+      runAfter:
+        - index-audit-prepare
+      params:
+        - name: project-dir
+          value: upstream
+        - name: args
+          value: ["-p","local.yml", "--inventory", "localhost,"]
+      workspaces:
+        - name: runner-dir
+          workspace: pipeline
+          # subPath: src

@@ -1,5 +1,5 @@
 ---
-#TODO: correct task order and fix conditions including installation one
+# TODO: correct task order and fix conditions including installation one
 - name: "Uninstall OLM"
   ansible.builtin.command: "{{ op_bin_dir }}/{{ operator_sdk_binary }} olm uninstall --version {{ olm_version }} --timeout 5m0s"
   changed_when: true
@@ -26,8 +26,8 @@
       failed_when: false
       when:
         - olm_is_running is defined
-        - olm_is_running|bool
-        - olm_needed|bool
+        - olm_is_running | bool
+        - olm_needed | bool
 
     - name: "Report"
       block:
@@ -47,6 +47,6 @@
       ansible.builtin.command: "{{ op_bin_dir }}/{{ operator_sdk_binary }} olm install --version {{ olm_version }} --timeout {{ olm_installation_timeout }}"
       register: olm_install_output
       when:
-        - olm_needed|bool
+        - olm_needed | bool
   tags:
     - install
