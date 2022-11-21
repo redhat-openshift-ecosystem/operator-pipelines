@@ -10,12 +10,15 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   community-base-pipeline-test:
-    name: Install kind cluster
+    name: Community base pipeline test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: python -m pip install --upgrade pip kubernetes
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.op/bin" >> $GITHUB_PATH
+          python -m pip install --upgrade pip kubernetes yq==2.14.0
       - name: Install kind cluster with registry and tekton setup via ansible
         id: install
         env:
@@ -29,5 +32,6 @@ jobs:
       - name: Running testing pipeline via tekton
         id: test-tekton
         run: |
+          echo $PATH
           tkn pipeline start index-audit --use-param-defaults --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml --showlog
-          RC=$(tkn pipelinerun describe --last -o yaml | yq r - status.conditions[0].status)
+          [[ $(tkn pipelinerun describe --last -o yaml | yq .status.conditions[0].status -r) == "True" ]] && exit 0 || exit 1
