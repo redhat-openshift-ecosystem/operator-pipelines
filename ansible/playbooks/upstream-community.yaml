@@ -7,8 +7,9 @@
     op_work_dir: "{{ ansible_env.HOME }}/.op"
     op_bin_dir: "{{ op_work_dir }}/bin"
     registry_cert_dir: "{{ op_work_dir }}/certs"
-    run_cleanup: false
     oc_namespace: default
+    run_upstream: true
+    run_cleanup: false
 
   environment:
     # User has to do 'export SSL_CERT_DIR=$HOME/.op/certs' when running in rootless mode
@@ -85,6 +86,8 @@
         - tekton-task
         - tekton-pipeline
         - ci
+        - tekton-task-upstream
+        - tekton-pipeline-upstream
 
     - name: "Delete kind cluster"
       ansible.builtin.include_role:
