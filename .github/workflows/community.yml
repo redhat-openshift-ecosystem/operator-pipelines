@@ -1,5 +1,5 @@
 ---
-name: Community kind cluster setup
+name: Community base pipeline test
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
@@ -9,7 +9,7 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
 
 jobs:
-  kind-setup:
+  community-base-pipeline-test:
     name: Install kind cluster
     runs-on: ubuntu-latest
     steps:
@@ -25,3 +25,9 @@ jobs:
         run: |
           ansible-galaxy collection install kubernetes.core
           ansible-playbook -i ansible/inventory/local ansible/playbooks/upstream-community.yaml --tags install,tekton-task,tekton-pipeline,ci,verify -e container_tool=docker -e package_validate_certs=false -e tekton_validate_certs=false
+
+      - name: Running testing pipeline via tekton
+        id: test-tekton
+        run: |
+          tkn pipeline start index-audit --use-param-defaults --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml --showlog
+          RC=$(tkn pipelinerun describe --last -o yaml | yq r - status.conditions[0].status)
