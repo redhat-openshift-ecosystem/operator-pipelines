@@ -6,11 +6,11 @@ metadata:
 spec:
   params:
     - name: operator_test_playbook_repo
-      description: "Operator test playbook repo" 
+      description: "Operator test playbook repo"
       type: string
       default: "https://github.com/redhat-openshift-ecosystem/operator-test-playbooks"
     - name: operator_test_playbook_branch
-      description: "Operator test playbook branch" 
+      description: "Operator test playbook branch"
       type: string
       default: "upstream-community"
     - name: gitInitImage
@@ -74,7 +74,7 @@ spec:
         - name: project-dir
           value: upstream
         - name: args
-          value: ["-p","local.yml", "--inventory", "localhost,"]
+          value: ["-p", "local.yml", "--inventory", "localhost,"]
         - name: image
           value: quay.io/operator_testing/operator-test-playbooks:dev-tekton
       workspaces:
