@@ -56,8 +56,8 @@
     - name: Import redhat-marketplace-index imagestream
       tags:
         - import-index-images
-      no_log: yes
-      uri:
+      no_log: true
+      ansible.builtin.uri:
         url: "{{ ocp_host }}/apis/image.openshift.io/v1/namespaces/{{ oc_namespace }}/imagestreamimports"
         method: POST
         # The 'or' condition is needed to support Ansible versions < 2.13
@@ -92,18 +92,33 @@
         - tekton-task
       k8s:
         state: present
-        apply: yes
+        apply: true
         namespace: "{{ oc_namespace }}"
         definition: "{{ lookup('template', '{{ item }}') }}"
       with_fileglob:
         - ../templates/openshift/tasks/*
+
+    - name: Deploy pipeline tasks (upstream)
+      tags:
+        - tekton-task
+        - tekton-task-upstream
+      k8s:
+        state: present
+        apply: true
+        namespace: "{{ oc_namespace }}"
+        definition: "{{ lookup('template', '{{ item }}') }}"
+      with_fileglob:
+        - ../templates/upstream/tasks/*
+      when:
+        - run_upstream is defined
+        - run_upstream | bool
 
     - name: Deploy hosted and release pipelines
       tags:
         - tekton-pipeline
       k8s:
         state: present
-        apply: yes
+        apply: true
         namespace: "{{ oc_namespace }}"
         definition: "{{ lookup('template', '{{ item }}') }}"
       with_items:
@@ -115,11 +130,27 @@
         - ci
       k8s:
         state: present
-        apply: yes
+        apply: true
         namespace: "{{ oc_namespace }}"
         definition: "{{ lookup('template', '{{ item }}') }}"
       with_items:
         - ../templates/openshift/pipelines/operator-ci-pipeline.yml
+
+    - name: Deploy pipeline (upstream)
+      tags:
+        - tekton-pipeline
+        - tekton-pipeline-upstream
+      k8s:
+        state: present
+        apply: true
+        namespace: "{{ oc_namespace }}"
+        definition: "{{ lookup('template', '{{ item }}') }}"
+      with_items:
+        - ../templates/upstream/pipelines/index-audit.yml
+      when:
+        - run_upstream is defined
+        - run_upstream | bool
+
 
     - include_tasks: tasks/operator-pipeline-event-listener.yml
     - include_tasks: tasks/operator-hosted-pipeline-trigger.yml
