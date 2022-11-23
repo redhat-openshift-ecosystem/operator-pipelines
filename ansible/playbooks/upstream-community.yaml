@@ -29,6 +29,7 @@
       when: prerequisites is undefined or prerequisites | bool
       tags:
         - clean
+        - prerequisites
         - install
         - verify
 
