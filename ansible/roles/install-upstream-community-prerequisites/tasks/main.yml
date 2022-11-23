@@ -9,6 +9,7 @@
   loop_control:
     loop_var: sb_item
   tags:
+    - prerequisites
     - install
     - verify
 
@@ -23,6 +24,7 @@
     package_parse_index: 1
   tags:
     - clean
+    - prerequisites
     - install
     - verify
 
@@ -40,6 +42,7 @@
     package_version_rcs: [0, 1]
   tags:
     - clean
+    - prerequisites
     - install
     - verify
 
@@ -55,6 +58,7 @@
     package_version_rcs: [0, 1]
   tags:
     - clean
+    - prerequisites
     - install
     - verify
 
@@ -69,6 +73,7 @@
     package_parse_index: 1
   tags:
     - clean
+    - prerequisites
     - install
     - verify
 
@@ -86,5 +91,6 @@
     package_version_rcs: [0, 1]
   tags:
     - clean
+    - prerequisites
     - install
     - verify
