@@ -29,11 +29,16 @@ spec:
         skopeo login $(params.registry) --authfile $(workspaces.registry-credentials.path)/.dockerconfigjson \
 
         skopeo inspect docker://$(params.image) > $(workspaces.image-data.path)/skopeo.json
+
+        truncate -s 0 $(workspaces.image-data.path)/podman.json
+        chmod 664 $(workspaces.image-data.path)/podman.json
     - name: podman-inspect
+      securityContext:
+        runAsUser: 1000
       image: "$(params.podman_image)"
       script: |
         set -xe
 
         podman pull $(params.image)
 
-        podman image inspect $(params.image) > $(workspaces.image-data.path)/podman.json
+        podman image inspect $(params.image) >> $(workspaces.image-data.path)/podman.json
