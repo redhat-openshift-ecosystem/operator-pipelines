@@ -125,7 +125,7 @@ spec:
           opm migrate index.db index
 
           # Generate the index Dockerfile
-          opm alpha generate dockerfile index
+          opm generate dockerfile index
 
           # Amend the Dockerfile with the addition of the sqlite DB for backwards compatibility
           echo -e "\nADD index.db $DB_PATH\n" >> index.Dockerfile
