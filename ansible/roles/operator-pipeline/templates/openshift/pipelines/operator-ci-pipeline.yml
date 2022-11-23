@@ -29,7 +29,7 @@ spec:
       default: image-registry.openshift-image-registry.svc:5000
     - name: podman_image
       description: Podman image
-      default: "registry.redhat.io/rhel8/podman:8.5-13"
+      default: "registry.redhat.io/rhel8/podman:8.7"
     - name: env
       description: Which environment to run in. Can be one of [dev, qa, stage, prod]
       default: "prod"
