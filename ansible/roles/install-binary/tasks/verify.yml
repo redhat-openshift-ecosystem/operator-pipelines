@@ -28,5 +28,6 @@
       when: package_verify_msg is undefined or package_verify_msg | bool
 
   tags:
+    - prerequisites
     - install
     - verify
