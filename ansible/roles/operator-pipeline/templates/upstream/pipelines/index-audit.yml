@@ -44,7 +44,7 @@ spec:
         - name: revision
           value: $(params.operator_test_playbook_branch)
         - name: gitInitImage
-          value: $(params.gitInitImage)
+          value: $(params.gitInitImage)          
       workspaces:
         - name: output
           workspace: pipeline
@@ -52,6 +52,13 @@ spec:
     - name: index-audit-prepare
       runAfter:
         - checkout
+      params:
+        - name: indexes
+          value: $(params.indexes)
+        - name: kubeconfig_secret_name
+          value: $(params.kubeconfig_secret_name)
+        - name: kubeconfig_secret_key
+          value: $(params.kubeconfig_secret_key)  
       taskSpec:
         params:
           - name: project-dir
@@ -61,7 +68,12 @@ spec:
             description: Comma separated list of indexes to audit
             type: string
             default: "quay.io/openshift-community-operators/catalog_tmp:v4.12,quay.io/openshift-community-operators/catalog_tmp:v4.12s"
-
+          - name: kubeconfig_secret_name
+            description: The name of the Kubernetes Secret that contains the kubeconfig.
+            default: kubeconfig
+          - name: kubeconfig_secret_key
+            description: The key within the Kubernetes Secret that contains the kubeconfig.
+            default: kubeconfig
         steps:
           - name: debug
             image: alpine:latest
