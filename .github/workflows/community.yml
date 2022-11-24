@@ -32,5 +32,5 @@ jobs:
       - name: Running testing pipeline via tekton
         id: test-tekton
         run: |
-          tkn pipeline start index-audit --use-param-defaults --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml --showlog
-          # [[ $(tkn pipelinerun describe --last -o yaml | yq .status.conditions[0].status -r) == "True" ]] && exit 0 || exit 1
+          tkn pipeline start index-audit --use-param-defaults --param indexes=quay.io/openshift-community-operators/catalog_tmp:v4.11,quay.io/openshift-community-operators/catalog_tmp:v4.11s --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml --showlog
+          [[ $(tkn pipelinerun describe --last -o yaml | yq .status.conditions[0].status -r) == "True" ]] && exit 0 || exit 1

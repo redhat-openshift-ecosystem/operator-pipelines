@@ -21,6 +21,10 @@ spec:
       description: Ansible runner image
       type: string
       default: "quay.io/operator_testing/operator-test-playbooks:dev-tekton"
+    - name: indexes
+      description: Comma separated list of indexes to audit
+      type: string
+      default: "quay.io/openshift-community-operators/catalog_tmp:v4.12,quay.io/openshift-community-operators/catalog_tmp:v4.12s"
   workspaces:
     - name: pipeline
   tasks:
@@ -52,7 +56,7 @@ spec:
             image: alpine:latest
             script: |
               mkdir -p $(workspaces.runner-dir.path)/$(params.project-dir)/env || true
-              echo "--tags index_verify -e run_upstream=true -e run_prepare_catalog_repo_upstream=false -e container_tool=podman -e iv_indexes=quay.io/openshift-community-operators/catalog_tmp:v4.12,quay.io/openshift-community-operators/catalog_tmp:v4.12s" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/cmdline
+              echo "--tags index_verify -e run_upstream=true -e run_prepare_catalog_repo_upstream=false -e container_tool=podman -e iv_indexes=$(params.indexes)" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/cmdline
               echo "ansible_connection: local" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/extravars
             securityContext:
               runAsNonRoot: true
