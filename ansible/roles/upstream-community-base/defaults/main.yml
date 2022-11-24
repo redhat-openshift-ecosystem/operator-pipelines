@@ -12,7 +12,7 @@ registry_port: 5000
 registry_ssl: false
 registry_cert_dir: "{{ op_work_dir }}/certs"
 iib_version: 6.3.0
-iib_skip: false
+skip_iib: false
 kubectl_binary: kubectl
 kubectl_version: v1.23.5
 oc_version: 4.3.5

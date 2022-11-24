@@ -18,12 +18,13 @@
         version: "{{ iib_version }}"
         force: true
       when: not iib_project_dir_st.stat.exists
-  when: not skip_iib | bool
   tags:
     - clean
     - install
     - iib-install
     - iib-delete
+  when: not skip_iib | bool
+
 
 - name: "Install iib"
   block:
