@@ -51,6 +51,10 @@ spec:
           - name: project-dir
             description: The project directory under the workspace runner-dir
             default: 'upstream'
+          - name: indexes
+            description: Comma separated list of indexes to audit
+            type: string
+            default: "quay.io/openshift-community-operators/catalog_tmp:v4.12,quay.io/openshift-community-operators/catalog_tmp:v4.12s"
         steps:
           - name: debug
             image: alpine:latest
