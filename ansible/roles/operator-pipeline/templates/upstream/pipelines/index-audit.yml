@@ -25,6 +25,12 @@ spec:
       description: Comma separated list of indexes to audit
       type: string
       default: "quay.io/openshift-community-operators/catalog_tmp:v4.12,quay.io/openshift-community-operators/catalog_tmp:v4.12s"
+    - name: kubeconfig_secret_name
+      description: The name of the Kubernetes Secret that contains the kubeconfig.
+      default: kubeconfig
+    - name: kubeconfig_secret_key
+      description: The key within the Kubernetes Secret that contains the kubeconfig.
+      default: kubeconfig
   workspaces:
     - name: pipeline
   tasks:
@@ -55,30 +61,14 @@ spec:
             description: Comma separated list of indexes to audit
             type: string
             default: "quay.io/openshift-community-operators/catalog_tmp:v4.12,quay.io/openshift-community-operators/catalog_tmp:v4.12s"
-          - name: kubeconfig_secret_name
-            description: The name of the Kubernetes Secret that contains the kubeconfig.
-            default: kubeconfig
-          - name: kubeconfig_secret_key
-            description: The key within the Kubernetes Secret that contains the kubeconfig.
-            default: kubeconfig
-        volumes:
-          - name: kubeconfig-volume
-            secret:
-              secretName: "$(params.kubeconfig_secret_name)"
 
         steps:
           - name: debug
             image: alpine:latest
-            volumeMounts:
-              - name: kubeconfig-volume
-                readOnly: true
-                mountPath: "/etc/kubeconfig-volume"
             script: |
               mkdir -p $(workspaces.runner-dir.path)/$(params.project-dir)/env || true
-              echo "--tags index_verify -e run_upstream=true -e run_prepare_catalog_repo_upstream=false -e container_tool=podman -e iv_indexes=$(params.indexes) -e container_run_mode=pod" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/cmdline
+              echo "--tags index_verify -e run_upstream=true -e run_prepare_catalog_repo_upstream=false -e container_tool=podman -e iv_indexes=$(params.indexes) -e container_run_mode=pod -e kubeconfig_path=/etc/kubeconfig-volume/$(params.kubeconfig_secret_key)" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/cmdline
               echo "ansible_connection: local" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/extravars
-              mkdir -p $HOME/.kube
-              cp -f /etc/kubeconfig-volume/$(params.kubeconfig_secret_key) $HOME/.kube/config
             securityContext:
               runAsNonRoot: true
               runAsUser: 65532

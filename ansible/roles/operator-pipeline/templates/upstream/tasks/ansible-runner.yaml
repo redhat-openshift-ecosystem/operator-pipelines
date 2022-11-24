@@ -16,9 +16,6 @@ spec:
   description: >-
     Task to run Ansible playbooks using Ansible Runner
 
-  workspaces:
-    - name: runner-dir
-      description: The Ansibler runner directory
   params:
     - name: project-dir
       description: The project directory under the workspace runner-dir
@@ -34,6 +31,20 @@ spec:
     - name: image
       description: Ansible runner image.
       default: quay.io/ansible/ansible-runner:stable-2.12-latest #tag: stable-2.12-latest
+    - name: kubeconfig_secret_name
+      description: The name of the Kubernetes Secret that contains the kubeconfig.
+      default: kubeconfig
+    - name: kubeconfig_secret_key
+      description: The key within the Kubernetes Secret that contains the kubeconfig.
+
+  workspaces:
+    - name: runner-dir
+      description: The Ansibler runner directory
+  volumes:
+    - name: kubeconfig-volume
+      secret:
+        secretName: "$(params.kubeconfig_secret_name)"
+
   stepTemplate:
     env:
       - name: HOME
@@ -72,6 +83,10 @@ spec:
         - $(params.args)
         - $(params.project-dir)
       workingDir: '$(workspaces.runner-dir.path)'
+      volumeMounts:
+        - name: kubeconfig-volume
+          readOnly: true
+          mountPath: "/etc/kubeconfig-volume"
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
