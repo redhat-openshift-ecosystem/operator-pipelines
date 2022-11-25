@@ -36,7 +36,7 @@ spec:
       default: kubeconfig
     - name: kubeconfig_secret_key
       description: The key within the Kubernetes Secret that contains the kubeconfig.
-
+      default: kubeconfig
   workspaces:
     - name: runner-dir
       description: The Ansibler runner directory

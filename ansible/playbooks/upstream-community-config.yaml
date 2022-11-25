@@ -26,3 +26,7 @@ tools:
     version: v1.23.0
   olm:
     version: v0.22.0
+  grpcurl:
+    version: v1.8.7
+  jq:
+    version: 1.6

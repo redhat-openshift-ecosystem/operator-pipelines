@@ -15,6 +15,10 @@ iib_version: 6.3.0
 skip_iib: false
 kubectl_binary: kubectl
 kubectl_version: v1.23.5
+grpcurl_binary: grpcurl
+grpcurl_version: v1.8.7
+jq_binary: jq
+jq_version: 1.6
 oc_version: 4.3.5
 operator_sdk_version: v1.18.1
 olm_version: v0.20.0

@@ -74,17 +74,31 @@ spec:
           - name: kubeconfig_secret_key
             description: The key within the Kubernetes Secret that contains the kubeconfig.
             default: kubeconfig
+        volumes:
+          - name: kubeconfig-volume
+            secret:
+              secretName: "$(params.kubeconfig_secret_name)"
         steps:
           - name: debug
-            image: alpine:latest
+            # image: alpine:latest
+            image: quay.io/operator_testing/operator-test-playbooks:dev-tekton
             script: |
+              echo "/etc/kubeconfig-volume/$(params.kubeconfig_secret_key)"
               mkdir -p $(workspaces.runner-dir.path)/$(params.project-dir)/env || true
-              echo "--tags index_verify -e run_upstream=true -e run_prepare_catalog_repo_upstream=false -e container_tool=podman -e iv_indexes=$(params.indexes) -e container_run_mode=pod -e kubeconfig_path=/etc/kubeconfig-volume/$(params.kubeconfig_secret_key)" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/cmdline
+              echo "--tags index_verify -e run_upstream=true -e run_prepare_catalog_repo_upstream=false -e container_tool=podman -e iv_indexes=$(params.indexes) -e container_run_mode=pod -e kubeconfig_path=/etc/kubeconfig-volume/$(params.kubeconfig_secret_key) -e testing_bin_path=/usr/local/bin" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/cmdline
               echo "ansible_connection: local" > $(workspaces.runner-dir.path)/$(params.project-dir)/env/extravars
+              ls -al /etc/kubeconfig-volume/$(params.kubeconfig_secret_key)
+              cat /etc/kubeconfig-volume/$(params.kubeconfig_secret_key)
+              export KUBECONFIG=/etc/kubeconfig-volume/$(params.kubeconfig_secret_key)
+              kubectl get all -A
             securityContext:
               runAsNonRoot: true
               runAsUser: 65532
               runAsGroup: 65532
+            volumeMounts:
+              - name: kubeconfig-volume
+                readOnly: true
+                mountPath: "/etc/kubeconfig-volume"
         workspaces:
           - name: runner-dir
       workspaces:

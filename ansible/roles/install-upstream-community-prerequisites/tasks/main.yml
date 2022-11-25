@@ -13,6 +13,41 @@
     - install
     - verify
 
+- name: "Install grpcurl"
+  ansible.builtin.include_role:
+    name: install-binary
+  vars:
+    package_binary: "grpcurl"
+    package_version: "{{ grpcurl_version }}"
+    package_version_command: "--version"
+    package_url: "https://github.com/fullstorydev/grpcurl/releases/download/{{ package_version }}/grpcurl_{{ package_version[1:] }}_linux_x86_64.tar.gz"
+    package_parse_delimeter: " "
+    package_parse_index: 1
+    package_extract: true
+    package_extract_exclude: ["LICENSE", "README.md"]
+    package_version_rcs: [0, 1]
+  tags:
+    - clean
+    - prerequisites
+    - install
+    - verify
+
+- name: "Install jq"
+  ansible.builtin.include_role:
+    name: install-binary
+  vars:
+    package_binary: "jq"
+    package_version: "{{ jq_version }}"
+    package_version_command: "--version"
+    package_url: "https://github.com/stedolan/jq/releases/download/jq-{{ package_version }}/jq-linux64"
+    package_parse_delimeter: "-"
+    package_parse_index: 1
+  tags:
+    - clean
+    - prerequisites
+    - install
+    - verify
+
 - name: "Install kind"
   ansible.builtin.include_role:
     name: install-binary

@@ -8,7 +8,7 @@ nodes:
 networking:
   # WARNING: It is _strongly_ recommended that you keep this the default
   # (127.0.0.1) for security reasons. However it is possible to change this.
-  apiServerAddress: "{{ kind_cluster_apiServerAddress }}"
+  apiServerAddress: "{{ kind_cluster_api_server_address }}"
   apiServerPort: 6443
 {% if registry_enable|bool == true %}
 containerdConfigPatches:
