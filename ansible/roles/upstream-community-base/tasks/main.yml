@@ -38,7 +38,7 @@
     skip_iib: "{{ not uc_config.iib.enable | bool | default(skip_iib) }}"
     kubectl_version: "{{ uc_config.tools.kubectl.version | default(kubectl_version) }}"
     grpcurl_version: "{{ uc_config.tools.grpcurl.version | default(grpcurl_version) }}"
-    jq_version: "{{ uc_config.tools.jq.version | default(jq_version) }}"    
+    jq_version: "{{ uc_config.tools.jq.version | default(jq_version) }}"
     oc_version: "{{ uc_config.tools.oc.version | default(oc_version) }}"
     operator_sdk_version: "{{ uc_config.tools.operator_sdk.version | default(operator_sdk_version) }}"
     olm_version: "{{ uc_config.tools.olm.version | default(olm_version) }}"
