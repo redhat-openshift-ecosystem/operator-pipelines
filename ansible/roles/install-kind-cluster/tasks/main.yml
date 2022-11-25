@@ -20,12 +20,12 @@
         - clean
         - install
 
-    - name: "Set 'kind_cluster_api_server_address' from ip['{{ kind_cluster_ip_index }}']"
+    - name: "Set 'kind_cluster_api_server_address' from ip['{{ kind_cluster_api_ip_index }}']"
       ansible.builtin.set_fact:
-        kind_cluster_api_server_address: "{{ ansible_facts['all_ipv4_addresses'][kind_cluster_ip_index] | default('localhost') }}"
+        kind_cluster_api_server_address: "{{ ansible_facts['all_ipv4_addresses'][kind_cluster_api_ip_index | int] }}"
       when:
-        - kind_cluster_ip_index is defined
-        - kind_cluster_ip_index | length > 0
+        - kind_cluster_api_ip_index is defined
+        - kind_cluster_api_ip_index | length > 0
       tags:
         - clean
         - install
