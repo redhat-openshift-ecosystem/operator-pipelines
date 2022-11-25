@@ -35,7 +35,7 @@
     registry_hostname: "{{ ansible_facts['fqdn'] | default('') }}"
     registry_ip: "{{ ansible_facts['all_ipv4_addresses'][0] | default('') }}"
     iib_version: "{{ uc_config.iib.version | default(iib_version) }}"
-    skip_iib: "{{ not uc_config.iib.enable | bool | default(skip_iib) }}"
+    skip_iib: "{{ (not uc_config.iib.enable | bool) | default(skip_iib) }}"
     kubectl_version: "{{ uc_config.tools.kubectl.version | default(kubectl_version) }}"
     grpcurl_version: "{{ uc_config.tools.grpcurl.version | default(grpcurl_version) }}"
     jq_version: "{{ uc_config.tools.jq.version | default(jq_version) }}"
