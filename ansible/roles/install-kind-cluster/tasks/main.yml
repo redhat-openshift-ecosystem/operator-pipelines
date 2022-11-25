@@ -26,6 +26,7 @@
       when:
         - kind_cluster_api_ip_index is defined
         - kind_cluster_api_ip_index | length > 0
+        - kind_cluster_api_ip_index | int >= 0
       tags:
         - clean
         - install
