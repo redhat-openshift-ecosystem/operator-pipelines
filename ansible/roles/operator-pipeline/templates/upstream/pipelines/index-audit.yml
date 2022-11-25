@@ -44,7 +44,7 @@ spec:
         - name: revision
           value: $(params.operator_test_playbook_branch)
         - name: gitInitImage
-          value: $(params.gitInitImage)          
+          value: $(params.gitInitImage)
       workspaces:
         - name: output
           workspace: pipeline
@@ -58,7 +58,7 @@ spec:
         - name: kubeconfig_secret_name
           value: $(params.kubeconfig_secret_name)
         - name: kubeconfig_secret_key
-          value: $(params.kubeconfig_secret_key)  
+          value: $(params.kubeconfig_secret_key)
       taskSpec:
         params:
           - name: project-dir
