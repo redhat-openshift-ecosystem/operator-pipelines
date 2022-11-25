@@ -7,3 +7,4 @@
         state: absent
   tags:
     - clean
+    - prerequisites

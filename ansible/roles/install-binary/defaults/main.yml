@@ -5,6 +5,7 @@ op_retries: 3
 op_delay: 15
 binary_needs_install: false
 package_version_rcs: [0]
+package_version_command: "version"
 package_verify_msg: true
 package_extract: false
 package_extract_exclude: []

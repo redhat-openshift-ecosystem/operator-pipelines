@@ -9,7 +9,8 @@ kind_binary: kind
 kind_version: v0.12.0
 kind_kube_version: v1.23.4
 kind_cluster_name: "operator-test"
-kind_cluster_apiServerAddress: "127.0.0.1"
+kind_cluster_api_ip_index: "0"
+kind_cluster_api_server_address: "127.0.0.1"
 kund_cluster_install_retries: 1
 kind_config_path: "{{ ikc_tmp_dir }}/kind_config.yaml"
 kind_config_map_registry_path: "{{ ikc_tmp_dir }}/kind_config_map_registry.yaml"
@@ -24,11 +25,14 @@ registry_ssl: false
 registry_cert_dir: "{{ op_work_dir }}/certs"
 registry_ca_cert_name: "registry-ca-cert"
 registry_ca_cert_namespace: "default"
-
 kubectl_binary: kubectl
 kubectl_version: v1.23.5
 oc_binary: oc
 oc_version: 4.3.5
+grpcurl_binary: grpcurl
+grpcurl_version: v1.8.7
+jq_binary: jq
+jq_version: 1.6
 operator_sdk_binary: operator-sdk
 operator_sdk_version: v1.18.1
 tekton_pipeline_version: v0.34.1

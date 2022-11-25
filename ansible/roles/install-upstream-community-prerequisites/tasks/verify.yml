@@ -12,5 +12,6 @@
         msg: "'{{ sb_item }}' was not found! You need to install it first."
       when: sb_results.rc != 0
   tags:
+    - prerequisites
     - install
     - verify
