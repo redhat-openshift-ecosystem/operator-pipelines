@@ -26,3 +26,5 @@ tekton_pipeline_version: v0.34.1
 tekton_triggers_version: v0.19.1
 tekton_dashboard_version: v0.24.1
 tkn_version: 0.23.1
+ngrok_binary: ngrok
+ngrok_version: 3.1.0

@@ -24,15 +24,9 @@
   kubernetes.core.k8s_info:
     api_version: apps/v1
     kind: Deployment
-    # kind: Deployment
     namespace: kube-system
     name: coredns
-    # field_selectors:
-    # - status.phase=Running
-    # wait: true
-    # wait_sleep: 1
-    # wait_timeout: 360
-    # kubeconfig: "{{ kubeconfig }}"
+    kubeconfig: "{{ kubeconfig }}"
   retries: 20
   timeout: 5
   register: pod_list
@@ -56,7 +50,6 @@
 - name: "Download ingress '{{ ingress_version }}' to {{ kind_ingress_path }}"
   ansible.builtin.get_url:
     url: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ ingress_version }}/deploy/static/provider/kind/deploy.yaml"
-    # url: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml"
     dest: "{{ kind_ingress_path }}"
     mode: "0664"
     force: true
@@ -81,9 +74,6 @@
   kubernetes.core.k8s:
     state: present
     src: "{{ kind_ingress_path }}"
-    # wait: true
-    # wait_sleep: 1
-    # wait_timeout: 360
     kubeconfig: "{{ kubeconfig }}"
   tags:
     - install
