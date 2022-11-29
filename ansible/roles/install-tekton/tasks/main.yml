@@ -90,7 +90,7 @@
         wait_timeout: 360
         kubeconfig: "{{ kubeconfig }}"
 
-    - name: "Enable Ingress and tekton-dashboard"
+    - name: "Enable Ingress and tekton-dashboard 'http://tekton-dashboard.127.0.0.1.nip.io'"
       kubernetes.core.k8s:
         state: present
         definition:
