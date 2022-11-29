@@ -24,7 +24,7 @@
           retries: "{{ op_retries }}"
           delay: "{{ op_delay }}"
           failed_when: package_install_result is failure
-          when: not package_extract|bool
+          when: not package_extract | bool
 
         - name: "Download and extract OpenShift {{ package_binary }} ({{ package_version }} to {{ op_bin_dir }}/{{ package_binary }}"
           ansible.builtin.unarchive:
@@ -37,9 +37,10 @@
           until: download_and_unpack_result is succeeded
           retries: "{{ op_retries }}"
           delay: "{{ op_delay }}"
-          when: package_extract|bool
+          when: package_extract | bool
 
-      when: binary_needs_install|bool
+      when: binary_needs_install | bool
 
   tags:
+    - prerequisites
     - install

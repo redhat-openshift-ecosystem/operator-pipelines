@@ -20,7 +20,18 @@
         - clean
         - install
 
-    - name: "Install cluster '{{ kind_cluster_name }}'"
+    - name: "Set 'kind_cluster_api_server_address' from ip['{{ kind_cluster_api_ip_index }}']"
+      ansible.builtin.set_fact:
+        kind_cluster_api_server_address: "{{ ansible_facts['all_ipv4_addresses'][kind_cluster_api_ip_index | int] }}"
+      when:
+        - kind_cluster_api_ip_index is defined
+        - kind_cluster_api_ip_index | length > 0
+        - kind_cluster_api_ip_index | int >= 0
+      tags:
+        - clean
+        - install
+
+    - name: "Install cluster '{{ kind_cluster_name }}' with api address '{{ kind_cluster_api_server_address }}'"
       ansible.builtin.include_tasks:
         file: install.yml
       tags:

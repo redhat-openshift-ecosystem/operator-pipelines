@@ -5,16 +5,19 @@
     file: remove.yml
   tags:
     - clean
+    - prerequisites
 
 - name: "Install {{ package_binary }}"
   ansible.builtin.include_tasks:
     file: install.yml
   tags:
+    - prerequisites
     - install
 
 - name: "Verify {{ package_binary }}"
   ansible.builtin.include_tasks:
     file: verify.yml
   tags:
+    - prerequisites
     - install
     - verify
