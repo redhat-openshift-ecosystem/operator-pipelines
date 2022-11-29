@@ -5,6 +5,7 @@
       ansible.builtin.get_url:
         url: "https://storage.googleapis.com/tekton-releases/pipeline/previous/{{ tekton_pipeline_version }}/release.yaml"
         dest: "{{ kind_tekton_pipeline_path }}"
+        force: true
         mode: "0664"
         validate_certs: "{{ tekton_validate_certs }}"
 
@@ -12,6 +13,7 @@
       ansible.builtin.get_url:
         url: "https://storage.googleapis.com/tekton-releases/triggers/previous/{{ tekton_triggers_version }}/release.yaml"
         dest: "{{ kind_tekton_triggers_path }}"
+        force: true
         mode: "0664"
         validate_certs: "{{ tekton_validate_certs }}"
 
@@ -19,6 +21,7 @@
       ansible.builtin.get_url:
         url: "https://github.com/tektoncd/dashboard/releases/download/{{ tekton_dashboard_version }}/tekton-dashboard-release.yaml"
         dest: "{{ kind_tekton_dashboard_path }}"
+        force: true
         mode: "0664"
         validate_certs: "{{ tekton_validate_certs }}"
   tags:
