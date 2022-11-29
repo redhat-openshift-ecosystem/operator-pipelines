@@ -89,5 +89,26 @@
         wait_sleep: 1
         wait_timeout: 360
         kubeconfig: "{{ kubeconfig }}"
+
+    - name: "Enable Ingress and tekton-dashboard"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: tekton-dashboard
+            namespace: tekton-pipelines
+          spec:
+            rules:
+              - host: tekton-dashboard.127.0.0.1.nip.io
+                http:
+                  paths:
+                    - pathType: ImplementationSpecific
+                      backend:
+                        service:
+                          name: tekton-dashboard
+                          port:
+                            number: 9097
   tags:
     - install
