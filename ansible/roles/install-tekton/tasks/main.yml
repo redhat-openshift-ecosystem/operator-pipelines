@@ -90,7 +90,7 @@
         wait_timeout: 360
         kubeconfig: "{{ kubeconfig }}"
 
-    - name: "Enable Ingress and tekton-dashboard 'http://tekton-dashboard.127.0.0.1.nip.io:8000'"
+    - name: "Enable Ingress and tekton-dashboard 'http://tekton-dashboard.127.0.0.1.nip.io:{{ tekton_dashboard_public_port }}'"
       kubernetes.core.k8s:
         state: present
         definition:
@@ -124,7 +124,7 @@
       block:
         - name: "Start ngrok at port 8000"
           ansible.builtin.shell:
-            cmd: "nohup ngrok http 8000 --authtoken={{ ngrok_auth_token }} --log=stdout </dev/null >/dev/null 2>&1 &"
+            cmd: "nohup ngrok http {{ tekton_dashboard_public_port }} --authtoken={{ ngrok_auth_token }} --log=stdout </dev/null >/dev/null 2>&1 &"
             chdir: "/tmp/"
           async: 10
           poll: 0

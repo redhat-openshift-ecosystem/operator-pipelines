@@ -10,10 +10,7 @@ nodes:
             node-labels: "ingress-ready=true"
     extraPortMappings:
       - containerPort: 80
-        hostPort: 8000
-        protocol: TCP
-      - containerPort: 443
-        hostPort: 8443
+        hostPort: {{ tekton_dashboard_public_port }}
         protocol: TCP
       - containerPort: 31000
         hostPort: 50051
