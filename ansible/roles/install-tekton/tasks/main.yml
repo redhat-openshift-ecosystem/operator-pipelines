@@ -120,6 +120,11 @@
                           port:
                             number: 9097
 
+    - name: "Adding 'Tekton Dashboard local url' to 'community_final_report'"
+      ansible.builtin.set_fact:
+        community_final_report: >
+          "{{ (community_final_report | default([])) + ['Tekton Dashboard local url : http://tekton-dashboard.127.0.0.1.nip.io:' + tekton_dashboard_public_port | string] }}"
+
     - name: "Setup ngrok"
       block:
         - name: "Start ngrok at port 8000"
@@ -140,6 +145,11 @@
         - name: "Print ngrok output"
           ansible.builtin.debug:
             msg: "Dashboard: {{ ngrok_result.json.tunnels[0].public_url }}"
+          when: ngrok_result.json.tunnels.0 is defined
+
+        - name: "Adding 'Tekton Dashboard local url' to 'community_final_report'"
+          ansible.builtin.set_fact:
+            community_final_report: "{{ (community_final_report | default([])) + ['Tekton Dashboard public url : ' + ngrok_result.json.tunnels[0].public_url] }}"
           when: ngrok_result.json.tunnels.0 is defined
 
 

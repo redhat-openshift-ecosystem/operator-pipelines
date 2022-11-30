@@ -33,10 +33,10 @@
       failed_when: false
       when: container_tool == "podman"
 
-    - name: "Generating iib '{{ container_tool }}-compose.yml'"
+    - name: "Generating iib 'docker-compose.yml'"
       ansible.builtin.template:
         src: docker-compose-run.yml.j2
-        dest: "{{ iib_project_dir }}/{{ container_tool }}-compose.yml"
+        dest: "{{ iib_project_dir }}/docker-compose.yml"
         mode: 0644
 
     - name: "Replace 'iib_registry' for to push to quay directly"
