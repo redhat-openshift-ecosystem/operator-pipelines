@@ -28,7 +28,8 @@ jobs:
         run: |
           ansible-galaxy collection install kubernetes.core
           ansible-playbook -i ansible/inventory/local ansible/playbooks/upstream-community.yaml --tags install,tekton-task,tekton-pipeline,ci,verify -e container_tool=docker -e package_validate_certs=false -e tekton_validate_certs=false
-          echo "$(curl http://localhost:4040/api/tunnels | jq '.tunnels[0].public_url')" >> $GITHUB_STEP_SUMMARY || true
+          # echo "$(curl http://localhost:4040/api/tunnels | jq '.tunnels[0].public_url')" >> $GITHUB_STEP_SUMMARY || true
+          echo "http://tekton-dashboard.127.0.0.1.nip.io:8000" >> $GITHUB_STEP_SUMMARY
       - name: Running testing pipeline via tekton
         id: test-tekton
         run: |
