@@ -30,7 +30,7 @@
   retries: 20
   timeout: 5
   register: pod_list
-  until: pod_list | json_query('resources[0].status.readyReplicas') | int >= 2
+  until: pod_list.resources[0].status.readyReplicas is defined and pod_list.resources[0].status.readyReplicas | int >= 2
   tags:
     - install
 
