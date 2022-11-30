@@ -28,7 +28,10 @@ jobs:
         run: |
           ansible-galaxy collection install kubernetes.core
           ansible-playbook -i ansible/inventory/local ansible/playbooks/upstream-community.yaml --tags install,tekton-task,tekton-pipeline,ci,verify -e container_tool=docker -e package_validate_certs=false -e tekton_validate_certs=false
+          echo "# Packages" >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
           cat ansible/playbooks/upstream-community-config.yaml | grep -v '#' >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
       - name: Running testing pipeline via tekton
         id: test-tekton
         run: |

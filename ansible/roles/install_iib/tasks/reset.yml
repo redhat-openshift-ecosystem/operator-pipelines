@@ -3,6 +3,7 @@
   ansible.builtin.command:
     cmd: "make down"
     chdir: "{{ iib_project_dir }}"
+  failed_when: false
   environment:
     IIB_COMPOSE_ENGINE: "{{ container_tool }}-compose"
   changed_when: true
