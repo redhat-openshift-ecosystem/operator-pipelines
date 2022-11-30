@@ -128,26 +128,26 @@ def ocp_version_info(
 
     indices = get_supported_indices(pyxis_url, ocp_versions_range, organization)
 
-    if not indices:
-        raise ValueError("No supported indices found")
-
-    # Raise an error if any of the supported OCP versions have reached their EOL
+    supported_indices = []
     now = datetime.now(timezone.utc)
     for index in indices:
         eol = index.get("end_of_life")
-        if not eol:
-            continue
+        if eol:
+            eol_datetime = isoparse(eol).astimezone(timezone.utc)
+            if eol_datetime <= now:
+                LOGGER.warning(
+                    "OpenShift %s has reached its end of life", index["ocp_version"]
+                )
+                continue
+        supported_indices.append(index)
 
-        eol_datetime = isoparse(eol).astimezone(timezone.utc)
-        if eol_datetime <= now:
-            raise ValueError(
-                f"OpenShift {index['ocp_version']} has reached its end of life"
-            )
+    if not supported_indices:
+        raise ValueError("No supported indices found")
 
     return {
         "versions_annotation": ocp_versions_range,
-        "indices": indices,
-        "max_version_index": indices[0],
+        "indices": supported_indices,
+        "max_version_index": supported_indices[0],
     }
 
 
