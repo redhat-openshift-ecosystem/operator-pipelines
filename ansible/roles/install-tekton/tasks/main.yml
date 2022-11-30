@@ -120,6 +120,31 @@
                           port:
                             number: 9097
 
+    - name: "Setup ngrok"
+      block:
+        - name: "Start ngrok at port 8000"
+          ansible.builtin.shell:
+            cmd: "nohup ngrok http 8000 --authtoken={{ ngrok_auth_token }} --log=stdout </dev/null >/dev/null 2>&1 &"
+            chdir: "/tmp/"
+          async: 10
+          poll: 0
+          changed_when: false
 
+        - name: "Getting ngrok public url"
+          ansible.builtin.uri:
+            url: "http://localhost:4040/api/tunnels"
+            return_content: true
+            status_code: 200
+          register: ngrok_result
+
+        - name: "Print ngrok output"
+          ansible.builtin.debug:
+            msg: "Dashboard: {{ ngrok_result.json.tunnels[0].public_url }}"
+          when: ngrok_result.json.tunnels.0 is defined
+
+
+      when:
+        - ngrok_auth_token is defined
+        - ngrok_auth_token | length > 0
   tags:
     - install
