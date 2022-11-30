@@ -92,11 +92,14 @@ def test_ocp_version_info(
     bundle_root = bundle["root"]
 
     # Happy path
-    mock_indices.return_value = [{"ocp_version": "4.7", "path": "quay.io/foo:4.7"}]
+    mock_indices.return_value = [
+        {"ocp_version": "4.7", "path": "quay.io/foo:4.7"},
+        {"ocp_version": "4.6", "path": "quay.io/foo:4.6", "end_of_life": timestamp},
+    ]
     info = operatorcert.ocp_version_info(bundle_root, "", organization)
     assert info == {
         "versions_annotation": "4.6-4.8",
-        "indices": mock_indices.return_value,
+        "indices": mock_indices.return_value[:1],
         "max_version_index": mock_indices.return_value[0],
     }
 
@@ -115,7 +118,6 @@ def test_ocp_version_info(
     ]
     with pytest.raises(ValueError) as err_info:
         operatorcert.ocp_version_info(bundle_root, "", organization)
-    assert str(err_info.value) == "OpenShift 4.7 has reached its end of life"
 
     # Missing version range annotation
     annotations = {
