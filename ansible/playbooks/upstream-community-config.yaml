@@ -1,7 +1,7 @@
 ---
 kind:
-  version: v0.16.0
-  kube_version: v1.24.6
+  version: v0.17.0
+  kube_version: v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1
 registry:
   enable: true
   ssl: true
@@ -10,16 +10,16 @@ iib:
   version: v6.3.0
 tekton:
   pipeline:
-    version: v0.40.2
+    version: v0.42.0
   triggers:
-    version: v0.21.0
+    version: v0.22.0
   dashboard:
-    version: v0.29.2
+    version: v0.30.0
   tkn:
     version: 0.26.0
 tools:
   kubectl:
-    version: v1.25.2
+    version: v1.25.3
   oc:
     version: 4.11.7
   operator_sdk:
@@ -30,3 +30,5 @@ tools:
     version: v1.8.7
   jq:
     version: 1.6
+  ngrok:
+    version: 3.1.0

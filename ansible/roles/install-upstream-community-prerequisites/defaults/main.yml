@@ -10,3 +10,4 @@ kubectl_version: v1.23.5
 oc_version: 4.3.5
 operator_sdk_version: v1.18.1
 tkn_version: 0.23.1
+ngrok_version: 3.1.0

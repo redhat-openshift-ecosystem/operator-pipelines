@@ -97,6 +97,22 @@
     - install
     - verify
 
+- name: "Install ngrok"
+  ansible.builtin.include_role:
+    name: install-binary
+  vars:
+    package_binary: "ngrok"
+    package_version: "{{ ngrok_version }}"
+    package_url: "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v{{ package_version.split('.')[0] }}-stable-linux-amd64.tgz"
+    package_parse_delimeter: " "
+    package_parse_index: 2
+    package_extract: true
+  tags:
+    - clean
+    - prerequisites
+    - install
+    - verify
+
 - name: "Install operator-sdk"
   ansible.builtin.include_role:
     name: install-binary

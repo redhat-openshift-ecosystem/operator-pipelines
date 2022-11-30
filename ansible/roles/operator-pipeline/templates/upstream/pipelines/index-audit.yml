@@ -84,7 +84,7 @@ spec:
             image: quay.io/operator_testing/operator-test-playbooks:dev-tekton
             script: |
               export KUBECONFIG=/etc/kubeconfig-volume/$(params.kubeconfig_secret_key)
-              CLUSTER_IP=$(kubectl config view -o jsonpath="{.clusters[].cluster.server}" | cut -d ':' -f 2 | cut -d '/' -f3)
+              CLUSTER_IP=$(kubectl config view -o jsonpath="{.clusters[?(@.name=='kind-operator-test')].cluster.server}" | cut -d ':' -f 2 | cut -d '/' -f3)
               mkdir -p $(workspaces.runner-dir.path)/$(params.project-dir)/env || true
               echo "--tags index_verify -e run_upstream=true -e run_prepare_catalog_repo_upstream=false -e container_tool=podman -e iv_indexes=$(params.indexes) -e container_run_mode=pod -e kubeconfig_path=/etc/kubeconfig-volume/$(params.kubeconfig_secret_key) -e testing_bin_path=/usr/local/bin -e iv_container_host=$CLUSTER_IP" | tee $(workspaces.runner-dir.path)/$(params.project-dir)/env/cmdline
               echo "ansible_connection: local" | tee $(workspaces.runner-dir.path)/$(params.project-dir)/env/extravars

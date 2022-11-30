@@ -23,8 +23,6 @@
     - install
     - iib-install
     - iib-delete
-  when: not skip_iib | bool
-
 
 - name: "Install iib"
   block:
@@ -53,4 +51,3 @@
       tags:
         - clean
         - iib-delete
-  when: not skip_iib | bool
