@@ -54,9 +54,21 @@
         - verify
         - kind-install
 
+    - name: "Install iib"
+      ansible.builtin.include_role:
+        name: install_iib
+      when: skip_iib is undefined or not skip_iib | bool
+      tags:
+        - clean
+        - install
+        - iib-install
+        - iib-delete
+
+
     - name: "Install OLM"
       ansible.builtin.include_role:
         name: install-olm
+      when: skip_olm is undefined or not skip_olm | bool
       tags:
         - clean
         - install
@@ -69,15 +81,6 @@
         - clean
         - install
         - verify
-
-    - name: "Install iib"
-      ansible.builtin.include_role:
-        name: install_iib
-      tags:
-        - clean
-        - install
-        - iib-install
-        - iib-delete
 
     - name: "Install operator pipeline"
       ansible.builtin.include_role:
@@ -102,6 +105,6 @@
         var: community_final_report
       when:
         - community_final_report is defined
-        - community_final_report|length > 0
+        - community_final_report | length > 0
       tags:
         - always

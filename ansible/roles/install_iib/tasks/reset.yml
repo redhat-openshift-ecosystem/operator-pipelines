@@ -1,17 +1,4 @@
 ---
-- name: "Remove previous iib installation 'make down'"
-  ansible.builtin.command:
-    cmd: "make down"
-    chdir: "{{ iib_project_dir }}"
-  environment:
-    IIB_COMPOSE_ENGINE: "{{ container_tool }}-compose"
-  changed_when: true
-  tags:
-    - install
-    - clean
-    - iib-install
-    - iib-delete
-
 - name: "Install iib (Wait until success)"
   block:
     - name: Set the retry count
@@ -69,6 +56,21 @@
       when:
         - iib_push_image is defined
         - iib_push_image|length > 0
+
+
+    - name: "Remove previous iib installation 'make down'"
+      ansible.builtin.command:
+        cmd: "make down"
+        chdir: "{{ iib_project_dir }}"
+      failed_when: false
+      environment:
+        IIB_COMPOSE_ENGINE: "{{ container_tool }}-compose"
+      changed_when: true
+      tags:
+        - install
+        - clean
+        - iib-install
+        - iib-delete
 
     - name: "Building and starting iib {{ iib_version }} 'make up'"
       ansible.builtin.command:

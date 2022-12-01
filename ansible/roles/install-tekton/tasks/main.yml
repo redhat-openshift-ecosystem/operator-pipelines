@@ -5,6 +5,7 @@
       ansible.builtin.get_url:
         url: "https://storage.googleapis.com/tekton-releases/pipeline/previous/{{ tekton_pipeline_version }}/release.yaml"
         dest: "{{ kind_tekton_pipeline_path }}"
+        force: true
         mode: "0664"
         validate_certs: "{{ tekton_validate_certs }}"
 
@@ -12,6 +13,7 @@
       ansible.builtin.get_url:
         url: "https://storage.googleapis.com/tekton-releases/triggers/previous/{{ tekton_triggers_version }}/release.yaml"
         dest: "{{ kind_tekton_triggers_path }}"
+        force: true
         mode: "0664"
         validate_certs: "{{ tekton_validate_certs }}"
 
@@ -19,6 +21,7 @@
       ansible.builtin.get_url:
         url: "https://github.com/tektoncd/dashboard/releases/download/{{ tekton_dashboard_version }}/tekton-dashboard-release.yaml"
         dest: "{{ kind_tekton_dashboard_path }}"
+        force: true
         mode: "0664"
         validate_certs: "{{ tekton_validate_certs }}"
   tags:
@@ -86,5 +89,72 @@
         wait_sleep: 1
         wait_timeout: 360
         kubeconfig: "{{ kubeconfig }}"
+
+    - name: "Enable Ingress and tekton-dashboard 'http://tekton-dashboard.127.0.0.1.nip.io:{{ tekton_dashboard_public_port }}'"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: tekton-dashboard
+            namespace: tekton-pipelines
+          spec:
+            rules:
+              - host: tekton-dashboard.127.0.0.1.nip.io
+                http:
+                  paths:
+                    - pathType: ImplementationSpecific
+                      backend:
+                        service:
+                          name: tekton-dashboard
+                          port:
+                            number: 9097
+              - http:
+                  paths:
+                    - pathType: Prefix
+                      path: "/"
+                      backend:
+                        service:
+                          name: tekton-dashboard
+                          port:
+                            number: 9097
+
+    - name: "Adding 'Tekton Dashboard local url' to 'community_final_report'"
+      ansible.builtin.set_fact:
+        community_final_report: >
+          "{{ (community_final_report | default([])) + ['Tekton Dashboard local url : http://tekton-dashboard.127.0.0.1.nip.io:' + tekton_dashboard_public_port | string] }}"
+
+    - name: "Setup ngrok"
+      block:
+        - name: "Start ngrok at port 8000"
+          ansible.builtin.shell:
+            cmd: "nohup ngrok http {{ tekton_dashboard_public_port }} --authtoken={{ ngrok_auth_token }} --log=stdout </dev/null >/dev/null 2>&1 &"
+            chdir: "/tmp/"
+          async: 10
+          poll: 0
+          changed_when: false
+
+        - name: "Getting ngrok public url"
+          ansible.builtin.uri:
+            url: "http://localhost:4040/api/tunnels"
+            return_content: true
+            status_code: 200
+          register: ngrok_result
+
+        - name: "Print ngrok output"
+          ansible.builtin.debug:
+            msg: "Dashboard: {{ ngrok_result.json.tunnels[0].public_url }}"
+          when: ngrok_result.json.tunnels.0 is defined
+
+        - name: "Adding 'Tekton Dashboard local url' to 'community_final_report'"
+          ansible.builtin.set_fact:
+            community_final_report: "{{ (community_final_report | default([])) + ['Tekton Dashboard public url : ' + ngrok_result.json.tunnels[0].public_url] }}"
+          when: ngrok_result.json.tunnels.0 is defined
+
+
+      when:
+        - ngrok_auth_token is defined
+        - ngrok_auth_token | length > 0
   tags:
     - install

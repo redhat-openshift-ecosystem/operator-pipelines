@@ -20,6 +20,20 @@
   tags:
     - install
 
+- name: "Wait until coredns is up"
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    namespace: kube-system
+    name: coredns
+    kubeconfig: "{{ kubeconfig }}"
+  retries: 20
+  timeout: 5
+  register: pod_list
+  until: pod_list.resources[0].status.readyReplicas is defined and pod_list.resources[0].status.readyReplicas | int >= 2
+  tags:
+    - install
+
 - name: "Get kind cluster information"
   kubernetes.core.k8s_cluster_info:
   register: api_status
@@ -29,6 +43,48 @@
 - name: "Failing when cluster failed to start"
   ansible.builtin.fail:
     msg: "Kind cluster was not able to start !!!"
-  when: api_status.failed is undefined or api_status.failed|bool
+  when: api_status.failed is undefined or api_status.failed | bool
+  tags:
+    - install
+
+- name: "Download ingress '{{ ingress_version }}' to {{ kind_ingress_path }}"
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ ingress_version }}/deploy/static/provider/kind/deploy.yaml"
+    dest: "{{ kind_ingress_path }}"
+    mode: "0664"
+    force: true
+    validate_certs: "{{ tekton_validate_certs }}"
+  tags:
+    - clean
+    - install
+
+- name: "Remove ingress {{ ingress_version }}"
+  kubernetes.core.k8s:
+    state: absent
+    src: "{{ kind_ingress_path }}"
+    wait: true
+    wait_sleep: 1
+    wait_timeout: 360
+    kubeconfig: "{{ kubeconfig }}"
+  tags:
+    - clean
+    - install
+
+- name: "Install ingress {{ ingress_version }}"
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ kind_ingress_path }}"
+    kubeconfig: "{{ kubeconfig }}"
+  tags:
+    - install
+
+- name: "Install ingress {{ ingress_version }}"
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ kind_ingress_path }}"
+    wait: true
+    wait_sleep: 1
+    wait_timeout: 360
+    kubeconfig: "{{ kubeconfig }}"
   tags:
     - install
