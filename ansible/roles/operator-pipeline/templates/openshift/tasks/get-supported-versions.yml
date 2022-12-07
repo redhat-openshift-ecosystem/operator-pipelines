@@ -32,7 +32,13 @@ spec:
         set -xe
 
         ORGANIZATION=$(cat config.yaml | yq -r '.organization')
-        VERSION_INFO=$(ocp-version-info $(params.bundle_path) $ORGANIZATION)
+        OCP_VERSIONS_OUTPUT_FILE="./ocp_versions.json"
+        ocp-version-info \
+          --output-file $OCP_VERSIONS_OUTPUT_FILE \
+          $(params.bundle_path) \
+          $ORGANIZATION
+
+        VERSION_INFO=$(cat $OCP_VERSIONS_OUTPUT_FILE)
         echo $VERSION_INFO | jq
 
         echo $VERSION_INFO \
