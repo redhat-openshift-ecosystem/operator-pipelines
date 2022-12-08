@@ -32,11 +32,6 @@ def setup_argparser() -> Any:  # pragma: no cover
         required=True,
     )
     parser.add_argument(
-        "--repo-published",
-        help="is the ContainerImage repository published?",
-        required=True,
-    )
-    parser.add_argument(
         "--connect-registry",
         help="Connect registry host",
         required=True,
