@@ -42,6 +42,7 @@ spec:
         # under a different UID, has access to its output file
         truncate -s 0 podman-inspect.json
         chmod 664 podman-inspect.json
+        setfacl -m g:1000:rw- podman-inspect.json
 
         mkdir -p $DOCKER_CONFIG
         chmod 775 $DOCKER_CONFIG
