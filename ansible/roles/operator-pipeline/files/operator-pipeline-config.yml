@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: operator-pipeline-config
+data:
+  enable-api-fields: "alpha" # Allow alpha fields to be used in Tasks and Pipelines.
+  enable-tekton-oci-bundles: true

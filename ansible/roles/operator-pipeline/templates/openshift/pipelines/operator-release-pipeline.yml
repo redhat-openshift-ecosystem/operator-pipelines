@@ -469,6 +469,7 @@ spec:
       when: *whenNotUndistributed
       taskRef:
         name: request-signature
+        bundle: "quay.io/redhat-isv/tkn-signing-bundle:3638365517"
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -503,6 +504,7 @@ spec:
       when: *whenNotUndistributed
       taskRef:
         name: upload-signature
+        bundle: "quay.io/redhat-isv/tkn-signing-bundle:3638365517"
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
