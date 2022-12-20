@@ -128,6 +128,21 @@
     - install
     - verify
 
+- name: "Install opm"
+  ansible.builtin.include_role:
+    name: install-binary
+  vars:
+    package_binary: "opm"
+    package_version: "{{ opm_version }}"
+    package_url: "https://github.com/operator-framework/operator-registry/releases/download/{{ package_version }}/linux-amd64-opm"
+    package_parse_delimeter: '"'
+    package_parse_index: 1
+  tags:
+    - clean
+    - prerequisites
+    - install
+    - verify
+
 - name: "Install tkn"
   ansible.builtin.include_role:
     name: install-binary

@@ -42,6 +42,7 @@
     jq_version: "{{ uc_config.tools.jq.version | default(jq_version) }}"
     oc_version: "{{ uc_config.tools.oc.version | default(oc_version) }}"
     operator_sdk_version: "{{ uc_config.tools.operator_sdk.version | default(operator_sdk_version) }}"
+    opm_version: "{{ uc_config.tools.opm.version | default(opm_version) }}"
     olm_version: "{{ uc_config.tools.olm.version | default(olm_version) }}"
     tekton_pipeline_version: "{{ uc_config.tekton.pipeline.version | default(tekton_pipeline_version) }}"
     tekton_triggers_version: "{{ uc_config.tekton.triggers.version | default(tekton_triggers_version) }}"
