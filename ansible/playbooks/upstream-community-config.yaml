@@ -23,7 +23,9 @@ tools:
   oc:
     version: 4.11.7
   operator_sdk:
-    version: v1.23.0
+    version: v1.26.0
+  opm:
+    version: v1.26.2
   olm:
     version: v0.22.0
   grpcurl:
