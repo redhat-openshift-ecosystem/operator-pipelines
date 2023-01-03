@@ -21,6 +21,7 @@ jq_binary: jq
 jq_version: 1.6
 oc_version: 4.3.5
 operator_sdk_version: v1.18.1
+opm_version: v1.26.2
 olm_version: v0.20.0
 tekton_pipeline_version: v0.34.1
 tekton_triggers_version: v0.19.1
