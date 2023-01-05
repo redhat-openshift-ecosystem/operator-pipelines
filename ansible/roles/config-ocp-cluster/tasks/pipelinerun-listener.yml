@@ -164,3 +164,18 @@
             name: config-defaults
           data:
             default-cloud-events-sink: "http://el-pipelinerun-listener.{{ pipelinerun_listener_namespace }}.svc.cluster.local:8080"
+
+    - name: Set default Tekton CloudEvents for Tekton Bundles
+      k8s:
+        state: present
+        validate_certs: "{{ k8s_validate_certs }}"
+        namespace: openshift-pipelines
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: feature-flags
+          data:
+            enable-tekton-oci-bundles: true
+            enable-api-fields: "alpha"
+        
