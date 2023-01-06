@@ -40,7 +40,7 @@ spec:
     - name: verify-whitelisted-index-image
       taskref:
         name: verify-whitelisted-index-image
-        bundle: "quay.io/redhat-isv/tkn-signing-bundle:3638365517"
+        bundle: "quay.io/redhat-isv/tkn-signing-bundle:3828559997"
         kind: Task
       params:
         - name: reference
@@ -61,7 +61,7 @@ spec:
     - name: request-signature
       taskRef:
         name: request-signature
-        bundle: "quay.io/redhat-isv/tkn-signing-bundle:3638365517"
+        bundle: "quay.io/redhat-isv/tkn-signing-bundle:3828559997"
         kind: Task
       runAfter:
         - set-env
@@ -96,7 +96,7 @@ spec:
     - name: upload-signature
       taskRef:
         name: upload-signature
-        bundle: "quay.io/redhat-isv/tkn-signing-bundle:3638365517"
+        bundle: "quay.io/redhat-isv/tkn-signing-bundle:3828559997"
         kind: Task
       runAfter:
         - request-signature
