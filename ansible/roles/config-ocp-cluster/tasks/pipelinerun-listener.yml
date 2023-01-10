@@ -164,4 +164,3 @@
             name: config-defaults
           data:
             default-cloud-events-sink: "http://el-pipelinerun-listener.{{ pipelinerun_listener_namespace }}.svc.cluster.local:8080"
-        
