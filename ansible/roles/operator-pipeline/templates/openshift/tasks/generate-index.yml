@@ -41,6 +41,7 @@ spec:
         # This is needed to ensure the inspect-base-index step, which runs
         # under a different UID, has access to its output file
         truncate -s 0 podman-inspect.json
+        chown :1000 podman-inspect.json
         chmod 664 podman-inspect.json
 
         mkdir -p $DOCKER_CONFIG
@@ -54,6 +55,7 @@ spec:
       workingDir: $(workspaces.output.path)
       securityContext:
         runAsUser: 1000
+        runAsGroup: 1000
       script: |
         #! /usr/bin/env bash
         set -exo pipefail
