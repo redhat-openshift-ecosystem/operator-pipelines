@@ -120,6 +120,29 @@
                           port:
                             number: 9097
 
+    - name: "Apply tekton resolvers-feature-flags"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: resolvers-feature-flags
+            namespace: tekton-pipelines-resolvers
+            labels:
+              app.kubernetes.io/component: resolvers
+              app.kubernetes.io/instance: default
+              app.kubernetes.io/part-of: tekton-pipelines
+          data:
+            # Setting this flag to "true" enables remote resolution of Tekton OCI bundles.
+            enable-bundles-resolver: "true"
+            # Setting this flag to "true" enables remote resolution of tasks and pipelines via the Tekton Hub.
+            enable-hub-resolver: "true"
+            # Setting this flag to "true" enables remote resolution of tasks and pipelines from Git repositories.
+            enable-git-resolver: "true"
+            # Setting this flag to "true" enables remote resolution of tasks and pipelines from other namespaces within the cluster.
+            enable-cluster-resolver: "true"
+
     - name: "Adding 'Tekton Dashboard local url' to 'community_final_report'"
       ansible.builtin.set_fact:
         community_final_report: >
