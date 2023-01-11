@@ -108,5 +108,26 @@
           data:
             registry-ca.crt: "{{ lookup('file', registry_cert_dir + '/domain.crt') }}"
 
+    - name: "Update configMap 'feature-flags' in namespace 'openshift-pipelines'"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: feature-flags
+            namespace: tekton-pipelines
+          data:
+            running-in-environment-with-injected-sidecars: 'true'
+            disable-home-env-overwrite: 'true'
+            disable-working-directory-overwrite: 'true'
+            scope-when-expressions-to-task: 'true'
+            require-git-ssh-secret-known-hosts: 'false'
+            enable-tekton-oci-bundles: 'true'
+            enable-api-fields: stable
+            enable-custom-tasks: 'false'
+            disable-creds-init: 'false'
+            disable-affinity-assistant: 'true'
+
   tags:
     - install
