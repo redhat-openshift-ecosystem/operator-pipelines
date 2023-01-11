@@ -57,6 +57,28 @@
         wait_timeout: 360
         kubeconfig: "{{ kubeconfig }}"
 
+    - name: "Remove tekton pipeline feature-flags"
+      kubernetes.core.k8s:
+        state: absent
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: feature-flags
+            namespace: tekton-pipelines
+        kubeconfig: "{{ kubeconfig }}"
+
+    - name: "Remove tekton pipeline resolvers-feature-flags"
+      kubernetes.core.k8s:
+        state: absent
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: resolvers-feature-flags
+            namespace: tekton-pipelines-resolvers
+        kubeconfig: "{{ kubeconfig }}"
+
   tags:
     - clean
     - install
@@ -71,6 +93,50 @@
         wait_sleep: 1
         wait_timeout: 360
         kubeconfig: "{{ kubeconfig }}"
+
+    - name: "Update configMap 'feature-flags' in namespace 'openshift-pipelines'"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: feature-flags
+            namespace: tekton-pipelines
+          data:
+            running-in-environment-with-injected-sidecars: "true"
+            disable-home-env-overwrite: "true"
+            disable-working-directory-overwrite: "true"
+            scope-when-expressions-to-task: "true"
+            require-git-ssh-secret-known-hosts: "false"
+            enable-tekton-oci-bundles: "true"
+            enable-api-fields: stable
+            enable-custom-tasks: "false"
+            disable-creds-init: "false"
+            disable-affinity-assistant: "true"
+
+    - name: "Update configMap 'resolvers-feature-flags' in namespace 'openshift-pipelines-resolvers'"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: resolvers-feature-flags
+            namespace: tekton-pipelines-resolvers
+            labels:
+              app.kubernetes.io/component: resolvers
+              app.kubernetes.io/instance: default
+              app.kubernetes.io/part-of: tekton-pipelines
+          data:
+            # Setting this flag to "true" enables remote resolution of Tekton OCI bundles.
+            enable-bundles-resolver: "true"
+            # Setting this flag to "true" enables remote resolution of tasks and pipelines via the Tekton Hub.
+            enable-hub-resolver: "true"
+            # Setting this flag to "true" enables remote resolution of tasks and pipelines from Git repositories.
+            enable-git-resolver: "true"
+            # Setting this flag to "true" enables remote resolution of tasks and pipelines from other namespaces within the cluster.
+            enable-cluster-resolver: "true"
 
     - name: "Install tekton triggers {{ tekton_triggers_version }}"
       kubernetes.core.k8s:
@@ -151,7 +217,6 @@
           ansible.builtin.set_fact:
             community_final_report: "{{ (community_final_report | default([])) + ['Tekton Dashboard public url : ' + ngrok_result.json.tunnels[0].public_url] }}"
           when: ngrok_result.json.tunnels.0 is defined
-
 
       when:
         - ngrok_auth_token is defined
