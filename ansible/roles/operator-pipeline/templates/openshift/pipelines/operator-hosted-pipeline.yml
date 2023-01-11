@@ -152,7 +152,7 @@ spec:
         - name: revision
           value: $(params.git_pr_branch)
         - name: gitInitImage
-          value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
+          value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:a538c423e7a11aae6ae582a411fdb090936458075f99af4ce5add038bb6983e8
       workspaces:
         - name: output
           workspace: repository

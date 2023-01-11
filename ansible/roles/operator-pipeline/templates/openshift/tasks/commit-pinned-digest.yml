@@ -25,7 +25,7 @@ spec:
   params:
     - name: gitInitImage
       description: Git init image
-      default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9"
+      default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:a538c423e7a11aae6ae582a411fdb090936458075f99af4ce5add038bb6983e8"
     - name: dirty_flag
     - name: git_branch
     - name: verbose
