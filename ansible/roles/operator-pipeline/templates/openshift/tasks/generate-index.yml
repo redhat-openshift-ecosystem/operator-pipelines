@@ -51,6 +51,9 @@ spec:
 
     - name: inspect-base-index
       image: "$(params.podman_image)"
+      env:
+        - name: STORAGE_DRIVER
+          value: vfs
       workingDir: $(workspaces.output.path)
       securityContext:
         runAsUser: 1000
@@ -66,7 +69,6 @@ spec:
 
         podman pull $FROM_INDEX
         podman image inspect $FROM_INDEX | tee -a podman-inspect.json
-
     - name: determine-index-format
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.output.path)
