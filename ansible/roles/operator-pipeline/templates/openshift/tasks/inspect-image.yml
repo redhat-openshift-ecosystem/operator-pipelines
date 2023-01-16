@@ -36,6 +36,9 @@ spec:
       securityContext:
         runAsUser: 1000
       image: "$(params.podman_image)"
+      env:
+        - name: STORAGE_DRIVER
+          value: vfs
       script: |
         set -xe
 
