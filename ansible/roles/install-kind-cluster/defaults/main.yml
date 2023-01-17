@@ -20,7 +20,7 @@ kind_tekton_operator_path: "{{ ikc_tmp_dir }}/kind_tekton_operator.yaml"
 kind_tekton_pipeline_path: "{{ ikc_tmp_dir }}/kind_tekton_pipeline.yaml"
 kind_tekton_triggers_path: "{{ ikc_tmp_dir }}/kind_tekton_triggers.yaml"
 kind_tekton_dashboard_path: "{{ ikc_tmp_dir }}/kind_tekton_dashboard.yaml"
-tekton_dashboard_public_port: 8080
+tekton_dashboard_public_port: 8008
 registry_enable: false
 registry_name: kind-registry
 registry_port: 5000
