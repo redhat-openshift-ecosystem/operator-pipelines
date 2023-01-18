@@ -9,7 +9,7 @@ kind_tekton_dashboard_path: "{{ ikc_tmp_dir }}/kind_tekton_dashboard.yaml"
 tekton_pipeline_version: v0.34.1
 tekton_triggers_version: v0.19.1
 tekton_dashboard_version: v0.24.1
-tekton_dashboard_public_port: 8000
+tekton_dashboard_public_port: 8008
 tekton_validate_certs: true
 ikc_tmp_dir: "{{ op_work_dir }}/kind"
 kubeconfig: "{{ ansible_env.HOME }}/.kube/config"

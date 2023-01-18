@@ -176,15 +176,6 @@
                           name: tekton-dashboard
                           port:
                             number: 9097
-              - http:
-                  paths:
-                    - pathType: Prefix
-                      path: "/"
-                      backend:
-                        service:
-                          name: tekton-dashboard
-                          port:
-                            number: 9097
 
     - name: "Adding 'Tekton Dashboard local url' to 'community_final_report'"
       ansible.builtin.set_fact:
