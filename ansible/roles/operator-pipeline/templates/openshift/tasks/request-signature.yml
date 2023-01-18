@@ -39,7 +39,6 @@ spec:
       default: umb.api.redhat.com
   results:
     - name: signature_data_file
-    - name: signature_data
   volumes:
     - name: umb-ssl-volume
       secret:
@@ -79,6 +78,6 @@ spec:
 
         SIG_DATA=$(cat signing_response.json)
         echo "Signed claims and their metadata: "
-        echo -n $SIG_DATA | tee $(results.signature_data.path)
+        echo -n $SIG_DATA
         echo -n signing_response.json | tee $(results.signature_data_file.path)
       workingDir: $(workspaces.source.path)
