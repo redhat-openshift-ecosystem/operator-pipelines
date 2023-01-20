@@ -32,7 +32,7 @@ spec:
     - name: pyxis-ssl-volume
       secret:
         secretName: "$(params.pyxis_ssl_secret_name)"
-        optional: false
+        optional: true
   steps:
     - name: check-operator-name
       image: "$(params.pipeline_image)"
