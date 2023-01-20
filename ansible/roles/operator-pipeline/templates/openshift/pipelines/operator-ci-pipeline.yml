@@ -71,6 +71,7 @@ spec:
       default: "true"
   workspaces:
     - name: pipeline
+    - name: results
     - name: ssh-dir
       optional: true
     - name: registry-credentials
