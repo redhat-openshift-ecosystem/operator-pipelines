@@ -8,11 +8,20 @@ spec:
     - name: pipeline_image
     - name: cert_project_id
       description: Identifier of certification project from Red Hat Connect
+    - name: pyxis_api_key_secret_name
+      default: default-api-secret
+      description: Kubernetes secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_api_key_secret_key
+      default: pyxis_api_key
+      description: The key within the Kubernetes secret that contains Pyxis API key. Valid only when external Pyxis is used.
     - name: pyxis_ssl_secret_name
+      default: default-ssl-secret
       description: Kubernetes secret name that contains the Pyxis SSL files. Valid only when internal Pyxis is used.
     - name: pyxis_ssl_cert_secret_key
+      default: default-ssl-cert
       description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
     - name: pyxis_ssl_key_secret_key
+      default: default-ssl-key
       description: The key within the Kubernetes secret that contains the Pyxis SSL key. Valid only when internal Pyxis is used.
     - name: pyxis_url
       default: https://pyxis.engineering.redhat.com
@@ -50,6 +59,12 @@ spec:
           value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
         - name: PYXIS_KEY_PATH
           value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+        - name: PYXIS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.pyxis_api_key_secret_name)
+              key: $(params.pyxis_api_key_secret_key)
+              optional: true
       volumeMounts:
         - name: pyxis-ssl-volume
           readOnly: true

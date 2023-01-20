@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: reserve-operator-name
+  name: check-operator-name
 spec:
   params:
     - name: pipeline_image
@@ -10,13 +10,20 @@ spec:
       description: The association that the operator belongs in, usually the isv_pid.
     - name: operator_name
       description: The operator name to be reserved.
-    - name: source
-      description: The source catalog the operator belongs to, usually "redhat-marketplace" or "certified-operators"
+    - name: pyxis_api_key_secret_name
+      default: default-api-secret
+      description: Kubernetes secret name that contains Pyxis API key. Valid only when external Pyxis is used.
+    - name: pyxis_api_key_secret_key
+      default: pyxis_api_key
+      description: The key within the Kubernetes secret that contains Pyxis API key. Valid only when external Pyxis is used.
     - name: pyxis_ssl_secret_name
-      description: Kubernetes secret name that contains the Pyxis SSL files.
+      default: default-ssl-secret
+      description: Kubernetes secret name that contains the Pyxis SSL files. Valid only when internal Pyxis is used.
     - name: pyxis_ssl_cert_secret_key
-      description: The key within the Kubernetes secret that contains the Pyxis SSL cert.
+      default: default-ssl-cert
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
     - name: pyxis_ssl_key_secret_key
+      default: default-ssl-key
       description: The key within the Kubernetes secret that contains the Pyxis SSL key.
     - name: pyxis_url
       description: Pyxis instance to reserve the operator name on.
@@ -27,7 +34,7 @@ spec:
         secretName: "$(params.pyxis_ssl_secret_name)"
         optional: false
   steps:
-    - name: reserve-operator-name
+    - name: check-operator-name
       image: "$(params.pipeline_image)"
       env:
         - name: PYXIS_CERT_PATH
@@ -36,8 +43,12 @@ spec:
           value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
         - name: ASSOCIATION
           value: $(params.association)
-        - name: SOURCE
-          value: $(params.source)
+        - name: PYXIS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.pyxis_api_key_secret_name)
+              key: $(params.pyxis_api_key_secret_key)
+              optional: true
       volumeMounts:
         - name: pyxis-ssl-volume
           readOnly: true
@@ -46,11 +57,10 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        echo "Attempting to reserve operator name for association $ASSOCIATION"
+        echo "Checking if project already has operator name for association $ASSOCIATION"
 
-        reserve-operator-name \
+        check-operator-name \
           --association $ASSOCIATION \
           --operator-name "$(params.operator_name)" \
           --pyxis-url "$(params.pyxis_url)" \
-          --source $SOURCE \
           --verbose
