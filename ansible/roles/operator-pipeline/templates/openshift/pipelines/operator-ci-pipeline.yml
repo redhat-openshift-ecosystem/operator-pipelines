@@ -311,7 +311,7 @@ spec:
         - name: association
           value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
         - name: operator_name
-          value: "$(tasks.validate-pr-title.results.operator_name)"
+          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_api_key_secret_name
