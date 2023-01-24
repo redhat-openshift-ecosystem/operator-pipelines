@@ -73,11 +73,7 @@ def wait_for_results(iib_url: str, batch_id: int, timeout=60 * 60, delay=20) -> 
             for build in builds:
                 if build.get("state") == "failed":
                     LOGGER.error(f"IIB build failed: {build['id']}")
-                    state_history = build.get("state_history", [])
-                    if state_history:
-                        reason = state_history[0].get("state_reason")
-                    else:
-                        reason = build.get("state_reason")
+                    reason = build.get("state_reason")
                     LOGGER.info(f"Reason: {reason}")
             return response
 
