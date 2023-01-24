@@ -52,6 +52,27 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
         }
     ]
 
+    # if the builds are in failed state without state history
+    mock_get_builds.return_value = {
+        "items": [
+            {
+                "state": "failed",
+                "id": 1,
+                "batch": "some_batch_id",
+                "state_reason": "failed due to timeout",
+            }
+        ]
+    }
+
+    assert wait()["items"] == [
+        {
+            "state": "failed",
+            "id": 1,
+            "batch": "some_batch_id",
+            "state_reason": "failed due to timeout",
+        }
+    ]
+
     # if not all the builds are completed
     mock_get_builds.return_value = {
         "items": [
