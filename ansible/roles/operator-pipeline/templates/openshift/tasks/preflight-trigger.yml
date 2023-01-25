@@ -164,7 +164,7 @@ spec:
               exit 0
           fi
 
-          DPTP_VER="4.9"
+          DPTP_VER="4.11"
           CP_VER="$(params.ocp_version)"
 
           if [ "$(printf '%s\n' "$DPTP_VER" "$CP_VER" | sort -V | head -n1)" == "$DPTP_VER" ]; then
