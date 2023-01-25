@@ -71,7 +71,6 @@ spec:
       default: "true"
   workspaces:
     - name: pipeline
-    - name: results
     - name: ssh-dir
       optional: true
     - name: registry-credentials
@@ -227,29 +226,6 @@ spec:
           workspace: pipeline
           subPath: src
 
-    - name: get-cert-project-related-data
-      runAfter:
-        - certification-project-check
-      taskRef:
-        name: get-cert-project-related-data
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_api_key_secret_name
-          value: "$(params.pyxis_api_key_secret_name)"
-        - name: pyxis_api_key_secret_key
-          value: "$(params.pyxis_api_key_secret_key)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
-        - name: results
-          workspace: results
-
     - name: get-organization
       runAfter:
         - commit-pinned-digest
@@ -297,31 +273,9 @@ spec:
           workspace: pipeline
           subPath: src
 
-    # check if cert_project already has package_lock
-    # and if the package_name match operator_name
-    - name: check-operator-name
-      runAfter:
-        - annotations-validation
-        - get-cert-project-related-data
-      taskRef:
-        name: check-operator-name
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: association
-          value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
-        - name: operator_name
-          value: "$(tasks.bundle-path-validation.results.package_name)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_api_key_secret_name
-          value: "$(params.pyxis_api_key_secret_name)"
-        - name: pyxis_api_key_secret_key
-          value: "$(params.pyxis_api_key_secret_key)"
-
     - name: dockerfile-creation
       runAfter:
-        - check-operator-name
+        - annotations-validation
         - yaml-lint
         - certification-project-check
       taskRef:

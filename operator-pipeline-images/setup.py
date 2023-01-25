@@ -29,7 +29,6 @@ setup(
             "verify-pr-user=operatorcert.entrypoints.verify_pr_user:main",
             "upload-artifacts=operatorcert.entrypoints.upload_artifacts:main",
             "download-test-results=operatorcert.entrypoints.download_test_results:main",
-            "check-operator-name=operatorcert.entrypoints.check_operator_name:main",
             "reserve-operator-name=operatorcert.entrypoints.reserve_operator_name:main",
             "set-github-status=operatorcert.entrypoints.set_github_status:main",
             "link-pull-request=operatorcert.entrypoints.link_pull_request:main",

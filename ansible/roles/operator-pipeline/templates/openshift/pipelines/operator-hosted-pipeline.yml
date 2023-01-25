@@ -336,35 +336,11 @@ spec:
           workspace: repository
           subPath: src
 
-    # check if cert_project already has package_lock
-    # and if the package_name match operator_name
-    - name: check-operator-name
-      runAfter:
-        - submission-validation
-        - annotations-validation
-      taskRef:
-        name: check-operator-name
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: association
-          value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
-        - name: operator_name
-          value: "$(tasks.validate-pr-title.results.operator_name)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
-        - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
-        - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
-
     # Updates certification status to "In Progress", if not already "Published".
     # See the get-cert-project-related-data task for how that's determined.
     - name: update-cert-project-status
       runAfter:
-        - check-operator-name
+        - submission-validation
       taskRef:
         name: update-cert-project-status
       params:

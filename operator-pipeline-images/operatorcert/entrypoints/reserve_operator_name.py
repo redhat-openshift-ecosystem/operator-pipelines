@@ -32,6 +32,38 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     return parser
 
 
+def check_operator_name_registered_for_association(args) -> None:
+    rsp = pyxis.get(
+        urljoin(
+            args.pyxis_url,
+            f"v1/operators/packages?filter=association=={args.association}",
+        )
+    )
+
+    rsp.raise_for_status()
+
+    packages = rsp.json().get("data")
+
+    if packages:
+        # there should only be 1 package for given association/isv_pid
+        package = packages[0]
+        if package["package_name"] != args.operator_name:
+            LOGGER.error(
+                f"There is already different operator name ({package['package_name']}) "
+                f"reserved for association {args.association}."
+            )
+            sys.exit(1)
+        else:
+            LOGGER.info(
+                f"Association ({args.association}) has already correct "
+                f"operator name ({args.operator_name}) registered."
+            )
+    else:
+        LOGGER.info(
+            f"There isn't operator name registered for association {args.association}."
+        )
+
+
 def check_operator_name(args) -> None:
     rsp = pyxis.get(
         urljoin(
@@ -80,7 +112,7 @@ def reserve_operator_name(args) -> None:
     )
 
 
-def main() -> None:  # pragma: no cover
+def main() -> None:
     parser = setup_argparser()
     args = parser.parse_args()
 
@@ -89,6 +121,7 @@ def main() -> None:  # pragma: no cover
         log_level = "DEBUG"
     setup_logger(level=log_level)
 
+    check_operator_name_registered_for_association(args)
     check_operator_name(args)
     reserve_operator_name(args)
 
