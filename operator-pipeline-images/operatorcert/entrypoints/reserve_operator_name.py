@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+from typing import Any
 from urllib.parse import urljoin
 
 from operatorcert import pyxis
@@ -32,7 +33,11 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     return parser
 
 
-def check_operator_name_registered_for_association(args) -> None:
+def check_operator_name_registered_for_association(args: Any) -> None:
+    """
+    Check if for given association/isv_pid operatorPackage already exist
+    and validates that the package name match operator name requested.
+    """
     rsp = pyxis.get(
         urljoin(
             args.pyxis_url,
@@ -49,22 +54,28 @@ def check_operator_name_registered_for_association(args) -> None:
         package = packages[0]
         if package["package_name"] != args.operator_name:
             LOGGER.error(
-                f"There is already different operator name ({package['package_name']}) "
-                f"reserved for association {args.association}."
+                f"Requested operator name {args.operator_name} "
+                f"does not match operator name {package['package_name']} "
+                f"already reserved for certification project."
             )
             sys.exit(1)
         else:
             LOGGER.info(
-                f"Association ({args.association}) has already correct "
-                f"operator name ({args.operator_name}) registered."
+                f"Requested operator name {args.operator_name} match "
+                f"with operator name already reserved."
             )
     else:
         LOGGER.info(
-            f"There isn't operator name registered for association {args.association}."
+            f"There isn't any operator name registered for project "
+            f"with association/isv_pid {args.association}."
         )
 
 
-def check_operator_name(args) -> None:
+def check_operator_name(args: Any) -> None:
+    """
+    Check if operator name already exist and if yes,
+    validates if it match with the operator name requested.
+    """
     rsp = pyxis.get(
         urljoin(
             args.pyxis_url,
@@ -95,7 +106,11 @@ def check_operator_name(args) -> None:
         LOGGER.info(f"Operator name {args.operator_name} is available.")
 
 
-def reserve_operator_name(args) -> None:
+def reserve_operator_name(args: Any) -> None:
+    """
+    Reserve operator name for given combination
+    of association and operator name
+    """
     post_data = {
         "association": args.association,
         "package_name": args.operator_name,
