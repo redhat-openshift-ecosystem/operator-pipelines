@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+from typing import Any
 from urllib.parse import urljoin
 
 from operatorcert import pyxis
@@ -32,7 +33,49 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     return parser
 
 
-def check_operator_name(args) -> None:
+def check_operator_name_registered_for_association(args: Any) -> None:
+    """
+    Check if for given association/isv_pid operatorPackage already exist
+    and validates that the package name match operator name requested.
+    """
+    rsp = pyxis.get(
+        urljoin(
+            args.pyxis_url,
+            f"v1/operators/packages?filter=association=={args.association}",
+        )
+    )
+
+    rsp.raise_for_status()
+
+    packages = rsp.json().get("data")
+
+    if packages:
+        # there should only be 1 package for given association/isv_pid
+        package = packages[0]
+        if package["package_name"] != args.operator_name:
+            LOGGER.error(
+                f"Requested operator name {args.operator_name} "
+                f"does not match operator name {package['package_name']} "
+                f"already reserved for certification project."
+            )
+            sys.exit(1)
+        else:
+            LOGGER.info(
+                f"Requested operator name {args.operator_name} match "
+                f"with operator name already reserved."
+            )
+    else:
+        LOGGER.info(
+            f"There isn't any operator name registered for project "
+            f"with association/isv_pid {args.association}."
+        )
+
+
+def check_operator_name(args: Any) -> None:
+    """
+    Check if operator name already exist and if yes,
+    validates if it match with the operator name requested.
+    """
     rsp = pyxis.get(
         urljoin(
             args.pyxis_url,
@@ -63,7 +106,11 @@ def check_operator_name(args) -> None:
         LOGGER.info(f"Operator name {args.operator_name} is available.")
 
 
-def reserve_operator_name(args) -> None:
+def reserve_operator_name(args: Any) -> None:
+    """
+    Reserve operator name for given combination
+    of association and operator name
+    """
     post_data = {
         "association": args.association,
         "package_name": args.operator_name,
@@ -80,7 +127,7 @@ def reserve_operator_name(args) -> None:
     )
 
 
-def main() -> None:  # pragma: no cover
+def main() -> None:
     parser = setup_argparser()
     args = parser.parse_args()
 
@@ -89,6 +136,7 @@ def main() -> None:  # pragma: no cover
         log_level = "DEBUG"
     setup_logger(level=log_level)
 
+    check_operator_name_registered_for_association(args)
     check_operator_name(args)
     reserve_operator_name(args)
 
