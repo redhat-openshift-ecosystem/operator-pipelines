@@ -7,7 +7,7 @@ spec:
   params:
     - name: pipeline_image
     - name: association
-      description: The assocation that the operator belongs in, usually the isv_pid.
+      description: The association that the operator belongs in, usually the isv_pid.
     - name: operator_name
       description: The operator name to be reserved.
     - name: source
@@ -46,7 +46,7 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        echo "Attempting to reserve operator name for assocation $ASSOCIATION"
+        echo "Attempting to reserve operator name for association $ASSOCIATION"
 
         reserve-operator-name \
           --association $ASSOCIATION \
