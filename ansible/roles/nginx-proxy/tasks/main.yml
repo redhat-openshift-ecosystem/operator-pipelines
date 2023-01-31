@@ -57,4 +57,4 @@
     state: present
     force: yes
     namespace: '{{ oc_namespace }}'
-    definition: "{{ lookup('template', '../templates/openshift/fluentd-config.yml') }}"mgreczi-mac:operator-pipelines
+    definition: "{{ lookup('template', '../templates/openshift/fluentd-config.yml') }}"
