@@ -30,6 +30,9 @@ spec:
         - name: nginx-htpasswd
           secret:
             secretName: "{{ nginx_proxy_name }}-htpasswd-{{ suffix }}"
+        - name: fluentd-config
+          secret:
+            secretName: "{{ nginx_proxy_name }}-fluentd-{{ suffix }}"
 
       containers:
         - name: "{{ nginx_proxy_name }}"
@@ -71,3 +74,30 @@ spec:
             limits:
               cpu: 250m
               memory: 256Mi
+        - name: fluentd
+          image: images.paas.redhat.com/exd-sp-guild-isv/fluentd:latest
+          env:
+            - name: FLUENTD_CONF
+              value: fluentd.conf
+          volumeMounts:
+            - name: "{{ community_signing_pipeline_name }}-logs"
+              mountPath: /var/log/nginx
+              readOnly: true
+            - name: fluentd-config
+              mountPath: /fluentd/etc
+              readOnly: true
+          resources:
+            requests:
+              cpu: 0.075
+              memory: 80Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            successThreshold: 1

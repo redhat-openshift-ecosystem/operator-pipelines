@@ -20,6 +20,10 @@ community_signing_pipeline_url: "{{ community_signing_pipeline_name }}-{{ oc_nam
 
 nginx_proxy_url: "{{ community_signing_pipeline_name }}-nginx-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
 
+log_dir: /var/log/nginx
+nginx_access_log_location: "{{ log_dir }}/nginx.access"
+nginx_error_log_location: "{{ log_dir }}/nginx.error"
+
 # Webhook vars
 operator_pipeline_github_webhook_repos:
   - redhat-openshift-ecosystem/operator-pipelines-test

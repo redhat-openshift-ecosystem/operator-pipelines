@@ -7,3 +7,8 @@ oc_namespace: null
 suffix: unknown
 namespace_state: present
 github_webhook_state: present
+
+#### Fluentd settings
+splunk_hec_token: null
+splunk_hec: splunk-hec.corp.redhat.com
+splunk_port: 8088

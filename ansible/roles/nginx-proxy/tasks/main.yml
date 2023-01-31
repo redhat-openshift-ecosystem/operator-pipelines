@@ -51,3 +51,10 @@
       - env={{ env }}
       - suffix!={{ suffix }}
   include_tasks: remove-objects.yml
+
+- name: Create Fluentd config
+  k8s:
+    state: present
+    force: yes
+    namespace: '{{ oc_namespace }}'
+    definition: "{{ lookup('template', '../templates/openshift/fluentd-config.yml') }}"mgreczi-mac:operator-pipelines
