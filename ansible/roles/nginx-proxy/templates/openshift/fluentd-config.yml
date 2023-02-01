@@ -2,15 +2,15 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: 'loki-fluentd-{{ suffix }}'
+  name: '{{ community_signing_pipeline_name }}-fluentd-{{ suffix }}'
   labels:
-    io.kompose.service: loki
+    io.kompose.service: "{{ community_signing_pipeline_name }}"
     app: API-key-server
     suffix: '{{ suffix }}'
     env: '{{ env }}'
-    paas.redhat.com/appcode: "{{ loki_app_code }}"
-type: Opaque 
-stringData: 
+    paas.redhat.com/appcode: "{{ community_signing_pipeline_appcode }}"
+type: Opaque
+stringData:
   fluentd.conf: |-
     # fluentd
     <source>
@@ -30,7 +30,7 @@ stringData:
     <source>
       @type tail
       tag nginx.access
-      path {{ nginx_access_log_location }}
+      path {{ nginx_proxy_access_log_location }}
       pos_file /tmp/nginx_access.log.pos
       <parse>
         @type regexp
@@ -41,7 +41,7 @@ stringData:
     <source>
       @type tail
       tag nginx.error
-      path {{ nginx_error_log_location }}
+      path {{ nginx_proxy_error_log_location }}
       pos_file /tmp/nginx_error.log.pos
 
       format multiline
