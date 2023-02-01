@@ -21,15 +21,15 @@ data:
     http {
 
       log_format logger-json escape=json '{"source": "nginx", "time": $msec, \
-             "resp_body_size": $body_bytes_sent, "host": "$http_host", "address": "$remote_addr", \
-             "request_length": $request_length, "method": "$request_method", "uri": "$request_uri", \
-             "status": $status,  "user_agent": "$http_user_agent", \
-             "resp_time": $request_time, "upstream_addr": "$upstream_addr"}';
+          "resp_body_size": $body_bytes_sent, "host": "$http_host", "address": "$remote_addr", \
+          "request_length": $request_length, "method": "$request_method", "uri": "$request_uri", \
+          "status": $status,  "user_agent": "$http_user_agent", \
+          "resp_time": $request_time, "upstream_addr": "$upstream_addr"}';
 
       server {
 
           listen 8080;
-          
+
           # Logging in json format
           access_log {{ nginx_proxy_access_log_location }} logger-json;
           error_log  {{ nginx_proxy_error_location }} logger-json;
@@ -38,15 +38,15 @@ data:
           gzip on;
           gzip_types text/plain application/json;
           gzip_min_length 1024;
-          
+
+          location /_proxy/ping {
+              return 200 'pong';
+
           # Mitigate 500 Gateway timeout errors
           proxy_connect_timeout       600;
           proxy_send_timeout          600;
           proxy_read_timeout          600;
           send_timeout                600;
-
-          location /_proxy/ping {
-              return 200 'pong';
           }
 
           location / {
