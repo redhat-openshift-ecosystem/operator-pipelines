@@ -2,3 +2,8 @@ ansible_connection: local
 
 # Index signature verification vars
 registry_auth_local_path: ../../vaults/index-signature-verification/registry-auth.json
+
+#### Fluentd settings
+splunk_hec_token: null
+splunk_hec: splunk-hec.corp.redhat.com
+splunk_port: 8088
