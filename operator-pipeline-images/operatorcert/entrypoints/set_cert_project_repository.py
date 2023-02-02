@@ -53,7 +53,6 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def set_cert_project_repository(args: Any) -> None:
-
     payload = {
         "container": {
             "registry": args.registry,

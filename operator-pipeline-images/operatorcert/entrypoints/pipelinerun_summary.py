@@ -25,7 +25,6 @@ def parse_args() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def main() -> None:
-
     args = parse_args()
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(level=log_level, log_format="%(message)s")

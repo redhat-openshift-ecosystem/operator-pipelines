@@ -91,7 +91,13 @@ spec:
         done
 
     - name: pull-images-by-digest
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
       image: "$(params.podman_image)"
+      env:
+        - name: STORAGE_DRIVER
+          value: vfs
       script: |
         #!/usr/bin/env bash
         set +x -e -o pipefail
