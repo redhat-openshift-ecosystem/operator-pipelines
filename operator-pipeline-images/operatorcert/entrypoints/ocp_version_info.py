@@ -35,7 +35,6 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def main() -> None:
-
     parser = setup_argparser()
     args = parser.parse_args()
     log_level = "DEBUG" if args.verbose else "INFO"

@@ -59,7 +59,6 @@ def github_add_comment(
     commen_tag: str,
     replace: str,
 ) -> None:
-
     split_url = urllib.parse.urlparse(request_url).path.split("/")
 
     # This will convert https://github.com/foo/bar/pull/202 to
