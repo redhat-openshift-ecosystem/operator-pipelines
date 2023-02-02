@@ -32,22 +32,16 @@ stringData:
       tag nginx.access
       path {{ nginx_proxy_access_log_location }}
       pos_file /tmp/nginx_access.log.pos
-      <parse>
-        @type regexp
-        expression /^(?<remote>[^ ]*) (?<host>[^ ]*) (?<user>[^ ]*) \[(?<trace_id>[^\]]*)\] \[(?<time>[^\]]*)\] "(?<method>\S+)(?: +(?<path>[^\"]*?)(?: +\S*)?)?" (?<code>[^ ]*) (?<size>[^ ]*)(?: "(?<referer>[^\"]*)" "(?<agent>[^\"]*)"(?:\s+\"?(?<http_x_forwarded_for>[^\"]*)\"?)?)?$/
-        time_format "%d/%b/%Y:%H:%M:%S %z"
-      </parse>
+      format json
+      read_from_head true
     </source>
     <source>
       @type tail
       tag nginx.error
       path {{ nginx_proxy_error_log_location }}
       pos_file /tmp/nginx_error.log.pos
-
-      format multiline
-      format_firstline /^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} \[\w+\] (?<pid>\d+).(?<tid>\d+): /
-      format1 /^(?<time>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?<log_level>\w+)\] (?<pid>\d+).(?<tid>\d+): (?<message>.*)/
-      multiline_flush_interval 3s
+      format json
+      read_from_head true
     </source>
 
     # common
@@ -60,7 +54,7 @@ stringData:
       </record>
     </filter>
 
-    <match nginx.**>
+    <match *>
       @type splunk_hec
       hec_host {{ splunk_hec }}
       hec_port {{ splunk_port }}
