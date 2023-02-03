@@ -22,7 +22,7 @@ jobs:
     name: Build and push multi-architecture image
     strategy:
       matrix:
-        architecture: [amd64, ppc64le, s390x]
+        architecture: [amd64, ppc64le, s390x, arm64]
         platform: [linux]
     runs-on: ubuntu-20.04
     steps:
@@ -62,6 +62,7 @@ jobs:
           buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:linux-amd64
           buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:linux-ppc64le
           buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:linux-s390x
+          buildah manifest add ${{ env.IMAGE_NAME }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:linux-arm64
      # Authenticate to container image registry to push the image
       - name: Podman Login
         uses: redhat-actions/podman-login@v1
