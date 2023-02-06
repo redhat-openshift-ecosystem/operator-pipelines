@@ -20,11 +20,21 @@ data:
 
     http {
 
-      log_format logger-json escape=json '{"source": "nginx", "time": $msec, \
-          "resp_body_size": $body_bytes_sent, "host": "$http_host", "address": "$remote_addr", \
-          "request_length": $request_length, "method": "$request_method", "uri": "$request_uri", \
-          "status": $status,  "user_agent": "$http_user_agent", \
-          "resp_time": $request_time, "upstream_addr": "$upstream_addr"}';
+      log_format logger-json escape=json '{
+                                           "time": $msec, \
+                                           "time_local":"$time_local", \
+                                           "resp_body_size": $body_bytes_sent, \
+                                           "host": "$http_host", \
+                                           "address": "$remote_addr", \
+                                           "request":"$request", \
+                                           "request_length": $request_length, \
+                                           "method": "$request_method", \
+                                           "uri": "$request_uri", \
+                                           "status": $status,  \
+                                           "user_agent": "$http_user_agent", \
+                                           "resp_time": $request_time, 
+                                           "upstream_addr": "$upstream_addr"
+                                           }';
 
       server {
 
