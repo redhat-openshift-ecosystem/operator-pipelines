@@ -32,8 +32,8 @@ data:
                                            "uri": "$request_uri", \
                                            "status": $status,  \
                                            "user_agent": "$http_user_agent", \
-                                           "resp_time": $request_time, 
-                                           "upstream_addr": "$upstream_addr"
+                                           "resp_time": $request_time, \
+                                           "upstream_addr": "$upstream_addr" \
                                            }';
 
       server {
