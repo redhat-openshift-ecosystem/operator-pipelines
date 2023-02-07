@@ -25,6 +25,9 @@ spec:
     - name: keys_config_map
       description: Name of the ConfigMap with the public keys
       default: index-signature-verification-keys
+    - name: containers_policy_config_map
+      description: Name of the  /etc/containers/policy.json
+      default: containers-policy-json
 
   workspaces:
     - name: registry-credentials
@@ -36,6 +39,9 @@ spec:
     - name: keys
       configMap:
         name: "$(params.keys_config_map)"
+    - name: policies
+      configMap:
+        name: "$(params.containers_policy_config_map)"
 
   stepTemplate:
     volumeMounts:
@@ -101,8 +107,6 @@ spec:
       script: |
         #!/usr/bin/env bash
         set +x -e -o pipefail
-
-        podman image trust set -f /mnt/keys/pub.gpg registry.redhat.io
 
         for pull_spec in $(cat image-digests.txt); do
           podman pull $pull_spec

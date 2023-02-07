@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: containers-policy-json
+data:
+  policy.json: |
+     {
+     "default": [
+         {
+             "type": "insecureAcceptAnything"
+         }
+     ],
+     "transports": {
+         "docker": {
+             "registry.access.redhat.com": [
+                 {
+                     "type": "signedBy",
+                     "keyType": "GPGKeys",
+                     "keyPaths": [
+                         "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+                         "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta"
+                     ]
+                 }
+             ],
+             "registry.redhat.io": [
+                 {
+                       "type": "signedBy",
+                       "keyType": "GPGKeys",
+                       "keyPath": "/mnt/keys/pub.gpg"
+                  }
+               ]
+           },
+           "docker-daemon": {
+               "": [
+                   {
+                       "type": "insecureAcceptAnything"
+                   }
+               ]
+           }
+       }
+     }
