@@ -44,7 +44,6 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def update_cert_project_status(args: Any) -> None:
-
     payload = {
         "certification_status": args.certification_status,
         "certification_date": datetime.now(timezone.utc).isoformat(),

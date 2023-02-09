@@ -1,47 +1,73 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from operatorcert import hydra
+import pytest
 from requests import HTTPError, Response
 
-
-def test_get_session_basic_auth(monkeypatch: Any) -> None:
-    monkeypatch.setenv("HYDRA_USERNAME", "user")
-    monkeypatch.setenv("HYDRA_PASSWORD", "password")
-
-    session = hydra._get_session()
-    assert session.auth == ("user", "password")
+from operatorcert import hydra
 
 
-@patch("sys.exit")
-def test_get_session_no_auth(mock_exit: MagicMock) -> None:
-    hydra._get_session()
-    mock_exit.assert_called_once_with(1)
+def test_get(requests_mock: Any, monkeypatch: Any) -> None:
+    monkeypatch.setenv("HYDRA_SSO_TOKEN_URL", "https://auth.example.com/oidc/token")
+    monkeypatch.setenv("HYDRA_SSO_CLIENT_ID", "abc")
+    monkeypatch.setenv("HYDRA_SSO_CLIENT_SECRET", "xyz")
 
+    requests_mock.post(
+        "https://auth.example.com/oidc/token",
+        request_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        json={"access_token": "asdfghjkl", "expires_in": 600},
+    )
+    requests_mock.get(
+        "https://connect.redhat.com/foo/bar",
+        request_headers={"Authorization": "Bearer asdfghjkl"},
+        json={"key": "val"},
+    )
 
-@patch("operatorcert.hydra._get_session")
-def test_get(mock_session: MagicMock) -> None:
-    mock_session.return_value.get.return_value.json.return_value = {"key": "val"}
-    resp = hydra.get("https://foo.com/v1/bar")
+    resp = hydra.get("https://connect.redhat.com/foo/bar")
 
     assert resp == {"key": "val"}
 
 
-@patch("operatorcert.hydra._get_session")
-def test_get_preprod_proxy(mock_session: MagicMock) -> None:
-    mock_session.return_value.get.return_value.json.return_value = {"key": "val"}
+def test_get_preprod_proxy(requests_mock: Any, monkeypatch: Any) -> None:
+    monkeypatch.setenv("HYDRA_SSO_TOKEN_URL", "https://auth.example.com/oidc/token")
+    monkeypatch.setenv("HYDRA_SSO_CLIENT_ID", "abc")
+    monkeypatch.setenv("HYDRA_SSO_CLIENT_SECRET", "xyz")
+
+    requests_mock.post(
+        "https://auth.example.com/oidc/token",
+        request_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        json={"access_token": "asdfghjkl", "expires_in": 600},
+    )
+    requests_mock.get(
+        "https://connect.dev.redhat.com/foo/bar",
+        request_headers={"Authorization": "Bearer asdfghjkl"},
+        json={"key": "val"},
+    )
 
     resp = hydra.get("https://connect.dev.redhat.com/foo/bar")
     assert resp == {"key": "val"}
-
-
-@patch("sys.exit")
-@patch("operatorcert.hydra._get_session")
-def test_get_with_error(mock_session: MagicMock, mock_exit: MagicMock) -> None:
-    response = Response()
-    response.status_code = 400
-    mock_session.return_value.get.return_value.raise_for_status.side_effect = HTTPError(
-        response=response
+    history = {x.hostname: x for x in requests_mock.request_history}
+    assert (
+        history["connect.dev.redhat.com"].proxies.get("https")
+        == "http://squid.corp.redhat.com:3128"
     )
-    hydra.get("https://foo.com/v1/bar")
-    mock_exit.assert_called_once_with(1)
+
+
+def test_get_with_error(requests_mock: Any, monkeypatch: Any) -> None:
+    monkeypatch.setenv("HYDRA_SSO_TOKEN_URL", "https://auth.example.com/oidc/token")
+    monkeypatch.setenv("HYDRA_SSO_CLIENT_ID", "abc")
+    monkeypatch.setenv("HYDRA_SSO_CLIENT_SECRET", "xyz")
+
+    requests_mock.post(
+        "https://auth.example.com/oidc/token",
+        request_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        json={"access_token": "asdfghjkl", "expires_in": 600},
+    )
+    requests_mock.get(
+        "https://connect.dev.redhat.com/foo/bar",
+        request_headers={"Authorization": "Bearer asdfghjkl"},
+        status_code=404,
+    )
+
+    with pytest.raises(SystemExit):
+        hydra.get("https://connect.dev.redhat.com/foo/bar")

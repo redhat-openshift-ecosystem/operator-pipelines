@@ -150,7 +150,6 @@ Start Time: *{start_time}*
         taskrun_parts = []
 
         for taskrun in taskruns:
-
             # Ignore final tasks if not desired
             if (not include_final_tasks) and taskrun in self.finally_taskruns:
                 continue

@@ -7,7 +7,6 @@ from operatorcert.entrypoints import github_pr
 
 @patch("operatorcert.entrypoints.github_pr.github.post")
 def test_open_pr(mock_post: MagicMock, monkeypatch: Any) -> None:
-
     mock_post.return_value = {}
     resp = github_pr.open_pr(
         "http://foo.com/v1", "repo/name", "branch1", "main", "title", "Body"
