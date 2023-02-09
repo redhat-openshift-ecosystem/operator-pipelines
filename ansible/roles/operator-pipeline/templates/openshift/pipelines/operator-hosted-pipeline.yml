@@ -51,12 +51,17 @@ spec:
     - name: hydra_secret_name
       description: Kubernetes secret name that contains the Hydra credentials.
       default: hydra-credentials
-    - name: hydra_secret_username_key
-      description: The key within the Kubernetes secret that contains the Hydra username.
-      default: username
-    - name: hydra_secret_password_key
-      description: The key within the Kubernetes secret that contains the Hydra password.
-      default: password
+    - name: hydra_secret_sso_client_id_key
+      description: |
+        The key within the Kubernetes secret that contains Hydra SSO client ID.
+      default: sso_client_id
+    - name: hydra_secret_sso_client_secret_key
+      description: |
+        The key within the Kubernetes secret that contains the Hydra SSO password.
+      default: sso_client_secret
+    - name: hydra_secret_sso_token_url_key
+      description: The key within the Kubernetes secret that contains SSO URL.
+      default: sso_token_url
     - name: pyxis_ssl_secret_name
       description: Kubernetes secret name that contains the Pyxis SSL files.
       default: operator-pipeline-api-certs
@@ -825,9 +830,11 @@ spec:
         - name: hydra_secret_name
           value: "$(params.hydra_secret_name)"
         - name: hydra_secret_username_key
-          value: "$(params.hydra_secret_username_key)"
+          value: "$(params.hydra_secret_sso_client_id_key)"
         - name: hydra_secret_password_key
-          value: "$(params.hydra_secret_password_key)"
+          value: "$(params.hydra_secret_sso_client_secret_key)"
+        - name: hydra_secret_sso_token_url_key
+          value: "$(params.hydra_secret_sso_token_url_key)"
         - name: ignore_publishing_checklist
           value: "$(params.ignore_publishing_checklist)"
 
