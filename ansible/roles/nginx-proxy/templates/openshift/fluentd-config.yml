@@ -5,7 +5,7 @@ metadata:
   name: '{{ community_signing_pipeline_name }}-fluentd-{{ suffix }}'
   labels:
     io.kompose.service: "{{ community_signing_pipeline_name }}"
-    app: API-key-server
+    app: "{{ community_signing_pipeline_name }}"
     suffix: '{{ suffix }}'
     env: '{{ env }}'
     paas.redhat.com/appcode: "{{ community_signing_pipeline_appcode }}"
