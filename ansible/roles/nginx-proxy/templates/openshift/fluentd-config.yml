@@ -59,7 +59,6 @@ stringData:
       hec_host {{ splunk_hec }}
       hec_port {{ splunk_port }}
       hec_token {{ splunk_token }}
-
       index rh_services
       source_key source
       sourcetype_key sourcetype
