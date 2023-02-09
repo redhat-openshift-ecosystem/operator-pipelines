@@ -42,7 +42,7 @@ data:
 
           # Logging in json format
           access_log {{ nginx_proxy_access_log_location }} logger-json;
-          error_log  {{ nginx_proxy_error_location }} logger-json;
+          error_log  {{ nginx_proxy_error_log_location }} logger-json;
 
           # enable compression
           gzip on;
