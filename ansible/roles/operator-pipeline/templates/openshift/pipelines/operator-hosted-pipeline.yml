@@ -829,9 +829,9 @@ spec:
           value: "$(tasks.set-env.results.connect_url)"
         - name: hydra_secret_name
           value: "$(params.hydra_secret_name)"
-        - name: hydra_secret_username_key
+        - name: hydra_secret_sso_client_id_key
           value: "$(params.hydra_secret_sso_client_id_key)"
-        - name: hydra_secret_password_key
+        - name: hydra_secret_sso_client_secret_key
           value: "$(params.hydra_secret_sso_client_secret_key)"
         - name: hydra_secret_sso_token_url_key
           value: "$(params.hydra_secret_sso_token_url_key)"
