@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: '{{ community_signing_pipeline_name }}-fluentd-{{ suffix }}'
+  labels:
+    io.kompose.service: "{{ community_signing_pipeline_name }}"
+    app: "{{ community_signing_pipeline_name }}"
+    suffix: '{{ suffix }}'
+    env: '{{ env }}'
+    paas.redhat.com/appcode: "{{ community_signing_pipeline_appcode }}"
+type: Opaque
+stringData:
+  fluentd.conf: |-
+    # fluentd
+    <source>
+      @type http_healthcheck
+      port 8082
+      bind 0.0.0.0
+    </source>
+    <label @FLUENT_LOG>
+      # throw those away, since they are already
+      # logged in the stdout
+      <match fluent.*>
+        @type null
+      </match>
+    </label>
+
+    # nginx
+    <source>
+      @type tail
+      tag nginx.access
+      path {{ nginx_proxy_access_log_location }}
+      pos_file /tmp/nginx_access.log.pos
+      format json
+      read_from_head true
+    </source>
+    <source>
+      @type tail
+      tag nginx.error
+      path {{ nginx_proxy_error_log_location }}
+      pos_file /tmp/nginx_error.log.pos
+      format json
+      read_from_head true
+    </source>
+
+    # common
+    <filter **>
+      @type record_transformer
+      <record>
+        source {{ community_signing_pipeline_name }}
+        sourcetype {{ community_signing_pipeline_name }}:${tag}
+        environment {{ env }}
+      </record>
+    </filter>
+    <match *>
+      @type splunk_hec
+      hec_host {{ splunk_hec }}
+      hec_port {{ splunk_port }}
+      hec_token {{ splunk_token }}
+      index rh_services
+      source_key source
+      sourcetype_key sourcetype
+      host_key host
+    </match>

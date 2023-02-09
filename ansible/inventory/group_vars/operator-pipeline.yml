@@ -58,3 +58,8 @@ nginx_proxy_service_url: "https://{{ community_signing_pipeline_url }}"
 nginx_proxy_url: "{{ community_signing_pipeline_name }}-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
 
 signing_pub_key_local_path: ../../vaults/{{ env }}/sig-key.pub
+
+#### Fluentd settings
+splunk_hec_token: null
+splunk_hec: splunk-hec.corp.redhat.com
+splunk_port: 8088
