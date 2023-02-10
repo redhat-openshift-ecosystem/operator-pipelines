@@ -69,7 +69,6 @@ spec:
               readOnly: true
             - name: nginx-logs
               mountPath: "{{ nginx_proxy_log_dir }}"
-              readOnly: true
           resources:
             requests:
               cpu: 250m
