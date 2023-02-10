@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: '{{ nginx_proxy_name }}-fluentd-{{ suffix }}'
+  name: '{{ community_signing_pipeline_name }}-fluentd-{{ suffix }}'
   labels:
     io.kompose.service: "{{ community_signing_pipeline_name }}"
     app: "{{ community_signing_pipeline_name }}"

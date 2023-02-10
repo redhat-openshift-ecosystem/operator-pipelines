@@ -32,7 +32,9 @@ spec:
             secretName: "{{ nginx_proxy_name }}-htpasswd-{{ suffix }}"
         - name: fluentd-config
           secret:
-            secretName: "{{ nginx_proxy_name }}-fluentd-{{ suffix }}"
+            secretName: "{{ community_signing_pipeline_name }}-fluentd-{{ suffix }}"
+        - name: nginx-logs
+          emptyDir: {}
 
       containers:
         - name: "{{ nginx_proxy_name }}"
