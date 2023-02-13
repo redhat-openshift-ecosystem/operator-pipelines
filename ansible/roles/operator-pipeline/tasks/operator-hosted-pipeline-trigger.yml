@@ -52,6 +52,8 @@
                 value: "{{ pipelines_metrics_endpoint }}"
               - name: image_namespace
                 value: "{{ operator_pipeline_pending_namespace }}"
+              - name: hydra_sso_token_url
+                value: "{{ operator_pipeline_hydra_sso_token_url }}"
 
     - name: Create Hosted pipeline Trigger Template
       k8s:
@@ -84,6 +86,7 @@
               - name: pipeline_image
               - name: metrics_endpoint
               - name: image_namespace
+              - name: hydra_sso_token_url
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
@@ -132,6 +135,8 @@
                       value: $(tt.params.metrics_endpoint)
                     - name: image_namespace
                       value: $(tt.params.image_namespace)
+                    - name: hydra_sso_token_url
+                      value: $(tt.params.hydra_sso_token_url)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:

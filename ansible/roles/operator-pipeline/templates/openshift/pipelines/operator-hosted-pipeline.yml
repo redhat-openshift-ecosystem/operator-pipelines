@@ -51,12 +51,17 @@ spec:
     - name: hydra_secret_name
       description: Kubernetes secret name that contains the Hydra credentials.
       default: hydra-credentials
-    - name: hydra_secret_username_key
-      description: The key within the Kubernetes secret that contains the Hydra username.
-      default: username
-    - name: hydra_secret_password_key
-      description: The key within the Kubernetes secret that contains the Hydra password.
-      default: password
+    - name: hydra_secret_sso_client_id_key
+      description: |
+        The key within the Kubernetes secret that contains Hydra SSO client ID.
+      default: sso_client_id
+    - name: hydra_secret_sso_client_secret_key
+      description: |
+        The key within the Kubernetes secret that contains the Hydra SSO password.
+      default: sso_client_secret
+    - name: hydra_sso_token_url
+      description: SSO URL.
+      default: https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token
     - name: pyxis_ssl_secret_name
       description: Kubernetes secret name that contains the Pyxis SSL files.
       default: operator-pipeline-api-certs
@@ -824,10 +829,12 @@ spec:
           value: "$(tasks.set-env.results.connect_url)"
         - name: hydra_secret_name
           value: "$(params.hydra_secret_name)"
-        - name: hydra_secret_username_key
-          value: "$(params.hydra_secret_username_key)"
-        - name: hydra_secret_password_key
-          value: "$(params.hydra_secret_password_key)"
+        - name: hydra_secret_sso_client_id_key
+          value: "$(params.hydra_secret_sso_client_id_key)"
+        - name: hydra_secret_sso_client_secret_key
+          value: "$(params.hydra_secret_sso_client_secret_key)"
+        - name: hydra_sso_token_url
+          value: "$(params.hydra_sso_token_url)"
         - name: ignore_publishing_checklist
           value: "$(params.ignore_publishing_checklist)"
 

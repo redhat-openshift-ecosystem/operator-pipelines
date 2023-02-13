@@ -29,8 +29,9 @@ operator_release_pipeline_registry_auth_serve_path: ../../vaults/{{ env }}/regis
 operator_pipeline_kubeconfig_prow_local_path: ../../vaults/common/kubeconfig-prow
 operator_pipeline_github_bot_token: ../../vaults/common/github-bot-token.txt
 
-operator_pipeline_hydra_username_local_path: ../../vaults/common/nonprod-hydra-username
-operator_pipeline_hydra_password_local_path: ../../vaults/common/nonprod-hydra-password
+operator_pipeline_hydra_sso_token_url: https://auth.stage.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token
+operator_pipeline_hydra_sso_client_id_local_path: ../../vaults/common/nonprod-hydra-sso-client-id
+operator_pipeline_hydra_sso_client_secret_local_path: ../../vaults/common/nonprod-hydra-sso-client-secret
 
 operator_pipeline_preflight_decryption_key_private_local_path: ../../vaults/common/preflight-decryption-key-priv.gpg
 operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/common/preflight-decryption-key-pub.gpg

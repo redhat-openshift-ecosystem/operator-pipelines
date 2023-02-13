@@ -2,37 +2,13 @@ import logging
 import os
 import re
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import requests
 
-from operatorcert.utils import add_session_retries
+from operatorcert.oidc_client import OIDCClientCredentials, OIDCClientCredentialsClient
 
 LOGGER = logging.getLogger("operator-cert")
-
-
-def _get_session() -> requests.Session:
-    """
-    Create a Hydra http session with auth based on env variables.
-
-    Auth is set to use Basic Auth.
-
-    Returns:
-        requests.Session: Hydra session
-    """
-    username = os.environ.get("HYDRA_USERNAME")
-    password = os.environ.get("HYDRA_PASSWORD")
-    if not username or not password:
-        LOGGER.error(
-            "Missing auth details for Hydra. Define both HYDRA_USERNAME and HYDRA_PASSWORD."
-        )
-        sys.exit(1)
-
-    session = requests.Session()
-    session.auth = (username, password)
-    add_session_retries(session)
-
-    return session
 
 
 def get(url: str) -> Dict[str, Any]:
@@ -45,16 +21,23 @@ def get(url: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Hydra response
     """
-    session = _get_session()
+    auth = OIDCClientCredentials(
+        token_url=os.environ["HYDRA_SSO_TOKEN_URL"],
+        client_id=os.environ["HYDRA_SSO_CLIENT_ID"],
+        client_secret=os.environ["HYDRA_SSO_CLIENT_SECRET"],
+    )
 
     # Set up proxy for preprod instances due to Akamai preprod lockdown
     regex = re.compile(r"^https:\/\/connect\.(dev|qa|stage)\.redhat\.com*")
     match = regex.match(url)
+    proxy = None
     if match:
-        session.proxies["https"] = "http://squid.corp.redhat.com:3128"
+        proxy = "http://squid.corp.redhat.com:3128"
+
+    client = OIDCClientCredentialsClient(auth, proxy)
 
     LOGGER.debug(f"GET Hydra API request: {url}")
-    resp = session.get(url)
+    resp = client.get(url)
 
     try:
         resp.raise_for_status()
