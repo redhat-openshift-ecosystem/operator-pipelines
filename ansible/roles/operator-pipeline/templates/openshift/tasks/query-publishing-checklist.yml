@@ -18,8 +18,8 @@ spec:
     - name: hydra_secret_sso_client_secret_key
       description: |
         The key within the Kubernetes secret that contains the Hydra SSO password
-    - name: hydra_secret_sso_token_url_key
-      description: The key within the Kubernetes secret that contains SSO URL
+    - name: hydra_sso_token_url
+      description: SSO URL
     - name: ignore_publishing_checklist
       default: "false"
       description: Ignore the results of the publishing checklist
@@ -38,10 +38,7 @@ spec:
               name: $(params.hydra_secret_name)
               key: $(params.hydra_secret_sso_client_secret_key)
         - name: HYDRA_SSO_TOKEN_URL
-          valueFrom:
-            secretKeyRef:
-              name: $(params.hydra_secret_name)
-              key: $(params.hydra_secret_sso_token_url_key)
+          value: $(params.hydra_sso_token_url)
       script: |
         #! /usr/bin/env bash
         set -ex
