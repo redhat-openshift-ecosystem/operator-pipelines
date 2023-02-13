@@ -32,7 +32,9 @@ spec:
             secretName: "{{ nginx_proxy_name }}-htpasswd-{{ suffix }}"
         - name: fluentd-config
           secret:
-            secretName: "{{ nginx_proxy_name }}-fluentd-{{ suffix }}"
+            secretName: "{{ community_signing_pipeline_name }}-fluentd-{{ suffix }}"
+        - name: nginx-logs
+          emptyDir: {}
 
       containers:
         - name: "{{ nginx_proxy_name }}"
@@ -67,6 +69,8 @@ spec:
             - name: nginx-htpasswd
               mountPath: "{{ nginx_basic_user_dir_path }}"
               readOnly: true
+            - name: nginx-logs
+              mountPath: "{{ nginx_proxy_log_dir }}"
           resources:
             requests:
               cpu: 250m
@@ -80,8 +84,8 @@ spec:
             - name: FLUENTD_CONF
               value: fluentd.conf
           volumeMounts:
-            - name: "{{ community_signing_pipeline_name }}-logs"
-              mountPath: /var/log/nginx
+            - name: nginx-logs
+              mountPath: "{{ nginx_proxy_log_dir }}"
               readOnly: true
             - name: fluentd-config
               mountPath: /fluentd/etc
