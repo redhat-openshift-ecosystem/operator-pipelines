@@ -4,7 +4,7 @@ from urllib.parse import parse_qsl, urlencode
 import pytest
 import requests
 
-from operatorcert.oidcc_client import (
+from operatorcert.oidc_client import (
     OIDCClientCredentials,
     OIDCClientCredentialsClient,
     OIDCAuthenticationError,

@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 import requests
 
-from operatorcert.oidcc_client import OIDCClientCredentials, OIDCClientCredentialsClient
+from operatorcert.oidc_client import OIDCClientCredentials, OIDCClientCredentialsClient
 
 LOGGER = logging.getLogger("operator-cert")
 
