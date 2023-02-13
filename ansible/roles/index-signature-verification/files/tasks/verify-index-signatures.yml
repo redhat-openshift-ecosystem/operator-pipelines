@@ -25,9 +25,6 @@ spec:
     - name: keys_config_map
       description: Name of the ConfigMap with the public keys
       default: index-signature-verification-keys
-    - name: containers_policy_config_map
-      description: Name of the  /etc/containers/policy.json
-      default: containers-policy-json
 
   workspaces:
     - name: registry-credentials
@@ -39,9 +36,6 @@ spec:
     - name: keys
       configMap:
         name: "$(params.keys_config_map)"
-    - name: policies
-      configMap:
-        name: "$(params.containers_policy_config_map)"
 
   stepTemplate:
     volumeMounts:
@@ -106,8 +100,10 @@ spec:
           value: vfs
       script: |
         #!/usr/bin/env bash
-        set +x -e -o pipefail
 
+        set +x -e -o pipefail
+        cp /etc/containers/policy.json /tmp/
+        podman image trust set --policypath=/tmp/policy.json -f /mnt/keys/pub.gpg registry.redhat.io
         for pull_spec in $(cat image-digests.txt); do
-          podman pull $pull_spec
+            podman pull --signature-policy=/tmp/policy.json $pull_spec
         done
