@@ -100,10 +100,10 @@ spec:
           value: vfs
       script: |
         #!/usr/bin/env bash
+
         set +x -e -o pipefail
-
-        podman image trust set -f /mnt/keys/pub.gpg registry.redhat.io
-
+        cp /etc/containers/policy.json /tmp/
+        podman image trust set --policypath=/tmp/policy.json -f /mnt/keys/pub.gpg registry.redhat.io
         for pull_spec in $(cat image-digests.txt); do
-          podman pull $pull_spec
+            podman pull --signature-policy=/tmp/policy.json $pull_spec
         done
