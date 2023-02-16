@@ -11,7 +11,6 @@ data:
   nginx.conf: |-
     worker_processes auto;
     pid /tmp/nginx.pid;
-
     include /usr/share/nginx/modules/*.conf;
 
     events {
@@ -67,13 +66,12 @@ data:
               auth_basic_user_file {{ nginx_basic_user_file_path }};
               proxy_pass {{ nginx_proxy_service_url }};
           }
-          
+
           # Provides additional statistics for the future
           location /nginx_status {
               stub_status;
-	            allow 127.0.0.1;
-	            deny all;
-	        }
-          
+              allow 127.0.0.1;
+              deny all;
+          }
       }
     }

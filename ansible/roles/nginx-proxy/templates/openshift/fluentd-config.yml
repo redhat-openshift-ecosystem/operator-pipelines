@@ -40,7 +40,7 @@ stringData:
       tag nginx.error
       path {{ nginx_proxy_error_log_location }}
       pos_file /tmp/nginx_error.log.pos
-      
+
       format multiline
       format_firstline /^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} \[\w+\] (?<pid>\d+).(?<tid>\d+): /
       format1 /^(?<time>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?<log_level>\w+)\] (?<pid>\d+).(?<tid>\d+): (?<message>.*)/
