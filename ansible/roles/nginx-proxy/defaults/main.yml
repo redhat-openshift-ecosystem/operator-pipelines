@@ -12,6 +12,7 @@ nginx_basic_user_file_local_path: /tmp/htpasswd
 nginx_basic_user_dir_path: /etc/nginx
 nginx_basic_user_file_path: /etc/nginx/htpasswd
 nginx_proxy_service_url: https://example.com
+community_signing_pipeline_appcode: COOP-001
 
 nginx_port: 8080
 
