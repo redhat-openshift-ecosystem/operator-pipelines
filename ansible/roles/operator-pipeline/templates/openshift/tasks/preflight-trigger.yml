@@ -7,7 +7,7 @@ spec:
   params:
     - name: preflight_trigger_image
       description: Preflight trigger image
-      default: "quay.io/opdev/preflight-trigger:stable"
+      default: "quay.io/opdev/preflight-trigger:latest"
     - name: preflight_trigger_environment
       description: Which openshift-ci step-registry steps and ProwJob templates to use. Can be one of [preprod, prod]
     - default: '4.12'
