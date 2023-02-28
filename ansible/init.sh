@@ -25,19 +25,17 @@ get_environments() {
 
 # execute playbook for given environment
 execute_playbook() {
-    local secret=$(dirname "$0")/vaults/$env/secret-vars.yml
+    local secret=$(dirname "$0")/vaults/$env/ocp-token.yml
     if [ ! -f $secret ]; then
         touch $secret
         echo "File $secret was not found, empty one was created"
     fi
 
-    ansible-playbook -i inventory/operator-pipeline playbooks/deploy.yml \
+    ansible-playbook -i inventory/operator-pipeline-$1 playbooks/operator-pipeline-env-setup.yml \
         --vault-password-file=$2 \
         -e "env=$1" \
         -e "ocp_host=`oc whoami --show-server`" \
-        -e "ocp_token=`oc whoami -t`" \
-        --tags init \
-        -vvvv
+        -e "ocp_token=`oc whoami -t`"
 }
 
 # update token for given environment
@@ -49,7 +47,7 @@ update_token() {
         | awk '$2=="kubernetes.io/service-account-token" && $1~/^operator-pipeline-admin-token/ {print $3; exit}' \
         | base64 -d)
 
-    local secret=$(dirname "$0")/vaults/$env/secret-vars.yml
+    local secret=$(dirname "$0")/vaults/$env/ocp-token.yml
 
     echo "ocp_token: $token" > $secret
     ansible-vault encrypt $secret --vault-password-file $2 > /dev/null

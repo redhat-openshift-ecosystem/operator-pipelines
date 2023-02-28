@@ -3,6 +3,7 @@
 ansible_connection: local
 env: unset
 oc_namespace: "operator-pipeline-{{ env }}"
+service_account_name: operator-pipeline-admin
 branch: "{{ env }}"
 preflight_min_version: 0.0.0
 preflight_trigger_environment: preprod

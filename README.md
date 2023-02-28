@@ -72,6 +72,16 @@ tkn pipeline start operator-ci-pipeline \
   --showlog
 ```
 
+A subset of tasks in the pipeline requires privilege escalation which is no longer
+supported with OpenShift Pipelines 1.9. Thus a new `SCC` needs to be created and linked
+with `pipeline` service account. Creating [SCC](https://docs.openshift.com/container-platform/4.11/authentication/managing-security-context-constraints.html#security-context-constraints-creating_configuring-internal-oauth)
+requires user with cluster-admin privileges.
+```bash
+# Create a new SCC
+oc apply -f ansible/roles/operator-pipeline/templates/openshift/openshift-pipelines-custom-scc.yml
+# Add SCC to a pipeline service account
+oc adm policy add-scc-to-user pipelines-custom-scc -z pipeline
+```
 
 
 To enable opening the PR and uploading the pipeline logs (visible to the certification project

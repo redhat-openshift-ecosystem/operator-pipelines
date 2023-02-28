@@ -38,27 +38,21 @@ spec:
       workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
-        # This is needed to ensure the inspect-base-index step, which runs
-        # under a different UID, has access to its output file
-        truncate -s 0 podman-inspect.json
-        chown :1000 podman-inspect.json
         chmod 664 podman-inspect.json
 
         mkdir -p $DOCKER_CONFIG
         chmod 775 $DOCKER_CONFIG
         cp $HOME/.docker/config.json $DOCKER_CONFIG/config.json
         chmod 664 $DOCKER_CONFIG/config.json
-        chmod go+rx .
 
     - name: inspect-base-index
       image: "$(params.podman_image)"
       env:
         - name: STORAGE_DRIVER
           value: vfs
-      workingDir: $(workspaces.output.path)
       securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
+        privileged: true
+      workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
         set -exo pipefail
@@ -78,7 +72,6 @@ spec:
         #! /usr/bin/env bash
         set -x
 
-        chmod 644 podman-inspect.json
         # Create a special file in the workspace if this index uses file-based configs
         CONFIGS_QUERY='.[0].Labels."operators.operatorframework.io.index.configs.v1"'
         jq -e "$CONFIGS_QUERY" podman-inspect.json && touch $FBC_FILE
