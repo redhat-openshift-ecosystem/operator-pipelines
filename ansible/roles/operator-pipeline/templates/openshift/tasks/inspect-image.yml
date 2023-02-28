@@ -10,7 +10,7 @@ spec:
       default: "registry.redhat.io/rhel8/skopeo:8.7"
     - name: podman_image
       description: Podman image
-      default: "registry.redhat.io/rhel8/podman:8.7"
+      default: "registry.redhat.io/ubi9/podman:9.1.0-12"
     - name: image
       description: reference to the existing bundle image
     - name: registry
@@ -29,12 +29,9 @@ spec:
         skopeo login $(params.registry) --authfile $(workspaces.registry-credentials.path)/.dockerconfigjson \
 
         skopeo inspect docker://$(params.image) > $(workspaces.image-data.path)/skopeo.json
-
-        truncate -s 0 $(workspaces.image-data.path)/podman.json
-        chmod 664 $(workspaces.image-data.path)/podman.json
     - name: podman-inspect
       securityContext:
-        runAsUser: 1000
+        privileged: true
       image: "$(params.podman_image)"
       env:
         - name: STORAGE_DRIVER

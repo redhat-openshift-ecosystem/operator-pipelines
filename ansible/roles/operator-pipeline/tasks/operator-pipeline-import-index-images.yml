@@ -1,0 +1,70 @@
+---
+# We can't use the k8s module here because it always tries to GET the resource
+# prior to creation or patching. The ImageStreamImport API only supports POST.
+- name: Import certified-operator-index imagestream
+  tags:
+    - import-index-images
+  no_log: yes
+  uri:
+    url: "{{ ocp_host }}/apis/image.openshift.io/v1/namespaces/{{ oc_namespace }}/imagestreamimports"
+    method: POST
+    # The 'or' condition is needed to support Ansible versions < 2.13
+    validate_certs: "{{ lookup('env', 'K8S_AUTH_VERIFY_SSL', default='yes') or 'yes' }}"
+    status_code: 201
+    body_format: json
+    headers:
+      Authorization: "Bearer {{ ocp_token }}"
+    body:
+      apiVersion: image.openshift.io/v1
+      kind: ImageStreamImport
+      metadata:
+        name: certified-operator-index
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      spec:
+        import: true
+        repository:
+          from:
+            kind: DockerImage
+            name: "{{ certified_operator_index }}"
+          importPolicy:
+            insecure: "{{ insecure_index_import | default(false) }}"
+            scheduled: true
+          referencePolicy:
+            type: Local
+
+- name: Import redhat-marketplace-index imagestream
+  tags:
+    - import-index-images
+  no_log: true
+  ansible.builtin.uri:
+    url: "{{ ocp_host }}/apis/image.openshift.io/v1/namespaces/{{ oc_namespace }}/imagestreamimports"
+    method: POST
+    # The 'or' condition is needed to support Ansible versions < 2.13
+    validate_certs: "{{ lookup('env', 'K8S_AUTH_VERIFY_SSL', default='yes') or 'yes' }}"
+    status_code: 201
+    body_format: json
+    headers:
+      Authorization: "Bearer {{ ocp_token }}"
+    body:
+      apiVersion: image.openshift.io/v1
+      kind: ImageStreamImport
+      metadata:
+        name: redhat-marketplace-index
+        labels:
+          app: operator-pipeline
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      spec:
+        import: true
+        repository:
+          from:
+            kind: DockerImage
+            name: "{{ redhat_marketplace_index }}"
+          importPolicy:
+            insecure: "{{ insecure_index_import | default(false) }}"
+            scheduled: true
+          referencePolicy:
+            type: Local

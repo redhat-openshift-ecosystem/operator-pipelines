@@ -1,0 +1,9 @@
+---
+- name: Setup operator-pipeline namespace
+  hosts: "operator-pipeline-{{ env }}"
+
+  tasks:
+    - name: Configure namespace + service account
+      include_role:
+        name: operator-pipeline
+        tasks_from: operator-pipeline-service-account
