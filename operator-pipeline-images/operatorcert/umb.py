@@ -4,7 +4,6 @@ import ssl
 import stomp
 from stomp import ConnectionListener
 import sys
-import time
 from typing import Any
 import uuid
 
@@ -45,14 +44,14 @@ class UmbClient:
 
     def connect_and_subscribe(self, destination: str) -> None:
         """
-        Connect to UMB and subscribe to the given destination as a qaueue.
+        Connect to UMB and subscribe to the given destination as a queue.
         Args:
             destination: Destination/topic to subscribe to.
         """
         if not self.connection.is_connected():
-            self.connection.connect()
+            LOGGER.info("Connecting to the UMB...")
+            self.connection.connect(wait=True)
 
-        LOGGER.info("Connecting to UMB...")
         destination = f"/queue/Consumer.{self.umb_client_name}.{self.id}.{destination}"
         self.connection.subscribe(
             destination=destination,
@@ -62,11 +61,6 @@ class UmbClient:
         )
         LOGGER.info(f"Subscribed to {destination} with id={self.id}")
 
-        time.sleep(2)
-        if not self.connection.is_connected():
-            LOGGER.error("Not connected to the UMB")
-            sys.exit(1)
-
     def send(self, destination: str, message: str) -> None:
         """
         Send a message to the given destination.
@@ -75,11 +69,9 @@ class UmbClient:
             message: Valid json string to send.
         """
         if not self.connection.is_connected():
-            self.connection.connect()
+            LOGGER.info("Connecting to the UMB...")
+            self.connection.connect(wait=True)
 
-        while self.connection.is_connected() is False:
-            LOGGER.info("Waiting for UMB connection...")
-            time.sleep(1)
         LOGGER.debug(f"Publishing to topic: /topic/{destination}")
         LOGGER.info(f"Writing message to UMB: {message}")
         self.connection.send(body=message, destination=f"/topic/{destination}")

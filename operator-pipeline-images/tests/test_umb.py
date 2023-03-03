@@ -17,9 +17,10 @@ def create_test_umb_client() -> UmbClient:
 def test_connect_and_subscribe(mock_connection: MagicMock) -> None:
     mock_connection.return_value = MagicMock()
     mock_connect_obj = mock_connection.return_value
-    mock_connect_obj.is_connected.return_value = True
+    mock_connect_obj.is_connected.return_value = False
     umb = create_test_umb_client()
     umb.connect_and_subscribe("VirtualTopic.eng.test.topic")
+    mock_connect_obj.connect.assert_called_once_with(wait=True)
     mock_connect_obj.subscribe.assert_called_once_with(
         destination=f"/queue/Consumer.test-client.{umb.id}.VirtualTopic.eng.test.topic",
         id=umb.id,
@@ -28,37 +29,14 @@ def test_connect_and_subscribe(mock_connection: MagicMock) -> None:
     )
 
 
-@patch("sys.exit")
-@patch("time.sleep")
 @patch("operatorcert.umb.stomp.Connection")
-def test_connect_and_subscribe_not_connected(
-    mock_connection: MagicMock, mock_sleep: MagicMock, mock_exit: MagicMock
-) -> None:
+def test_send(mock_connection: MagicMock) -> None:
     mock_connection.return_value = MagicMock()
     mock_connect_obj = mock_connection.return_value
     mock_connect_obj.is_connected.return_value = False
     umb = create_test_umb_client()
-    umb.connect_and_subscribe("VirtualTopic.eng.test.topic")
-    mock_connect_obj.connect.assert_called_once()
-    mock_connect_obj.subscribe.assert_called_once_with(
-        destination=f"/queue/Consumer.test-client.{umb.id}.VirtualTopic.eng.test.topic",
-        id=umb.id,
-        ack="auto",
-        headers={"activemq.prefetchSize": 1},
-    )
-    mock_exit.assert_called_once_with(1)
-
-
-@patch("time.sleep")
-@patch("operatorcert.umb.stomp.Connection")
-def test_send(mock_connection: MagicMock, mock_sleep: MagicMock) -> None:
-    mock_connection.return_value = MagicMock()
-    mock_connect_obj = mock_connection.return_value
-    mock_connect_obj.is_connected.side_effect = [False, False, True]
-    umb = create_test_umb_client()
     umb.send("VirtualTopic.eng.test.topic", '{"foo":"bar"}')
-    assert mock_connect_obj.is_connected.call_count == 3
-    mock_sleep.assert_called_once()
+    mock_connect_obj.connect.assert_called_once_with(wait=True)
     mock_connect_obj.send.assert_called_once_with(
         body='{"foo":"bar"}', destination="/topic/VirtualTopic.eng.test.topic"
     )
