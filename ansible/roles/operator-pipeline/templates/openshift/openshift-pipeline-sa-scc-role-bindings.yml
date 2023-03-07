@@ -2,7 +2,7 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: "system:openshift:scc:pipelines-custom-scc"
+  name: "pipeline-{{ oc_namespace }}-pipelines-custom-scc"
 subjects:
   - kind: ServiceAccount
     name: pipeline
