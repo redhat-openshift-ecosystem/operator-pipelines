@@ -20,26 +20,11 @@ data:
     http {
 
 
-      log_format logger-json escape=json '{
-                                           "time": $msec, \
-                                           "time_local":"$time_local", \
-                                           "resp_body_size": $body_bytes_sent, \
-                                           "host": "$http_host", \
-                                           "address": "$remote_addr", \
-                                           "remote_user": $remote_user \
-                                           "request":"$request", \
-                                           "request_length": $request_length, \
-                                           "method": "$request_method", \
-                                           "uri": "$request_uri", \
-                                           "status": $status,  \
-                                           "user_agent": "$http_user_agent", \
-                                           "http_referer" "$http_referer"
-                                           "resp_time": $request_time, \
-                                           "upstream_addr": "$upstream_addr" \
-                                           "gzip_ratio": "$gzip_ratio"
-                                          }';
+      log_format custom_proxy_log '$remote_addr - $remote_user [$time_local] '
+                                  '"$request" $status $body_bytes_sent '
+                                  '"$http_referer" "$http_user_agent" ';
 
-      access_log {{ nginx_proxy_access_log_location }} logger-json;
+      access_log {{ nginx_proxy_access_log_location }} custom_proxy_log;
       error_log {{ nginx_proxy_error_log_location }} debug;
 
       server {

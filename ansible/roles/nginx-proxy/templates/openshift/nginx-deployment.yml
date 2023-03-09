@@ -79,7 +79,7 @@ spec:
               cpu: 250m
               memory: 256Mi
         - name: fluentd
-          image: images.paas.redhat.com/exd-sp-guild-isv/fluentd:latest
+          image: quay.io/redhat-isv/fluentd:latest
           env:
             - name: FLUENTD_CONF
               value: fluentd.conf
