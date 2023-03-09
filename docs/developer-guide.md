@@ -11,6 +11,7 @@
 
 ## Setup
 
+1. [Git leaks detection](#git-leaks-detection)
 1. [Prepare a development environment](#prepare-a-development-environment)
 1. [Prepare a certification project](#prepare-a-certification-project)
 1. [Prepare an Operator bundle](#prepare-an-operator-bundle)
@@ -21,6 +22,18 @@
     - Required for testing submission with the CI pipeline
 1. [Prepare the CI to run from your fork](ci-cd.md) (optional)
     - Required to run integration testing on forks of this repo.
+
+### Git leaks detection
+Since the repository contains a secret information in form of encrypted
+Ansible Vault there is high chance that developer may push a commit with
+decrypted secrets by mistake. To avoid this problem we recommend
+to use `Gitleaks` tool that prevent you from commit secret code into git history.
+
+The repository is already pre-configured but each developer has to make final
+config changes in his/her environment.
+
+Follow the [documentation](https://github.com/gitleaks/gitleaks#pre-commit) to
+configure Gitleaks on your computer.
 
 ### Prepare a Development Environment
 
@@ -74,7 +87,7 @@ cluster for development/testing, purposes.
 
 1. Install [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.7/cicd/pipelines/installing-pipelines.html)
 
-1. Login to your cluster with `oc` CLI. 
+1. Login to your cluster with `oc` CLI.
 
     You can run `crc console --credentials` to get the admin login command.
 
@@ -284,8 +297,8 @@ tox
 1. Push the image to a remote registry, eg. Quay.io.
 
     ```bash
-    buildah push <image-digest-from-build-step> <remote-repository> 
-    ```   
+    buildah push <image-digest-from-build-step> <remote-repository>
+    ```
 
     This step may require login, eg.
 

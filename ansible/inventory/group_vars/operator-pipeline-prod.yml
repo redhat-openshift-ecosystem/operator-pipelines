@@ -16,7 +16,7 @@ operator_pipeline_kubeconfig_prow_local_path: ../../vaults/prod/kubeconfig-prow
 operator_pipeline_github_bot_token: ../../vaults/prod/github-bot-token.txt
 
 operator_pipeline_preflight_decryption_key_private_local_path: ../../vaults/prod/preflight-decryption-key-priv.gpg
-operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/prod/preflight-decryption-key-pub.gpg
+operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/prod/preflight-decryption-key-pub
 
 pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-prod
 
