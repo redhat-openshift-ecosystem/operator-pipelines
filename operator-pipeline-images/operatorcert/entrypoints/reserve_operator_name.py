@@ -41,7 +41,8 @@ def check_operator_name_registered_for_association(args: Any) -> None:
     rsp = pyxis.get(
         urljoin(
             args.pyxis_url,
-            f"v1/operators/packages?filter=association=={args.association}",
+            "v1/operators/packages?"
+            f"filter=association=={args.association};deleted!=true",
         )
     )
 
@@ -79,7 +80,8 @@ def check_operator_name(args: Any) -> None:
     rsp = pyxis.get(
         urljoin(
             args.pyxis_url,
-            f"v1/operators/packages?filter=package_name=={args.operator_name}",
+            "v1/operators/packages?"
+            f"filter=package_name=={args.operator_name};deleted!=true",
         )
     )
 
