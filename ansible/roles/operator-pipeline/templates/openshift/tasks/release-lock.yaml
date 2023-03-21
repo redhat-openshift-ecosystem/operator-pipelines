@@ -1,0 +1,12 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: release-lease
+spec:
+  params:
+  - name: lease-name
+    type: string
+  steps:
+    - name: delete-lease
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      script: kubectl delete lease $(params.lease-name) --ignore-not-found=true

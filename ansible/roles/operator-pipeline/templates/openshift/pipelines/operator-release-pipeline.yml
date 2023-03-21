@@ -419,8 +419,7 @@ spec:
         - name: connect_registry
           value: "$(tasks.set-env.results.connect_registry)"
 
-    # call IIB to add the bundle to index
-    - name: add-bundle-to-index
+    - name: acquire-lease
       runAfter:
         - publish-resources
         - get-supported-versions
@@ -429,6 +428,16 @@ spec:
           operator: notin
           values:
             - undistributed
+      taskRef:
+        name: acquire-lease
+      params:
+        - name: lease-name
+          value: *operatorDistribution
+
+    # call IIB to add the bundle to index
+    - name: add-bundle-to-index
+      runAfter:
+        - acquire-lease
       taskRef:
         name: add-bundle-to-index
       params:
@@ -547,6 +556,16 @@ spec:
 
 
   finally:
+    - name: release-lease
+      when:
+        - input: $(tasks.status)
+          operator: in
+          values: ["Succeeded", "Completed"]
+      taskRef:
+        name: release-lease
+      params:
+        - name: lease-name
+          value: *operatorDistribution
 
     # Upload the logs of this pipeline.
     # Dependencies on other task results should be minimized. If any
