@@ -6,6 +6,7 @@ spec:
   params:
   - name: lease-name
     type: string
+    description: The name of the resource which will be acquired.
   steps:
     - name: delete-lease
       image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest

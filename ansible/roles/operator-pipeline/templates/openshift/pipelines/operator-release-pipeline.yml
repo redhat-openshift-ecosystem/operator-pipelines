@@ -419,6 +419,7 @@ spec:
         - name: connect_registry
           value: "$(tasks.set-env.results.connect_registry)"
 
+    # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
     - name: acquire-lease
       runAfter:
         - publish-resources
@@ -556,11 +557,9 @@ spec:
 
 
   finally:
+
+    # Release the acquired resource
     - name: release-lease
-      when:
-        - input: $(tasks.status)
-          operator: in
-          values: ["Succeeded", "Completed"]
       taskRef:
         name: release-lease
       params:
