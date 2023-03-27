@@ -4,13 +4,13 @@ metadata:
   name: acquire-lease
 spec:
   params:
-  - name: lease-name
-    type: string
-    description: The name of the resource which will be acquired.
-  - name: timeout
-    type: string
-    default: 90m
-    description: The timeout for the wait period of leased resource.
+    - name: lease-name
+      type: string
+      description: The name of the resource which will be acquired.
+    - name: timeout
+      type: string
+      default: 90m
+      description: The timeout for the wait period of leased resource.
   steps:
     - name: create-lease
       image: quay.io/operator_testing/operator-test-playbooks:dev-tekton
@@ -64,7 +64,6 @@ spec:
                 fi
               fi
             done
-            
         }
         create_lease_yaml() {
           microTime=$(date -u +"%Y-%m-%dT%H:%M:%S.000000Z")
