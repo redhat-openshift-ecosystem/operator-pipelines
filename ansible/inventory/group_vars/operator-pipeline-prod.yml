@@ -28,5 +28,6 @@ redhat_marketplace_index: registry.redhat.io/redhat/redhat-marketplace-index
 
 community_signing_umb_client_name: community-operator-signing-pipeline
 community_signing_pipeline_url: "{{ community_signing_pipeline_name }}-tekton-{{ env }}.apps.pipelines-prod.ijdb.p1.openshiftapps.com"
+nginx_basic_user_file_local_path: ../../vaults/common/htpasswd-prod
 nginx_proxy_url: "{{ community_signing_pipeline_name }}-{{ env }}.apps.pipelines-prod.ijdb.p1.openshiftapps.com"
 nginx_proxy_replicas: 2
