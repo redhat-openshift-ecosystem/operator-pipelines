@@ -9,5 +9,5 @@ spec:
     description: The name of the resource which will be acquired.
   steps:
     - name: delete-lease
-      image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      image: quay.io/operator_testing/operator-test-playbooks:dev-tekton
       script: kubectl delete lease $(params.lease-name) --ignore-not-found=true

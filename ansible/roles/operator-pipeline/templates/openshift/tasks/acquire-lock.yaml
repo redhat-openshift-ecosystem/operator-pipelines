@@ -11,13 +11,9 @@ spec:
     type: string
     default: 90m
     description: The timeout for the wait period of leased resource.
-  stepTemplate:
-    env:
-      - name: TOTAL_DURATION_IN_SECONDS
-        value: ${0}
   steps:
     - name: create-lease
-      image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      image: quay.io/operator_testing/operator-test-playbooks:dev-tekton
       script: |
         calculate_duration_in_seconds() {
             if [ "${1: -1}" == "m" ]; then
@@ -31,24 +27,44 @@ spec:
             else
                 TOTAL_DURATION_IN_SECONDS=${1}
             fi
+            export TOTAL_DURATION_IN_SECONDS
         }
         acquire_lease() {
             echo "Attempting to create lease $(params.lease-name)"
-            until kubectl create -f e2e-lease.yaml
+            while true
             do
-              echo "Waiting for lease..."
-              acquiredTime=$(oc get lease $(params.lease-name) -o=jsonpath='{.spec.acquireTime}')
-              acquiredTimeInSeconds=$(date +%s --date="${acquiredTime}")
-              currentTimeinSeconds=$(date +%s)
-              elapsedSeconds=$(($currentTimeinSeconds-$acquiredTimeInSeconds))
-              if (( elapsedSeconds > TOTAL_DURATION_IN_SECONDS)); then
-                echo "Lease abandoned, deleting"
-                kubectl delete lease $(params.lease-name)
+              if kubectl create -f e2e-lease.yaml; then
+                leaseOwner=$(kubectl get lease $(params.lease-name) -o=jsonpath='{.spec.holderIdentity}')
+                echo "The owner of the lease is ${leaseOwner}"
+                echo "Acquired lease $(params.lease-name)"
+                break
+              else
+                echo "Waiting for lease..."
+                acquiredTime=$(oc get lease $(params.lease-name) -o=jsonpath='{.spec.acquireTime}')
+                echo "acquiredTime: ${acquiredTime}"
+                acquiredTimeInSeconds=$(date +%s --date="${acquiredTime}")
+                echo "acquiredTimeInSeconds: ${acquiredTimeInSeconds}"
+                c=$(date +"%D %T")
+                echo "currenttime: ${c}"
+                currentTimeinSeconds=$(date +%s)
+                echo "currentTimeinSeconds: ${currentTimeinSeconds}"
+                elapsedSeconds=$(($currentTimeinSeconds-$acquiredTimeInSeconds))
+                echo "TOTAL_DURATION_IN_SECONDS: ${TOTAL_DURATION_IN_SECONDS}"
+                echo "elapsedSeconds: ${elapsedSeconds}"
+                if (( elapsedSeconds > TOTAL_DURATION_IN_SECONDS)); then
+                  echo "Lease abandoned, deleting"
+                  kubectl delete lease $(params.lease-name)
+                  kubectl create -f e2e-lease.yaml
+                  leaseOwner=$(kubectl get lease $(params.lease-name) -o=jsonpath='{.spec.holderIdentity}')
+                  echo "The owner of the lease is ${leaseOwner}"
+                  echo "Acquired lease $(params.lease-name)"
+                  break
+                else
+                  kubectl wait --for=delete lease $(params.lease-name) --timeout=$(params.timeout)
+                fi
               fi
             done
-            leaseOwner=$(kubectl get lease $(params.lease-name) -o=jsonpath='{.spec.holderIdentity}')
-            echo "The owner of the lease is ${leaseOwner}"
-            echo "Acquired lease $(params.lease-name)"
+            
         }
         create_lease_yaml() {
           microTime=$(date -u +"%Y-%m-%dT%H:%M:%S.000000Z")
@@ -68,4 +84,4 @@ spec:
         create_lease_yaml
         # Acquire Lease
         export -f acquire_lease
-        timeout $(params.timeout) bash -c "acquire_lease"
+        bash -c "acquire_lease"
