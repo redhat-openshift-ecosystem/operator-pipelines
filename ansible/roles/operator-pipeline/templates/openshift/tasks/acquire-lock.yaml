@@ -34,9 +34,6 @@ spec:
             while true
             do
               if kubectl create -f e2e-lease.yaml; then
-                leaseOwner=$(kubectl get lease $(params.lease-name) -o=jsonpath='{.spec.holderIdentity}')
-                echo "The owner of the lease is ${leaseOwner}"
-                echo "Acquired lease $(params.lease-name)"
                 break
               else
                 echo "Waiting for lease..."
@@ -55,15 +52,15 @@ spec:
                   echo "Lease abandoned, deleting"
                   kubectl delete lease $(params.lease-name)
                   kubectl create -f e2e-lease.yaml
-                  leaseOwner=$(kubectl get lease $(params.lease-name) -o=jsonpath='{.spec.holderIdentity}')
-                  echo "The owner of the lease is ${leaseOwner}"
-                  echo "Acquired lease $(params.lease-name)"
                   break
                 else
                   kubectl wait --for=delete lease $(params.lease-name) --timeout=$(params.timeout)
                 fi
               fi
             done
+            leaseOwner=$(kubectl get lease $(params.lease-name) -o=jsonpath='{.spec.holderIdentity}')
+            echo "The owner of the lease is ${leaseOwner}"
+            echo "Acquired lease $(params.lease-name)"
         }
         create_lease_yaml() {
           microTime=$(date -u +"%Y-%m-%dT%H:%M:%S.000000Z")
@@ -82,5 +79,4 @@ spec:
         # Create yaml that will be used for the lease object
         create_lease_yaml
         # Acquire Lease
-        export -f acquire_lease
-        bash -c "acquire_lease"
+        acquire_lease
