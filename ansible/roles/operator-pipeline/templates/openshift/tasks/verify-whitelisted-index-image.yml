@@ -14,13 +14,16 @@ spec:
       image: "$(params.ubi8_minimal_image)"
       script: |
         #! /usr/bin/env bash
-        INDEX_IMAGE="$(cut -d':' -f1 <<< '$(params.reference)')"
-        echo $INDEX_IMAGE
-        if [[ $INDEX_IMAGE == "registry.redhat.io/redhat/community-operator-index" ||
-              $INDEX_IMAGE == "registry.redhat.io/redhat/redhat-marketplace-index" ||
-              $INDEX_IMAGE == "registry.redhat.io/redhat/certified-operator-index" ]]; then
-          echo "The index image is white listed."
-        else
-          echo "The index image is not white listed."
-          exit 1
-        fi
+        for REFERENCE in $(tr ',' ' ' <<< '$(params.reference)'); do
+          INDEX_IMAGE="$(cut -d':' -f1 <<< $REFERENCE)"
+          echo $INDEX_IMAGE
+          if ! [[ $INDEX_IMAGE == "registry.redhat.io/redhat/community-operator-index" ||
+                  $INDEX_IMAGE == "registry.redhat.io/redhat/redhat-marketplace-index" ||
+                  $INDEX_IMAGE == "registry.redhat.io/redhat/certified-operator-index" ||
+                  $INDEX_IMAGE == "quay.io/community-operators-pipeline/catalog"            # Community operators dev
+               ]]; then
+            echo "The index image is not white listed."
+            exit 1
+          fi
+        done
+        echo "The index image is white listed."
