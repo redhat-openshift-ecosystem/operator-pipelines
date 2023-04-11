@@ -432,6 +432,8 @@ spec:
       taskRef:
         name: acquire-lease
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: lease-name
           value: *operatorDistribution
 
@@ -563,6 +565,8 @@ spec:
       taskRef:
         name: release-lease
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: lease-name
           value: *operatorDistribution
 
