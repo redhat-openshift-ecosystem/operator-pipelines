@@ -16,7 +16,6 @@ spec:
     - name: create-lease
       image: "$(params.pipeline_image)"
       script: |
-        KUBECONFIG=/etc/kubeconfig-volume/$(params.ocp_registry_kubeconfig_secret_key)
         calculate_duration_in_seconds() {
             if [ "${1: -1}" == "m" ]; then
                 TOTAL_DURATION_IN_SECONDS=$((${1:: -1} * 60))
