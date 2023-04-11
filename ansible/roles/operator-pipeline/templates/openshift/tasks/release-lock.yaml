@@ -1,0 +1,16 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: release-lease
+spec:
+  params:
+    - name: pipeline_image
+    - name: lease-name
+      type: string
+      description: The name of the resource which will be acquired.
+  steps:
+    - name: delete-lease
+      image: "$(params.pipeline_image)"
+      script: |
+        LEASE_NAME=$(echo -n $(params.lease-name))
+        oc delete lease $LEASE_NAME --ignore-not-found=true

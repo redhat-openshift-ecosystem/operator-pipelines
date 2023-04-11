@@ -1,0 +1,84 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: acquire-lease
+spec:
+  params:
+    - name: pipeline_image
+    - name: lease-name
+      type: string
+      description: The name of the resource which will be acquired.
+    - name: timeout
+      type: string
+      default: 90m
+      description: The timeout for the wait period of leased resource.
+  steps:
+    - name: create-lease
+      image: "$(params.pipeline_image)"
+      script: |
+        calculate_duration_in_seconds() {
+            if [ "${1: -1}" == "m" ]; then
+                TOTAL_DURATION_IN_SECONDS=$((${1:: -1} * 60))
+            # If it is "h", then the token is in hours
+            elif [ "${1: -1}" == "h" ]; then
+                TOTAL_DURATION_IN_SECONDS=$((${1:: -1} * 3600))
+            elif [ "${1: -1}" == "s" ]; then
+                TOTAL_DURATION_IN_SECONDS=$((${1:: -1}))
+            # Otherwise, the token is in seconds
+            else
+                TOTAL_DURATION_IN_SECONDS=${1}
+            fi
+            export TOTAL_DURATION_IN_SECONDS
+        }
+        acquire_lease() {
+            LEASE_NAME=$(echo -n $(params.lease-name))
+            echo "Attempting to create lease $LEASE_NAME"
+            while true
+            do
+              if oc create -f e2e-lease.yaml; then
+                break
+              else
+                echo "Waiting for lease..."
+                acquiredTime=$(oc get lease $LEASE_NAME -o jsonpath='{.spec.acquireTime}')
+                echo "acquiredTime: ${acquiredTime}"
+                acquiredTimeInSeconds=$(date +%s --date="${acquiredTime}")
+                echo "acquiredTimeInSeconds: ${acquiredTimeInSeconds}"
+                c=$(date +"%D %T")
+                echo "currenttime: ${c}"
+                currentTimeinSeconds=$(date +%s)
+                echo "currentTimeinSeconds: ${currentTimeinSeconds}"
+                elapsedSeconds=$(($currentTimeinSeconds-$acquiredTimeInSeconds))
+                echo "TOTAL_DURATION_IN_SECONDS: ${TOTAL_DURATION_IN_SECONDS}"
+                echo "elapsedSeconds: ${elapsedSeconds}"
+                if (( elapsedSeconds > TOTAL_DURATION_IN_SECONDS)); then
+                  echo "Lease abandoned, deleting"
+                  oc delete lease $LEASE_NAME
+                  oc create -f e2e-lease.yaml
+                  break
+                else
+                  oc wait --for=delete lease $LEASE_NAME --timeout=$(params.timeout) || continue
+                fi
+              fi
+            done
+            leaseOwner=$(oc get lease $LEASE_NAME -o jsonpath='{.spec.holderIdentity}')
+            echo "The owner of the lease is ${leaseOwner}"
+            echo "Acquired lease $LEASE_NAME"
+        }
+        create_lease_yaml() {
+          microTime=$(date -u +"%Y-%m-%dT%H:%M:%S.000000Z")
+          # EOF in yaml is hard, so make a file the simple way
+          echo "apiVersion: coordination.k8s.io/v1" > e2e-lease.yaml
+          echo "kind: Lease" >> e2e-lease.yaml
+          echo "metadata:" >> e2e-lease.yaml
+          echo "  name: $(params.lease-name)" >> e2e-lease.yaml
+          echo "spec:" >> e2e-lease.yaml
+          echo "  acquireTime: ${microTime}" >> e2e-lease.yaml
+          echo "  leaseDurationSeconds: ${TOTAL_DURATION_IN_SECONDS}" >> e2e-lease.yaml
+          echo "  holderIdentity: $(params.lease-name)" >> e2e-lease.yaml
+        }
+        # Calculate duration in seconds to store in lease
+        calculate_duration_in_seconds $(params.timeout)
+        # Create yaml that will be used for the lease object
+        create_lease_yaml
+        # Acquire Lease
+        acquire_lease
