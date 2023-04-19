@@ -441,6 +441,7 @@ spec:
     - name: add-bundle-to-index
       runAfter:
         - acquire-lease
+      when: *whenNotUndistributed
       taskRef:
         name: add-bundle-to-index
       params:
