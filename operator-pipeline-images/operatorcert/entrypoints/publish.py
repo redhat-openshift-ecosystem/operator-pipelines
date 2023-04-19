@@ -151,7 +151,7 @@ def create_repository(args: Any, project: Dict[str, Any]) -> Any:
     long_description = container.get("repository_description") or " "
     # strip html, trim by word boundary, max length 100, add ellipsis
     short_description = html2text.html2text(long_description)
-    short_description = textwrap.wrap(short_description, 97)[0] + "..."
+    short_description = textwrap.shorten(short_description, 97, placeholder="...")
 
     display_data = {
         "name": project.get("name", ""),
