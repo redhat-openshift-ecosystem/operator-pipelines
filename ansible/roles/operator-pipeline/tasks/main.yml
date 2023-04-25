@@ -68,6 +68,8 @@
       with_items:
         - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
         - ../templates/openshift/pipelines/operator-release-pipeline.yml
+        - ../templates/openshift/pipelines/community-release-pipeline.yml
+        - ../templates/openshift/pipelines/community-hosted-pipeline.yml
 
     - name: Deploy CI pipeline
       tags:
@@ -99,6 +101,8 @@
     - include_tasks: tasks/operator-pipeline-event-listener.yml
     - include_tasks: tasks/operator-hosted-pipeline-trigger.yml
     - include_tasks: tasks/operator-release-pipeline-trigger.yml
+    - include_tasks: tasks/community-hosted-pipeline-trigger.yml
+    - include_tasks: tasks/community-release-pipeline-trigger.yml
 
     - include_tasks: tasks/community-signing.yml
 
