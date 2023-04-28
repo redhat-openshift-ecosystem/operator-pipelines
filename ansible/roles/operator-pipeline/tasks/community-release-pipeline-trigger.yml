@@ -51,6 +51,7 @@
               - name: git_repo_url
               - name: git_base_branch
               - name: git_pr_url
+              - name: git_pr_title
               - name: git_username
               - name: git_commit
               - name: env
@@ -79,6 +80,8 @@
                       value: $(tt.params.git_base_branch)
                     - name: git_pr_url
                       value: $(tt.params.git_pr_url)
+                    - name: git_pr_title
+                      value: $(tt.params.git_pr_title)
                     - name: git_username
                       value: $(tt.params.git_username)
                     - name: git_commit

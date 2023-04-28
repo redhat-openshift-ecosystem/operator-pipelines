@@ -11,7 +11,7 @@
           apiVersion: triggers.tekton.dev/v1alpha1
           kind: TriggerBinding
           metadata:
-            name: community-hosted-pipeline-trigger-binding
+            name: community-operator-hosted-pipeline-trigger-binding
             labels:
               app: operator-pipeline
               suffix: "{{ suffix }}"
@@ -26,6 +26,8 @@
                 value: $(body.pull_request.head.repo.clone_url)
               - name: git_pr_url
                 value: $(body.pull_request.html_url)
+              - name: git_pr_title
+                value: $(body.pull_request.title)
               - name: git_username
                 value: $(body.pull_request.user.login)
               - name: git_commit
