@@ -1,0 +1,63 @@
+---
+- name: Create event listener allowing triggering the community pipelines via Github webhook
+  tags:
+    - triggers
+  block:
+    - name: Create event listener
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: EventListener
+          metadata:
+            name: operator-pipeline-github-listener
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            serviceAccountName: pipeline
+            triggers:
+              # run community hosted pipeline on PR opened, reopened, synchronized
+              - name: github-pull-request-listener
+                interceptors:
+                  - github:
+                      secretRef:
+                        secretName: github-webhook-secret
+                        secretKey: webhook-secret
+                      eventTypes:
+                        - pull_request
+                  - cel:
+                      filter: >-
+                        (
+                          header.match("X-GitHub-Event", "pull_request")
+                          && body.action in ["opened", "reopened", "synchronize"]
+                          && body.pull_request.base.ref == "{{ branch }}"
+                        )
+                bindings:
+                  - ref: community-operator-hosted-pipeline-trigger-binding
+                template:
+                  ref: community-operator-hosted-pipeline-trigger-template
+              # run community release pipeline on merged PR
+              - name: github-pull-request-listener
+                interceptors:
+                  - github:
+                      secretRef:
+                        secretName: github-webhook-secret
+                        secretKey: webhook-secret
+                      eventTypes:
+                        - pull_request
+                  - cel:
+                      filter: >-
+                        (
+                          header.match("X-GitHub-Event", "pull_request")
+                          && body.action == "closed"
+                          && body.pull_request.base.ref == "{{ branch }}"
+                          && body.pull_request.merged == true
+                          && body.sender.login == "rh-operator-bundle-bot"
+                        )
+                bindings:
+                  - ref: community-operator-release-pipeline-trigger-binding
+                template:
+                  ref: community-operator-release-pipeline-trigger-template

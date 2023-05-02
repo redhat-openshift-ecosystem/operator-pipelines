@@ -99,6 +99,7 @@
 
 
     - include_tasks: tasks/operator-pipeline-event-listener.yml
+    - include_tasks: tasks/community-pipeline-event-listener.yml
     - include_tasks: tasks/operator-hosted-pipeline-trigger.yml
     - include_tasks: tasks/operator-release-pipeline-trigger.yml
     - include_tasks: tasks/community-hosted-pipeline-trigger.yml
