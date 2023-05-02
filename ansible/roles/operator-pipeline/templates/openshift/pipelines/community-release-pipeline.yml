@@ -12,7 +12,6 @@ spec:
     - name: git_username
     - name: git_commit
     - name: env
-      default: "dev"
     - name: pipeline_image
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
   workspaces:
