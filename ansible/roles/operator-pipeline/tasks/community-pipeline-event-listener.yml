@@ -11,7 +11,7 @@
           apiVersion: triggers.tekton.dev/v1alpha1
           kind: EventListener
           metadata:
-            name: operator-pipeline-github-listener
+            name: community-operator-pipeline-github-listener
             labels:
               app: operator-pipeline
               suffix: "{{ suffix }}"
@@ -20,7 +20,7 @@
             serviceAccountName: pipeline
             triggers:
               # run community hosted pipeline on PR opened, reopened, synchronized
-              - name: github-pull-request-listener
+              - name: github-community-pull-request-listener
                 interceptors:
                   - github:
                       secretRef:
@@ -40,7 +40,7 @@
                 template:
                   ref: community-operator-hosted-pipeline-trigger-template
               # run community release pipeline on merged PR
-              - name: github-pull-request-listener
+              - name: github-community-pull-request-listener
                 interceptors:
                   - github:
                       secretRef:
@@ -61,3 +61,27 @@
                   - ref: community-operator-release-pipeline-trigger-binding
                 template:
                   ref: community-operator-release-pipeline-trigger-template
+
+    - name: Create community pipeline trigger route
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: route.openshift.io/v1
+          kind: route
+          metadata:
+            labels:
+              eventlistener: community-operator-pipeline-github-listener
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+            name: operator-pipeline
+          spec:
+            port:
+              targetPort: http-listener
+            tls:
+              termination: edge
+            to:
+              kind: Service
+              # el- prefix means, that the service was created by EventListener.
+              name: el-community-operator-pipeline-github-listener
