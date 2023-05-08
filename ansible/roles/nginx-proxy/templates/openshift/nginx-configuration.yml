@@ -40,7 +40,9 @@ data:
           location / {
               auth_basic "Community signing pipeline";
               auth_basic_user_file {{ nginx_basic_user_file_path }};
-              proxy_pass {{ nginx_proxy_service_url }};
+              resolver {{ nginx_nameserver_ip }};
+              set $backend {{ nginx_proxy_service_url }};
+              proxy_pass $backend;
           }
       }
     }
