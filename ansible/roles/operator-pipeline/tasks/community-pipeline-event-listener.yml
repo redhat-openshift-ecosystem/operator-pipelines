@@ -75,7 +75,7 @@
               app: operator-pipeline
               suffix: "{{ suffix }}"
               env: "{{ env }}"
-            name: operator-pipeline
+            name: community-operator-pipeline
           spec:
             port:
               targetPort: http-listener
