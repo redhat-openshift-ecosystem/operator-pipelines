@@ -15,12 +15,12 @@ jobs:
   run-integration-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Prepare
         id: prepare
         run: |
-          echo "::set-output name=suffix::${GITHUB_SHA::7}"
+          echo "suffix=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: |

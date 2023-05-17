@@ -1,0 +1,38 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: community-release-pipeline
+spec:
+  params:
+    - name: git_repo_url
+    - name: git_base_branch
+    - name: git_pr_title
+    - name: git_pr_url
+    - name: git_username
+    - name: git_commit
+    - name: env
+    - name: pipeline_image
+      default: "quay.io/redhat-isv/operator-pipelines-images:released"
+  workspaces:
+    - name: repository
+    - name: ssh-dir
+      optional: true
+  tasks:
+    - name: clone-repository
+      taskRef:
+        name: git-clone
+        kind: Task
+      params:
+        - name: url
+          value: $(params.git_repo_url)
+        - name: revision
+          value: $(params.git_base_branch)
+        - name: gitInitImage
+          value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
+      workspaces:
+        - name: output
+          workspace: repository
+          subPath: src
+        - name: ssh-directory
+          workspace: ssh-dir

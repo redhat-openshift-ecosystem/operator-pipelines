@@ -1,0 +1,101 @@
+---
+- name: Create trigger enabling running Community release pipeline via GitHub webhook
+  tags:
+    - triggers
+  block:
+    - name: Create Community release pipeline Trigger Binding
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerBinding
+          metadata:
+            name: community-operator-release-pipeline-trigger-binding
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_repo_url
+                value: $(body.pull_request.base.repo.clone_url)
+              - name: git_base_branch
+                value: $(body.pull_request.base.ref)
+              - name: git_pr_url
+                value: $(body.pull_request.html_url)
+              - name: git_username
+                value: $(body.pull_request.user.login)
+              - name: git_commit
+                value: $(body.pull_request.merge_commit_sha)
+              - name: env
+                value: "{{ env }}"
+              - name: pipeline_image
+                value: "{{ operator_pipeline_image_pull_spec }}"
+
+    - name: Create Community release pipeline Trigger Binding
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerTemplate
+          metadata:
+            name: community-operator-release-pipeline-trigger-template
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_repo_url
+              - name: git_base_branch
+              - name: git_pr_url
+              - name: git_pr_title
+              - name: git_username
+              - name: git_commit
+              - name: env
+              - name: pipeline_image
+            resourcetemplates:
+              - apiVersion: tekton.dev/v1beta1
+                kind: PipelineRun
+                metadata:
+                  generateName: community-release-pipeline-run
+                  labels:
+                    app: operator-pipeline
+                    suffix: "{{ suffix }}"
+                    env: "{{ env }}"
+                    git_commit: $(tt.params.git_commit)
+                  annotations:
+                    git_pull_request_url: $(tt.params.git_pr_url)
+                    git_pull_request_title: $(tt.params.git_pr_title)
+                spec:
+                  timeout: "1h30m0s"
+                  pipelineRef:
+                    name: community-release-pipeline
+                  params:
+                    - name: git_repo_url
+                      value: $(tt.params.git_repo_url)
+                    - name: git_base_branch
+                      value: $(tt.params.git_base_branch)
+                    - name: git_pr_url
+                      value: $(tt.params.git_pr_url)
+                    - name: git_pr_title
+                      value: $(tt.params.git_pr_title)
+                    - name: git_username
+                      value: $(tt.params.git_username)
+                    - name: git_commit
+                      value: $(tt.params.git_commit)
+                    - name: env
+                      value: $(tt.params.env)
+                    - name: pipeline_image
+                      value: $(tt.params.pipeline_image)
+                  workspaces:
+                    - name: repository
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi
