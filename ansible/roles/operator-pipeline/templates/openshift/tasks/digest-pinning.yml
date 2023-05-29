@@ -79,6 +79,8 @@ spec:
         if [[ $REPLACEMENT_COUNT -gt 0 ]]; then
           echo "Manifests were not pinned."
           echo -n "true" | tee $(results.dirty_flag.path)
+          echo "Branch reset to pre-pinning state."
+          git checkout -- .
         else
           echo "Manifests are pinned."
           echo -n "false" | tee $(results.dirty_flag.path)
