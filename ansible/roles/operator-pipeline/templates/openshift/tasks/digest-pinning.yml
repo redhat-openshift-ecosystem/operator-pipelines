@@ -79,13 +79,13 @@ spec:
         if [[ $REPLACEMENT_COUNT -gt 0 ]]; then
           echo "Manifests were not pinned."
           echo -n "true" | tee $(results.dirty_flag.path)
-          echo "Branch reset to pre-pinning state."
-          git checkout -- .
         else
           echo "Manifests are pinned."
           echo -n "false" | tee $(results.dirty_flag.path)
+          echo "The branch is reset to its pre-pin state because other unrelated changes may occur during the pin step and need to be undone."
+          git checkout -- .
         fi
-    - name: verify-related-images
+    - name: verify-related-imagesmultiline echo
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
