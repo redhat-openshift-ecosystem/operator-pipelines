@@ -82,6 +82,8 @@ spec:
         else
           echo "Manifests are pinned."
           echo -n "false" | tee $(results.dirty_flag.path)
+          echo "The branch is reset to its pre-pin state because other unrelated changes may occur during the pin step and need to be undone."
+          git checkout -- .
         fi
     - name: verify-related-images
       image: "$(params.pipeline_image)"
