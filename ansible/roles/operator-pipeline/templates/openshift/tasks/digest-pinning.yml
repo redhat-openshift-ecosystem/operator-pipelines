@@ -85,7 +85,7 @@ spec:
           echo "The branch is reset to its pre-pin state because other unrelated changes may occur during the pin step and need to be undone."
           git checkout -- .
         fi
-    - name: verify-related-imagesmultiline echo
+    - name: verify-related-images
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
