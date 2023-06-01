@@ -73,6 +73,9 @@ spec:
           exit 0
         fi
 
+        # configure git to enable operations on unowned repository
+        git config --global --add safe.directory "/workspace/source"
+
         cat replacements.json
         REPLACEMENT_COUNT=$(jq length replacements.json)
 
@@ -97,6 +100,7 @@ spec:
           echo -n "true" | tee $(results.related_images_flag.path)
           exit 0
         fi
+
 
         BUNDLE_PATH=$(realpath $(params.bundle_path))
         cat references.json
