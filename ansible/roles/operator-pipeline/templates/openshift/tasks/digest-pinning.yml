@@ -101,7 +101,6 @@ spec:
           exit 0
         fi
 
-
         BUNDLE_PATH=$(realpath $(params.bundle_path))
         cat references.json
         REFERENCE_COUNT=$(jq length references.json)
