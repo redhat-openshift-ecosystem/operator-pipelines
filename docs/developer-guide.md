@@ -72,7 +72,8 @@ ansible-playbook -v \
   --vault-password-file $VAULT_PASSWORD_PATH \
   ansible/playbooks/deploy.yml
 ```
-
+#### Integration tests
+See [integration tests section in ci-cd.md](ci-cd.md#integration-tests)
 #### Install tkn
 
 You should install the [tkn](https://docs.openshift.com/container-platform/4.7/cli_reference/tkn_cli/installing-tkn.html)

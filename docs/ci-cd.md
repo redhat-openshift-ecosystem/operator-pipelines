@@ -49,6 +49,23 @@ ansible-pull \
   ansible/playbooks/operator-pipeline-integration-tests.yml
 ```
 
+To manually run the integration tests from the local environment:
+- prerequisites:
+  - logged-in to OC cluster
+  - export NAMESPACE - new is created if not exist,
+    careful for duplicity (can override existing projects)
+  - SSH key need to be set in GitHub account for local user
+    (Ansible use SSH to clone/manipulate repositories)
+  - Python dependencies (mentioned above) need to be installed globally 
+
+```bash
+ansible-playbook -v \
+  -i "ansible/inventory/operator-pipeline-integration-tests" \
+  -e "oc_namespace=$NAMESPACE" \ 
+  --vault-password-file $VAULT_PASSWORD_PATH \
+  ansible/playbooks/operator-pipeline-integration-tests.yml
+```
+
 Tags can be used to run select portions of the playbook. For example, the test
 resources will be cleaned up at the end of every run. Skipping the `clean` tag
 will leave the resources behind for debugging.
