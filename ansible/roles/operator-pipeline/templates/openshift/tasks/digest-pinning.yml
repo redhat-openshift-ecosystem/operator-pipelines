@@ -73,6 +73,9 @@ spec:
           exit 0
         fi
 
+        # configure git to enable operations on unowned repository
+        git config --global --add safe.directory $(workspaces.source.path)
+
         cat replacements.json
         REPLACEMENT_COUNT=$(jq length replacements.json)
 
