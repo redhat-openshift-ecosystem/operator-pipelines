@@ -23,6 +23,7 @@ jobs:
         run: |
           pdm sync -d -G tox
           pdm sync -d -G operator-pipelines-dev
+          pdm sync -G operator-pipelines
       - name: Run Tests
         run: |
           pdm run -v tox

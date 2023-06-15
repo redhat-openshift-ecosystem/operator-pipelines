@@ -96,6 +96,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "decorator"
+version = "5.1.1"
+requires_python = ">=3.5"
+summary = "Decorators for Humans"
+
+[[package]]
 name = "distlib"
 version = "0.3.6"
 summary = "Distribution utilities"
@@ -124,6 +130,15 @@ requires_python = ">=3.6"
 summary = "A Git URL parsing module (supports parsing and rewriting)"
 
 [[package]]
+name = "gssapi"
+version = "1.8.2"
+requires_python = ">=3.7"
+summary = "Python GSSAPI Wrapper"
+dependencies = [
+    "decorator",
+]
+
+[[package]]
 name = "html2text"
 version = "2020.1.16"
 requires_python = ">=3.5"
@@ -149,6 +164,12 @@ name = "iniconfig"
 version = "2.0.0"
 requires_python = ">=3.7"
 summary = "brain-dead simple config-ini parsing"
+
+[[package]]
+name = "krb5"
+version = "0.5.0"
+requires_python = ">=3.7"
+summary = "Kerberos API bindings for Python"
 
 [[package]]
 name = "mypy-extensions"
@@ -187,11 +208,6 @@ requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
-name = "pykerberos"
-version = "1.2.4"
-summary = "High-level interface to Kerberos"
-
-[[package]]
 name = "pyproject-api"
 version = "1.5.2"
 requires_python = ">=3.7"
@@ -199,6 +215,27 @@ summary = "API to interact with the python pyproject.toml based projects"
 dependencies = [
     "packaging>=23.1",
     "tomli>=2.0.1; python_version < \"3.11\"",
+]
+
+[[package]]
+name = "pyspnego"
+version = "0.9.1"
+requires_python = ">=3.7"
+summary = "Windows Negotiate Authentication Client and Server"
+dependencies = [
+    "cryptography",
+]
+
+[[package]]
+name = "pyspnego"
+version = "0.9.1"
+extras = ["kerberos"]
+requires_python = ">=3.7"
+summary = "Windows Negotiate Authentication Client and Server"
+dependencies = [
+    "gssapi>=1.6.0; sys_platform != \"win32\"",
+    "krb5>=0.3.0; sys_platform != \"win32\"",
+    "pyspnego==0.9.1",
 ]
 
 [[package]]
@@ -260,13 +297,13 @@ dependencies = [
 
 [[package]]
 name = "requests-kerberos"
-version = "0.12.0"
+version = "0.14.0"
+requires_python = ">=3.6"
 summary = "A Kerberos authentication handler for python-requests"
 dependencies = [
-    "cryptography>=1.3; python_version != \"3.3\"",
-    "pykerberos<2.0.0,>=1.1.8; sys_platform != \"win32\"",
+    "cryptography>=1.3",
+    "pyspnego[kerberos]",
     "requests>=1.1.0",
-    "winkerberos>=0.5.0; sys_platform == \"win32\"",
 ]
 
 [[package]]
@@ -363,12 +400,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "winkerberos"
-version = "0.9.1"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-summary = "High level interface to SSPI for Kerberos client auth"
-
-[[package]]
 name = "xmltodict"
 version = "0.13.0"
 requires_python = ">=3.4"
@@ -400,7 +431,7 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "operator-pipelines", "operator-pipelines-dev", "tox"]
-content_hash = "sha256:d805645ced0d95a73ae041cccd0f9d3f29ad9afe0576f80608a3515cc10cbf40"
+content_hash = "sha256:a39d2e0e68f32c409e2729b98fe7eab7ef676b53c3f58693c548aff7f3f7fa6b"
 
 [metadata.files]
 "argcomplete 3.1.1" = [
@@ -680,6 +711,10 @@ content_hash = "sha256:d805645ced0d95a73ae041cccd0f9d3f29ad9afe0576f80608a3515cc
     {url = "https://files.pythonhosted.org/packages/ef/78/d391ec7a08d4adf8a93d0fd9fa9fd468493ef50b6213c28deadf5322379d/cryptography-41.0.1-cp37-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:059e348f9a3c1950937e1b5d7ba1f8e968508ab181e75fc32b879452f08356db"},
     {url = "https://files.pythonhosted.org/packages/fc/db/bccda95237c4a823164d2f243aac25036f8d81c1083a49e85457d185dd31/cryptography-41.0.1-pp38-pypy38_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:1a8e6c2de6fbbcc5e14fd27fb24414507cb3333198ea9ab1258d916f00bc3039"},
 ]
+"decorator 5.1.1" = [
+    {url = "https://files.pythonhosted.org/packages/66/0c/8d907af351aa16b42caae42f9d6aa37b900c67308052d10fdce809f8d952/decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330"},
+    {url = "https://files.pythonhosted.org/packages/d5/50/83c593b07763e1161326b3b8c6686f0f4b0f24d5526546bee538c89837d6/decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
+]
 "distlib 0.3.6" = [
     {url = "https://files.pythonhosted.org/packages/58/07/815476ae605bcc5f95c87a62b95e74a1bce0878bc7a3119bc2bf4178f175/distlib-0.3.6.tar.gz", hash = "sha256:14bad2d9b04d3a36127ac97f30b12a19268f211063d8f8ee4f47108896e11b46"},
     {url = "https://files.pythonhosted.org/packages/76/cb/6bbd2b10170ed991cf64e8c8b85e01f2fb38f95d1bc77617569e0b0b26ac/distlib-0.3.6-py2.py3-none-any.whl", hash = "sha256:f35c4b692542ca110de7ef0bea44d73981caeb34ca0b9b6b2e6d7790dda8f80e"},
@@ -699,6 +734,28 @@ content_hash = "sha256:d805645ced0d95a73ae041cccd0f9d3f29ad9afe0576f80608a3515cc
     {url = "https://files.pythonhosted.org/packages/70/ad/4526ec3dde02eddbc1b860bd0861a770b95bdb95f5fae30f26f3d587ca7d/giturlparse-0.10.0.tar.gz", hash = "sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337"},
     {url = "https://files.pythonhosted.org/packages/a2/01/baa326ad32510acd3f08835e1b9f3c66170ddf7dfcc233640ff22d0ea619/giturlparse-0.10.0-py2.py3-none-any.whl", hash = "sha256:04ba1a3a099c3093fa8d24a422913c6a9b2c2cd22bcffc939cf72e3e98f672d7"},
 ]
+"gssapi 1.8.2" = [
+    {url = "https://files.pythonhosted.org/packages/07/ff/8acb19608ad388e853bae13f5b223d6c0ebc7480949792bde7408bb5d8e2/gssapi-1.8.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:a36bc089036196aa03c3c312ea1639677065b3d7e8f37edbba731f61f5e56dd6"},
+    {url = "https://files.pythonhosted.org/packages/09/77/5460b39ae054a8db83e847fbcbfc9e568e4676f7fdecc81df4b8021045b5/gssapi-1.8.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:13aba9a947994f5f5f1fb6f425b397a359b191cee2983fa33911cf5e212d6cfb"},
+    {url = "https://files.pythonhosted.org/packages/1c/c6/2a5b88f81b69d07863ddfef8c71cb4faafeed32cdf382b03105808af42da/gssapi-1.8.2-cp37-cp37m-win32.whl", hash = "sha256:84bfd1b3954a5a608302884a36586eed6f623f6f38fcd331ad55937eca1ea89f"},
+    {url = "https://files.pythonhosted.org/packages/27/71/5110b5af9354e5eb66a30dbaa6bac2a5e3013057120544830a849dbd087b/gssapi-1.8.2.tar.gz", hash = "sha256:b78e0a021cc91158660e4c5cc9263e07c719346c35a9c0f66725e914b235c89a"},
+    {url = "https://files.pythonhosted.org/packages/2d/06/85ba9d00ac91df12bab7e11138251bd6abdb9a125fb4c5b7ca81922bafd4/gssapi-1.8.2-cp310-cp310-win_amd64.whl", hash = "sha256:f75b094913a1757e5e634b70b03e808cab0eb02c802ec50b760636b23b0aa50c"},
+    {url = "https://files.pythonhosted.org/packages/33/97/5b61a4e98d59095861fe899a232c43ed841607a0cddb86df0c28fdc45eb0/gssapi-1.8.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:75763c49b3e18da60e160d76e8ac9a27b0bbd637c6e88513150fbb7158ae15d7"},
+    {url = "https://files.pythonhosted.org/packages/54/9d/e6965848a3c8f8b2ab628152e96f97cd08f9dc685e8018375d3893dcb704/gssapi-1.8.2-cp37-cp37m-win_amd64.whl", hash = "sha256:85e7e623dfe51fef3f613acb965c4fa1866e7a7ee2c2558cbe2f203798171510"},
+    {url = "https://files.pythonhosted.org/packages/56/4a/a1592f85a8b0ff2d825d89d42f1d527d3c874235551429099163bbe203d1/gssapi-1.8.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:512a2bd98e8003f48d98908bf54d1ed94c5388764e0a09fdc24cc691422a4162"},
+    {url = "https://files.pythonhosted.org/packages/58/a2/5c98c62a87ae3bb0f69ce92be350ce3565711deac678d76d67f63c47aa07/gssapi-1.8.2-cp39-cp39-win32.whl", hash = "sha256:dcd2be270bf490b6007eb3734795aaeddf92848f79b69d6a23f6204ccaa9b6c7"},
+    {url = "https://files.pythonhosted.org/packages/5c/98/29742495a9823ce6cd3fa1a2e79f577aab073584c02bbae1b1e3b0ab36bb/gssapi-1.8.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:d6be1d8e07cc151e217f8a0ccf7c28ca5a1bb0ae00c8512586642c9f876a7298"},
+    {url = "https://files.pythonhosted.org/packages/9e/a2/ab93ef92ee3ea56ff7efaf6e494c81f15e04c414afad7639258054f303c2/gssapi-1.8.2-cp38-cp38-win32.whl", hash = "sha256:43c8b1acb8efa1f881ff7f7e912ccdc611689484190b7cc83f538b44f8992cbd"},
+    {url = "https://files.pythonhosted.org/packages/ad/88/3525602008b60ec3f2f3b2191f709a98542d2f4c7bedaecb68d590f0bb64/gssapi-1.8.2-cp311-cp311-win_amd64.whl", hash = "sha256:8b4c1c664635153b0055a08bf30ec1552c8aa064a76f565d7905057500f334b3"},
+    {url = "https://files.pythonhosted.org/packages/b4/70/be4e9736ca7d67afebbc874ef7d880c283292304527c526ff63788aeae19/gssapi-1.8.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:47d69b1fd3bd0764d7a14500c6cbd8fd08198ee6e1737048a01ad7024d57f67d"},
+    {url = "https://files.pythonhosted.org/packages/ba/0d/8e2b9fdcf92685f9d75e9e5662fe551ae8ef78d0a49a0691173a98f76de2/gssapi-1.8.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:7c14cf97d61073d8211abfded77066af791356868022acda10224a8212639cf5"},
+    {url = "https://files.pythonhosted.org/packages/bd/c4/0118c8b57ea2cc0d90fd73b3913e5bc71881fd999097c1b94f46b9b56c88/gssapi-1.8.2-cp310-cp310-win32.whl", hash = "sha256:cdd6bff2cf7f3a5a5a24cddde137b6e117fe53aad81f240dee2e8e383c0b289b"},
+    {url = "https://files.pythonhosted.org/packages/cb/46/0edae670477ea32244858ed4b6970dff8dc86b7cb549b840a0340ec6a98f/gssapi-1.8.2-cp311-cp311-win32.whl", hash = "sha256:4aaed04439aed8eba525ea44dd7219ecd97d520254320e66ac53d9ae4acb8fe5"},
+    {url = "https://files.pythonhosted.org/packages/ce/0b/ff6ae4a40e55c16662b8f115fed8f1d7b449a250d88c35455790a6fea7d2/gssapi-1.8.2-cp38-cp38-win_amd64.whl", hash = "sha256:787262e0db124d302c972d30e6f4b7c81423e696d08ee6e07047194a9bce2664"},
+    {url = "https://files.pythonhosted.org/packages/d2/d2/836db96140de5152dc014fd9d83f0cf40f07160de3c645c0e6a2cb76b5a3/gssapi-1.8.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:67c85758a6b40042509c96bb00d0873a501491453ad5b0da88dbfa9343c8ffea"},
+    {url = "https://files.pythonhosted.org/packages/d9/1a/486b96b32f7d223f948f8920ce8d295f6796a31ad85e5bbed524ac8d2caf/gssapi-1.8.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:02e0a8f35e1f5b1c0eada646e3da1af3022c25e8df26ded3fd18ee78abb155ea"},
+    {url = "https://files.pythonhosted.org/packages/fb/06/8deda19dda3f308eaf85141c22ec485f067a597dad25b8ddd9543d67fd99/gssapi-1.8.2-cp39-cp39-win_amd64.whl", hash = "sha256:fac7d1f4b14383bd29d3996cf5f6f23d0dc50ffd7965d2bc35bcc0849da24152"},
+]
 "html2text 2020.1.16" = [
     {url = "https://files.pythonhosted.org/packages/6c/f9/033a17d8ea8181aee41f20c74c3b20f1ccbefbbc3f7cd24e3692de99fb25/html2text-2020.1.16.tar.gz", hash = "sha256:e296318e16b059ddb97f7a8a1d6a5c1d7af4544049a01e261731d2d5cc277bbb"},
     {url = "https://files.pythonhosted.org/packages/ae/88/14655f727f66b3e3199f4467bafcc88283e6c31b562686bf606264e09181/html2text-2020.1.16-py3-none-any.whl", hash = "sha256:c7c629882da0cf377d66f073329ccf34a12ed2adf0169b9285ae4e63ef54c82b"},
@@ -714,6 +771,18 @@ content_hash = "sha256:d805645ced0d95a73ae041cccd0f9d3f29ad9afe0576f80608a3515cc
 "iniconfig 2.0.0" = [
     {url = "https://files.pythonhosted.org/packages/d7/4b/cbd8e699e64a6f16ca3a8220661b5f83792b3017d0f79807cb8708d33913/iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
     {url = "https://files.pythonhosted.org/packages/ef/a6/62565a6e1cf69e10f5727360368e451d4b7f58beeac6173dc9db836a5b46/iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
+]
+"krb5 0.5.0" = [
+    {url = "https://files.pythonhosted.org/packages/58/1e/380b15c72ef9e75c01352d80421108fa7f6155fe3f9c6e52de4962c09662/krb5-0.5.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:db6d5dada48a2e14793e3e61213fae5de3787c4f3d74dcb744ef8bf3a87afa96"},
+    {url = "https://files.pythonhosted.org/packages/58/e3/50ce47968c1ae283b99410ebb6eaa595b2f016f35f15a9d11426db65ae3e/krb5-0.5.0.tar.gz", hash = "sha256:33d6cf20ff9710cffb883136387fabc906360de1bce58bcd5673c4bb420e1657"},
+    {url = "https://files.pythonhosted.org/packages/64/d9/a28b9dfbcdba55432720fd29a21e94318ef253b9ab70cdfb586507ce79ca/krb5-0.5.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:939ba0fe5dd56eefb666485adc115216c034711c2ecf7a76f7a42864c2831a8c"},
+    {url = "https://files.pythonhosted.org/packages/ac/64/e578a981a07c60fe730689f8f1c71dd6c1626f5437c531a03a806cc0daa5/krb5-0.5.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:8221f288dc993013097257f0cc612132a07b414e0c5dc69396387c13e07e369e"},
+    {url = "https://files.pythonhosted.org/packages/b9/83/8ad161ca9afa71b345a6af5d5c2613bf1f66c2ff1892a85c300d7eb14f13/krb5-0.5.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:3112879e5f77cd7f404c61552fceb9c8745cb330086db822289e10fd68911f33"},
+    {url = "https://files.pythonhosted.org/packages/bc/f0/220c340ab5dc1f949f40d5ec3674f5faf87f12bd71cee1876ef69c94b8b2/krb5-0.5.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:6e1ae1c1b114817a7fd12c6427688a00b9bc8fc3b9896efd455f513d8d3e1111"},
+    {url = "https://files.pythonhosted.org/packages/df/a7/b51b162219155eb858c9d8353f227f71e2228c018d599043177fc639ff21/krb5-0.5.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:a9609198ba4aa35586c1ceb55171c113434eedcc97187a9f743be32c4831115f"},
+    {url = "https://files.pythonhosted.org/packages/ea/36/466e81cba9c7a68ccae2916a5f3ab78a9b89415c111d2bcf229233fbb1a1/krb5-0.5.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:bfd76ea4e4aee06a23da7cbec1c50452cf0388f05fd63fac71b14b4a9474c250"},
+    {url = "https://files.pythonhosted.org/packages/f0/18/3ace9f937d358671a2b65e3a3f7c79af7cfc419cf0115d88a01dfb33ac4f/krb5-0.5.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:31603913a068c148639d62c9aada9f51ddeb4ba77594c2d9857fbdfe6824376e"},
+    {url = "https://files.pythonhosted.org/packages/f2/52/fce96ce9d71bdb788341b6f503a645254b2451fcc337be56fa02e93cdcc3/krb5-0.5.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:e0a9debe7402ddb06f8b15d10da5894ae536317b80b95bb2393e916fd7e807b1"},
 ]
 "mypy-extensions 1.0.0" = [
     {url = "https://files.pythonhosted.org/packages/2a/e2/5d3f6ada4297caebe1a2add3b126fe800c96f56dbe5d1988a2cbe0b267aa/mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d"},
@@ -739,12 +808,23 @@ content_hash = "sha256:d805645ced0d95a73ae041cccd0f9d3f29ad9afe0576f80608a3515cc
     {url = "https://files.pythonhosted.org/packages/5e/0b/95d387f5f4433cb0f53ff7ad859bd2c6051051cebbb564f139a999ab46de/pycparser-2.21.tar.gz", hash = "sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206"},
     {url = "https://files.pythonhosted.org/packages/62/d5/5f610ebe421e85889f2e55e33b7f9a6795bd982198517d912eb1c76e1a53/pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
 ]
-"pykerberos 1.2.4" = [
-    {url = "https://files.pythonhosted.org/packages/07/e9/ae44ea7d7605df9e5ca1ed745a2c5672dc838a8398101051dd5f255b130d/pykerberos-1.2.4.tar.gz", hash = "sha256:9d701ebd8fc596c99d3155d5ba45813bd5908d26ef83ba0add250edb622abed4"},
-]
 "pyproject-api 1.5.2" = [
     {url = "https://files.pythonhosted.org/packages/6f/26/82a2773463e1b739b62e432cff62d39daf21b3172e5ace6213b7f2bbfad7/pyproject_api-1.5.2.tar.gz", hash = "sha256:999f58fa3c92b23ebd31a6bad5d1f87d456744d75e05391be7f5c729015d3d91"},
     {url = "https://files.pythonhosted.org/packages/ce/a7/0666a457fe35518d998448a6606b5f66c4bf092864bac6ef7fc380da582b/pyproject_api-1.5.2-py3-none-any.whl", hash = "sha256:9cffcbfb64190f207444d7579d315f3278f2c04ba46d685fad93197b5326d348"},
+]
+"pyspnego 0.9.1" = [
+    {url = "https://files.pythonhosted.org/packages/0a/b8/6beb4175d3893052aef79126c6f15e49055482ad99bbf971ed4ca310b96e/pyspnego-0.9.1-cp311-cp311-win32.whl", hash = "sha256:58a17f7ba17f6cee72149911df6cc785ce7072744a386483957b74c62da654d8"},
+    {url = "https://files.pythonhosted.org/packages/2c/b2/517386c6feccca5147c46a91a5a257c75f9cd00460e8ec459df917365066/pyspnego-0.9.1-cp311-cp311-win_amd64.whl", hash = "sha256:e7a92321272e3613c30f55a3324ef6d780bba8b723be8d50c35aac8409fc4028"},
+    {url = "https://files.pythonhosted.org/packages/4f/bf/bb3e8333cbd89cd00fc51e12880aeef2163911662a4790c09c0fec4d2774/pyspnego-0.9.1-cp310-cp310-win32.whl", hash = "sha256:aa43f00ed1c3b8e16a658613e2557a3ff9bea26acef867705eb4ee7f5e469ac3"},
+    {url = "https://files.pythonhosted.org/packages/72/1b/6beacfeef9cbc04479670ec9c4ac3c5bd3f808f2232076a412cef14680e7/pyspnego-0.9.1-cp38-cp38-win_amd64.whl", hash = "sha256:6366e39ba251889e2573c7d037e7feec8af86aea6c3b32f22a8af33bf88265b6"},
+    {url = "https://files.pythonhosted.org/packages/81/84/3b3200982e993a197dc3a1f6f7a900d8cd545250d9c382cb6c8cf9f02463/pyspnego-0.9.1-py3-none-any.whl", hash = "sha256:c6aebe1fdc3990be2c137f3c3e041062243871b8161bc7adf4d269c3b6deda35"},
+    {url = "https://files.pythonhosted.org/packages/88/a1/b66742a05d341224fb6aa29fc925c80d8be6aecaa21c6694b4c4efcdb53f/pyspnego-0.9.1-cp310-cp310-win_amd64.whl", hash = "sha256:d031a7fa9c9ab3b67725e35affc90f8e6504518fb3ffe21573504e72b5a2fb5e"},
+    {url = "https://files.pythonhosted.org/packages/90/5c/9b8966572cabef14050a37999972ce2f40bba0f568095c69de19b4eed3c8/pyspnego-0.9.1-cp37-cp37m-win32.whl", hash = "sha256:87a2c23e640f4f6ae3c391d1f56e287b72908080a0e6376f2f365da5a2117dca"},
+    {url = "https://files.pythonhosted.org/packages/be/86/6c3c258d3298d4cc91b19ccd9016333ef0bddf7cbf941df3baad8c98b80c/pyspnego-0.9.1-cp37-cp37m-win_amd64.whl", hash = "sha256:ff4fecf488369d6634afb20f9e56eb3b187fb3c883d6551601bbad4f4badab62"},
+    {url = "https://files.pythonhosted.org/packages/bf/61/4c0a5323eab384f157c3a12de47e29de55fa9216b3176a41f94124e18b25/pyspnego-0.9.1-cp39-cp39-win32.whl", hash = "sha256:07417f90328fb57c19a383e59b65060d4fc101441b74c34dbe4ba860775b0a3a"},
+    {url = "https://files.pythonhosted.org/packages/ef/71/5b6455012a8b167ae251256f03fa368b05b2ad773a0312a4b0587af636e6/pyspnego-0.9.1-cp38-cp38-win32.whl", hash = "sha256:7515f00418324809eb1adec0afac93da006c03baba6c6fd1a981b5401b798f56"},
+    {url = "https://files.pythonhosted.org/packages/fa/07/25dd6f020a281256b7d69685016e7e1f2f24f19985615d82e84d6bf39272/pyspnego-0.9.1-cp39-cp39-win_amd64.whl", hash = "sha256:4b79d5ba55ada38833d2421c44ed30a7313c00cbf34fa919dd106049616307d3"},
+    {url = "https://files.pythonhosted.org/packages/fb/38/46174701e2a2de8b72e79c980324b034203edafff3c543a4134b2c1ae9af/pyspnego-0.9.1.tar.gz", hash = "sha256:6eea64f511bdfa192c2f80593ddf124258b0ea560327468953d18420e0ab3597"},
 ]
 "pytest 7.3.2" = [
     {url = "https://files.pythonhosted.org/packages/58/2a/07c65fdc40846ecb8a9dcda2c38fcb5a06a3e39d08d4a4960916431951cb/pytest-7.3.2.tar.gz", hash = "sha256:ee990a3cc55ba808b80795a79944756f315c67c12b56abd3ac993a7b8c17030b"},
@@ -797,9 +877,9 @@ content_hash = "sha256:d805645ced0d95a73ae041cccd0f9d3f29ad9afe0576f80608a3515cc
     {url = "https://files.pythonhosted.org/packages/70/8e/0e2d847013cb52cd35b38c009bb167a1a26b2ce6cd6965bf26b47bc0bf44/requests-2.31.0-py3-none-any.whl", hash = "sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f"},
     {url = "https://files.pythonhosted.org/packages/9d/be/10918a2eac4ae9f02f6cfe6414b7a155ccd8f7f9d4380d62fd5b955065c3/requests-2.31.0.tar.gz", hash = "sha256:942c5a758f98d790eaed1a29cb6eefc7ffb0d1cf7af05c3d2791656dbd6ad1e1"},
 ]
-"requests-kerberos 0.12.0" = [
-    {url = "https://files.pythonhosted.org/packages/14/61/85737ebe1e65cd4bf023d9e4610df70851bd7638e003b81a44a9b901feae/requests-kerberos-0.12.0.tar.gz", hash = "sha256:9d21f15241c53c2ad47e813138b9aee4b9acdd04b82048c4388ade15f40a52fd"},
-    {url = "https://files.pythonhosted.org/packages/ee/a2/866f2b9a60f75055137b9ad127033e397963b2c4769d4b5fab1c3c7e8be3/requests_kerberos-0.12.0-py2.py3-none-any.whl", hash = "sha256:5733abc0b6524815f6fc72d5c0ec9f3fb89137b852adea2a461c45931f5675e0"},
+"requests-kerberos 0.14.0" = [
+    {url = "https://files.pythonhosted.org/packages/13/3b/42c51612c9d46de37bdae19f2290848e17ee4fa38a63f37f1d46b7660510/requests_kerberos-0.14.0-py2.py3-none-any.whl", hash = "sha256:da74ea478ccd8584de88092bdcd17a7c29d494374a340d1d8677189903c9ac6a"},
+    {url = "https://files.pythonhosted.org/packages/3d/ca/cad727db9eaae0db743982a8197c8a58cc85ed142354abfade1567ede9dc/requests-kerberos-0.14.0.tar.gz", hash = "sha256:cda9d1240ae5392e081869881c8742d0e171fd6a893a7ac0875db2748e966fd1"},
 ]
 "requests-mock 1.11.0" = [
     {url = "https://files.pythonhosted.org/packages/29/e8/ce73e8d1c7ec127cb3af61df3fd04df9a34eef34e511dc03c069748f773d/requests_mock-1.11.0-py2.py3-none-any.whl", hash = "sha256:f7fae383f228633f6bececebdab236c478ace2284d6292c6e7e2867b9ab74d15"},
@@ -844,25 +924,6 @@ content_hash = "sha256:d805645ced0d95a73ae041cccd0f9d3f29ad9afe0576f80608a3515cc
 "virtualenv 20.23.0" = [
     {url = "https://files.pythonhosted.org/packages/d6/37/3ff25b2ad0d51cfd752dc68ee0ad4387f058a5ceba4d89b47ac478de3f59/virtualenv-20.23.0.tar.gz", hash = "sha256:a85caa554ced0c0afbd0d638e7e2d7b5f92d23478d05d17a76daeac8f279f924"},
     {url = "https://files.pythonhosted.org/packages/f1/0a/18755fa6aec794fd539b050beeaa905fa5c77c64356aa8bdecb62c01581a/virtualenv-20.23.0-py3-none-any.whl", hash = "sha256:6abec7670e5802a528357fdc75b26b9f57d5d92f29c5462ba0fbe45feacc685e"},
-]
-"winkerberos 0.9.1" = [
-    {url = "https://files.pythonhosted.org/packages/11/ed/3bc4dd65f069c92b6ed9310babf173750ababb806b7ec1a4ddb7ad07de7d/winkerberos-0.9.1-cp37-cp37m-win_amd64.whl", hash = "sha256:773ba1ef924de8ad9c8c1dc24bfaa40e1182f9978e46d2dcb98856c4ab069ce4"},
-    {url = "https://files.pythonhosted.org/packages/27/fd/698612d51487d3d9d4ed60b9712b0d11a64404581bbc1bfa89c800e957a9/winkerberos-0.9.1-cp39-cp39-win32.whl", hash = "sha256:484a23369cf461fdfa6d88d8c238e7129a469f7c961f257c8f5668536d9c2df9"},
-    {url = "https://files.pythonhosted.org/packages/30/63/c49029c8afe6b6f94a9d51fda87d9be63bde7f233f7aa67db18b0146edbb/winkerberos-0.9.1-cp310-cp310-win32.whl", hash = "sha256:4565476111ec30a9def8f4c31bb937e165ab9862ad11ffa700f431f0d4941030"},
-    {url = "https://files.pythonhosted.org/packages/32/6e/3fa7b6166196dd8b4cb972517c780d101871fdcb016b1ff59d07bb534feb/winkerberos-0.9.1-cp39-cp39-win_amd64.whl", hash = "sha256:9842854fa5527b72720e2911f1b6008736baacaf3df1a60bfe62a0aaf0f037ff"},
-    {url = "https://files.pythonhosted.org/packages/59/6f/0b2563eb5020f6ad35f45e37b81c45ec65f3795a65562aa9d11ac0f8b5e7/winkerberos-0.9.1-cp38-cp38-win_amd64.whl", hash = "sha256:fb29dd36c0d7fd66c6abefe7871aecbd1fda00cb38e972fad668a9558e531a12"},
-    {url = "https://files.pythonhosted.org/packages/69/f6/16cc64502d14c4228558cc0632cc53f0b541b50717a52cdb3e6585bfb728/winkerberos-0.9.1-cp38-cp38-win32.whl", hash = "sha256:167d0c58741d5624518aa94694e079831a9b1de1b99b1f901330c18c785d00f7"},
-    {url = "https://files.pythonhosted.org/packages/7b/22/6695a69bc6575765b4edb3001545e3c9428c4856d11b139a8a8550a6973f/winkerberos-0.9.1-cp35-cp35m-win_amd64.whl", hash = "sha256:630cb3a5789532e3adac03ab51bc2fc2288cae70d39259a6bdd409d2a3c8b936"},
-    {url = "https://files.pythonhosted.org/packages/7c/84/05c565f76af2cbfb74bbe253bb00f964fcf1828686b5e29d2c0060677610/winkerberos-0.9.1-cp36-cp36m-win_amd64.whl", hash = "sha256:bf3e4aab04673660a8731fab527c4a838cfdfa935deada6cef0df8f8e9a6cd4d"},
-    {url = "https://files.pythonhosted.org/packages/83/4c/d8cb38ad905b112065363bbcd625a6edb2f35da9d529379caf264ea1db82/winkerberos-0.9.1-cp311-cp311-win_amd64.whl", hash = "sha256:60e47a551db0431a2e98b46ef9d9b59a70df0c0c450af0172747da7083573122"},
-    {url = "https://files.pythonhosted.org/packages/93/b3/5820f06483bc1c88ffd712e4f5ee875593b695f57027b7ac8c8f760fa0e2/winkerberos-0.9.1-cp35-cp35m-win32.whl", hash = "sha256:044b7358cd34de6ae34c76aa48a40607e6f63835ff319516662c1c65f84f2feb"},
-    {url = "https://files.pythonhosted.org/packages/97/4b/0fc609068e4f94c53c8eceb00a5687ad79ef041a9e856af999afc0b48f98/winkerberos-0.9.1-cp27-cp27m-win32.whl", hash = "sha256:aba3190d8c1f1bb876f398346ff7d7c2e173046a1653086dad638dc3b16cccdf"},
-    {url = "https://files.pythonhosted.org/packages/a8/f5/131fe29d4783ce0b5b565d9b0d6a5b0d7a71f9603d0b35cff259641496ee/winkerberos-0.9.1-cp36-cp36m-win32.whl", hash = "sha256:45cf5084640888ad025a6f6f9e1fb313e03d626101c1bcca6e82214d7e9c5ee3"},
-    {url = "https://files.pythonhosted.org/packages/aa/ce/ddd1aa02552c876df8efc4710ced6148c749df8276705f8e94f84fcb0561/winkerberos-0.9.1.zip", hash = "sha256:02ec925c2aa4fe4f7656792a76e346d8fab13e12ced2732354a21958adfe92c6"},
-    {url = "https://files.pythonhosted.org/packages/b3/7b/16d6749330110cff801cf4a0d099020316cb6f76deffcea7aa3bf663e695/winkerberos-0.9.1-cp37-cp37m-win32.whl", hash = "sha256:024657b9861f057a90f10fcc94de2ac7bf1d2d84b7f51386f68f1d77c99f58c7"},
-    {url = "https://files.pythonhosted.org/packages/b7/b2/3381cd9c5c756d9da6d836429fbf7fb558d7db402d56abf9b52d7dfb04c7/winkerberos-0.9.1-cp311-cp311-win32.whl", hash = "sha256:26716c91900f19c8990d6e77026e1b1686e5bdb22ac829c87781ff80eba4603d"},
-    {url = "https://files.pythonhosted.org/packages/c3/ec/aaf4ca160bdf5752d8edbe8978ba362e21fd7b4d93a40b6090822c1f9b19/winkerberos-0.9.1-cp310-cp310-win_amd64.whl", hash = "sha256:59499e9682961ea784fa41b85af499b699f2ff5f3a07fde30a51ce33d509fa96"},
-    {url = "https://files.pythonhosted.org/packages/e0/6a/fa453bb86d4512e03f2639ac78a6f4a1ab53ca32b35035c9eaf830f1cd07/winkerberos-0.9.1-cp27-cp27m-win_amd64.whl", hash = "sha256:53c5109e95b9cf0a80198ee6953d6263b0c8d254cc3815e9091cff4544ab4697"},
 ]
 "xmltodict 0.13.0" = [
     {url = "https://files.pythonhosted.org/packages/39/0d/40df5be1e684bbaecdb9d1e0e40d5d482465de6b00cbb92b84ee5d243c7f/xmltodict-0.13.0.tar.gz", hash = "sha256:341595a488e3e01a85a9d8911d8912fd922ede5fecc4dce437eb4b6c8d037e56"},
