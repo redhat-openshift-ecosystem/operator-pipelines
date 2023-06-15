@@ -60,6 +60,7 @@ spec:
           pip3 install --user \
             -r requirements.txt
         fi
+
         if [ -f  requirements.yml ];
         then
           ansible-galaxy role install -vv \
