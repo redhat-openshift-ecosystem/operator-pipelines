@@ -29,4 +29,4 @@ jobs:
         uses: fedora-python/tox-github-action@v0.4
         with:
           tox_env: black,test,yamllint
-          dnf_install: krb5-devel krb5-workstation
+          dnf_install: pdm
