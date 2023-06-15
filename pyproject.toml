@@ -13,16 +13,16 @@ license = {text = "GPLv3"}
 
 [project.optional-dependencies]
 operator-pipelines = [
-    "python-magic==0.4.24",
-    "pyyaml==5.4.1",
-    "requests==2.31.0",
-    "yq==2.12.2",
-    "giturlparse==0.10.0",
-    "html2text==2020.1.16",
+    "python-magic>=0.4.24",
+    "pyyaml>=5.4.1",
+    "requests>=2.31.0",
+    "yq>=2.12.2",
+    "giturlparse>=0.10.0",
+    "html2text>=2020.1.16",
     "requests-kerberos>=0.14.0",
-    "python-dateutil==2.8.2",
-    "humanize==3.12.0",
-    "stomp-py==8.0.1",
+    "python-dateutil>=2.8.2",
+    "humanize>=3.12.0",
+    "stomp-py>=8.0.1",
 ]
 [build-system]
 requires = ["pdm-pep517>=1.0"]
