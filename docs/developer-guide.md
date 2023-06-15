@@ -267,21 +267,21 @@ oc apply -R -f ansible/roles/operator-pipeline/templates/openshift
 ## Making Changes to the Pipeline Image
 
 ### Dependency manager
-Snitch project is configured to automatically manage Python dependencies using [PDM][1] tool.
+Operator pipelines project is configured to automatically manage Python dependencies using [PDM][1] tool.
 The pdm automates definition, installation, upgrades and the whole lifecycle of
 dependency in a project. All dependencies are stored in `pyproject.toml` file in a groups
-that corresponds to individual applications within the Snitch project.
+that corresponds to individual applications within the Operator pipelines project.
 
 Adding, removing and updating of dependency needs to be always done using `pdm` cli.
 ```bash
-pdm add -G snitch gunicorn==20.1.0
+pdm add -G operator-pipelines gunicorn==20.1.0
 ```
 After a dependency is installed it is added to pdm.lock file. The lock file
 is always part of git repository.
 
 If you want to install specific group set of dependencies use following command:
 ```bash
-pdm install -G snitch
+pdm install -G operator-pipelines
 ```
 Dependencies are stored into virtual environment (.venv) which is automatically created after `pdm install`
 If .venv wasn't created, configure pdm to automatically create it during installation with `pdm config python.use_venv true`.

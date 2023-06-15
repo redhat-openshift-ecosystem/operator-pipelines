@@ -61,6 +61,18 @@ WORKDIR /home/user
 
 COPY ./operator-pipeline-images ./
 
+# install PDM
+RUN pip3 install --upgrade pip setuptools wheel && pip3 install pdm
+# install dependencies in virtual environment
+COPY ./pdm.lock ./pyproject.toml ./
+RUN pdm venv create 3.11 && pdm install --no-lock --no-editable \
+        --group snitch \
+        --group snitch-dev
+
+ENV VIRTUAL_ENV=./.venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 RUN pip3 install .
 
 # set dir ownership
