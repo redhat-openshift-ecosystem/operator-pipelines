@@ -19,7 +19,6 @@ dependencies = [
     "pathspec>=0.9.0",
     "platformdirs>=2",
     "tomli>=1.1.0; python_version < \"3.11\"",
-    "typing-extensions>=3.10.0.0; python_version < \"3.10\"",
 ]
 
 [[package]]
@@ -369,12 +368,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "typing-extensions"
-version = "4.6.3"
-requires_python = ">=3.7"
-summary = "Backported and Experimental Type Hints for Python 3.7+"
-
-[[package]]
 name = "urllib3"
 version = "2.0.3"
 requires_python = ">=3.7"
@@ -429,7 +422,7 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "operator-pipelines", "operator-pipelines-dev", "tox"]
-content_hash = "sha256:4ca85b643522cdbf0342289b0def836613d2c87fe4694f8c3226fbc1212012ec"
+content_hash = "sha256:ba0332459b7104bdede548e96d95a757d82f3cf033bcc49989d08edc2173d231"
 
 [metadata.files]
 "argcomplete 3.1.1" = [
@@ -917,10 +910,6 @@ content_hash = "sha256:4ca85b643522cdbf0342289b0def836613d2c87fe4694f8c3226fbc12
 "tox-pdm 0.6.1" = [
     {url = "https://files.pythonhosted.org/packages/57/42/c437d69c3b884c58027999e524c91716ac355048284be771d810d80ceed1/tox-pdm-0.6.1.tar.gz", hash = "sha256:952ea67f2ec891f11eb00749f63fc0f980384435ca782c448d154390f9f42f5e"},
     {url = "https://files.pythonhosted.org/packages/dd/2e/9c694f9775e3bd6e9eadf6c38fdc9f2e55d2ecbc7a4bba30eecf2a4b7f91/tox_pdm-0.6.1-py3-none-any.whl", hash = "sha256:9e3cf83b7b55c3e33aaee0e65cf341739581ff4604a4178f0ef7dbab73a0bb35"},
-]
-"typing-extensions 4.6.3" = [
-    {url = "https://files.pythonhosted.org/packages/42/56/cfaa7a5281734dadc842f3a22e50447c675a1c5a5b9f6ad8a07b467bffe7/typing_extensions-4.6.3.tar.gz", hash = "sha256:d91d5919357fe7f681a9f2b5b4cb2a5f1ef0a1e9f59c4d8ff0d3491e05c0ffd5"},
-    {url = "https://files.pythonhosted.org/packages/5f/86/d9b1518d8e75b346a33eb59fa31bdbbee11459a7e2cc5be502fa779e96c5/typing_extensions-4.6.3-py3-none-any.whl", hash = "sha256:88a4153d8505aabbb4e13aacb7c486c2b4a33ca3b3f807914a9b4c844c471c26"},
 ]
 "urllib3 2.0.3" = [
     {url = "https://files.pythonhosted.org/packages/8a/03/ad9306a50d05c166e3456fe810f33cee2b8b2a7a6818ec5d4908c4ec6b36/urllib3-2.0.3-py3-none-any.whl", hash = "sha256:48e7fafa40319d358848e1bc6809b208340fafe2096f1725d05d67443d0483d1"},

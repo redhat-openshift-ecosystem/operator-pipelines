@@ -7,7 +7,7 @@ authors = [
     {name = "haripate", email = "haripate@redhat.com"},
 ]
 dependencies = []
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "GPLv3"}
 

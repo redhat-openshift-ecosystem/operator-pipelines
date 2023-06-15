@@ -308,13 +308,13 @@ $ source .venv/bin/activate
 
 1. Ensure you have [buildah](https://github.com/containers/buildah/blob/main/install.md) installed
 
-1. Build the image
+2. Build the image
 
     ```bash
     buildah bud
     ```
 
-1. Push the image to a remote registry, eg. Quay.io.
+3. Push the image to a remote registry, eg. Quay.io.
 
     ```bash
     buildah push <image-digest-from-build-step> <remote-repository>

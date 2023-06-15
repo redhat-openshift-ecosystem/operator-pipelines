@@ -65,7 +65,7 @@ COPY ./operator-pipeline-images ./
 RUN pip3 install --upgrade pip setuptools wheel && pip3 install pdm
 # install dependencies in virtual environment
 COPY ./pdm.lock ./pyproject.toml ./
-RUN pdm venv create 3.11 && pdm install --no-lock --no-editable \
+RUN pdm venv create 3.10 && pdm install --no-lock --no-editable \
         --group snitch \
         --group snitch-dev
 
