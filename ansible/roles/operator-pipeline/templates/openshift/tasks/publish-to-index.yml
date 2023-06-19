@@ -16,6 +16,9 @@ spec:
         Which environment the pipeline is running in. Can be one of [dev, qa, stage, prod]
     - name: operator_distribution_method
       description: Operator distribution method. Can be one of [connect, marketplace]
+  results:
+    - name: status
+      description: Index publishing status for operator bundle
   steps:
     - name: skopeo-copy
       # Pipeline image is needed for Red Hat internal SSL cert
