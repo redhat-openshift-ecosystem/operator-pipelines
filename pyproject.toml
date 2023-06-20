@@ -19,10 +19,10 @@ operator-pipelines = [
     "yq>=2.12.2",
     "giturlparse>=0.10.0",
     "html2text>=2020.1.16",
-    "requests-kerberos[gssapi,krb5,pyspnego]>=0.14.0",
     "python-dateutil>=2.8.2",
     "humanize>=3.12.0",
     "stomp-py>=8.0.1",
+    "requests-kerberos>=0.14.0",
 ]
 [build-system]
 requires = ["pdm-pep517>=1.0"]
