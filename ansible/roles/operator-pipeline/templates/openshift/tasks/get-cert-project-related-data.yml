@@ -33,6 +33,8 @@ spec:
       description: Current Certification status of the cert Project
     - name: github_usernames
       description: List of GitHub accounts with permissions allowing operator submission
+    - name: project_status
+      description: Status of the cert project - either archived or active
   workspaces:
     - name: source
     - name: results
@@ -89,6 +91,7 @@ spec:
         get_from_cp repository_name '.container.repository_name' | tee $(results.repo_name.path)
         get_from_cp org_id '.org_id' | tee $(results.org_id.path)
         get_from_cp operator_distribution '.operator_distribution' | tee $(results.operator_distribution.path)
+        get_from_cp project_status '.project_status' | tee $(results.project_status.path)
 
         # Exception, where function cannot be applied-
         # github usernames have the newline symbol changed to space
