@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           pdm sync -dG operator-pipelines-dev
-          pdm sync -G opeartor-pipelines
+          pdm sync -G operator-pipelines
           pdm sync -dG tox
       - name: Run Tests
         run: |
