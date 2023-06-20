@@ -13,7 +13,9 @@ jobs:
     name: Run unit tests and linters
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v3
         with:
@@ -21,11 +23,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          dnf install -y krb5-devel \
+          sudo apt-get install -y krb5-devel \
           krb5-workstation
           pdm sync -dG operator-pipelines-dev
           pdm sync -G operator-pipelines
           pdm sync -dG tox
+
       - name: Run Tests
         run: |
           pdm run -v tox
