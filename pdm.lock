@@ -303,6 +303,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "requests-kerberos"
+version = "0.14.0"
+extras = ["gssapi", "krb5", "pyspnego"]
+requires_python = ">=3.6"
+summary = "A Kerberos authentication handler for python-requests"
+dependencies = [
+    "requests-kerberos==0.14.0",
+]
+
+[[package]]
+name = "requests-kerberos"
+version = "0.14.0"
+extras = ["gssapi", "pyspnego"]
+requires_python = ">=3.6"
+summary = "A Kerberos authentication handler for python-requests"
+dependencies = [
+    "requests-kerberos==0.14.0",
+]
+
+[[package]]
 name = "requests-mock"
 version = "1.11.0"
 summary = "Mock out responses from the requests package"
@@ -422,7 +442,7 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "operator-pipelines", "operator-pipelines-dev", "tox"]
-content_hash = "sha256:ba0332459b7104bdede548e96d95a757d82f3cf033bcc49989d08edc2173d231"
+content_hash = "sha256:9201c31ba5e3b85975bca98e3ab2880fa4d1ff37f67b75619aa8b252bbfd5c0f"
 
 [metadata.files]
 "argcomplete 3.1.1" = [
