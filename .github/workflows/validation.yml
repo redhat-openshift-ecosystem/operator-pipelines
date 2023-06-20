@@ -18,10 +18,11 @@ jobs:
         uses: pdm-project/setup-pdm@v3
         with:
           python-version: "3.10"
-          dnf_install: krb5-devel krb5-workstation
 
       - name: Install dependencies
         run: |
+          dnf install -y krb5-devel \
+          krb5-workstation
           pdm sync -dG operator-pipelines-dev
           pdm sync -G operator-pipelines
           pdm sync -dG tox
