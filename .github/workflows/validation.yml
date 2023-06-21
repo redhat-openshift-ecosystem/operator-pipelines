@@ -16,11 +16,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies for krbs
-        uses: fedora-python/tox-github-action@v0.4
-        with:
-          dnf_install: krb5-devel krb5-workstation
-
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v3
         with:
@@ -29,7 +24,6 @@ jobs:
       - name: Install dependencies
         run: |
           pdm sync -dG operator-pipelines-dev
-          pdm sync -G operator-pipelines
           pdm sync -dG tox
 
       - name: Run Tests
