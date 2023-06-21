@@ -32,7 +32,7 @@ spec:
         #!/urs/bin/env bash
         set -xe -o pipefail
 
-        if [ "${PROJECT_STATUS}" = "archived"]; then
+        if [ "${PROJECT_STATUS}" = "archived" ]; then
           echo "This project is archived."
           exit 1
         fi
