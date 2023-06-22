@@ -13,8 +13,19 @@ jobs:
     name: Run unit tests and linters
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: fedora-python/tox-github-action@v0.4
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v3
         with:
-          tox_env: black,test,yamllint
-          dnf_install: krb5-devel krb5-workstation
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pdm sync -dG operator-pipelines-dev
+          pdm sync -dG tox
+
+      - name: Run Tests
+        run: |
+          pdm run -v tox
