@@ -73,15 +73,6 @@ ENV VIRTUAL_ENV=./.venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN mkdir __pypackages__ && pdm sync --no-editable
-
-# run stage
-FROM python:3.10
-
-# retrieve packages from build stage
-ENV PYTHONPATH=./pkgs
-COPY --from=builder /project/__pypackages__/3.10/lib /project/pkgs
-
 RUN pip3 install .
 
 # set dir ownership

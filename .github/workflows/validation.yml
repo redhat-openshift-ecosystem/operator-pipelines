@@ -21,6 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           pdm sync -dG operatorcert-dev
+          pdm sync -G operatorcert
           pdm sync -dG tox
 
       - name: Run Tests
