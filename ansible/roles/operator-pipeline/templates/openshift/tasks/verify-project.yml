@@ -26,8 +26,9 @@ spec:
   steps:
     - name: verify-project-not-archived
       image: "$(params.pipeline_image)"
-      env: PROJECT_STATUS
-      value: $(params.project_status)
+      env:
+        - name: PROJECT_STATUS
+          value: $(params.project_status)
       script: |
         #!/urs/bin/env bash
         set -xe -o pipefail
