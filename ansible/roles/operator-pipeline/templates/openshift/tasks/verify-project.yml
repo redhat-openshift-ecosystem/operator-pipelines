@@ -2,22 +2,42 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: verify-project-distribution
+  name: verify-project
 spec:
   description: >-
-    This task verifies that project with correct distribution method is used.
+    This task verifies that project is not archived and the correct distribution
+    method is used.
   params:
     - name: pipeline_image
       description: The common pipeline image.
 
     - name: organization
       description: |
-        Organization defined in the project config.yaml - either certified-operator or redhat-marketplace
+        Organization defined in the project config.yaml - either
+        certified-operator or redhat-marketplace
 
     - name: project_distribution
       description: |
         Certification project distribution method.
+
+    - name: project_status
+      description: |
+        Certification project status - either archived or active
   steps:
+    - name: verify-project-not-archived
+      image: "$(params.pipeline_image)"
+      env:
+        - name: PROJECT_STATUS
+          value: $(params.project_status)
+      script: |
+        #!/urs/bin/env bash
+        set -xe -o pipefail
+
+        if [ "${PROJECT_STATUS}" = "archived" ]; then
+          echo "This project is archived."
+          exit 1
+        fi
+
     - name: verify-project-distribution
       image: "$(params.pipeline_image)"
       env:
