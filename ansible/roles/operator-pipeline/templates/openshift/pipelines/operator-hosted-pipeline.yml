@@ -957,7 +957,7 @@ spec:
         - name: REQUEST_URL
           value: "$(params.git_pr_url)"
         - name: COMMENT
-          value: "[View your certification test results and logs here]($(tasks.set-env.results.connect_url)/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results)."
+          value: "[View your certification test results and logs here]($(tasks.set-env.results.connect_url)/internal/technology-partner-data-hub/#/projects/$(tasks.certification-project-check.results.certification_project_id)/test-results)."
         - name: GITHUB_TOKEN_SECRET_NAME
           value: "$(params.github_token_secret_name)"
         - name: GITHUB_TOKEN_SECRET_KEY
