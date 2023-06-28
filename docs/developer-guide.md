@@ -266,26 +266,16 @@ oc apply -R -f ansible/roles/operator-pipeline/templates/openshift
 
 ## Making Changes to the Pipeline Image
 
-### Dependency manager
-Operator pipelines project is configured to automatically manage Python dependencies using [PDM][1] tool.
-The pdm automates definition, installation, upgrades and the whole lifecycle of
-dependency in a project. All dependencies are stored in `pyproject.toml` file in a groups
-that corresponds to individual applications within the Operator pipelines project.
+### Setup
+To install the python package in a development environment, run:
 
-Adding, removing and updating of dependency needs to be always done using `pdm` cli.
 ```bash
-pdm add -G operator-pipelines gunicorn==20.1.0
+pip install ".[dev]"
 ```
-After a dependency is installed it is added to pdm.lock file. The lock file
-is always part of git repository.
 
-If you want to install specific group set of dependencies use following command:
-```bash
-pdm install -G operator-pipelines
-```
-Dependencies are stored into virtual environment (.venv) which is automatically created after `pdm install`
-If .venv wasn't created, configure pdm to automatically create it during installation with `pdm config python.use_venv true`.
+### Tips
 
+- If adding a new script in the pipeline image - don't forget to add the entrypoint to setup.py
 
 ### Run Unit Tests, Code Style Checkers, etc.
 
@@ -295,26 +285,17 @@ To run unit tests and code style checkers:
 tox
 ```
 
-### Local development
-
-Setup python virtual environment using pdm.
-```shell
-$ pdm venv create 3.10
-$ pdm install
-$ source .venv/bin/activate
-```
-
 ### Build & Push
 
 1. Ensure you have [buildah](https://github.com/containers/buildah/blob/main/install.md) installed
 
-2. Build the image
+1. Build the image
 
     ```bash
     buildah bud
     ```
 
-3. Push the image to a remote registry, eg. Quay.io.
+1. Push the image to a remote registry, eg. Quay.io.
 
     ```bash
     buildah push <image-digest-from-build-step> <remote-repository>
@@ -325,5 +306,3 @@ $ source .venv/bin/activate
     ```bash
     buildah login quay.io
     ```
-
-[1]: https://pdm.fming.dev/latest/
