@@ -146,4 +146,3 @@ dmypy.json
 .*.sw?
 ansible/vault-password*
 
-.pdm-python
