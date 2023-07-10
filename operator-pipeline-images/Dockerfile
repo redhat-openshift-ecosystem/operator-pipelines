@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:36
+FROM registry.fedoraproject.org/fedora:38
 
 LABEL description="Cli tools for operator certification pipeline"
 LABEL summary="This image contains tools required for operator bundle certification pipeline."

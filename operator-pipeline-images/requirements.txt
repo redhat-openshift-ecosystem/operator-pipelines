@@ -1,10 +1,10 @@
-python-magic==0.4.24
-pyyaml==5.4.1
+python-magic==0.4.27
+pyyaml==6.0
 requests==2.31.0
-yq==2.12.2
+yq==3.2.2
 giturlparse==0.10.0
 html2text==2020.1.16
-requests_kerberos==0.12.0
+requests_kerberos==0.14.0
 python-dateutil==2.8.2
-humanize==3.12.0
+humanize==4.7.0
 stomp.py==8.0.1
