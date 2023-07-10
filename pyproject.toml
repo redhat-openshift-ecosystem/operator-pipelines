@@ -1,0 +1,74 @@
+[tool.black]
+target_version = ['py310']
+
+[tool.pdm]
+package-dir = "."
+
+[project]
+name = "operatorcert"
+version = "1.0.0"
+description = "Tools for Red Hat Operator certification pipelines"
+authors = [
+    {name = "haripate", email = "haripate@redhat.com"},
+    {name = "Red Hat, Inc."},
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "GPLv3"}
+
+[project.scripts]
+bundle-dockerfile = "operatorcert.entrypoints.bundle_dockerfile:main"
+create-container-image = "operatorcert.entrypoints.create_container_image:main"
+download-test-results = "operatorcert.entrypoints.download_test_results:main"
+get-cert-project-related-data = "operatorcert.entrypoints.get_cert_project_related_data:main"
+get-vendor-related-data = "operatorcert.entrypoints.get_vendor_related_data:main"
+github-add-comment = "operatorcert.entrypoints.github_add_comment:main"
+hydra-checklist = "operatorcert.entrypoints.hydra_checklist:main"
+index = "operatorcert.entrypoints.index:main"
+link-pull-request = "operatorcert.entrypoints.link_pull_request:main"
+ocp-version-info = "operatorcert.entrypoints.ocp_version_info:main"
+open-pull-request = "operatorcert.entrypoints.github_pr:main"
+pipelinerun-summary = "operatorcert.entrypoints.pipelinerun_summary:main"
+publish = "operatorcert.entrypoints.publish:main"
+request-signature = "operatorcert.entrypoints.request_signature:main"
+reserve-operator-name = "operatorcert.entrypoints.reserve_operator_name:main"
+set-cert-project-repository = "operatorcert.entrypoints.set_cert_project_repository:main"
+set-github-status = "operatorcert.entrypoints.set_github_status:main"
+update-cert-project-status = "operatorcert.entrypoints.update_cert_project_status:main"
+upload-artifacts = "operatorcert.entrypoints.upload_artifacts:main"
+upload-signature = "operatorcert.entrypoints.upload_signature:main"
+verify-changed-dirs = "operatorcert.entrypoints.verify_changed_dirs:main"
+verify-pr-title = "operatorcert.entrypoints.verify_pr_title:main"
+verify-pr-uniqueness = "operatorcert.entrypoints.verify_pr_uniqueness:main"
+verify-pr-user = "operatorcert.entrypoints.verify_pr_user:main"
+
+[project.optional-dependencies]
+operatorcert = [
+    "python-magic>=0.4.24",
+    "pyyaml>=5.4.1",
+    "requests>=2.31.0",
+    "yq>=2.12.2",
+    "giturlparse>=0.10.0",
+    "html2text>=2020.1.16",
+    "python-dateutil>=2.8.2",
+    "humanize>=3.12.0",
+    "stomp-py>=8.0.1",
+    "requests-kerberos>=0.14.0",
+]
+
+[tool.pdm.dev-dependencies]
+operatorcert-dev = [
+    "black>=23.3.0",
+    "pytest>=7.3.2",
+    "pytest-cov>=4.1.0",
+    "yamllint>=1.32.0",
+    "requests-mock>=1.11.0",
+]
+tox = [
+    "tox>=4.6.0",
+    "tox-pdm>=0.6.1",
+]
+
+[build-system]
+requires = ["pdm-pep517>=1.0"]
+build-backend = "pdm.pep517.api"

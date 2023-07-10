@@ -61,6 +61,27 @@ WORKDIR /home/user
 
 COPY ./operator-pipeline-images ./
 
+# install PDM
+RUN pip3 install --upgrade pip setuptools wheel && pip3 install pdm
+# install dependencies in virtual environment
+COPY ./pdm.lock ./pyproject.toml ./README.md ./
+RUN pdm venv create 3.10 && pdm install --no-lock --no-editable \
+        --group operatorcert \
+        --group operatorcert-dev
+
+ENV VIRTUAL_ENV=./.venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN mkdir __pypackages__ && pdm sync --no-editable
+
+# run stage
+FROM python:3.10
+
+# retrieve packages from build stage
+ENV PYTHONPATH=./pkgs
+COPY --from=builder /project/__pypackages__/3.10/lib /project/pkgs
+
 RUN pip3 install .
 
 # set dir ownership
