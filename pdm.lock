@@ -422,7 +422,7 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "operatorcert", "operatorcert-dev", "tox"]
-content_hash = "sha256:ba2b29f24342dd81cb1760a461ab9dbfea96ad646416d4540435a7bf6c560d82"
+content_hash = "sha256:9c06acbfd34a7aa55e3b40863425c93396befff1b5464997616df6e88d010d9a"
 
 [metadata.files]
 "argcomplete 3.1.1" = [

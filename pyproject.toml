@@ -63,6 +63,7 @@ operatorcert-dev = [
     "pytest-cov>=4.1.0",
     "yamllint>=1.32.0",
     "requests-mock>=1.11.0",
+    "python-dateutil>=2.8.2",
 ]
 tox = [
     "tox>=4.6.0",
