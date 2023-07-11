@@ -1,5 +1,0 @@
-black
-pytest
-pytest-cov
-yamllint
-requests-mock
