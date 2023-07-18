@@ -261,13 +261,21 @@ def parse_pr_title(pr_title: str) -> Tuple[str, str]:
     If yes, extract the Bundle name and version.
     """
     # Verify if PR title follows convention- it should contain the bundle name and version.
-    # Any non- empty string without whitespaces makes a valid version.
-    regex = rf"^operator ([a-zA-Z0-9-]+) \(([^\s]+)\)$"
+    regex = rf"^operator ([a-zA-Z0-9-]+) \(([0-9]+\.[0-9]+\.[0-9]+[a-zA-Z0-9-]*)\)$"
     regex_pattern = re.compile(regex)
+    err_msg = f"Pull request title {pr_title} does not follow the regex 'operator <operator_name> (<version>)"
+
+    # Check <version> for prefix 'v'
+    regex_v = rf"^operator ([a-zA-Z0-9-]+) \((v[0-9]+\.[0-9]+\.[0-9]+[a-zA-Z0-9-]*)\)$"
+    regex_pattern_v = re.compile(regex_v)
+    err_msg_v = f" where <version> does not contain prefix 'v'"
+
+    if regex_pattern_v.match(pr_title):
+        err_msg = err_msg + err_msg_v
 
     if not regex_pattern.match(pr_title):
         raise ValueError(
-            f"Pull request title {pr_title} does not follow the regex 'operator <operator_name> (<version>)"
+                err_msg
         )
 
     matching = regex_pattern.search(pr_title)
