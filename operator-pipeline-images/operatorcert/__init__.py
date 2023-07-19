@@ -265,7 +265,7 @@ def parse_pr_title(pr_title: str) -> Tuple[str, str]:
     regex_pattern = re.compile(regex)
     err_msg = f"Pull request title {pr_title} does not follow the regex 'operator <operator_name> (<version>)"
 
-    # Check <version> for prefix 'v'
+    # Check <version> for prefix 'v' failure case and include additional error context
     regex_v = rf"^operator ([a-zA-Z0-9-]+) \((v[0-9]+\.[0-9]+\.[0-9]+[a-zA-Z0-9-]*)\)$"
     regex_pattern_v = re.compile(regex_v)
     err_msg_v = f" where <version> does not contain prefix 'v'"
@@ -274,9 +274,7 @@ def parse_pr_title(pr_title: str) -> Tuple[str, str]:
         err_msg = err_msg + err_msg_v
 
     if not regex_pattern.match(pr_title):
-        raise ValueError(
-                err_msg
-        )
+        raise ValueError(err_msg)
 
     matching = regex_pattern.search(pr_title)
     bundle_name = matching.group(1)
