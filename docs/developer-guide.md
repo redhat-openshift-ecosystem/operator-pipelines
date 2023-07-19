@@ -299,7 +299,7 @@ tox
 
 Setup python virtual environment using pdm.
 ```shell
-$ pdm venv create 3.10
+$ pdm venv create 3.11
 $ pdm install
 $ source .venv/bin/activate
 ```

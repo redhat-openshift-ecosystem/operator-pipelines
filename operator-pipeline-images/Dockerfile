@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:36
+FROM registry.fedoraproject.org/fedora:38
 
 LABEL description="Cli tools for operator certification pipeline"
 LABEL summary="This image contains tools required for operator bundle certification pipeline."
@@ -65,15 +65,12 @@ COPY ./operator-pipeline-images ./
 RUN pip3 install --upgrade pip setuptools wheel && pip3 install pdm
 # install dependencies in virtual environment
 COPY ./pdm.lock ./pyproject.toml ./README.md ./
-RUN pdm venv create 3.10 && pdm install --no-lock --no-editable \
+RUN pdm venv create 3.11 && pdm install --no-lock --no-editable \
         --group operatorcert \
         --group operatorcert-dev
 
-ENV VIRTUAL_ENV=./.venv
-RUN python3 -m venv $VIRTUAL_ENV
+ENV VIRTUAL_ENV=/home/user/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-RUN pip3 install .
 
 # set dir ownership
 RUN chgrp -R 0 /home/user /etc/passwd
