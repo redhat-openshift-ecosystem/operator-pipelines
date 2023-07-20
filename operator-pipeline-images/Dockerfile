@@ -61,7 +61,16 @@ WORKDIR /home/user
 
 COPY ./operator-pipeline-images ./
 
-RUN pip3 install .
+# install PDM
+RUN pip3 install --upgrade pip setuptools wheel && pip3 install pdm
+# install dependencies in virtual environment
+COPY ./pdm.lock ./pyproject.toml ./README.md ./
+RUN pdm venv create 3.11 && pdm install --no-lock --no-editable \
+        --group operatorcert \
+        --group operatorcert-dev
+
+ENV VIRTUAL_ENV=/home/user/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # set dir ownership
 RUN chgrp -R 0 /home/user /etc/passwd
