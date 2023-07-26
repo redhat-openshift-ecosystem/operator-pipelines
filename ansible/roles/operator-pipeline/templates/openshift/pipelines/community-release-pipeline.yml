@@ -36,3 +36,28 @@ spec:
           subPath: src
         - name: ssh-directory
           workspace: ssh-dir
+
+    # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
+    - name: acquire-lease
+      runAfter:
+        - clone-repository
+      taskRef:
+        name: acquire-lease
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        # TODO: Update the lease-name in future according to the another task's dependencies
+        - name: lease-name
+          value: "community-pipeline"      
+
+  finally:
+    # Release the acquired resource
+    - name: release-lease
+      taskRef:
+        name: release-lease
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        # TODO: Update the lease-name in future according to the another task's dependencies
+        - name: lease-name
+          value: "community-pipeline"
