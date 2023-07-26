@@ -1,6 +1,9 @@
 ---
 extends: default
 
+ignore: |
+  operator-pipeline-images/tests/data/operator-repo
+
 rules:
   line-length:
     level: warning
