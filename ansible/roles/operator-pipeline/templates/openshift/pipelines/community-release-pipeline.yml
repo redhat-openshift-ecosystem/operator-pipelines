@@ -48,7 +48,7 @@ spec:
           value: "$(params.pipeline_image)"
         # TODO: Update the lease-name in future according to the another task's dependencies
         - name: lease-name
-          value: "community-pipeline"      
+          value: "community-pipeline"
 
   finally:
     # Release the acquired resource
