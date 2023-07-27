@@ -269,6 +269,9 @@ def test_verify_changed_files_location(wrong_change: str):
     "pr_title, is_valid, name, version",
     [
         ("operator operator-test123 (1.0.1)", True, "operator-test123", "1.0.1"),
+        ("operator operator-test123 (1.0.1-8)", True, "operator-test123", "1.0.1-8"),
+        ("operator operator-test123 (1.0.1-8.0)", True, "operator-test123", "1.0.1-8.0"),
+        ("operator operator-test123 (1.0.1-rc.1.0)", True, "operator-test123", "1.0.1-rc.1.0"),
         ("operator OPERATOR (1.0.1-ok)", True, "OPERATOR", "1.0.1-ok"),
         ("operator operator-test123 (1.0.1) aa", False, "", ""),
         ("operator  (1.0.1)", False, "", ""),
