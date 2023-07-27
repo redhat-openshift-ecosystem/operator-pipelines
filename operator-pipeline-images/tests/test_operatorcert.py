@@ -268,7 +268,11 @@ def test_verify_changed_files_location(wrong_change: str):
 @pytest.mark.parametrize(
     "pr_title, is_valid, name, version",
     [
+        # fmt: off
         ("operator operator-test123 (1.0.1)", True, "operator-test123", "1.0.1"),
+        ("operator operator-test123 (1.0.1-8)", True, "operator-test123", "1.0.1-8"),
+        ("operator operator-test123 (1.0.1-8.0)", True, "operator-test123", "1.0.1-8.0"),
+        ("operator operator-test123 (1.0.1-rc.1.0)", True, "operator-test123", "1.0.1-rc.1.0"),
         ("operator OPERATOR (1.0.1-ok)", True, "OPERATOR", "1.0.1-ok"),
         ("operator operator-test123 (1.0.1) aa", False, "", ""),
         ("operator  (1.0.1)", False, "", ""),
@@ -276,6 +280,7 @@ def test_verify_changed_files_location(wrong_change: str):
         ("operator operator-test123 (v1.0.1)", False, "", ""),
         ("operator oper@tor-test123 (1.0.1)", False, "", ""),
         ("operator operator-test123 (1)", False, "operator-test123", "1"),
+        # fmt: on
     ],
 )
 def test_parse_pr_title(pr_title: str, is_valid: bool, name: str, version: str):
