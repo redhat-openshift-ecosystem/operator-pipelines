@@ -46,7 +46,6 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        # TODO: Update the lease-name in future according to the another task's dependencies
         - name: lease-name
           value: "community-pipeline"
 
@@ -58,6 +57,5 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        # TODO: Update the lease-name in future according to the another task's dependencies
         - name: lease-name
           value: "community-pipeline"
