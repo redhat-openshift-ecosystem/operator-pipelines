@@ -9,16 +9,17 @@ name = "operatorcert"
 version = "1.0.0"
 description = "Tools for Red Hat Operator certification pipelines"
 authors = [
-    {name = "haripate", email = "haripate@redhat.com"},
-    {name = "Red Hat, Inc."},
+    { name = "haripate", email = "haripate@redhat.com" },
+    { name = "Red Hat, Inc." },
 ]
 requires-python = ">=3.10"
 readme = "README.md"
-license = {text = "GPLv3"}
+license = { text = "GPLv3" }
 
 [project.scripts]
 bundle-dockerfile = "operatorcert.entrypoints.bundle_dockerfile:main"
 create-container-image = "operatorcert.entrypoints.create_container_image:main"
+create-github-gist = "operatorcert.entrypoints.create_github_gist:main"
 download-test-results = "operatorcert.entrypoints.download_test_results:main"
 get-cert-project-related-data = "operatorcert.entrypoints.get_cert_project_related_data:main"
 get-vendor-related-data = "operatorcert.entrypoints.get_vendor_related_data:main"
@@ -54,6 +55,7 @@ operatorcert = [
     "humanize>=3.12.0",
     "stomp-py>=8.0.1",
     "requests-kerberos>=0.14.0",
+    "PyGithub>=1.59.0",
 ]
 
 [tool.pdm.dev-dependencies]
@@ -65,10 +67,7 @@ operatorcert-dev = [
     "requests-mock>=1.11.0",
     "python-dateutil>=2.8.2",
 ]
-tox = [
-    "tox>=4.6.0",
-    "tox-pdm>=0.6.1",
-]
+tox = ["tox>=4.6.0", "tox-pdm>=0.6.1"]
 
 [build-system]
 requires = ["pdm-pep517>=1.0"]

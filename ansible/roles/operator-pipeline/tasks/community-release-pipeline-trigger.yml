@@ -99,3 +99,11 @@
                           resources:
                             requests:
                               storage: 100Mi
+                    - name: results
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi

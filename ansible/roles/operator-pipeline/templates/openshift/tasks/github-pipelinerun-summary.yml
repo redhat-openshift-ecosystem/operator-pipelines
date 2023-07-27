@@ -40,6 +40,12 @@ spec:
     - name: pipeline_image
       description: The common pipeline image.
 
+    - name: upload_pipeline_logs
+      default: "false"
+      description: |
+        A flag that determines whether pipeline logs should be uploaded to Github gists
+      type: string
+
     - name: comment_suffix
       description: A comment to append to the end of the summary
       default: ""
@@ -55,6 +61,9 @@ spec:
         PR_NAME="$(params.pipelinerun)"
         mkdir $PR_NAME
 
+        echo "Getting pipeline logs"
+        tkn pipelinerun logs "$(params.pipelinerun)" > $PR_NAME/$(params.pipelinerun).log
+
         echo "Getting PipelineRun details"
         tkn pipelinerun describe $PR_NAME -o json > $PR_NAME/pipelinerun.json
 
@@ -65,6 +74,30 @@ spec:
           > $PR_NAME/taskruns.json
 
         chmod -R 777 $PR_NAME
+
+    - name: upload-pipeline-logs
+      workingDir: $(workspaces.output.path)
+      image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #! /usr/bin/env bash
+        set -ex
+
+        if [[ "$(params.upload_pipeline_logs)" == "true" ]]; then
+          echo "Uploading pipeline logs"
+
+          PR_NAME="$(params.pipelinerun)"
+          create-github-gist \
+            --input-file $PR_NAME/$(params.pipelinerun).log \
+            --output-file $PR_NAME/gits_output.json
+
+          echo "Logs have been successfully uploaded"
+        fi
 
     - name: build-comment
       workingDir: $(workspaces.output.path)
@@ -77,6 +110,12 @@ spec:
 
         pipelinerun-summary $PR_NAME/pipelinerun.json $PR_NAME/taskruns.json \
           > $PR_NAME/comment.md
+
+        if [[ "$(params.upload_pipeline_logs)" == "true" ]]; then
+          cat $PR_NAME/gits_output.json
+          GIST_URL=`cat $PR_NAME/gits_output.json | jq -r ".gist_url"`
+          echo "Pipeline logs: $GIST_URL" >> $PR_NAME/comment.md
+        fi
 
         if [ ! -z "$(params.comment_suffix)" ]; then
           echo "$(params.comment_suffix)" >> $PR_NAME/comment.md
