@@ -2,16 +2,15 @@ import json
 import logging
 import pathlib
 import re
-import tempfile
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple, Set
 from urllib.parse import urljoin
+from typing import Dict, List, Optional, Tuple
 
 import yaml
 from dateutil.parser import isoparse
 from operatorcert import github
 from operatorcert import pyxis
-from operatorcert.utils import find_file
+from operatorcert.utils import find_file, store_results
 
 # Bundle annotations
 OCP_VERSIONS_ANNOTATION = "com.redhat.openshift.versions"

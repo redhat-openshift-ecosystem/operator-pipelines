@@ -1,8 +1,8 @@
 from datetime import timezone
 from pathlib import Path
-from typing import Dict
 from unittest import mock
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import patch, MagicMock, call
+from typing import Dict
 
 import pytest
 import yaml
