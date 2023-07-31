@@ -6,7 +6,7 @@ groups = ["default", "operatorcert", "operatorcert-dev", "tox"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:06f98ba4cfb29afdd5133a27953d7b0411d5f68631218a6f63cb4c006b7ace1e"
+content_hash = "sha256:913cd7215d7f6cebd6dbd458bc26f155ccd103e6044493d1c5a1583ef666610f"
 
 [[package]]
 name = "argcomplete"
