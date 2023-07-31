@@ -50,11 +50,11 @@ def test_bundle() -> None:
     bundle1 = repo.operator("operator-clone-e2e").bundle("0.0.100")
     bundle2 = repo.operator("operator-clone-e2e").bundle("0.0.101")
     bundle3 = repo.operator("operator-e2e").bundle("0.0.100")
-    with pytest.raises(InvalidBundleException):
+    with pytest.raises(InvalidBundleException, match="missing .metadata.name"):
         _ = repo.operator("invalid-operator").bundle("0.0.1")
-    with pytest.raises(InvalidBundleException):
+    with pytest.raises(InvalidBundleException, match="not found"):
         _ = repo.operator("invalid-operator").bundle("0.0.2")
-    with pytest.raises(InvalidBundleException):
+    with pytest.raises(InvalidBundleException, match="Not a valid bundle"):
         _ = repo.operator("invalid-operator").bundle("0.0.3")
     assert bundle1 != bundle2
     assert bundle2 != bundle3
