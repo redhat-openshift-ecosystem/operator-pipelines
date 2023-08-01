@@ -39,7 +39,7 @@ def _load_yaml_strict(path: Path) -> Any:
         return yaml.safe_load(yaml_file)
 
 
-def _load_yaml(path: Path) -> Any:
+def load_yaml(path: Path) -> Any:
     """Same as _load_yaml_strict but tries both .yaml and .yml extensions"""
     return _load_yaml_strict(_find_yaml(path))
 
@@ -79,11 +79,15 @@ class Bundle:
         self.operator_name = self._bundle_path.parent.name
         try:
             csv_full_name = self.csv["metadata"]["name"]
-        except KeyError as exc:
+            self.csv_operator_name, self.csv_operator_version = csv_full_name.split(
+                ".", 1
+            )
+        except ValueError as exc:
             raise InvalidBundleException(
-                f"CSV for {self} missing .metadata.name"
+                f"Invalid .metadata.name in CSV for {self}"
             ) from exc
-        self.csv_operator_name, self.csv_operator_version = csv_full_name.split(".", 1)
+        except (KeyError, TypeError) as exc:
+            raise InvalidBundleException(f"Invalid CSV contents for {self}") from exc
 
     @cached_property
     def annotations(self) -> Dict[str, Any]:
@@ -104,7 +108,7 @@ class Bundle:
         """
         :return: The content of the CSV file for the bundle
         """
-        return _load_yaml(self.csv_file_name)
+        return load_yaml(self.csv_file_name)
 
     @classmethod
     def probe(cls, path: Path) -> bool:
@@ -136,7 +140,7 @@ class Bundle:
         :return: The parsed content of the file
         """
         try:
-            return _load_yaml(self._bundle_path / self.METADATA_DIR / filename)
+            return load_yaml(self._bundle_path / self.METADATA_DIR / filename)
         except FileNotFoundError:
             return {}
 
@@ -216,7 +220,7 @@ class Operator:
         :return: The contents of the ci.yaml for the operator
         """
         try:
-            return _load_yaml(self._operator_path / "ci.yaml")
+            return load_yaml(self._operator_path / "ci.yaml")
         except FileNotFoundError:
             log.info("No ci.yaml found for %s", self)
             return {}
@@ -304,7 +308,7 @@ class Repo:
         :return: The contents of the ci/pipeline-config.yaml for the repo
         """
         try:
-            return _load_yaml(self._repo_path / "ci" / "pipeline-config.yaml")
+            return load_yaml(self._repo_path / "ci" / "pipeline-config.yaml")
         except FileNotFoundError:
             log.warning("No ci/pipeline-config.yaml found for %s", self)
             return {}
