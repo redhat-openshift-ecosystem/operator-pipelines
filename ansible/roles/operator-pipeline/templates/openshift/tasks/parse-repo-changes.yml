@@ -76,3 +76,5 @@ spec:
             || fail "The PR modifies existing bundles"
         jq -e '.deleted_bundles|length==0' </tmp/changes.json \
             || fail "The PR deletes existing bundles"
+        jq -e '.added_bundles|length==1' </tmp/changes.json \
+            || fail "The PR affects more than one bundle"
