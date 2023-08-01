@@ -16,6 +16,7 @@ from operatorcert.operator_repo import (
 def merge(
     a: Dict[str, Any], b: Dict[str, Any], path: List[str] = None
 ) -> Dict[str, Any]:
+    """Deep merge dictionary b into a and return a"""
     if path is None:
         path = []
     for key in b:
@@ -29,9 +30,7 @@ def merge(
     return a
 
 
-def create_files(
-    path: Path, *contents: Dict[str, Optional[Union[str, bytes, Dict[str, Any]]]]
-) -> None:
+def create_files(path: Path, *contents: Dict[str, Any]) -> None:
     """
     Create files
 
@@ -42,6 +41,7 @@ def create_files(
             under the given root path. Values can be:
             string or bytes: the body of the file will contain that string
                 or bytes as it is
+            None: an empty directory will be created at the given path
             anything else: the file will contain a yaml structure containing
                 the data
     """
@@ -72,12 +72,15 @@ def bundle_files(
     Args:
         operator_name: Name of the operator
         bundle_version: Version of the bundle
-        annotations: Optional dictionary containing extra annotations for the bundle
-        csv: Optional dictionary containing extra fields for the CSV of the bundle
+        annotations: Optional dictionary containing extra annotations
+            for the bundle
+        csv: Optional dictionary containing extra fields for the CSV
+            of the bundle
         other_files: Dictionary of extra files to inject in the bundle
 
     Returns:
-
+        A dictionary representation of the files for the bundle that can
+        be fed directly to create_files
     """
     bundle_path = f"operators/{operator_name}/{bundle_version}"
     base_annotations = {
