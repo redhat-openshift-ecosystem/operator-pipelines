@@ -15,6 +15,14 @@ spec:
     - name: git_commit_base
     - name: env
 
+    - name: registry
+      description: Must be some variety of quay registry.
+      default: quay.io
+
+    - name: image_namespace
+      default: $(context.pipelineRun.namespace)
+      description: The namespace/organization all built images will be pushed to.
+
     - name: pipeline_image
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
 
@@ -30,6 +38,7 @@ spec:
     - name: results
     - name: ssh-dir
       optional: true
+    - name: registry-credentials
   tasks:
     - name: clone-repository
       taskRef:
@@ -68,6 +77,42 @@ spec:
         - name: repo
           workspace: repository
           subPath: src
+
+    - name: dockerfile-creation
+      runAfter:
+        - detect-changes
+      taskRef:
+        name: dockerfile-creation
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: &addedBundlePath "operators/$(tasks.detect-changes.results.added_operator)/$(tasks.detect-changes.results.added_bundle)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    # Bundle Image (Operator Bundle) is a container image that stores
+    # Kubernetes manifests and metadata associated with an operator.
+    # A bundle is meant to represent a specific version of an operator on cluster.
+    - name: build-bundle
+      runAfter:
+        - dockerfile-creation
+      taskRef:
+        name: buildah
+        kind: Task
+      params:
+        - name: IMAGE
+          value: &bundleImage "$(params.registry)/community-$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
+        - name: CONTEXT
+          value: *addedBundlePath
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+        - name: credentials
+          workspace: registry-credentials
 
   finally:
 

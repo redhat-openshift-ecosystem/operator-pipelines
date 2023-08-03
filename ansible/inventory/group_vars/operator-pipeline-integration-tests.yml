@@ -5,6 +5,7 @@ branch: "{{ oc_namespace }}"
 
 operator_pipeline_pending_namespace: operator-pipeline-stage
 operator_pipeline_release_namespace: redhat-isv-operators-stage
+community_operator_pipeline_pending_namespace: "community-operator-pipeline-stage"
 
 # Settings for importing index imagestreams
 insecure_index_import: true
