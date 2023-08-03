@@ -12,6 +12,7 @@ spec:
     - name: git_pr_title
     - name: git_username
     - name: git_commit
+    - name: git_commit_base
     - name: env
 
     - name: pipeline_image
@@ -39,6 +40,8 @@ spec:
           value: $(params.git_fork_url)
         - name: revision
           value: $(params.git_pr_branch)
+        - name: depth
+          value: 25
         - name: gitInitImage
           value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
       workspaces:
@@ -47,6 +50,25 @@ spec:
           subPath: src
         - name: ssh-directory
           workspace: ssh-dir
+
+    - name: detect-changes
+      taskRef:
+        name: parse-repo-changes
+        kind: Task
+      runAfter:
+        - clone-repository
+      params:
+        - name: pipeline_image
+          value: $(params.pipeline_image)
+        - name: head_commit
+          value: $(params.git_commit)
+        - name: base_commit
+          value: $(params.git_commit_base)
+      workspaces:
+        - name: repo
+          workspace: repository
+          subPath: src
+
   finally:
 
     # Comment with a pipeline summary

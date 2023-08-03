@@ -1,0 +1,80 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: parse-repo-changes
+spec:
+  params:
+    - name: pipeline_image
+    - name: head_commit
+      description: Commit ID of the head of the PR
+    - name: base_commit
+      description: Commit ID of the base of the PR
+  results:
+    - name: extra_files
+      description: >
+          Comma separated list of affected files not belonging to any operator
+    - name: added_operators
+      description: >
+          Comma separated list of new operators added
+    - name: modified_operators
+      description: >
+          Comma separated list of existing operators that have been modified
+    - name: deleted_operators
+      description: >
+          Comma separated list of operators that have been deleted
+    - name: added_bundles
+      description: >
+          Comma separated list of new bundles that have been added.
+          Bundle names are in the format "operator_name/bundle_version".
+    - name: modified_bundles
+      description: >
+          Comma separated list of existing bundles that have been modified
+          Bundle names are in the format "operator_name/bundle_version".
+    - name: deleted_bundles
+      description: >
+          Comma separated list of bundles that have been deleted
+          Bundle names are in the format "operator_name/bundle_version".
+  workspaces:
+    - name: repo
+      description: Local repo clone
+  steps:
+    - name: parse-repo-changes
+      image: "$(params.pipeline_image)"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        cd "$(workspaces.repo.path)"
+        git config --global --add safe.directory "$(workspaces.repo.path)"
+
+        detect-changed-operators \
+          --repo-path="$(workspaces.repo.path)" \
+          --head-commit="$(params.head_commit)" \
+          --base-commit="$(params.base_commit)" \
+          --output-file /tmp/changes.json       \
+          --verbose
+
+        jq -r '.extra_files|join(",")' </tmp/changes.json >$(results.extra_files.path)
+        jq -r '.added_operators|join(",")' </tmp/changes.json >$(results.added_operators.path)
+        jq -r '.modified_operators|join(",")' </tmp/changes.json >$(results.modified_operators.path)
+        jq -r '.deleted_operators|join(",")' </tmp/changes.json >$(results.deleted_operators.path)
+        jq -r '.added_bundles|join(",")' </tmp/changes.json >$(results.added_bundles.path)
+        jq -r '.modified_bundles|join(",")' </tmp/changes.json >$(results.modified_bundles.path)
+        jq -r '.deleted_bundles|join(",")' </tmp/changes.json >$(results.deleted_bundles.path)
+
+        function fail() {
+            echo "ERROR: $*"
+            exit 1
+        }
+
+        jq -e '.extra_files|length==0' </tmp/changes.json \
+            || fail "The PR affects non-operator files"
+        jq -e '.affected_operators|length==1' </tmp/changes.json \
+            || fail "The PR affects more than one operator"
+        jq -e '.modified_bundles|length==0' </tmp/changes.json \
+            || fail "The PR modifies existing bundles"
+        jq -e '.deleted_bundles|length==0' </tmp/changes.json \
+            || fail "The PR deletes existing bundles"
+        jq -e '.added_bundles|length==1' </tmp/changes.json \
+            || fail "The PR affects more than one bundle"

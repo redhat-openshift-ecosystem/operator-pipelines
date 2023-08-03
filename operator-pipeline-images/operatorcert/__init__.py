@@ -8,7 +8,6 @@ from typing import Dict, List, Optional, Tuple
 
 import yaml
 from dateutil.parser import isoparse
-
 from operatorcert import github
 from operatorcert import pyxis
 from operatorcert.utils import find_file, store_results
