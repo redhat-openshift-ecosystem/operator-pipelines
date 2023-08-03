@@ -38,6 +38,8 @@
                 value: "{{ env }}"
               - name: pipeline_image
                 value: "{{ operator_pipeline_image_pull_spec }}"
+              - name: image_namespace
+                value: "{{ community_operator_pipeline_pending_namespace }}"
 
     - name: Create Community hosted pipeline Trigger template
       k8s:
@@ -119,3 +121,6 @@
                           resources:
                             requests:
                               storage: 100Mi
+                    - name: registry-credentials
+                      secret:
+                        secretName: community-hosted-pipeline-registry-auth-secret
