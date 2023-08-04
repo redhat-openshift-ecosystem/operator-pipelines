@@ -40,10 +40,31 @@ spec:
       optional: true
     - name: registry-credentials
   tasks:
+
+    # Set a initial PR label with indication that pipeline has started
+    - name: set-github-started-label
+      taskRef:
+        name: github-labels
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: add_labels
+          value: "$(context.pipeline.name)/started"
+        - name: remove-matching-namespace-labels
+          value: "true"
+
     - name: clone-repository
       taskRef:
         name: git-clone
         kind: Task
+      runAfter:
+        - set-github-started-label
       params:
         - name: url
           value: $(params.git_fork_url)
@@ -115,6 +136,52 @@ spec:
           workspace: registry-credentials
 
   finally:
+
+    - name: set-github-passed-label
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values:
+            - Succeeded
+            - Completed
+      taskRef:
+        name: github-labels
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: add_labels
+          value: "$(context.pipeline.name)/passed"
+        - name: remove-matching-namespace-labels
+          value: "true"
+
+    - name: set-github-failed-label
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values:
+            - Succeeded
+            - Completed
+      taskRef:
+        name: github-labels
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: add_labels
+          value: "$(context.pipeline.name)/failed"
+        - name: remove-matching-namespace-labels
+          value: "true"
 
     # Comment with a pipeline summary
     - name: github-add-summary-comment

@@ -109,10 +109,31 @@ spec:
       description: Storage space for the result of merging certification project and
         pipeline service account registry tokens.
   tasks:
+
+    # Set a initial PR label with indication that pipeline has started
+    - name: set-github-started-label
+      taskRef:
+        name: github-labels
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: add_labels
+          value: "$(context.pipeline.name)/started"
+        - name: remove-matching-namespace-labels
+          value: "true"
+
     # Set a pending GitHub status check first to provide the user with immediate feedback.
     - name: set-github-status-pending
       taskRef:
         name: set-github-status
+      runAfter:
+        - set-github-started-label
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -962,6 +983,52 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: GITHUB_TOKEN_SECRET_KEY
           value: "$(params.github_token_secret_key)"
+
+    - name: set-github-passed-label
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values:
+            - Succeeded
+            - Completed
+      taskRef:
+        name: github-labels
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: add_labels
+          value: "$(context.pipeline.name)/passed"
+        - name: remove-matching-namespace-labels
+          value: "true"
+
+    - name: set-github-failed-label
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values:
+            - Succeeded
+            - Completed
+      taskRef:
+        name: github-labels
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: add_labels
+          value: "$(context.pipeline.name)/failed"
+        - name: remove-matching-namespace-labels
+          value: "true"
 
     # Set the github status to success if the pipeline passed
     - name: set-github-status-success
