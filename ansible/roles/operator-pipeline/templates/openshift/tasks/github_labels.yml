@@ -1,0 +1,78 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: github-labels
+spec:
+  description: >-
+    This Task will edit labels for a Github pull request.
+    The task adds, removes labels an can also remove labels
+    within a given namespace.
+
+  params:
+    - name: pipeline_image
+
+    - name: request_url
+      description: |
+        The GitHub pull request URL where we want to edit labels.
+      type: string
+
+    - name: add_labels
+      description: |
+        The actual comment to add or the filename containing comment to post.
+      type: string
+      default: ""
+
+    - name: remove_labels
+      description: |
+        The actual comment to add or the filename containing comment to post.
+      type: string
+      default: ""
+
+    - name: remove-matching-namespace-labels
+      type: string
+      default: "false"
+
+    - name: github_token_secret_name
+      description: |
+        The name of the Kubernetes Secret that contains the GitHub token.
+      type: string
+      default: github
+
+    - name: github_token_secret_key
+      description: |
+        The key within the Kubernetes Secret that contains the GitHub token.
+      type: string
+      default: token
+
+  steps:
+    - name: post-comment
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+
+      image: "$(params.pipeline_image)"
+      script: |
+        #! /usr/bin/env bash
+        set -xe -o pipefail
+
+        EXTRA_ARGS=""
+        if [[ ! -z "$(params.add_labels)" ]]; then
+          EXTRA_ARGS+=" --add-label $(params.add_labels)"
+        fi
+
+        if [[ ! -z "$(params.remove_labels)" ]]; then
+          EXTRA_ARGS+=" --remove-label $(params.remove_labels)"
+        fi
+
+        if [[ "$(params.remove-matching-namespace-labels)" == "true" ]]; then
+          EXTRA_ARGS+=" --remove-matching-namespace-labels"
+        fi
+
+        echo "Editing GitHub labels to PR $(params.request_url)"
+
+        github-labels \
+          --pull-request-url $(params.request_url) $EXTRA_ARGS
