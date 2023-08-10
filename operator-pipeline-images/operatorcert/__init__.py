@@ -89,15 +89,68 @@ def get_supported_indices(
     # version of an operator to support.
     params = {
         "filter": filter_,
-        "ocp_versions_range": ocp_versions_range,
         "page_size": 500,
         "sort_by": "ocp_version[desc]",
         "include": "data.ocp_version,data.path,data.end_of_life",
     }
+    if ocp_versions_range:
+        params["ocp_versions_range"] = ocp_versions_range
 
     rsp = pyxis.get(url, params=params, auth_required=False)
     rsp.raise_for_status()
     return rsp.json()["data"]
+
+
+def filter_out_eol_versions(indices: List[Dict]) -> List[Dict]:
+    """
+    Filters out indices that have reached their end of life.
+
+    Args:
+        indices (List[Dict]): List of operator indices
+
+    Returns:
+        List[Dict]: List of operator indices that have not reached their end of life
+    """
+    supported_indices = []
+    now = datetime.now(timezone.utc)
+    for index in indices:
+        eol = index.get("end_of_life")
+        if eol:
+            eol_datetime = isoparse(eol).astimezone(timezone.utc)
+            if eol_datetime <= now:
+                LOGGER.warning(
+                    "OpenShift %s has reached its end of life", index["ocp_version"]
+                )
+                continue
+        supported_indices.append(index)
+
+    return supported_indices
+
+
+def get_skipped_versions(
+    all_indices: List[Dict], supported_indices: List[Dict]
+) -> List[Dict]:
+    """
+    Compares the list of all indices to the list of supported indices and
+    returns a diff with a list of not supported indices.
+
+    Args:
+        all_indices (List[Dict]): List of all indices
+        supported_indices (List[Dict]): List of supported indices
+
+    Returns:
+        List[Dict]: List of not supported indices
+    """
+    supported_versions = [index["ocp_version"] for index in supported_indices]
+    all_versions = [index["ocp_version"] for index in all_indices]
+    skipped_versions = list(set(all_versions) - set(supported_versions))
+
+    skipped_indices = []
+    for version in all_indices:
+        if version["ocp_version"] in skipped_versions:
+            skipped_indices.append(version)
+
+    return skipped_indices
 
 
 def ocp_version_info(
@@ -118,7 +171,8 @@ def ocp_version_info(
     bundle_annotations = get_bundle_annotations(bundle_path)
 
     ocp_versions_range = bundle_annotations.get(OCP_VERSIONS_ANNOTATION)
-    if not ocp_versions_range:
+    if not ocp_versions_range and organization != "community-operators":
+        # Community operators are not required to have this annotation
         raise ValueError(f"'{OCP_VERSIONS_ANNOTATION}' annotation not defined")
 
     package = bundle_annotations.get(PACKAGE_ANNOTATION)
@@ -126,27 +180,24 @@ def ocp_version_info(
         raise ValueError(f"'{PACKAGE_ANNOTATION}' annotation not defined")
 
     indices = get_supported_indices(pyxis_url, ocp_versions_range, organization)
-
-    supported_indices = []
-    now = datetime.now(timezone.utc)
-    for index in indices:
-        eol = index.get("end_of_life")
-        if eol:
-            eol_datetime = isoparse(eol).astimezone(timezone.utc)
-            if eol_datetime <= now:
-                LOGGER.warning(
-                    "OpenShift %s has reached its end of life", index["ocp_version"]
-                )
-                continue
-        supported_indices.append(index)
+    supported_indices = filter_out_eol_versions(indices)
 
     if not supported_indices:
         raise ValueError("No supported indices found")
+
+    # Now get all available indices without using version range
+    all_indices = supported_indices
+    if ocp_versions_range:
+        # We need to get all indices to determine which ones are not supported
+        all_indices = get_supported_indices(pyxis_url, None, organization)
+        all_indices = filter_out_eol_versions(all_indices)
 
     return {
         "versions_annotation": ocp_versions_range,
         "indices": supported_indices,
         "max_version_index": supported_indices[0],
+        "all_indices": all_indices,
+        "not_supported_indices": get_skipped_versions(all_indices, supported_indices),
     }
 
 

@@ -87,6 +87,21 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: get-supported-versions
+      runAfter:
+        - detect-changes
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: &addedBundlePath "operators/$(tasks.detect-changes.results.added_operator)/$(tasks.detect-changes.results.added_bundle)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
     - name: acquire-lease
       runAfter:

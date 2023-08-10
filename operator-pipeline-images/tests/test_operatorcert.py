@@ -91,20 +91,31 @@ def test_ocp_version_info(
     organization = "certified-operators"
     bundle_root = bundle["root"]
 
-    # Happy path
-    mock_indices.return_value = [
+    supported_indices = [
         {"ocp_version": "4.7", "path": "quay.io/foo:4.7"},
         {"ocp_version": "4.6", "path": "quay.io/foo:4.6", "end_of_life": timestamp},
     ]
+
+    all_indices = [
+        {"ocp_version": "4.7", "path": "quay.io/foo:4.7"},
+        {"ocp_version": "4.8", "path": "quay.io/foo:4.8"},
+    ]
+
+    # Happy path
+    mock_indices.side_effect = (supported_indices, all_indices)
     info = operatorcert.ocp_version_info(bundle_root, "", organization)
+
     assert info == {
         "versions_annotation": "4.6-4.8",
-        "indices": mock_indices.return_value[:1],
-        "max_version_index": mock_indices.return_value[0],
+        "indices": supported_indices[:1],
+        "max_version_index": supported_indices[0],
+        "all_indices": all_indices,
+        "not_supported_indices": all_indices[1:],
     }
 
     # No supported indices found
-    mock_indices.return_value = []
+    mock_indices.reset_mock()
+    mock_indices.side_effect = [[], []]
     with pytest.raises(ValueError):
         operatorcert.ocp_version_info(bundle_root, "", organization)
 

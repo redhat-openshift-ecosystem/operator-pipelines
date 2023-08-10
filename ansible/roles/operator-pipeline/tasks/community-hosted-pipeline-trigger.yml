@@ -66,6 +66,7 @@
               - name: git_commit_base
               - name: env
               - name: pipeline_image
+              - name: image_namespace
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
@@ -104,6 +105,8 @@
                       value: $(tt.params.env)
                     - name: pipeline_image
                       value: $(tt.params.pipeline_image)
+                    - name: image_namespace
+                      value: $(tt.params.image_namespace)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:

@@ -125,7 +125,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/community-$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
         - name: CONTEXT
           value: *addedBundlePath
       workspaces:
@@ -134,6 +134,21 @@ spec:
           subPath: src
         - name: credentials
           workspace: registry-credentials
+
+    - name: get-supported-versions
+      runAfter:
+        - build-bundle
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: *addedBundlePath
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
 
   finally:
 
