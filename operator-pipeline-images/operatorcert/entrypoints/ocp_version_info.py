@@ -17,7 +17,7 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser.add_argument("bundle_path", help="Location of operator bundle")
     parser.add_argument(
         "organization",
-        choices=("certified-operators", "redhat-marketplace"),
+        choices=("certified-operators", "redhat-marketplace", "community-operators"),
         help="Location of operator bundle",
     )
     parser.add_argument(

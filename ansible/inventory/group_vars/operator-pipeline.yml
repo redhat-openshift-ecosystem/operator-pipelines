@@ -56,7 +56,7 @@ community_signing_pipeline_route_name: "{{ community_signing_pipeline_name }}"
 community_signing_pipeline_url: "{{ community_signing_pipeline_name }}-tekton-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
 
 community_operator_hosted_pipeline_registry_auth_path: ../../vaults/{{ env }}/registry-auth/community-hosted-pipeline.json
-community_operator_pipeline_pending_namespace: "community-hosted-pipeline-{{ env }}"
+community_operator_pipeline_pending_namespace: "community-operator-pipeline-{{ env }}"
 
 nginx_basic_user_file_local_path: ../../vaults/common/htpasswd-nonprod
 nginx_proxy_service_url: "https://{{ community_signing_pipeline_url }}"

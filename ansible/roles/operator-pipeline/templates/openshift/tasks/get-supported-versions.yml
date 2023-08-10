@@ -11,14 +11,25 @@ spec:
   results:
     - name: max_supported_ocp_version
       description: Maximum version of OpenShift supported by this Operator
+
     - name: max_supported_index
       description: Pull spec for the index corresponding to the max OCP version
+
     - name: indices
       description: All known supported index image pull specs (space separated)
+
     - name: indices_ocp_versions
       description: All known supported OCP versions (space separated)
+
+    - name: skipped_ocp_versions
+      description: All known ocp index image pull specs not supported by the operator (space separated)
+
+    - name: skipped_ocp_indices
+      description: All known ocp version not supported by the operator (space separated)
+
     - name: max_version_indices
       description: Latest known supported OCP indices
+
     - name: ocp_version
       description: OCP version annotation of the bundle
   workspaces:
@@ -58,6 +69,16 @@ spec:
 
         echo $VERSION_INFO \
           | jq -r '.indices | map(.ocp_version) | join(" ")' \
+          | tr -d '\n\r' \
+          | tee $(results.indices_ocp_versions.path)
+
+        echo $VERSION_INFO \
+          | jq -r '.not_supported_indices | map(.path) | join(" ")' \
+          | tr -d '\n\r' \
+          | tee $(results.skipped_ocp_indices.path)
+
+        echo $VERSION_INFO \
+          | jq -r '.not_supported_indices | map(.ocp_version) | join(" ")' \
           | tr -d '\n\r' \
           | tee $(results.indices_ocp_versions.path)
 

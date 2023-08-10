@@ -82,29 +82,13 @@
       with_items:
         - ../templates/openshift/pipelines/operator-ci-pipeline.yml
 
-    - name: Deploy pipeline (upstream)
-      tags:
-        - tekton-pipeline
-        - tekton-pipeline-upstream
-      k8s:
-        state: present
-        apply: true
-        namespace: "{{ oc_namespace }}"
-        definition: "{{ lookup('template', '{{ item }}') }}"
-      with_items:
-        - ../templates/upstream/pipelines/index-audit.yml
-      when:
-        - run_upstream is defined
-        - run_upstream | bool
+    - import_tasks: tasks/operator-pipeline-event-listener.yml
+    - import_tasks: tasks/community-pipeline-event-listener.yml
+    - import_tasks: tasks/operator-hosted-pipeline-trigger.yml
+    - import_tasks: tasks/operator-release-pipeline-trigger.yml
+    - import_tasks: tasks/community-hosted-pipeline-trigger.yml
+    - import_tasks: tasks/community-release-pipeline-trigger.yml
 
+    - import_tasks: tasks/community-signing.yml
 
-    - include_tasks: tasks/operator-pipeline-event-listener.yml
-    - include_tasks: tasks/community-pipeline-event-listener.yml
-    - include_tasks: tasks/operator-hosted-pipeline-trigger.yml
-    - include_tasks: tasks/operator-release-pipeline-trigger.yml
-    - include_tasks: tasks/community-hosted-pipeline-trigger.yml
-    - include_tasks: tasks/community-release-pipeline-trigger.yml
-
-    - include_tasks: tasks/community-signing.yml
-
-- include_tasks: tasks/operator-pipeline-webhooks.yml
+- import_tasks: tasks/operator-pipeline-webhooks.yml
