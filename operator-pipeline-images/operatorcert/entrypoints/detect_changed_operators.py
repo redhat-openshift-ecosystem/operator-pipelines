@@ -5,7 +5,7 @@ import pathlib
 import tempfile
 from typing import Tuple, Optional, Set, Dict, List
 from git import Repo as GitRepo
-from operatorcert.operator_repo import Repo as OperatorRepo
+from operator_repo import Repo as OperatorRepo
 
 from operatorcert.logger import setup_logger
 
