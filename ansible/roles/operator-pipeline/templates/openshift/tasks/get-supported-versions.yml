@@ -80,7 +80,7 @@ spec:
         echo $VERSION_INFO \
           | jq -r '.not_supported_indices | map(.ocp_version) | join(" ")' \
           | tr -d '\n\r' \
-          | tee $(results.indices_ocp_versions.path)
+          | tee $(results.skipped_ocp_versions.path)
 
         echo $VERSION_INFO \
           | jq -r '.max_version_index.path' \
