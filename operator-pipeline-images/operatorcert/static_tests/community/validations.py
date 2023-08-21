@@ -1,3 +1,7 @@
+"""
+    Utility functions to support the check_required_fields bundle check
+"""
+
 import binascii
 import datetime
 from base64 import b64decode
@@ -35,16 +39,22 @@ CATEGORIES = [
 
 
 def validate_capabilities(value: Any) -> bool:
+    """Return True if the value is a valid capability level"""
     if not isinstance(value, str):
         return False
     return value in CAPABILITIES
 
 
 def validate_categories(value: Any) -> bool:
+    """
+    Return True if the value is a valid comma separated list of
+    operator categories
+    """
     return all(x.strip() in CATEGORIES for x in str(value).split(","))
 
 
 def validate_timestamp(value: Any) -> bool:
+    """Return True if the value is a valid timestamp"""
     if isinstance(value, datetime.datetime):
         # the yaml parser seems to be smart enough to parse timestamps
         # on the fly
@@ -57,6 +67,7 @@ def validate_timestamp(value: Any) -> bool:
 
 
 def validate_semver(value: Any) -> bool:
+    """Return True if the value is semver compliant"""
     try:
         _ = Version.parse(value)
         return True
@@ -65,6 +76,14 @@ def validate_semver(value: Any) -> bool:
 
 
 def validate_list_of_dicts(value: Any, fields: dict[str, Type]) -> bool:
+    """
+    Return True if the value is a list of dicts and all entries in the
+    list respect the given schema.
+    The schema is a dict mapping the field name to its expected type.
+    Extra fields are allowed.
+    The length of the list is *not* checked, therefore an empty list
+    will always return True.
+    """
     # must be a list
     if not isinstance(value, list):
         return False
@@ -83,6 +102,7 @@ def validate_list_of_dicts(value: Any, fields: dict[str, Type]) -> bool:
 
 
 def validate_icon(value: Any) -> bool:
+    """Return True if the value is a valid list of icons"""
     # must be a list of dicts with "base64data" and "mediatype"
     if not validate_list_of_dicts(value, {"base64data": str, "mediatype": str}):
         return False
@@ -108,6 +128,7 @@ def validate_icon(value: Any) -> bool:
 
 
 def validate_maintainers(value: Any) -> bool:
+    """Return True if the value is a list of maintainers"""
     # must be a list of dicts with "name" and "email"
     if not validate_list_of_dicts(value, {"name": str, "email": str}):
         return False
@@ -115,6 +136,7 @@ def validate_maintainers(value: Any) -> bool:
 
 
 def validate_links(value: Any) -> bool:
+    """Return True if the value is a list of links"""
     # must be a list of dicts with "name" and "links"
     if not validate_list_of_dicts(value, {"name": str, "url": str}):
         return False
@@ -122,6 +144,7 @@ def validate_links(value: Any) -> bool:
 
 
 def validate_list_of_strings(value: Any) -> bool:
+    """Return True if the value is a list of strings"""
     if not isinstance(value, list):
         return False
     if not all(isinstance(x, str) for x in value):

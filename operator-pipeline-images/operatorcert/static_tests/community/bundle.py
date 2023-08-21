@@ -1,3 +1,11 @@
+"""
+    Bundle checks for the community operator static test suite
+
+    A bundle check is a function with a name starting with "check_"
+    and taking a Bundle argument and yielding OperatorCheck objects
+    (either Fail or Warn) to describe the issues found in the given Bundle.
+"""
+
 import json
 import re
 import subprocess

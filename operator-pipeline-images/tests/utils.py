@@ -1,3 +1,7 @@
+"""
+    Miscellaneous non-fixture utility functions for tests
+"""
+
 from pathlib import Path
 from typing import Optional, Union
 
