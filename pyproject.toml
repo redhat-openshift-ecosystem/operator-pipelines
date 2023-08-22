@@ -37,6 +37,7 @@ request-signature = "operatorcert.entrypoints.request_signature:main"
 reserve-operator-name = "operatorcert.entrypoints.reserve_operator_name:main"
 set-cert-project-repository = "operatorcert.entrypoints.set_cert_project_repository:main"
 set-github-status = "operatorcert.entrypoints.set_github_status:main"
+static-tests = "operatorcert.entrypoints.static_tests:main"
 update-cert-project-status = "operatorcert.entrypoints.update_cert_project_status:main"
 upload-artifacts = "operatorcert.entrypoints.upload_artifacts:main"
 upload-signature = "operatorcert.entrypoints.upload_signature:main"
@@ -60,6 +61,7 @@ operatorcert = [
     "PyGithub>=1.59.0",
     "GitPython>=3.1.32",
     "semver>=3.0.1",
+    "operator-repo@git+https://github.com/mporrato/operator-repo.git@v0.1.0",
 ]
 
 [tool.pdm.dev-dependencies]

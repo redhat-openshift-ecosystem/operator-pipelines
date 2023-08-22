@@ -6,7 +6,7 @@ groups = ["default", "operatorcert", "operatorcert-dev", "tox"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:913cd7215d7f6cebd6dbd458bc26f155ccd103e6044493d1c5a1583ef666610f"
+content_hash = "sha256:01440a9209690091e4d5b68c010c75c4228b84ae5e9fc9a272f9cf456c4bcdd9"
 
 [[package]]
 name = "argcomplete"
@@ -465,6 +465,19 @@ summary = "Type system extensions for programs checked with the mypy type checke
 files = [
     {file = "mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d"},
     {file = "mypy_extensions-1.0.0.tar.gz", hash = "sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782"},
+]
+
+[[package]]
+name = "operator-repo"
+version = "0.1.0"
+requires_python = ">=3.9"
+git = "https://github.com/mporrato/operator-repo.git"
+ref = "v0.1.0"
+revision = "cca14ff23b7360c5bf8992f93a67a1499ea3a325"
+summary = "Library and utilities to handle repositories of kubernetes operators"
+dependencies = [
+    "pyyaml>=6.0.1",
+    "semver>=3.0.1",
 ]
 
 [[package]]
