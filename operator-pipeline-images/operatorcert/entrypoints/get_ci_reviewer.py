@@ -53,19 +53,20 @@ def parse_ci_reviewer(
 
     path_to_operator = pathlib.Path(repo_path) / "operators" / operator_name / "ci.yaml"
     load_ci_yaml = load_yaml(path_to_operator)
+    yaml_reviewers = load_ci_yaml.get("reviewers")
 
-    all_reviewers = [
+    # assigning empty list in case there are no reviewers in ci.yaml
+    all_reviewers = [] if yaml_reviewers is None else [
         reviewer
-        for reviewer in load_ci_yaml.get("reviewers", [])
+        for reviewer in yaml_reviewers
         if reviewer != git_username
     ]
     LOGGER.debug(
         f"List of all reviewers from ci.yaml file except the PR author: {all_reviewers}"
     )
 
-    is_reviewer = (
-        "True" if git_username in load_ci_yaml.get("reviewers", []) else "False"
-    )
+    # assigning empty list in case there are no reviewers in ci.yaml
+    is_reviewer = "false" if yaml_reviewers is None or git_username not in yaml_reviewers else "true"
     LOGGER.debug(f"'{git_username}' is listed as reviewer: {is_reviewer}")
 
     return {"all_reviewers": all_reviewers, "is_reviewer": is_reviewer}
