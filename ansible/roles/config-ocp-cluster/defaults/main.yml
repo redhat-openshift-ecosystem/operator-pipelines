@@ -1,2 +1,3 @@
-k8s_validate_certs: yes
+---
+k8s_validate_certs: true
 pipelinerun_listener_namespace: pipelinerun-listener

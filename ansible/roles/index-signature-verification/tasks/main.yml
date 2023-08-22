@@ -1,7 +1,8 @@
+---
 - name: Create Namespace
   k8s:
     state: present
-    apply: yes
+    apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     definition:
       kind: Namespace
@@ -12,7 +13,7 @@
 - name: Create ConfigMaps
   k8s:
     state: present
-    apply: yes
+    apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
     definition: "{{ lookup('file', '{{ item }}') }}"
@@ -22,7 +23,7 @@
 - name: Create Tasks
   k8s:
     state: present
-    apply: yes
+    apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
     definition: "{{ lookup('file', '{{ item }}') }}"
@@ -32,7 +33,7 @@
 - name: Create Pipelines
   k8s:
     state: present
-    apply: yes
+    apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
     definition: "{{ lookup('file', '{{ item }}') }}"
@@ -42,7 +43,7 @@
 - name: Create EventListener
   k8s:
     state: present
-    apply: yes
+    apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
     definition:
@@ -61,7 +62,7 @@
 - name: Create TriggerBinding
   k8s:
     state: present
-    apply: yes
+    apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
     definition:
@@ -73,7 +74,7 @@
 - name: Create TriggerTemplate
   k8s:
     state: present
-    apply: yes
+    apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
     definition:
@@ -97,10 +98,10 @@
                     secretName: registry-auth-secret
 
 - name: Create registry auth Secret
-  no_log: yes
+  no_log: true
   k8s:
     state: present
-    force: yes
+    force: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
     definition:
@@ -115,7 +116,7 @@
 - name: Create CronJob
   k8s:
     state: present
-    apply: yes
+    apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
     definition:

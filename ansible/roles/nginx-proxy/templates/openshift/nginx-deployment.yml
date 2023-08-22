@@ -40,13 +40,13 @@ spec:
           args:
             - 'nginx -g "daemon off;error_log /dev/stdout debug;" -c /etc/nginx/nginx-config/nginx.conf'
           ports:
-            - containerPort: {{ nginx_port | int }} # yamllint disable-line rule:braces
+            - containerPort: {{ nginx_port | int }}  # yamllint disable-line rule:braces
               protocol: TCP
           livenessProbe:
             failureThreshold: 3
             httpGet:
               path: /_proxy/ping
-              port: {{ nginx_port | int }} # yamllint disable-line rule:braces
+              port: {{ nginx_port | int }}  # yamllint disable-line rule:braces
             initialDelaySeconds: 60
             periodSeconds: 30
             successThreshold: 1
@@ -54,7 +54,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /_proxy/ping
-              port: {{ nginx_port | int }} # yamllint disable-line rule:braces
+              port: {{ nginx_port | int }}  # yamllint disable-line rule:braces
             initialDelaySeconds: 15
             timeoutSeconds: 20
           volumeMounts:

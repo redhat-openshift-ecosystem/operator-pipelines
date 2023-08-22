@@ -7,7 +7,7 @@
     - community-signing
   k8s:
     state: present
-    apply: yes
+    apply: true
     namespace: "{{ oc_namespace }}"
     definition: "{{ lookup('template', '{{ item }}') }}"
   with_items:

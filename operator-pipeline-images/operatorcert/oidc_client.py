@@ -99,6 +99,7 @@ class OIDCClientCredentialsClient:
                 "client_id": self._auth.client_id,
                 "client_secret": self._auth.client_secret,
             },
+            timeout=20,
         )
         if not resp.ok:
             LOGGER.error(

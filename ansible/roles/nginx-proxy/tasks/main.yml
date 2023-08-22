@@ -5,7 +5,7 @@
 - name: Create nginx config
   k8s:
     state: present
-    apply: yes
+    apply: true
     namespace: "{{ oc_namespace }}"
     definition: "{{ lookup('template', '{{ item }}') }}"
   with_items:
@@ -14,7 +14,7 @@
 - name: Deploy nginx
   k8s:
     state: present
-    apply: yes
+    apply: true
     namespace: "{{ oc_namespace }}"
     definition: "{{ lookup('template', '{{ item }}') }}"
   with_items:
@@ -24,7 +24,7 @@
 - name: Create service
   k8s:
     state: present
-    apply: yes
+    apply: true
     namespace: "{{ oc_namespace }}"
     definition: "{{ lookup('template', '{{ item }}') }}"
   with_items:
@@ -33,7 +33,7 @@
 - name: Create route
   k8s:
     state: present
-    apply: yes
+    apply: true
     namespace: "{{ oc_namespace }}"
     definition: "{{ lookup('template', '{{ item }}') }}"
   with_items:

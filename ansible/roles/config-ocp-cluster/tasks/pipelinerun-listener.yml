@@ -1,3 +1,4 @@
+---
 - name: Create PipelineRun listener resources
   tags:
     - pipelinerun-listener
@@ -5,7 +6,7 @@
     - name: Create Namespace
       k8s:
         state: present
-        apply: yes
+        apply: true
         validate_certs: "{{ k8s_validate_certs }}"
         definition:
           kind: Namespace
@@ -20,7 +21,7 @@
     - name: Create Tasks
       k8s:
         state: present
-        apply: yes
+        apply: true
         validate_certs: "{{ k8s_validate_certs }}"
         namespace: "{{ pipelinerun_listener_namespace }}"
         definition: "{{ lookup('file', '{{ item }}') }}"
@@ -28,10 +29,10 @@
         - ../files/tasks/*
 
     - name: Create Google Chat webhook Secret
-      no_log: yes
+      no_log: true
       k8s:
         state: present
-        force: yes
+        force: true
         validate_certs: "{{ k8s_validate_certs }}"
         namespace: "{{ pipelinerun_listener_namespace }}"
         definition:
@@ -46,7 +47,7 @@
     - name: Create TriggerBinding
       k8s:
         state: present
-        apply: yes
+        apply: true
         namespace: "{{ pipelinerun_listener_namespace }}"
         validate_certs: "{{ k8s_validate_certs }}"
         definition:
@@ -66,7 +67,7 @@
     - name: Create TriggerTemplate
       k8s:
         state: present
-        apply: yes
+        apply: true
         namespace: "{{ pipelinerun_listener_namespace }}"
         validate_certs: "{{ k8s_validate_certs }}"
         definition:
@@ -102,7 +103,7 @@
     - name: Create EventListener
       k8s:
         state: present
-        apply: yes
+        apply: true
         namespace: "{{ pipelinerun_listener_namespace }}"
         validate_certs: "{{ k8s_validate_certs }}"
         definition:
@@ -135,7 +136,7 @@
     - name: Create ClusterRoleBinding
       k8s:
         state: present
-        apply: yes
+        apply: true
         namespace: "{{ pipelinerun_listener_namespace }}"
         validate_certs: "{{ k8s_validate_certs }}"
         definition:
