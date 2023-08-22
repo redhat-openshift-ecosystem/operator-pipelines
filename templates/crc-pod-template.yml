@@ -1,3 +1,4 @@
+---
 # This pod template is ONLY required when running with CodeReady Containers.
 # The pre-provisioned PersistentVolumes use hostPath which will only grant
 # read/write access to the root user. The only other workaround is to chown

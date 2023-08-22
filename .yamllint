@@ -5,3 +5,10 @@ rules:
   line-length:
     level: warning
     max: 180
+  document-start:
+    level: error
+
+ignore:
+  - .tox/
+  - ansible/vaults/
+  - .venv

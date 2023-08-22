@@ -73,6 +73,8 @@ operatorcert-dev = [
     "yamllint>=1.32.0",
     "requests-mock>=1.11.0",
     "python-dateutil>=2.8.2",
+    "bandit>=1.7.5",
+    "safety>=2.3.4",
 ]
 tox = ["tox>=4.6.0", "tox-pdm>=0.6.1"]
 

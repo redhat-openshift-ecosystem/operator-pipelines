@@ -4,7 +4,7 @@
 - name: Import certified-operator-index imagestream
   tags:
     - import-index-images
-  no_log: yes
+  no_log: true
   uri:
     url: "{{ ocp_host }}/apis/image.openshift.io/v1/namespaces/{{ oc_namespace }}/imagestreamimports"
     method: POST
