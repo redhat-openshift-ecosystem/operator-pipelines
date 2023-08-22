@@ -8,6 +8,13 @@ spec:
     - name: pipeline_image
     - name: git_username
     - name: operator_name
+    - name: pr_url
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
   workspaces:
     - name: repo
       description: Cloned repository
@@ -24,7 +31,7 @@ spec:
       workingDir: $(workspaces.repo.path)
       script: |
         #! /usr/bin/env bash
-        set -xe
+        set -e
         
         get-ci-reviewer \
           --repo-path="$(workspaces.repo.path)" \
@@ -33,5 +40,40 @@ spec:
           --output-file /tmp/output.json \
           --verbose
         
-        cat /tmp/output.json
+        list_of_reviewers="$(jq -r '.all_reviewers' /tmp/output.json)"
+        bool_reviewer="$(jq -r '.is_reviewer' /tmp/output.json)"
+        
+        echo -n "$list_of_reviewers" | tee $(results.list_reviewers.path)
+        echo -n "$bool_reviewer" | tee $(results.author_is_reviewer.path)
 
+    - name: approve-pull-request
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      image: "$(params.pipeline_image)"
+      script: |
+        #! /usr/bin/env bash
+        set -e
+        
+        PR_NUMBER=$(basename "$(params.pr_url)")
+        REPO_NAME=$(echo "$(params.pr_url)" | sed -e "s|^https://github.com/||" -e "s|/pull/.*$||")
+
+        API_URL=https://api.github.com/repos/${REPO_NAME}/pulls/${PR_NUMBER}/reviews
+        
+        echo $API_URL
+        
+        AUTHOR_IS_REVIEWER=$(cat $(results.author_is_reviewer.path))
+        
+        if [ "$AUTHOR_IS_REVIEWER" = "True" ]; then
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: bearer ${GITHUB_TOKEN}" \
+            -d '{"body": "Pull request has been approved", "event": "APPROVE"}' \
+            $API_URL
+
+          echo "This pull request was automatically approved due to PR author is in the reviewers list"
+          exit 0
+        fi

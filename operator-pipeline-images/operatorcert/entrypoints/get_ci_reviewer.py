@@ -1,6 +1,6 @@
 import argparse
 import json
-from typing import Any, List, Tuple
+from typing import Any, Dict
 
 from operatorcert.logger import setup_logger
 from operatorcert.operator_repo import load_yaml
@@ -37,7 +37,7 @@ def setup_argparser() -> Any:
 
 def parse_ci_reviewer(
     repo_path: str, git_username: str, operator_name: str
-) -> Tuple[List, str]:
+) -> Dict[str, str]:
     """
     Given operator repo path, pull request GitHub author and operator name, returns boolean if
     PR author is also listed as a reviewer in the ci.yaml file, list of the reviewers in the ci.yaml file.
@@ -68,7 +68,7 @@ def parse_ci_reviewer(
     )
     LOGGER.debug(f"'{git_username}' is listed as reviewer: {is_reviewer}")
 
-    return all_reviewers, is_reviewer
+    return {"all_reviewers": all_reviewers, "is_reviewer": is_reviewer}
 
 
 def main():
