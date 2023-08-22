@@ -33,6 +33,22 @@ spec:
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: github_bot_token
+
+    - name: kerberos_keytab_secret_name
+      description: >-
+        The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+      default: kerberos-keytab
+
+    - name: kerberos_keytab_secret_key
+      description: >-
+        The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+      default: krb5.keytab
+
+    - name: quay_oauth_secret_name
+      default: community-quay-oauth-token
+
+    - name: quay_oauth_secret_key
+      default: token
   workspaces:
     - name: repository
     - name: results
@@ -146,7 +162,7 @@ spec:
         kind: Task
       params:
         - name: IMAGE
-          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
+          value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)-$(params.git_commit)"
         - name: CONTEXT
           value: *addedBundlePath
       workspaces:
@@ -156,9 +172,26 @@ spec:
         - name: credentials
           workspace: registry-credentials
 
-    - name: get-supported-versions
+    - name: make-bundle-repo-public
       runAfter:
         - build-bundle
+      taskRef:
+        name: set-quay-repo-visibility
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: repository
+          value: "$(params.image_namespace)/$(tasks.detect-changes.results.added_operator)"
+        - name: visibility
+          value: public
+        - name: oauth_secret_name
+          value: "$(params.quay_oauth_secret_name)"
+        - name: oauth_secret_key
+          value: "$(params.quay_oauth_secret_key)"
+
+    - name: get-supported-versions
+      runAfter:
+        - make-bundle-repo-public
       taskRef:
         name: get-supported-versions
       params:
@@ -170,6 +203,35 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+
+    - name: add-bundle-to-index
+      runAfter:
+        - get-supported-versions
+      taskRef:
+        name: add-bundle-to-index
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: index_images
+          value: "$(tasks.get-supported-versions.results.indices)"
+        - name: bundle_pullspec
+          value: *bundleImage
+        - name: environment
+          value: "$(params.env)"
+        - name: kerberos_keytab_secret_name
+          value: "$(params.kerberos_keytab_secret_name)"
+        - name: kerberos_keytab_secret_key
+          value: "$(params.kerberos_keytab_secret_key)"
+        - name: index-image-destination
+          value: "$(params.registry)/$(params.image_namespace)/catalog"
+        # Adding a commit hash as a suffix to the image tag
+        - name: index-image-destination-tag-suffix
+          value: "-$(params.git_commit)"
+      workspaces:
+        - name: credentials
+          workspace: registry-credentials
+        - name: results
+          workspace: results
 
   finally:
 

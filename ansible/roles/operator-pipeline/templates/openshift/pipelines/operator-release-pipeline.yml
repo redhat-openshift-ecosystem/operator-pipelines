@@ -480,6 +480,9 @@ spec:
           value: "$(params.kerberos_keytab_secret_name)"
         - name: kerberos_keytab_secret_key
           value: "$(params.kerberos_keytab_secret_key)"
+      workspaces:
+        - name: results
+          workspace: results
 
     # use manifest list digests from IIB output and get the manifest digests from registry
     - name: get-manifest-digests
