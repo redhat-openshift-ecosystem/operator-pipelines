@@ -16,8 +16,8 @@
   when: namespace_state == 'present'
   block:
 
-    - include_tasks: tasks/pipeline-secrets.yml
-    - include_tasks: tasks/operator-pipeline-import-index-images.yml
+    - import_tasks: tasks/pipeline-secrets.yml
+    - import_tasks: tasks/operator-pipeline-import-index-images.yml
 
     - name: Add custom pipeline SCC and link it with pipeline SA
       tags:
@@ -42,20 +42,6 @@
       with_fileglob:
         - ../templates/openshift/tasks/*
 
-    - name: Deploy pipeline tasks (upstream)
-      tags:
-        - tekton-task
-        - tekton-task-upstream
-      k8s:
-        state: present
-        apply: true
-        namespace: "{{ oc_namespace }}"
-        definition: "{{ lookup('template', '{{ item }}') }}"
-      with_fileglob:
-        - ../templates/upstream/tasks/*
-      when:
-        - run_upstream is defined
-        - run_upstream | bool
 
     - name: Deploy hosted and release pipelines
       tags:

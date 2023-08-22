@@ -1,9 +1,13 @@
+"""
+IIB module for building a index images for a bundle
+"""
 import argparse
 import logging
 import os
+import subprocess
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from operatorcert import iib, utils
 from operatorcert.logger import setup_logger
@@ -26,18 +30,31 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
         "--indices",
         required=True,
         nargs="+",
-        help="List of indices the bundle supports, e.g --indices registry/index:v4.9 registry/index:v4.8",
+        help="List of indices the bundle supports, e.g --indices registry/index:v4.9 "
+        "registry/index:v4.8",
     )
     parser.add_argument(
         "--image-output",
         default="index-image-paths.txt",
-        help="File name to output comma-separated list of temporary location of the unpublished index images built by IIB.",
+        help="File name to output comma-separated list of temporary location of the "
+        "unpublished index images built by IIB.",
     )
     parser.add_argument(
         "--iib-url",
         default="https://iib.engineering.redhat.com",
         help="Base URL for IIB API",
     )
+    parser.add_argument(
+        "--index-image-destination",
+        help="A location of a destination registry to copy the index images to.",
+    )
+    parser.add_argument(
+        "--index-image-destination-tag-suffix",
+        default="",
+        help="A tag suffix to append to the index image when copying to the destination.",
+    )
+    parser.add_argument("--authfile", help="")
+
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     return parser
@@ -65,11 +82,11 @@ def wait_for_results(iib_url: str, batch_id: int, timeout=60 * 60, delay=20) -> 
         builds = response["items"]
 
         # all builds have completed
-        if all([build.get("state") == "complete" for build in builds]):
+        if all(build.get("state") == "complete" for build in builds):
             LOGGER.info(f"IIB batch build completed successfully: {batch_id}")
             return response
         # any have failed
-        elif any([build.get("state") == "failed" for build in builds]):
+        if any(build.get("state") == "failed" for build in builds):
             for build in builds:
                 if build.get("state") == "failed":
                     LOGGER.error(f"IIB build failed: {build['id']}")
@@ -96,7 +113,7 @@ def add_bundle_to_index(
     iib_url: str,
     indices: List[str],
     image_output: str,
-) -> None:
+) -> Any:
     """
     Add a bundle to index image using IIB
 
@@ -105,6 +122,8 @@ def add_bundle_to_index(
         iib_url: url of IIB instance
         indices: list of original indices
         image_output: file name to output the location of the newly built images to
+    Returns:
+        Any: Build response
     Raises:
         Exception: Exception is raised when IIB build fails
     """
@@ -125,11 +144,13 @@ def add_bundle_to_index(
     batch_id = resp[0]["batch"]
     response = wait_for_results(iib_url, batch_id)
     if response is None or not all(
-        [build.get("state") == "complete" for build in response["items"]]
+        build.get("state") == "complete" for build in response["items"]
     ):
         raise Exception("IIB build failed")
-    else:
-        output_index_image_paths(image_output, response)
+
+    output_index_image_paths(image_output, response)
+
+    return response
 
 
 def output_index_image_paths(
@@ -149,9 +170,40 @@ def output_index_image_paths(
         # The original from_index is used for signing
         index_images.append(f"{build['from_index']}+{build['index_image_resolved']}")
 
-    with open(image_output, "w") as f:
-        f.write(",".join(index_images))
+    with open(image_output, "w") as output_file:
+        output_file.write(",".join(index_images))
     LOGGER.info(f"Index image paths written to output file {image_output}.")
+
+
+def copy_images_to_destination(
+    iib_response: Any,
+    destination: str,
+    tag_suffix: str,
+    auth_file: Optional[str] = None,
+) -> None:
+    """
+    Copy IIB index images to a destination given by parameter
+
+    Args:
+        iib_response (Any): IIB build response object
+        destination (str): Registry and repository destination for the index images
+        tag_suffix (str): Tag suffix to append to the index image
+        auth_file (Optional[str], optional): Auth file for destination registry.
+        Defaults to None.
+    """
+    for image in iib_response.get("items", []):
+        version = image.get("from_index", "").split(":")[-1]
+        cmd = [
+            "skopeo",
+            "copy",
+            f"docker://{image.get('index_image_resolved')}",
+            f"docker://{destination}:{version}{tag_suffix}",
+        ]
+        if auth_file:
+            cmd.extend(["--authfile", auth_file])
+
+        LOGGER.info(f"Copying image to destination: {cmd}")
+        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
 
 def main() -> None:  # pragma: no cover
@@ -168,12 +220,19 @@ def main() -> None:  # pragma: no cover
 
     utils.set_client_keytab(os.environ.get("KRB_KEYTAB_FILE", "/etc/krb5.krb"))
 
-    add_bundle_to_index(
+    iib_response = add_bundle_to_index(
         args.bundle_pullspec,
         args.iib_url,
         args.indices,
         args.image_output,
     )
+    if args.index_image_destination:
+        copy_images_to_destination(
+            iib_response,
+            args.index_image_destination,
+            args.index_image_destination_tag_suffix,
+            args.authfile,
+        )
 
 
 if __name__ == "__main__":  # pragma: no cover
