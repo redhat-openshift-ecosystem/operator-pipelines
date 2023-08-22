@@ -44,7 +44,7 @@ def check_osdk_bundle_validate(bundle: Bundle) -> Iterator[CheckResult]:
             cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False
         ).stdout
     )
-    for output in sdk_result.get("outputs", []):
+    for output in sdk_result.get("outputs") or []:
         output_type = output.get("type")
         output_message = output.get("message", "")
         if output_type == "error":
