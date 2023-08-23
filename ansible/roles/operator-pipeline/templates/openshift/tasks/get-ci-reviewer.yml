@@ -1,0 +1,37 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-ci-reviewer
+spec:
+  params:
+    - name: pipeline_image
+    - name: git_username
+    - name: operator_name
+  workspaces:
+    - name: repo
+      description: Cloned repository
+  results:
+    - name: author_is_reviewer
+      description: >-
+        Check if the author of the PR is listed also as a reviewer
+    - name: list_reviewers
+      description: >-
+        Return list of all reviewers from ci.yaml file except author of the pull request
+  steps:
+    - name: get-ci-reviewer
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.repo.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+        
+        get-ci-reviewer \
+          --repo-path="$(workspaces.repo.path)" \
+          --git-username="$(params.git_username)" \
+          --operator-name="$(params.operator_name)" \
+          --output-file /tmp/output.json \
+          --verbose
+        
+        cat /tmp/output.json
+
