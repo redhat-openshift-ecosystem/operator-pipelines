@@ -44,11 +44,7 @@ spec:
         list_of_reviewers=$(jq -r '.all_reviewers[]' /tmp/output.json)
         bool_reviewer="$(jq -r '.is_reviewer' /tmp/output.json)"
         
-        for reviewer in $list_of_reviewers; do
-          echo "Requesting review from maintainer: reviewer"
-        done
-        
-        # storing variables to /dev/null so they would not be printed
+        # redirecting results variables to /dev/null so they would not be printed
         echo -n "$list_of_reviewers" | tee $(results.list_reviewers.path) > /dev/null
         echo -n "$bool_reviewer" | tee $(results.author_is_reviewer.path) > /dev/null
 
@@ -65,14 +61,14 @@ spec:
         set -e
         # do not use -x to not leak github secrets into logs!!!
 
+        # assigning variables for curl requests
         PR_NUMBER=$(basename "$(params.pr_url)")
         REPO_NAME=$(echo "$(params.pr_url)" | sed -e "s|^https://github.com/||" -e "s|/pull/.*$||")
         API_URL=https://api.github.com/repos/${REPO_NAME}/pulls/${PR_NUMBER}/requested_reviewers
 
         AUTHOR_IS_REVIEWER=$(cat $(results.author_is_reviewer.path))
-        
-        REPO_MAINTAINERS=("ezopezo", "mporrato", "allda", "tomasbakk")
-        
+        CI_REVIEWERS=$(cat $(results.list_reviewers.path))
+                
         # requesting review from repo maintainers if there are no reviewers in ci.yaml 
         if [ -z "$list_of_reviewers" ]; then
           curl -L \
@@ -84,6 +80,7 @@ spec:
             $API_URL
         
           echo "No reviewers detected in ci.yaml file - requesting review from repo maintainers"
+        
         else  
          # automatically approving PR if the author of PR is included in list of reviewers
           if [ "$AUTHOR_IS_REVIEWER" = "true" ]; then
@@ -94,5 +91,19 @@ spec:
               $API_URL
             
             echo "This pull request was automatically approved due to PR author is in the reviewers list"
+        
+          else
+            # request a review from the reviewers listed in ci.yml file excluding the author of PR
+            for reviewer in $CI_REVIEWERS; do
+              curl -L \
+                -X POST \
+                -H "Accept: application/vnd.github.v3+json" \
+                -H "Authorization: bearer ${GITHUB_TOKEN}" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                -d '{"reviewers": ["'"$reviewer"'"]}' \
+                $API_URL
+                
+              echo "Requesting review from reviewers in ci.yaml file: $reviewer"
+            done
           fi
         fi
