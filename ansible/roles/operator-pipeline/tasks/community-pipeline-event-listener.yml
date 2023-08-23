@@ -33,7 +33,7 @@
                         (
                           header.match("X-GitHub-Event", "pull_request")
                           && body.action in ["opened", "reopened", "synchronize"]
-                          && body.pull_request.base.ref == "stage"
+                          && body.pull_request.base.ref == "{{ branch }}"
                         )
                 bindings:
                   - ref: community-operator-hosted-pipeline-trigger-binding
@@ -53,7 +53,7 @@
                         (
                           header.match("X-GitHub-Event", "pull_request")
                           && body.action == "closed"
-                          && body.pull_request.base.ref == "stage"
+                          && body.pull_request.base.ref == "{{ branch }}"
                           && body.pull_request.merged == true
                         )
                 bindings:
