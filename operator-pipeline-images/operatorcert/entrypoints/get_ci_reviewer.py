@@ -3,7 +3,7 @@ import json
 from typing import Any, Dict
 
 from operatorcert.logger import setup_logger
-from operatorcert.operator_repo import load_yaml
+from operator_repo.utils import load_yaml
 import logging
 import pathlib
 
@@ -48,7 +48,7 @@ def parse_ci_reviewer(
 
     Returns:
         Boolean (True/False) if the pull request author is also listed as one of the reviewers
-        List of all reviewers listed in the ci.yaml file - excluding the pull request author.
+        List of all reviewers listed in the ci.yaml file
     """
 
     path_to_operator = pathlib.Path(repo_path) / "operators" / operator_name / "ci.yaml"
@@ -56,17 +56,17 @@ def parse_ci_reviewer(
     yaml_reviewers = load_ci_yaml.get("reviewers")
 
     # assigning empty list in case there are no reviewers in ci.yaml
-    all_reviewers = [] if yaml_reviewers is None else [
-        reviewer
-        for reviewer in yaml_reviewers
-        if reviewer != git_username
-    ]
-    LOGGER.debug(
-        f"List of all reviewers from ci.yaml file except the PR author: {all_reviewers}"
+    all_reviewers = (
+        [] if yaml_reviewers is None else [reviewer for reviewer in yaml_reviewers]
     )
+    LOGGER.debug(f"List of all reviewers from ci.yaml file {all_reviewers}")
 
-    # assigning empty list in case there are no reviewers in ci.yaml
-    is_reviewer = "false" if yaml_reviewers is None or git_username not in yaml_reviewers else "true"
+    # assigning false in case there are also no reviewers in ci.yaml
+    is_reviewer = (
+        "false"
+        if yaml_reviewers is None or git_username not in yaml_reviewers
+        else "true"
+    )
     LOGGER.debug(f"'{git_username}' is listed as reviewer: {is_reviewer}")
 
     return {"all_reviewers": all_reviewers, "is_reviewer": is_reviewer}
