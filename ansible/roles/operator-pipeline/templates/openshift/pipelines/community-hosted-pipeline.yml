@@ -20,7 +20,7 @@ spec:
       default: quay.io
 
     - name: image_namespace
-      default: $(context.pipelineRun.namespace)
+      default: "$(context.pipelineRun.namespace)"
       description: The namespace/organization all built images will be pushed to.
 
     - name: pipeline_image
@@ -83,9 +83,9 @@ spec:
         - set-github-started-label
       params:
         - name: url
-          value: $(params.git_fork_url)
+          value: "$(params.git_fork_url)"
         - name: revision
-          value: $(params.git_pr_branch)
+          value: "$(params.git_pr_branch)"
         - name: depth
           value: 25
         - name: gitInitImage
@@ -105,11 +105,11 @@ spec:
         - clone-repository
       params:
         - name: pipeline_image
-          value: $(params.pipeline_image)
+          value: "$(params.pipeline_image)"
         - name: head_commit
-          value: $(params.git_commit)
+          value: "$(params.git_commit)"
         - name: base_commit
-          value: $(params.git_commit_base)
+          value: "$(params.git_commit_base)"
       workspaces:
         - name: repo
           workspace: repository
@@ -123,11 +123,11 @@ spec:
         - detect-changes
       params:
         - name: pipeline_image
-          value: $(params.pipeline_image)
+          value: "$(params.pipeline_image)"
         - name: operator_name
-          value: $(tasks.detect-changes.results.added_operator)
+          value: "$(tasks.detect-changes.results.added_operator)"
         - name: bundle_version
-          value: $(tasks.detect-changes.results.added_bundle)
+          value: "$(tasks.detect-changes.results.added_bundle)"
       workspaces:
         - name: source
           workspace: repository
@@ -136,9 +136,33 @@ spec:
           workspace: results
           subPath: summary
 
-    - name: dockerfile-creation
+    - name: static-tests-results
+      taskRef:
+        name: report-static-tests-results
+        kind: Task
       runAfter:
         - static-tests
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: messages_count
+          value: "$(tasks.static-tests.results.messages_count)"
+        - name: failures_count
+          value: "$(tasks.static-tests.results.failures_count)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: summary
+
+    - name: dockerfile-creation
+      runAfter:
+        - static-tests-results
       taskRef:
         name: dockerfile-creation
       params:

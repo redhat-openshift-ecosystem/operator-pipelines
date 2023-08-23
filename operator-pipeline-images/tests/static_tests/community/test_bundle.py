@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 from operator_repo import Repo
-from operator_repo.checks import Fail, Warn
+from operator_repo.checks import Fail, Warn, CheckResult
 
 from operatorcert.static_tests.community.bundle import (
     check_osdk_bundle_validate,
@@ -14,18 +14,36 @@ from operatorcert.static_tests.community.bundle import (
 from tests.utils import create_files, bundle_files, merge
 
 
+@pytest.mark.parametrize(
+    "osdk_output, expected",
+    [
+        (
+            '{"passed": false, "outputs":'
+            '[{"type": "error", "message": "foo"}, {"type": "warning", "message": "bar"}]}',
+            {Fail("foo"), Warn("bar")},
+        ),
+        (
+            '{"passed": true, "outputs": null}',
+            set(),
+        ),
+    ],
+    False,
+    [
+        "A warning and an error",
+        "No warnings or errors",
+    ],
+)
 @patch("subprocess.run")
-def test_osdk_bundle_validate(mock_run: MagicMock, tmp_path: Path) -> None:
+def test_osdk_bundle_validate(
+    mock_run: MagicMock, osdk_output: str, expected: set[CheckResult], tmp_path: Path
+) -> None:
     create_files(tmp_path, bundle_files("test-operator", "0.0.1"))
     repo = Repo(tmp_path)
     bundle = repo.operator("test-operator").bundle("0.0.1")
     process_mock = MagicMock()
-    process_mock.stdout = (
-        '{"passed": false, "outputs":'
-        '[{"type": "error", "message": "foo"}, {"type": "warning", "message": "bar"}]}'
-    )
+    process_mock.stdout = osdk_output
     mock_run.return_value = process_mock
-    assert set(check_osdk_bundle_validate(bundle)) == {Fail("foo"), Warn("bar")}
+    assert set(check_osdk_bundle_validate(bundle)) == expected
 
 
 def _make_nested_dict(path: str, value: Any) -> dict:
