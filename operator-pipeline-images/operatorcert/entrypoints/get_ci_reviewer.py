@@ -30,7 +30,10 @@ def setup_argparser() -> Any:
         "--operator-name", help="Name of the cloned operator", required=True
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
-    parser.add_argument("--output-file", help="Output file with results - list of the ")
+    parser.add_argument(
+        "--output-file",
+        help="Output file with results - list of the reviewers and boolean if reviewer is included in ci.yaml file",
+    )
 
     return parser
 
@@ -87,8 +90,6 @@ def main():
     if args.output_file:
         with open(args.output_file, "w") as output_file:
             json.dump(result, output_file)
-    else:
-        print(json.dumps(result))
 
 
 if __name__ == "__main__":  # pragma: no cover

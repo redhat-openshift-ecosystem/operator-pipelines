@@ -33,21 +33,18 @@ spec:
         #! /usr/bin/env bash
         set -e
         # do not use -x to not leak github secrets into logs!!!
-        
         get-ci-reviewer \
           --repo-path="$(workspaces.repo.path)" \
           --git-username="$(params.git_username)" \
           --operator-name="$(params.operator_name)" \
           --output-file /tmp/output.json \
           --verbose
-        
         list_of_reviewers=$(jq -r '.all_reviewers[]' /tmp/output.json)
         bool_reviewer="$(jq -r '.is_reviewer' /tmp/output.json)"
-        
+
         # redirecting results variables to /dev/null so they would not be printed
         echo -n "$list_of_reviewers" | tee $(results.list_reviewers.path) > /dev/null
         echo -n "$bool_reviewer" | tee $(results.author_is_reviewer.path) > /dev/null
-
     - name: approve-pull-request
       env:
         - name: GITHUB_TOKEN
@@ -60,17 +57,14 @@ spec:
         #! /usr/bin/env bash
         set -e
         # do not use -x to not leak github secrets into logs!!!
-
         # assigning variables for curl requests
         PR_NUMBER=$(basename "$(params.pr_url)")
         REPO_NAME=$(echo "$(params.pr_url)" | sed -e "s|^https://github.com/||" -e "s|/pull/.*$||")
         API_URL_APPROVE=https://api.github.com/repos/${REPO_NAME}/pulls/${PR_NUMBER}/reviews
         API_URL_REVIEWERS=https://api.github.com/repos/${REPO_NAME}/pulls/${PR_NUMBER}/requested_reviewers
-
         AUTHOR_IS_REVIEWER=$(cat $(results.author_is_reviewer.path))
         CI_REVIEWERS=$(cat $(results.list_reviewers.path))
-                
-        # requesting review from repo maintainers if there are no reviewers in ci.yaml 
+        # requesting review from repo maintainers if there are no reviewers in ci.yaml
         if [ -z "$CI_REVIEWERS" ]; then
           curl -L \
             -X POST \
@@ -79,10 +73,8 @@ spec:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             -d '{"reviewers": ["ezopezo", "mporrato", "allda", "tomasbakk", "haripate"]}' \
             $API_URL_REVIEWERS > /dev/null
-        
           echo "No reviewers detected in ci.yaml file - requesting review from repo maintainers"
-        
-        else  
+        else
          # automatically approving PR if the author of PR is included in list of reviewers
           if [ "$AUTHOR_IS_REVIEWER" = "true" ]; then
             curl --X POST \
@@ -91,9 +83,7 @@ spec:
               -H "X-GitHub-Api-Version: 2022-11-28" \
               -d '{"body": "Pull request has been approved", "event": "APPROVE"}' \
               $API_URL_APPROVE > /dev/null
-            
             echo "This pull request was automatically approved due to PR author is in the reviewers list"
-        
           else
             # request a review from the reviewers listed in ci.yml file if the author is not listed in ci.yaml
             for reviewer in $CI_REVIEWERS; do
@@ -104,7 +94,6 @@ spec:
                 -H "X-GitHub-Api-Version: 2022-11-28" \
                 -d '{"reviewers": ["'"$reviewer"'"]}' \
                 $API_URL_REVIEWERS > /dev/null
-                
               echo "Requesting review from reviewers in ci.yaml file: $reviewer"
             done
           fi
