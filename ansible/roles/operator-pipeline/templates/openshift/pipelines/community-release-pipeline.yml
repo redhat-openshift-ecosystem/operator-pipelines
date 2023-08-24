@@ -187,7 +187,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Pull request for the operator was successfully merged"
+          value: "Operator bundle has been successfully distributed"
         - name: state
           value: success
         - name: context
@@ -215,7 +215,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Request to merge the pull request with operator has failed"
+          value: "Failed to distribute the operator bundle"
         - name: state
           value: failure
         - name: context

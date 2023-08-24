@@ -321,7 +321,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Pull request for operator successfully passed"
+          value: "Pipeline for the operator tests has passed successfully"
         - name: state
           value: success
         - name: context
@@ -349,7 +349,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Pull request for operator has failed"
+          value: "Pipeline for the operator tests has failed"
         - name: state
           value: failure
         - name: context
