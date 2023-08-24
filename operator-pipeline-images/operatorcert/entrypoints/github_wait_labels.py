@@ -24,8 +24,8 @@ class WaitType(Enum):
     """
     Enum representing the possible label wait conditions
 
-    WaitAny -> Wait until at least one label matches at least one regular expression
-    WaitNone -> Wait until no label matches any regular expression
+    WaitAny -> Wait until at least one label matches the regular expression
+    WaitNone -> Wait until no label matches the regular expression
     """
 
     WaitAny = 0
@@ -43,6 +43,9 @@ class WaitCondition:
         self.pattern = re.compile(regexp)
 
     def holds(self, labels: list[str]) -> bool:
+        """
+        Decide whether waiting conditions hold for PR labels
+        """
         if self.wait_type == WaitType.WaitAny:
             return any(self.pattern.fullmatch(label) for label in labels)
 
