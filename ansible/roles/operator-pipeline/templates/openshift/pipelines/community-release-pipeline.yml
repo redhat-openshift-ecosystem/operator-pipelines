@@ -171,6 +171,60 @@ spec:
         - name: remove-matching-namespace-labels
           value: "true"
 
+    # set the GitHub status to success if the pipeline passes
+    - name: set-github-status-success
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Succeeded", "Completed"]
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Pull request for the operator was successfully merged"
+        - name: state
+          value: success
+        - name: context
+          value: "operator/publish"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
+    # set the GitHub status to failure if the pipeline does not pass
+    - name: set-github-status-failure
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values:
+            - Succeeded
+            - Completed
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Request to merge the pull request with operator has failed"
+        - name: state
+          value: failure
+        - name: context
+          value: "operator/publish"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # Comment with a pipeline summary
     - name: github-add-summary-comment
       taskRef:
