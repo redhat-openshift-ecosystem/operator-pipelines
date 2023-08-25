@@ -107,7 +107,7 @@ def detect_namespace_labels(
     return namespace_labels
 
 
-def parse_github_issue_url(github_issue_url: str) -> (str, int):
+def parse_github_issue_url(github_issue_url: str) -> tuple[str, int]:
     """
     Parse github issue url and return repository and issue id.
 
