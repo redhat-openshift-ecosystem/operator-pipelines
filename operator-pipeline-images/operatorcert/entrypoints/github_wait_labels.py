@@ -153,7 +153,7 @@ def wait_on_pr_labels(
         wait_conditions: List of conditions that must hold for a wait to end
         poll_interval_s: Interval between finished requests to GitHub API
     """
-    assert poll_interval_s < timeout_s
+    assert poll_interval_s < timeout_s, "Timeout needs to be bigger than the poll interval"
 
     start_time = time.monotonic()
     while time.monotonic() - start_time < timeout_s:
