@@ -73,6 +73,9 @@ class WaitCondition:
 
         return self.wait_type == __value.wait_type and self.regexp == __value.regexp
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.wait_type}, {self.regexp})"
+
 
 def setup_argparser() -> ap.ArgumentParser:
     """
@@ -109,11 +112,18 @@ def setup_argparser() -> ap.ArgumentParser:
         help="The GitHub pull request URL where we want to wait for labels.",
     )
 
-    parser.add_argument("--timeout", default=60, help="Timeout for waiting in seconds.")
+    parser.add_argument(
+        "--timeout", type=int, default=60, help="Timeout for waiting in seconds."
+    )
 
     parser.add_argument(
-        "--poll-interval", default=1, help="Interval between requests in seconds"
+        "--poll-interval",
+        type=int,
+        default=5,
+        help="Interval between requests in seconds",
     )
+
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     return parser
 
@@ -157,6 +167,7 @@ def wait_on_pr_labels(
         poll_interval_s < timeout_s
     ), "Timeout needs to be bigger than the poll interval"
 
+    LOGGER.debug("Waiting for %s on PR #%s", wait_conditions, pull_request_id)
     start_time = time.monotonic()
     while time.monotonic() - start_time < timeout_s:
         pr_labels = get_pr_labels(repository, pull_request_id)
@@ -169,14 +180,17 @@ def wait_on_pr_labels(
 
         time.sleep(poll_interval_s)
 
+    LOGGER.debug("Timed out!")
     return False
 
 
-def main():
+def main() -> int:
     parser = setup_argparser()
     args = parser.parse_args()
 
     log_level = "INFO"
+    if args.verbose:
+        log_level = "DEBUG"
     setup_logger(level=log_level)
 
     github_auth = Auth.Token(os.environ["GITHUB_TOKEN"])
@@ -188,7 +202,7 @@ def main():
         repository = github.get_repo(repo_url)
     except GithubException as exc:
         LOGGER.error("Unable to get repository from GitHub: %s", str(exc))
-        exit(2)
+        return 2
 
     conditions = WaitCondition.get_wait_conditions(args)
     if not wait_on_pr_labels(
@@ -198,10 +212,10 @@ def main():
         args.timeout,
         args.poll_interval,
     ):
-        exit(1)
+        return 1
 
-    exit(0)
+    return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    exit(main())

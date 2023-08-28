@@ -23,115 +23,100 @@ def test_setup_argparser() -> None:
 @patch("operatorcert.entrypoints.github_wait_labels.wait_on_pr_labels")
 @patch("operatorcert.entrypoints.github_wait_labels.Github.get_repo")
 @patch("operatorcert.entrypoints.github_wait_labels.setup_logger")
-@patch("operatorcert.entrypoints.github_wait_labels.setup_argparser")
-@patch("operatorcert.entrypoints.github_wait_labels.exit")
 def test_main(
-    mock_sys_exit: MagicMock,
-    mock_setup_argparser: MagicMock,
     mock_setup_logger: MagicMock,
     mock_github_get_repo: MagicMock,
     mock_wait_on_pr_labels: MagicMock,
     monkeypatch: Any,
 ) -> None:
-    args = MagicMock()
-    args.any = ["regexp1", "regexp2"]
-    args.none = ["regexp3"]
-    args.timeout = 3600
-    args.poll_interval = 1
-
-    args.pull_request_url = "https://github.com/foo/bar/pull/123"
-    mock_setup_argparser.return_value.parse_args.return_value = args
-
     mock_repo = MagicMock()
     mock_github_get_repo.return_value = mock_repo()
+    mock_wait_on_pr_labels.return_value = True
 
     monkeypatch.setenv("GITHUB_TOKEN", "foo_api_token")
 
-    main()
+    args = [
+        "github-wait-labels",
+        "--github-host-url",
+        "https://api.example.com",
+        "--pull-request-url",
+        "https://example.com/namespace/repo/pull/999",
+        "--any",
+        r"ocp/4\.10/(pass|fail)",
+        "--any",
+        r"ocp/4\.11/(pass|fail)",
+        "--none",
+        r"do-not-merge",
+        "--poll-interval",
+        "15",
+        "--timeout",
+        "1000",
+        "--verbose",
+    ]
+
+    with patch("sys.argv", args):
+        assert main() == 0
 
     # want to test with __eq__ here to avoid mocking
     assert mock_wait_on_pr_labels.call_args[0][2] == [
-        WaitCondition(WaitType.WaitAny, "regexp1"),
-        WaitCondition(WaitType.WaitAny, "regexp2"),
-        WaitCondition(WaitType.WaitNone, "regexp3"),
+        WaitCondition(WaitType.WaitAny, r"ocp/4\.10/(pass|fail)"),
+        WaitCondition(WaitType.WaitAny, r"ocp/4\.11/(pass|fail)"),
+        WaitCondition(WaitType.WaitNone, r"do-not-merge"),
     ]
 
-    assert mock_wait_on_pr_labels.call_args[0][1] == 123
-    assert mock_wait_on_pr_labels.call_args[0][3] == 3600
-    assert mock_wait_on_pr_labels.call_args[0][4] == 1
-
-    mock_sys_exit.assert_called_once_with(0)
+    assert mock_wait_on_pr_labels.call_args[0][1] == 999
+    assert mock_wait_on_pr_labels.call_args[0][3] == 1000
+    assert mock_wait_on_pr_labels.call_args[0][4] == 15
 
 
 @patch("operatorcert.entrypoints.github_wait_labels.wait_on_pr_labels")
 @patch("operatorcert.entrypoints.github_wait_labels.Github.get_repo")
 @patch("operatorcert.entrypoints.github_wait_labels.setup_logger")
-@patch("operatorcert.entrypoints.github_wait_labels.setup_argparser")
-@patch("operatorcert.entrypoints.github_wait_labels.exit")
 def test_main_error(
-    mock_sys_exit: MagicMock,
-    mock_setup_argparser: MagicMock,
     mock_setup_logger: MagicMock,
     mock_github_get_repo: MagicMock,
     mock_wait_on_pr_labels: MagicMock,
     monkeypatch: Any,
-):
-    args = MagicMock()
-    args.any = ["regexp1", "regexp2"]
-    args.none = ["regexp3"]
-    args.timeout = 3600
-    args.poll_interval = 1
-
-    args.pull_request_url = "https://github.com/foo/bar/pull/123"
-    mock_setup_argparser.return_value.parse_args.return_value = args
-
+) -> None:
     mock_repo = MagicMock()
     mock_github_get_repo.return_value = mock_repo()
 
     monkeypatch.setenv("GITHUB_TOKEN", "foo_api_token")
     mock_wait_on_pr_labels.return_value = False
 
-    mock_sys_exit.side_effect = Exception("So that the utility terminates")
+    args = [
+        "github-wait-labels",
+        "--pull-request-url",
+        "https://example.com/namespace/repo/pull/999",
+    ]
 
-    with pytest.raises(Exception):
-        main()
-
-    mock_sys_exit.assert_called_once_with(1)
+    with patch("sys.argv", args):
+        assert main() == 1
 
 
 @patch("operatorcert.entrypoints.github_wait_labels.wait_on_pr_labels")
 @patch("operatorcert.entrypoints.github_wait_labels.Github.get_repo")
 @patch("operatorcert.entrypoints.github_wait_labels.setup_logger")
-@patch("operatorcert.entrypoints.github_wait_labels.setup_argparser")
-@patch("operatorcert.entrypoints.github_wait_labels.exit")
 def test_main_get_repo_exception(
-    mock_sys_exit: MagicMock,
-    mock_setup_argparser: MagicMock,
     mock_setup_logger: MagicMock,
     mock_github_get_repo: MagicMock,
     mock_wait_on_pr_labels: MagicMock,
     monkeypatch: Any,
-):
-    args = MagicMock()
-    args.any = ["regexp1", "regexp2"]
-    args.none = ["regexp3"]
-    args.timeout = 3600
-    args.poll_interval = 1
-
-    args.pull_request_url = "https://github.com/foo/bar/pull/123"
-    mock_setup_argparser.return_value.parse_args.return_value = args
-
+) -> None:
+    mock_repo = MagicMock()
     mock_github_get_repo.side_effect = GithubException(0, "err", None)
 
     monkeypatch.setenv("GITHUB_TOKEN", "foo_api_token")
     mock_wait_on_pr_labels.return_value = False
 
-    mock_sys_exit.side_effect = Exception("So that the utility terminates")
+    args = [
+        "github-wait-labels",
+        "--pull-request-url",
+        "https://example.com/namespace/repo/pull/999",
+    ]
 
-    with pytest.raises((GithubException, Exception)):
-        main()
-
-    mock_sys_exit.assert_called_once_with(2)
+    with patch("sys.argv", args):
+        assert main() == 2
 
 
 def test_get_pr_labels():
