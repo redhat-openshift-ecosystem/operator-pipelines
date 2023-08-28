@@ -1,0 +1,47 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: read-config
+  description: |
+    The read-config tasks reads user operator settings from the ci.yaml file
+spec:
+  params:
+    - name: pipeline_image
+      description: The common pipeline image.
+
+    - name: operator_path
+      description: |
+        Path to an operator within the git repository where the config is expected.
+
+  results:
+    - name: upgrade-graph-mode
+      description: "A graph update mode that defines how channel graphs are updated"
+
+  workspaces:
+    - name: source
+  steps:
+    - name: read-config
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -ex
+
+        CONFIG_PATH="$(params.operator_path)/ci.yaml"
+
+        if [ ! -f "$CONFIG_PATH" ]; then
+            echo "Config file $CONFIG_PATH does not exist."
+            # The config is not present - let's make an empty config
+            echo "---" > $CONFIG_PATH
+        fi
+
+        cat $CONFIG_PATH
+
+        # Parse the upgrade graph mode with default value "replaces"
+        UPGRADE_GRAPH_MODE=`cat $CONFIG_PATH | yq -r '.updateGraph // "replaces"'`
+
+        # Remove the "-mode" suffix
+        UPGRADE_GRAPH_MODE=`echo $UPGRADE_GRAPH_MODE | sed 's/-mode$//'`
+
+        echo -n $UPGRADE_GRAPH_MODE | tee $(results.upgrade-graph-mode.path)
