@@ -86,6 +86,7 @@ def test_add_bundle_to_index(
         "https://iib.engineering.redhat.com",
         ["registry/index:v4.9", "registry/index:v4.8"],
         "test-image-path.txt",
+        "replaces",
     )
     mock_image_paths.assert_called_once_with(
         "test-image-path.txt",
@@ -103,6 +104,7 @@ def test_add_bundle_to_index(
             "https://iib.engineering.redhat.com",
             ["registry/index:v4.9", "registry/index:v4.8"],
             "test-image-path.txt",
+            "replaces",
         )
 
 

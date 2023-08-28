@@ -53,6 +53,12 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
         default="",
         help="A tag suffix to append to the index image when copying to the destination.",
     )
+    parser.add_argument(
+        "--mode",
+        choices=["replaces", "semver", "semver-skippatch"],
+        default="",
+        help="A graph update mode that defines how channel graphs are updated.",
+    )
     parser.add_argument("--authfile", help="")
 
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
@@ -113,15 +119,17 @@ def add_bundle_to_index(
     iib_url: str,
     indices: List[str],
     image_output: str,
+    mode: Optional[str] = None,
 ) -> Any:
     """
     Add a bundle to index image using IIB
 
     Args:
-        bundle_pullspec: bundle pullspec
-        iib_url: url of IIB instance
-        indices: list of original indices
-        image_output: file name to output the location of the newly built images to
+        bundle_pullspec (str): bundle pullspec
+        iib_url (str): url of IIB instance
+        indices (List[str]): list of original indices
+        image_output (str): file name to output the location of the newly built images to
+        mode (Optional[str]): A mode that defines how the update graph will be updated
     Returns:
         Any: Build response
     Raises:
@@ -131,13 +139,14 @@ def add_bundle_to_index(
     payload = {"build_requests": []}
 
     for index in indices:
-        payload["build_requests"].append(
-            {
-                "from_index": index,
-                "bundles": [bundle_pullspec],
-                "add_arches": ["amd64", "s390x", "ppc64le"],
-            }
-        )
+        build_request = {
+            "from_index": index,
+            "bundles": [bundle_pullspec],
+            "add_arches": ["amd64", "s390x", "ppc64le"],
+        }
+        if mode:
+            build_request["graph_update_mode"] = mode
+        payload["build_requests"].append(build_request)
 
     resp = iib.add_builds(iib_url, payload)
 
@@ -225,6 +234,7 @@ def main() -> None:  # pragma: no cover
         args.iib_url,
         args.indices,
         args.image_output,
+        args.mode,
     )
     if args.index_image_destination:
         copy_images_to_destination(

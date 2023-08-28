@@ -115,12 +115,28 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: read-config
+      taskRef:
+        name: read-config
+        kind: Task
+      runAfter:
+        - detect-changes
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: operator_path
+          value: &addedOperatorPath "operators/$(tasks.detect-changes.results.added_operator)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     - name: static-tests
       taskRef:
         name: run-static-tests
         kind: Task
       runAfter:
-        - detect-changes
+        - read-config
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -251,6 +267,12 @@ spec:
         # Adding a commit hash as a suffix to the image tag
         - name: index-image-destination-tag-suffix
           value: "-$(params.git_commit)"
+        - name: upgrade-graph-mode
+          value: "$(tasks.read-config.results.upgrade-graph-mode)"
+        # Production IIB instance doesn't support the upgrade path feature yet.
+        # TODO: switch it to PROD when the feature is available
+        - name: iib_url
+          value: https://iib.stage.engineering.redhat.com
       workspaces:
         - name: credentials
           workspace: registry-credentials
