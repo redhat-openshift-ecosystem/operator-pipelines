@@ -25,6 +25,7 @@ RUN dnf update -y && \
     findutils \
     git \
     gcc \
+    gh \
     gnupg2 \
     jq \
     cargo \

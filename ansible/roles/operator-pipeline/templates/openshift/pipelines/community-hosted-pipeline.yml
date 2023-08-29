@@ -145,7 +145,7 @@ spec:
         name: run-static-tests
         kind: Task
       runAfter:
-        - detect-changes
+        - get-ci-reviewer
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"

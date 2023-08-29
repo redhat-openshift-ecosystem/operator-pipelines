@@ -3,9 +3,8 @@ import json
 from typing import Any, Dict
 
 from operatorcert.logger import setup_logger
-from operator_repo.utils import load_yaml
+from operator_repo import Repo
 import logging
-import pathlib
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -54,22 +53,15 @@ def parse_ci_reviewer(
         List of all reviewers listed in the ci.yaml file
     """
 
-    path_to_operator = pathlib.Path(repo_path) / "operators" / operator_name / "ci.yaml"
-    load_ci_yaml = load_yaml(path_to_operator)
-    yaml_reviewers = load_ci_yaml.get("reviewers")
+    operator = Repo(repo_path).operator(operator_name)
+    all_reviewers = operator.config.get("reviewers") or []
 
     # assigning empty list in case there are no reviewers in ci.yaml
-    all_reviewers = (
-        [] if yaml_reviewers is None else [reviewer for reviewer in yaml_reviewers]
-    )
     LOGGER.debug(f"List of all reviewers from ci.yaml file {all_reviewers}")
 
     # assigning false in case there are also no reviewers in ci.yaml
-    is_reviewer = (
-        "false"
-        if yaml_reviewers is None or git_username not in yaml_reviewers
-        else "true"
-    )
+    is_reviewer = git_username in all_reviewers
+
     LOGGER.debug(f"'{git_username}' is listed as reviewer: {is_reviewer}")
 
     return {"all_reviewers": all_reviewers, "is_reviewer": is_reviewer}
@@ -90,6 +82,8 @@ def main():
     if args.output_file:
         with open(args.output_file, "w") as output_file:
             json.dump(result, output_file)
+    else:
+        print(json.dumps(result))
 
 
 if __name__ == "__main__":  # pragma: no cover
