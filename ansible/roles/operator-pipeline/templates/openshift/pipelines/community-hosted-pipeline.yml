@@ -346,6 +346,28 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
+    
+    # merge PR
+    - name: merge-pr
+      runAfter:
+        - wait-prow-tests
+      taskRef:
+        name: merge-pr
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_pr_url
+          value: $(params.git_pr_url)
+        - name: bundle_path
+          value: *addedBundlePath
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
 
   finally:
 
