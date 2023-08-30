@@ -17,7 +17,6 @@ readme = "README.md"
 license = { text = "GPLv3" }
 
 [project.scripts]
-get-ci-reviewer = "operatorcert.entrypoints.get_ci_reviewer:main"
 bundle-dockerfile = "operatorcert.entrypoints.bundle_dockerfile:main"
 create-container-image = "operatorcert.entrypoints.create_container_image:main"
 create-github-gist = "operatorcert.entrypoints.create_github_gist:main"

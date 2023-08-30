@@ -32,19 +32,19 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -e
-        # do not use -x to not leak github secrets into logs!!!
-        get-ci-reviewer \
-          --repo-path="$(workspaces.repo.path)" \
-          --git-username="$(params.git_username)" \
-          --operator-name="$(params.operator_name)" \
-          --output-file /tmp/output.json \
-          --verbose
-        list_of_reviewers=$(jq -r '.all_reviewers[]' /tmp/output.json)
-        bool_reviewer=$(jq -r '.is_reviewer' /tmp/output.json)
-
-        # redirecting results variables to /dev/null so they would not be printed
-        echo -n "$list_of_reviewers" | tee $(results.list_reviewers.path) > /dev/null
-        echo -n "$bool_reviewer" | tee $(results.author_is_reviewer.path) > /dev/null
+        CI="operators/$(params.operator_name)/ci.yaml"
+        if [ ! -e "$CI" ]; then
+          echo >$(results.list_reviewers.path)
+          echo false >$(results.author_is_reviewer.path)
+        else
+          if grep -q 'reviewers:' $CI; then
+            yq -r '.reviewers[]' $CI >$(results.list_reviewers.path)
+            yq -r ".reviewers|index(\"$(params.git_username)\") != null" $CI >$(results.author_is_reviewer.path)
+          else
+            echo >$(results.list_reviewers.path)
+            echo false >$(results.author_is_reviewer.path)
+          fi
+        fi
     - name: approve-pull-request
       env:
         - name: GITHUB_TOKEN
@@ -60,16 +60,15 @@ spec:
 
         AUTHOR_IS_REVIEWER=$(cat $(results.author_is_reviewer.path))
         CI_REVIEWERS=$(cat $(results.list_reviewers.path))
-        
-        # requesting review from repo maintainers if there are no reviewers in ci.yaml
+        # requesting review from repo maintainers if there are no reviewers in ci.yaml or no ci.yaml file
         if [ -z "$CI_REVIEWERS" ]; then
           gh pr edit $(params.pr_url) --add-reviewer redhat-openshift-ecosystem/pipeline-maintainers
-          echo "Reviewers are missing in ci.yaml file - requesting review from repo maintainers"
+          echo "Reviewers are missing in ci.yaml file - requesting review from repo maintainers."
         else
-          # requesting review from PR author if he/she is included as one of the reviewers
+          # requesting review from PR author if it is included in the reviewers field
           if [ "$AUTHOR_IS_REVIEWER" = true ]; then
             gh pr review $(params.pr_url) --approve
-            echo "This pull request was automatically approved due to PR author is in the reviewers list"
+            echo "This pull request was automatically approved due to PR author is in the reviewers list."
           else
             # request a review from the reviewers listed in ci.yml file if the author is not listed in ci.yaml
             for reviewer in $CI_REVIEWERS; do

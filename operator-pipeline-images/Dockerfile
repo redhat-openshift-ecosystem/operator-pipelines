@@ -81,3 +81,29 @@ RUN chgrp -R 0 /home/user /etc/passwd
 RUN chmod -R g=u /home/user /etc/passwd
 
 USER "${USER_UID}"
+
+
+    # parse ci.yaml file and look for the reviewer and or author of the PR
+    - name: get-ci-reviewer
+      taskRef:
+        name: get-ci-reviewer
+        kind: Task
+      runAfter:
+        - detect-changes
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_username
+          value: $(params.git_username)
+        - name: pr_url
+          value: $(params.git_pr_url)
+        - name: operator_name
+          value: "$(tasks.detect-changes.results.added_operator)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+      workspaces:
+        - name: repo
+          workspace: repository
+          subPath: src
