@@ -22,6 +22,11 @@ spec:
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: github_bot_token
+
+    - name: metrics_endpoint
+      description: Prometheus metrics endpoint
+      default: http://pipeline-metrics.pipeline-metrics-prod
+
   workspaces:
     - name: repository
     - name: results
@@ -246,3 +251,17 @@ spec:
         - name: output
           workspace: results
           subPath: summary
+
+    # Submit a pipeline metrics to a collector
+    - name: update-metrics
+      taskRef:
+        name: update-metrics
+      params:
+        - name: pipelinerun
+          value: "$(context.pipelineRun.name)"
+        - name: metrics_url
+          value: "$(params.metrics_endpoint)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: metrics
