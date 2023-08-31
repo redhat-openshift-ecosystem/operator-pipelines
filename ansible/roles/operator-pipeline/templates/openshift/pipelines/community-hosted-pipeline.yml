@@ -126,7 +126,7 @@ spec:
         name: get-ci-reviewer
         kind: Task
       runAfter:
-        - get-ci-reviewer
+        - detect-changes
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -150,7 +150,7 @@ spec:
         name: read-config
         kind: Task
       runAfter:
-        - detect-changes
+        - get-ci-reviewer
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
