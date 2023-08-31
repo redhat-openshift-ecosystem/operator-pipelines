@@ -22,6 +22,11 @@ spec:
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: github_bot_token
+
+    - name: metrics_endpoint
+      description: Prometheus metrics endpoint
+      default: http://pipeline-metrics.pipeline-metrics-prod
+
   workspaces:
     - name: repository
     - name: results
@@ -171,6 +176,60 @@ spec:
         - name: remove-matching-namespace-labels
           value: "true"
 
+    # set the GitHub status to success if the pipeline passes
+    - name: set-github-status-success
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Succeeded", "Completed"]
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Operator bundle has been successfully distributed"
+        - name: state
+          value: success
+        - name: context
+          value: "operator/publish"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
+    # set the GitHub status to failure if the pipeline does not pass
+    - name: set-github-status-failure
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values:
+            - Succeeded
+            - Completed
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Failed to distribute the operator bundle"
+        - name: state
+          value: failure
+        - name: context
+          value: "operator/publish"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # Comment with a pipeline summary
     - name: github-add-summary-comment
       taskRef:
@@ -192,3 +251,17 @@ spec:
         - name: output
           workspace: results
           subPath: summary
+
+    # Submit a pipeline metrics to a collector
+    - name: update-metrics
+      taskRef:
+        name: update-metrics
+      params:
+        - name: pipelinerun
+          value: "$(context.pipelineRun.name)"
+        - name: metrics_url
+          value: "$(params.metrics_endpoint)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: metrics

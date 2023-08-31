@@ -12,6 +12,6 @@
       unarchive:
         src: https://mirror.openshift.com/pub/openshift-v4/clients/pipeline/0.17.2/tkn-linux-amd64-0.17.2.tar.gz
         dest: "{{ temp_tools_dir.path }}"
-        remote_src: yes
+        remote_src: true
         include:
           - tkn

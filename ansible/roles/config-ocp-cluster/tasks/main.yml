@@ -1,3 +1,4 @@
+---
 - name: Customize TektonConfig
   k8s:
     state: present

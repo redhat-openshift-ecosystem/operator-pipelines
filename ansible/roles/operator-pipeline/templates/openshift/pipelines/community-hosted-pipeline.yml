@@ -49,6 +49,11 @@ spec:
 
     - name: quay_oauth_secret_key
       default: token
+
+    - name: metrics_endpoint
+      description: Prometheus metrics endpoint
+      default: http://pipeline-metrics.pipeline-metrics-prod
+
   workspaces:
     - name: repository
     - name: results
@@ -121,7 +126,7 @@ spec:
         name: get-ci-reviewer
         kind: Task
       runAfter:
-        - detect-changes
+        - get-ci-reviewer
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -140,12 +145,28 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: read-config
+      taskRef:
+        name: read-config
+        kind: Task
+      runAfter:
+        - detect-changes
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: operator_path
+          value: &addedOperatorPath "operators/$(tasks.detect-changes.results.added_operator)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     - name: static-tests
       taskRef:
         name: run-static-tests
         kind: Task
       runAfter:
-        - get-ci-reviewer
+        - read-config
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -276,11 +297,35 @@ spec:
         # Adding a commit hash as a suffix to the image tag
         - name: index-image-destination-tag-suffix
           value: "-$(params.git_commit)"
+        - name: upgrade-graph-mode
+          value: "$(tasks.read-config.results.upgrade-graph-mode)"
+        # Production IIB instance doesn't support the upgrade path feature yet.
+        # TODO: switch it to PROD when the feature is available
+        - name: iib_url
+          value: https://iib.stage.engineering.redhat.com
       workspaces:
         - name: credentials
           workspace: registry-credentials
         - name: results
           workspace: results
+
+    - name: wait-prow-tests
+      taskRef:
+        name: wait-prow-tests
+        kind: Task
+      runAfter:
+        - add-bundle-to-index
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: supported_ocp_versions
+          value: "$(tasks.get-supported-versions.results.indices_ocp_versions)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
 
   finally:
 
@@ -330,6 +375,60 @@ spec:
         - name: remove-matching-namespace-labels
           value: "true"
 
+    # set the GitHub status to success if the pipeline passes
+    - name: set-github-status-success
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Succeeded", "Completed"]
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Pipeline for the operator tests has passed successfully"
+        - name: state
+          value: success
+        - name: context
+          value: "operator/test"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
+    # set the GitHub status to failure if the pipeline does not pass
+    - name: set-github-status-failure
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values:
+            - Succeeded
+            - Completed
+      taskRef:
+        name: set-github-status
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Pipeline for the operator tests has failed"
+        - name: state
+          value: failure
+        - name: context
+          value: "operator/test"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # Comment with a pipeline summary
     - name: github-add-summary-comment
       taskRef:
@@ -351,3 +450,17 @@ spec:
         - name: output
           workspace: results
           subPath: summary
+
+    # Submit a pipeline metrics to a collector
+    - name: update-metrics
+      taskRef:
+        name: update-metrics
+      params:
+        - name: pipelinerun
+          value: "$(context.pipelineRun.name)"
+        - name: metrics_url
+          value: "$(params.metrics_endpoint)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: metrics

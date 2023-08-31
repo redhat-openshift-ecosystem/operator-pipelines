@@ -1,3 +1,4 @@
+---
 - name: Configure GitHub webhooks
   loop: "{{ operator_pipeline_github_webhook_repos }}"
   when: operator_pipeline_github_webhook_repos is defined
