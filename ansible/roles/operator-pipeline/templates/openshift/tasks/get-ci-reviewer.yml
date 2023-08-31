@@ -37,15 +37,20 @@ spec:
         set -e
         # storing repo maintainers from config.yaml file
         MAINTAINERS="config.yaml"
-        yq -r '(.maintainers//[]))[]' $MAINTAINERS >$(results.repo_maintainers.path)
+        yq -r '.maintainers[]' $MAINTAINERS >$(results.repo_maintainers.path)
         # storing reviewers from ci.yaml file
         CI="operators/$(params.operator_name)/ci.yaml"
         if [ ! -e "$CI" ]; then
           echo >$(results.list_reviewers.path)
           echo false >$(results.author_is_reviewer.path)
         else
-          yq -r '(.reviewers//[]))[]' $CI >$(results.list_reviewers.path)
-          yq -r ".reviewers//[]|index(\"$(params.git_username)\") != null" $CI >$(results.author_is_reviewer.path)
+          if grep -q 'reviewers:' $CI; then
+            yq -r '.reviewers[]' $CI >$(results.list_reviewers.path)
+            yq -r ".reviewers|index(\"$(params.git_username)\") != null" $CI >$(results.author_is_reviewer.path)
+          else
+            echo >$(results.list_reviewers.path)
+            echo false >$(results.author_is_reviewer.path)
+          fi
         fi
     - name: approve-pull-request
       env:
@@ -63,7 +68,7 @@ spec:
         REPO_MAINTAINERS=$(cat $(results.repo_maintainers.path))
         # requesting review from repo maintainers if there are no reviewers in ci.yaml or no ci.yaml file
         if [ -z "$CI_REVIEWERS" ]; then
-          gh pr edit $(params.pr_url) --add-reviewer $(`echo $REPO_MAINTAINERS | xargs | tr ' ' ','`)
+          gh pr edit $(params.pr_url) --add-reviewer `echo $REPO_MAINTAINERS | xargs | tr ' ' ','`
           echo "Reviewers are missing in ci.yaml file - requesting review from repo maintainers."
         else
           # requesting review from PR author if it is included in the reviewers field
@@ -72,6 +77,6 @@ spec:
             echo "This pull request was automatically approved due to PR author is in the reviewers list."
           else
             # request a review from the reviewers listed in ci.yml file if the author is not listed in ci.yaml
-            gh pr edit $(params.pr_url) --add-reviewer $(`echo $CI_REVIEWERS | xargs | tr ' ' ','`)
+            gh pr edit $(params.pr_url) --add-reviewer `echo $CI_REVIEWERS | xargs | tr ' ' ','`
           fi
         fi
