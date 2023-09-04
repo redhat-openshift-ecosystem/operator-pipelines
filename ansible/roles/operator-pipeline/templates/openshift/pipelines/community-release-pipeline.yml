@@ -15,6 +15,7 @@ spec:
     - name: env
     - name: pipeline_image
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
+
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github-bot-token
@@ -27,11 +28,37 @@ spec:
       description: Prometheus metrics endpoint
       default: http://pipeline-metrics.pipeline-metrics-prod
 
+    - name: umb_ssl_secret_name
+      description: Kubernetes secret that contains SSL files
+      default: operator-pipeline-api-certs
+    - name: umb_ssl_cert_secret_key
+      description: Kubernetes secret that contains SSL cert
+      default: operator-pipeline.key
+    - name: umb_ssl_key_secret_key
+      description: Kubernetes secret that contains SSL key
+
+    - name: kerberos_keytab_secret_name
+      description: >-
+        The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+      default: kerberos-keytab
+    - name: kerberos_keytab_secret_key
+      description: >-
+        The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+      default: krb5.keytab
+
+    - name: signing_pub_secret_name
+      description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
+      default: signing-pub-key
+    - name: signing_pub_secret_key
+      description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
+      default: sig-key.pub
+
   workspaces:
     - name: repository
     - name: results
     - name: ssh-dir
       optional: true
+    - name: registry-credentials
   tasks:
 
     # Set a initial PR label with indication that pipeline has started
@@ -52,12 +79,24 @@ spec:
         - name: remove-matching-namespace-labels
           value: "true"
 
+    # set environment
+    - name: set-env-community
+      runAfter:
+        - set-github-started-label
+      taskRef:
+        name: set-env-community
+        kind: Task
+      params:
+        - name: env
+          value: $(params.env)
+
+    # clone repository
     - name: clone-repository
       taskRef:
         name: git-clone
         kind: Task
       runAfter:
-        - set-github-started-label
+        - set-env-community
       params:
         - name: url
           value: $(params.git_repo_url)
@@ -74,6 +113,7 @@ spec:
         - name: ssh-directory
           workspace: ssh-dir
 
+    # detect changed operators
     - name: detect-changes
       taskRef:
         name: parse-repo-changes
@@ -92,6 +132,7 @@ spec:
           workspace: repository
           subPath: src
 
+    # get supported versions
     - name: get-supported-versions
       runAfter:
         - detect-changes
@@ -118,6 +159,124 @@ spec:
           value: "$(params.pipeline_image)"
         - name: lease-name
           value: "community-pipeline"
+
+    # call IIB to add the bundle to index
+    - name: add-bundle-to-index
+      runAfter:
+        - acquire-lease
+      taskRef:
+        name: add-bundle-to-index
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: index_images
+          value: "$(tasks.get-supported-versions.results.indices)"
+        - name: bundle_pullspec
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)-$(params.git_commit)"
+        - name: iib_url
+          value: "$(tasks.set-env-community.results.iib_url)"
+        - name: environment
+          value: "$(params.env)"
+        - name: kerberos_keytab_secret_name
+          value: "$(params.kerberos_keytab_secret_name)"
+        - name: kerberos_keytab_secret_key
+          value: "$(params.kerberos_keytab_secret_key)"
+        - name: index-image-destination
+          value: "$(params.registry)/$(params.image_namespace)/catalog"
+      workspaces:
+        - name: results
+          workspace: results
+
+    # use manifest list digests from IIB output and get the manifest digests from registry
+    - name: get-manifest-digests
+      runAfter:
+        - add-bundle-to-index
+      taskRef:
+        name: get-manifest-digests
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: index_image_paths
+          value: "$(tasks.add-bundle-to-index.results.index_image_paths)"
+        - name: environment
+          value: "$(params.env)"
+
+    # send UMB message to sign the container image
+    - name: request-signature
+      runAfter:
+        - get-manifest-digests
+      taskRef:
+        name: request-signature
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: manifest_digest
+          value: "$(tasks.get-manifest-digests.results.manifest_digests)"
+        - name: reference
+          value: "$(tasks.get-manifest-digests.results.docker_references)"
+        - name: requester
+          value: "Allda"
+        - name: sig_key_id
+          value: "$(tasks.set-env-community.results.sig_key_id)"
+        - name: sig_key_name
+          value: "$(tasks.set-env-community.results.sig_key_name)"
+        - name: umb_client_name
+          value: "$(tasks.set-env-community.results.umb_client_name)"
+        - name: umb_url
+          value: "$(tasks.set-env-community.results.umb_url)"
+        - name: umb_ssl_secret_name
+          value: "$(params.umb_ssl_secret_name)"
+        - name: umb_ssl_cert_secret_key
+          value: "$(params.umb_ssl_cert_secret_key)"
+        - name: umb_ssl_key_secret_key
+          value: "$(params.umb_ssl_key_secret_key)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: signing
+
+    # upload signature
+    - name: upload-signature
+      runAfter:
+        - request-signature
+      taskRef:
+        name: upload-signature
+        bundle: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: signature_data_file
+          value: "$(tasks.request-signature.results.signature_data_file)"
+        - name: umb_ssl_secret_name
+          value: "$(params.umb_ssl_secret_name)"
+        - name: umb_ssl_cert_secret_key
+          value: "$(params.umb_ssl_cert_secret_key)"
+        - name: umb_ssl_key_secret_key
+          value: "$(params.umb_ssl_key_secret_key)"
+        - name: signing_pub_secret_name
+          value: "$(params.signing_pub_secret_name)"
+        - name: signing_pub_secret_key
+          value: "$(params.signing_pub_secret_key)"
+        - name: verify_signature
+          value: "true"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: signing
+
+    # publish to index
+    - name: publish-to-index
+      runAfter:
+        - upload-signature
+      taskRef:
+        name: publish-to-index
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: index_image_paths
+          value: "$(tasks.add-bundle-to-index.results.index_image_paths)"
+        - name: environment
+          value: "$(params.env)"
 
   finally:
     # Release the acquired resource
