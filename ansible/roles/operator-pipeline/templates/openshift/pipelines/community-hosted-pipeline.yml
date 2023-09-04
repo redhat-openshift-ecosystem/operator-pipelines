@@ -284,12 +284,32 @@ spec:
         - name: results
           workspace: results
 
+    - name: trigger-prow-tests
+      taskRef:
+        name: trigger-prow-tests
+        kind: Task
+      runAfter:
+        - add-bundle-to-index
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: supported_ocp_versions
+          value: "$(tasks.get-supported-versions.results.indices_ocp_versions)"
+        - name: skipped_ocp_versions
+          value: "$(tasks.get-supported-versions.results.skipped_ocp_versions)"
+
     - name: wait-prow-tests
       taskRef:
         name: wait-prow-tests
         kind: Task
       runAfter:
-        - add-bundle-to-index
+        - trigger-prow-tests
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
