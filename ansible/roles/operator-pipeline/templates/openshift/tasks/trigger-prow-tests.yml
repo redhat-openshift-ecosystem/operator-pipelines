@@ -6,7 +6,7 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-      description: | 
+      description: |
         The common pipeline image.
 
     - name: request_url
@@ -50,13 +50,13 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -e
-        
+
         supported_versions=()
         for supported_version in $(params.supported_ocp_versions)
         do
           supported_versions+=("ocp/$supported_version/start")
         done
-        
+
         skipped_versions=()
         for skipped_version in $(params.skipped_ocp_versions)
         do
@@ -65,7 +65,7 @@ spec:
 
         all_versions=()
         all_versions+=("${supported_versions[@]}" "${skipped_versions[@]}")
-      
+
         github-labels \
           --github-host-url "$(params.github_host_url)" \
           --pull-request-url "$(params.request_url)" \
