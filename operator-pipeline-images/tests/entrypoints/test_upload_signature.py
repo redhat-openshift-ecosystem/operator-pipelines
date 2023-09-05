@@ -23,7 +23,7 @@ def test_main(
     )
 
 
-def test_parse_repository_name():
+def test_parse_repository_name() -> None:
     test_data = {
         "registry.com/repo": "repo",
         "registry.com/namespace/repo": "namespace/repo",

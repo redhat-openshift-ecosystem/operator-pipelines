@@ -1,17 +1,16 @@
 import re
 from pathlib import Path
-from typing import Any
-from unittest.mock import patch, MagicMock
+from typing import Any, Dict
+from unittest.mock import MagicMock, patch
 
 import pytest
 from operator_repo import Repo
-from operator_repo.checks import Fail, Warn, CheckResult
-
+from operator_repo.checks import CheckResult, Fail, Warn
 from operatorcert.static_tests.community.bundle import (
     check_osdk_bundle_validate,
     check_required_fields,
 )
-from tests.utils import create_files, bundle_files, merge
+from tests.utils import bundle_files, create_files, merge
 
 
 @pytest.mark.parametrize(
@@ -27,8 +26,8 @@ from tests.utils import create_files, bundle_files, merge
             set(),
         ),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "A warning and an error",
         "No warnings or errors",
     ],
@@ -46,11 +45,11 @@ def test_osdk_bundle_validate(
     assert set(check_osdk_bundle_validate(bundle)) == expected
 
 
-def _make_nested_dict(path: str, value: Any) -> dict:
+def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
     """
     _make_nested_dict("foo.bar", "baz") -> {"foo": {"bar": "baz"}}
     """
-    result = {}
+    result: Dict[str, Any] = {}
     current = result
     keys = path.split(".")
     for key in keys[:-1]:
@@ -145,8 +144,8 @@ def _make_nested_dict(path: str, value: Any) -> dict:
             "spec.keywords": (["foo", "bar"], "failure", "valid"),
         },
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "All missing",
         "All invalid",
         "All valid",
@@ -155,14 +154,13 @@ def _make_nested_dict(path: str, value: Any) -> dict:
 def test_required_fields(
     tmp_path: Path, fields: dict[str, tuple[Any, str, str]]
 ) -> None:
-    csv_fields = {}
+    csv_fields: Dict[str, Any] = {}
     for path, (value, _, _) in fields.items():
         merge(csv_fields, _make_nested_dict(path, value))
     create_files(tmp_path, bundle_files("test-operator", "0.0.1", csv=csv_fields))
     repo = Repo(tmp_path)
     bundle = repo.operator("test-operator").bundle("0.0.1")
 
-    print(list(check_required_fields(bundle)))
     re_missing = re.compile(r"CSV does not define (.+)")
     re_invalid = re.compile(r"CSV contains an invalid value for (.+)")
 

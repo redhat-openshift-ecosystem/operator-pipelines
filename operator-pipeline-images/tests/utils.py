@@ -3,12 +3,14 @@
 """
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import yaml
 
 
-def merge(a: dict, b: dict, path: Optional[list[str]] = None) -> dict:
+def merge(
+    a: Dict[str, Any], b: Dict[str, Any], path: Optional[list[str]] = None
+) -> Dict[str, Any]:
     """
     Recursively merge two dictionaries, with values from the second dictionary (b)
     overwriting corresponding values in the first dictionary (a). This function can
@@ -44,7 +46,7 @@ def merge(a: dict, b: dict, path: Optional[list[str]] = None) -> dict:
     return a
 
 
-def create_files(path: Union[str, Path], *contents: dict) -> None:
+def create_files(path: Union[str, Path], *contents: Dict[str, Any]) -> None:
     """
     Create files and directories at the specified path based on the provided content.
 
@@ -85,7 +87,7 @@ def create_files(path: Union[str, Path], *contents: dict) -> None:
             else:
                 full_path.parent.mkdir(parents=True, exist_ok=True)
                 if isinstance(content, (str, bytes)):
-                    full_path.write_text(content)
+                    full_path.write_text(content)  # type: ignore
                 else:
                     full_path.write_text(yaml.safe_dump(content))
 
@@ -93,10 +95,10 @@ def create_files(path: Union[str, Path], *contents: dict) -> None:
 def bundle_files(
     operator_name: str,
     bundle_version: str,
-    annotations: Optional[dict] = None,
-    csv: Optional[dict] = None,
-    other_files: Optional[dict] = None,
-) -> dict:
+    annotations: Optional[Dict[str, Any]] = None,
+    csv: Optional[Dict[str, Any]] = None,
+    other_files: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
     Creates an in-memory representation of the set of files for an Operator package bundle.
     The output format can be fed directly to the create_files function.

@@ -119,7 +119,7 @@ def test_main_get_repo_exception(
         assert main() == 2
 
 
-def test_get_pr_labels():
+def test_get_pr_labels() -> None:
     mock_repo = MagicMock()
     labels = [MagicMock(), MagicMock()]
     for mock_label, label_name in zip(labels, ["label1", "label2"]):
@@ -132,7 +132,7 @@ def test_get_pr_labels():
     assert get_pr_labels(mock_repo, 0) == ["label1", "label2"]
 
 
-def test_get_wait_conditions():
+def test_get_wait_conditions() -> None:
     args = MagicMock()
     args.any = ["one", "two"]
     args.none = ["three"]
@@ -160,7 +160,7 @@ def test_get_wait_conditions():
 )
 def test_condition_holds(
     wait_type: WaitType, regexp: str, labels: list[str], result: bool
-):
+) -> None:
     condition = WaitCondition(wait_type, regexp)
     assert condition.holds(labels) == result
 
@@ -243,10 +243,10 @@ def test_wait_on_pr_labels_success(
     mock_get_pr_labels: MagicMock,
     pr_labels_sequence: list[list[str]],
     wait_conditions: list[WaitCondition],
-    capsys,
-):
+    capsys: Any,
+) -> None:
     mock_get_pr_labels.side_effect = pr_labels_sequence
-    assert wait_on_pr_labels(None, None, wait_conditions, 5, 0.1)
+    assert wait_on_pr_labels(None, 1, wait_conditions, 5, 0.1)
 
     captured_stdout, _ = capsys.readouterr()
     assert captured_stdout == str.join("\n", pr_labels_sequence[-1]) + "\n"
@@ -264,13 +264,13 @@ def test_wait_on_pr_labels_timeout(
     mock_get_pr_labels: MagicMock,
     pr_labels: list[str],
     wait_conditions: list[WaitCondition],
-):
+) -> None:
     mock_get_pr_labels.return_value = pr_labels
-    assert not wait_on_pr_labels(None, None, wait_conditions, 1, 0.1)
+    assert not wait_on_pr_labels(None, 1, wait_conditions, 1, 0.1)
 
 
 @patch("operatorcert.entrypoints.github_wait_labels.exit")
-def test_get_pr_labels_exception(mock_exit: MagicMock):
+def test_get_pr_labels_exception(mock_exit: MagicMock) -> None:
     mock_repo = MagicMock()
     mock_repo.get_pull.side_effect = GithubException(0, "err", None)
 

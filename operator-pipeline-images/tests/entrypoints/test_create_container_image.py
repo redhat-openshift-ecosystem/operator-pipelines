@@ -13,7 +13,7 @@ from operatorcert.entrypoints.create_container_image import (
 
 
 @patch("operatorcert.entrypoints.create_container_image.pyxis.get")
-def test_check_if_image_already_exists(mock_get: MagicMock):
+def test_check_if_image_already_exists(mock_get: MagicMock) -> None:
     # Arrange
     mock_rsp = MagicMock()
     mock_get.return_value = mock_rsp
@@ -48,7 +48,7 @@ def test_check_if_image_already_exists(mock_get: MagicMock):
 @patch("operatorcert.entrypoints.create_container_image.datetime")
 def test_create_container_image(
     mock_datetime: MagicMock, mock_prepare_parsed: MagicMock, mock_post: MagicMock
-):
+) -> None:
     # Arrange
     mock_post.return_value = "ok"
     mock_prepare_parsed.return_value = {"architecture": "ok"}
@@ -102,7 +102,7 @@ def test_create_container_image(
 @patch("operatorcert.entrypoints.create_container_image.datetime")
 def test_create_container_image_latest(
     mock_datetime: MagicMock, mock_prepare_parsed: MagicMock, mock_post: MagicMock
-):
+) -> None:
     # Arrange
     mock_post.return_value = "ok"
     mock_prepare_parsed.return_value = {"architecture": "ok"}
@@ -156,7 +156,7 @@ def test_create_container_image_latest(
     )
 
 
-def test_prepare_parsed_data():
+def test_prepare_parsed_data() -> None:
     # Arrange
     file_content = {
         "DockerVersion": "1",
@@ -179,7 +179,9 @@ def test_prepare_parsed_data():
 
 @patch("operatorcert.entrypoints.create_container_image.pyxis.get")
 @patch("operatorcert.entrypoints.create_container_image.pyxis.put")
-def test_remove_latest_from_previous_image(mock_put: MagicMock, mock_get: MagicMock):
+def test_remove_latest_from_previous_image(
+    mock_put: MagicMock, mock_get: MagicMock
+) -> None:
     pyxis_url = "some_url.com"
     isv_pid = "some_pid"
 

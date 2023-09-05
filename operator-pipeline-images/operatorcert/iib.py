@@ -10,7 +10,7 @@ from operatorcert.utils import add_session_retries
 LOGGER = logging.getLogger("operator-cert")
 
 
-def get_session(kerberos_auth=True) -> Any:
+def get_session(kerberos_auth: bool = True) -> Any:
     """
     Get IIB requests session
 

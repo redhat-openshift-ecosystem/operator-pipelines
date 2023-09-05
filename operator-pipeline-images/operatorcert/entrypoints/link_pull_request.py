@@ -45,7 +45,7 @@ def setup_argparser() -> Any:  # pragma: no cover
 
 def link_pr_to_test_results(
     pyxis_url: str, test_result_id: str, pull_request_url: str, status: str
-) -> Dict[str, Any]:
+) -> Any:
     """
     Link a pull request to test results
 
@@ -59,7 +59,7 @@ def link_pr_to_test_results(
         ValueError: An exception is raised when invalid PR url is given
 
     Returns:
-        Dict[str, Any]: Pyxis API json response
+        Any: Pyxis API json response
     """
     test_result_url = urljoin(
         pyxis_url,
@@ -67,16 +67,18 @@ def link_pr_to_test_results(
     )
     pr_id = pull_request_url.split("/")[-1]
     try:
-        pr_id = int(pr_id)
+        pr_id_int = int(pr_id)
     except ValueError:
         raise ValueError(f"Invalid ID in pull request link: {pull_request_url}")
 
-    data = {"pull_request": {"status": status, "url": pull_request_url, "id": pr_id}}
+    data = {
+        "pull_request": {"status": status, "url": pull_request_url, "id": pr_id_int}
+    }
 
     return pyxis.patch(test_result_url, data)
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     """
     Main func
     """

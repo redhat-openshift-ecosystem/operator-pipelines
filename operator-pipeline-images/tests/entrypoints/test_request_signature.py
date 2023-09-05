@@ -108,7 +108,6 @@ def test_request_signature_uneven_manifest_and_reference() -> None:
     args.reference = "d,e"
     with pytest.raises(SystemExit) as e:
         request_signature.request_signature(args)
-        assert e.exception.code == 1
 
 
 @patch("json.load")

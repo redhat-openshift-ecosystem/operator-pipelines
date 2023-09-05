@@ -66,7 +66,9 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     return parser
 
 
-def wait_for_results(iib_url: str, batch_id: int, timeout=60 * 60, delay=20) -> Any:
+def wait_for_results(
+    iib_url: str, batch_id: int, timeout: float = 60 * 60, delay: float = 20
+) -> Any:
     """
     Wait for IIB build till it finishes
 
@@ -136,7 +138,7 @@ def add_bundle_to_index(
         Exception: Exception is raised when IIB build fails
     """
 
-    payload = {"build_requests": []}
+    payload: Dict[str, Any] = {"build_requests": []}
 
     for index in indices:
         build_request = {
@@ -165,7 +167,7 @@ def add_bundle_to_index(
 def output_index_image_paths(
     image_output: str,
     response: Dict[str, Any],
-):
+) -> None:
     """
     Extract the paths of the from_index and the newly built images.
     Args:

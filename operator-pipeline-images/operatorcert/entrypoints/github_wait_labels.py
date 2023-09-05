@@ -151,7 +151,7 @@ def wait_on_pr_labels(
     pull_request_id: int,
     wait_conditions: list[WaitCondition],
     timeout_s: int,
-    poll_interval_s: int,
+    poll_interval_s: float,
 ) -> bool:
     """
     Wait until ALL wait conditions on PR labels hold

@@ -6,7 +6,7 @@ import logging
 from typing import Any, Dict, List
 from urllib.parse import urljoin
 
-from operatorcert import pyxis, utils
+from operatorcert import pyxis
 from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
@@ -71,7 +71,7 @@ def setup_argparser() -> Any:  # pragma: no cover
     return parser
 
 
-def check_if_image_already_exists(args) -> bool:
+def check_if_image_already_exists(args: Any) -> bool:
     # quote is needed to urlparse the quotation marks
     filter_str = quote(
         f'isv_pid=="{args.isv_pid}";'
@@ -112,8 +112,8 @@ def prepare_parsed_data(skopeo_result: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def create_container_image(
-    args, skopeo_result: Dict[str, Any], podman_result: List[Dict[str, Any]]
-):
+    args: Any, skopeo_result: Dict[str, Any], podman_result: List[Dict[str, Any]]
+) -> Any:
     LOGGER.info("Creating new container image")
 
     date_now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
@@ -155,7 +155,7 @@ def create_container_image(
     return pyxis.post(upload_url, container_image_payload)
 
 
-def remove_latest_from_previous_image(pyxis_url: str, isv_pid: str):
+def remove_latest_from_previous_image(pyxis_url: str, isv_pid: str) -> None:
     # quote is needed to urlparse the quotation marks
     filter_str = quote(f'isv_pid=="{isv_pid}";' "not(deleted==true)")
 
@@ -194,7 +194,7 @@ def remove_latest_from_previous_image(pyxis_url: str, isv_pid: str):
         pyxis.put(put_image_url, prev_image)
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     """
     Main func
     """

@@ -8,8 +8,8 @@ PIPELINERUN_PATH = PARENT_DIR.joinpath("data/pipelinerun.json")
 TASKRUNS_PATH = PARENT_DIR.joinpath("data/taskruns.json")
 
 
-def test_taskrun():
-    pr = PipelineRun.from_files(PIPELINERUN_PATH, TASKRUNS_PATH)
+def test_taskrun() -> None:
+    pr = PipelineRun.from_files(str(PIPELINERUN_PATH), str(TASKRUNS_PATH))
 
     # Successful TaskRun
     tr = pr.taskruns[-1]
@@ -32,8 +32,8 @@ def test_taskrun():
     assert tr.status == TaskRun.FAILED
 
 
-def test_pipelinerun():
-    pr = PipelineRun.from_files(PIPELINERUN_PATH, TASKRUNS_PATH)
+def test_pipelinerun() -> None:
+    pr = PipelineRun.from_files(str(PIPELINERUN_PATH), str(TASKRUNS_PATH))
 
     assert pr.pipeline == "operator-hosted-pipeline"
     assert pr.name == "operator-hosted-pipeline-run-bvjls"

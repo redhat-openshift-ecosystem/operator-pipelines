@@ -2,13 +2,14 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 from requests import HTTPError, Response
+from requests_kerberos import HTTPKerberosAuth
 
 from operatorcert import iib
 
 
 def test_get_session() -> None:
     session = iib.get_session()
-    assert isinstance(session.auth, iib.HTTPKerberosAuth)
+    assert isinstance(session.auth, HTTPKerberosAuth)
 
 
 @patch("operatorcert.iib.get_session")
@@ -48,4 +49,4 @@ def test_get_builds_404(mock_session: MagicMock) -> None:
     )
 
     with pytest.raises(HTTPError):
-        iib.get_builds("https://foo.com/v1/bar", {})
+        iib.get_builds("https://foo.com/v1/bar", 1)
