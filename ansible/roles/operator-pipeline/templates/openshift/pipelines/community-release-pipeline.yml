@@ -264,20 +264,6 @@ spec:
           workspace: repository
           subPath: signing
 
-    # publish to index
-    - name: publish-to-index
-      runAfter:
-        - upload-signature
-      taskRef:
-        name: publish-to-index
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: index_image_paths
-          value: "$(tasks.add-bundle-to-index.results.index_image_paths)"
-        - name: environment
-          value: "$(params.env)"
-
   finally:
     # Release the acquired resource
     - name: release-lease
