@@ -11,8 +11,9 @@ spec:
 
     - name: request_url
       description: |
-        The GitHub issue or pull request URL where we want to add a new
-        comment.
+        The GitHub pull request URL where we want to add a labels
+        indicating which openshift versions should be included
+        and which versions should be skipped for prow operator testing.
 
     - name: github_token_secret_name
       description: |
