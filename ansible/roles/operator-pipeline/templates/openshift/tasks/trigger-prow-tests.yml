@@ -1,0 +1,74 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: trigger-prow-tests
+spec:
+  params:
+    - name: pipeline_image
+      description: |
+        The common pipeline image.
+
+    - name: request_url
+      description: |
+        The GitHub pull request URL where we want to add a labels
+        indicating which openshift versions should be included
+        and which versions should be skipped for prow operator testing.
+
+    - name: github_token_secret_name
+      description: |
+        The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+
+    - name: github_token_secret_key
+      description: |
+        The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+
+    - name: supported_ocp_versions
+      description: |
+        Space separated list of ocp versions supported by the pipeline
+        and the bundle.
+
+    - name: skipped_ocp_versions
+      description: |
+        Space separated list of ocp versions skipped for the bundle.
+
+    - name: github_host_url
+      description: |
+        The GitHub host, adjust this if you run a GitHub enterprise.
+      default: "https://api.github.com"
+
+  steps:
+    - name: add-labels-supported-skipped-versions
+      image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: "$(params.github_token_secret_name)"
+              key: "$(params.github_token_secret_key)"
+      script: |
+        #! /usr/bin/env bash
+        set -e
+
+        supported_versions=()
+        for supported_version in $(params.supported_ocp_versions)
+        do
+          supported_versions+=("ocp/$supported_version/start")
+        done
+
+        skipped_versions=()
+        for skipped_version in $(params.skipped_ocp_versions)
+        do
+          skipped_versions+=("ocp/$skipped_version/skip")
+        done
+
+        all_versions=()
+        all_versions+=("${supported_versions[@]}" "${skipped_versions[@]}")
+
+        github-labels \
+          --github-host-url "$(params.github_host_url)" \
+          --pull-request-url "$(params.request_url)" \
+          --add-labels "${all_versions[@]}" \
+          --remove-matching-namespace-labels
