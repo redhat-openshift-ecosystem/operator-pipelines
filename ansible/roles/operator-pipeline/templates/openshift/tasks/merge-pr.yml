@@ -17,6 +17,9 @@ spec:
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: token
+    - name: force_merge
+      description: The boolean which will indicate when to ignore the verification of ci.yaml file.
+      deafult: false
   workspaces:
     - name: source
   results:
@@ -27,11 +30,15 @@ spec:
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
-        PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
-        CI_FILE_PATH="$PKG_PATH/ci.yaml"
-        BOOL_MERGE=$(cat $CI_FILE_PATH | yq -r '.merge')
+        if [ "$BOOL_MERGE" = "false" ]; then
+          echo true >$(results.bool_merge.path)
+        else
+          PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
+          CI_FILE_PATH="$PKG_PATH/ci.yaml"
+          BOOL_MERGE=$(cat $CI_FILE_PATH | yq -r '.merge')
 
-        echo -n "$BOOL_MERGE" | tee $(results.bool_merge.path)
+          echo -n "$BOOL_MERGE" | tee $(results.bool_merge.path)
+        fi
 
     - name: review-pull-request
       image: "$(params.ubi8_minimal_image)"
