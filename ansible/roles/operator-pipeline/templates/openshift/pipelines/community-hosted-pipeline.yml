@@ -351,8 +351,8 @@ spec:
     - name: merge-pr
       when:
         - input: "$(tasks.get-ci-reviewer.results.author_is_reviewer)"
-          operator: notin
-          values: ["false"]
+          operator: in
+          values: ["true"]
       runAfter:
         - wait-prow-tests
       taskRef:
