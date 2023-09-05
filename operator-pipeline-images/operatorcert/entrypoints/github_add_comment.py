@@ -90,9 +90,9 @@ def github_add_comment(
             sys.exit(1)
 
         # If more than one comment is found take the last one
-        matching_comment = [x for x in comments if commen_tag in x["body"]][-1:]
-        if matching_comment:
-            matching_comment = matching_comment[0]["url"]
+        matching_comments = [x for x in comments if commen_tag in x["body"]][-1:]
+        if matching_comments:
+            matching_comment = matching_comments[0]["url"]
 
     if matching_comment:
         LOGGER.info("Updating this data on GitHub with PATCH")

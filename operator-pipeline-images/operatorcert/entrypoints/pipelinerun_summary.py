@@ -1,6 +1,6 @@
 import argparse
 import logging
-import sys
+from typing import Any
 
 from operatorcert.logger import setup_logger
 from operatorcert.tekton import PipelineRun
@@ -8,7 +8,7 @@ from operatorcert.tekton import PipelineRun
 LOGGER = logging.getLogger("operator-cert")
 
 
-def parse_args() -> argparse.ArgumentParser:  # pragma: no cover
+def parse_args() -> Any:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Construct a markdown summary for a Tekton PipelineRun."
     )

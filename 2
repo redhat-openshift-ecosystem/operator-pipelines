@@ -1,0 +1,55 @@
+Extend the CI pipeline with bandit, safety and pdm check
+
+These 3 tools have been added to the tox CI pipeline and bunch of yaml
+lint violation have been fixed.
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# interactive rebase in progress; onto 9c7e08e
+# Last command done (1 command done):
+#    pick 92b2ae4 Extend the CI pipeline with bandit, safety and pdm check
+# No commands remaining.
+# You are currently rebasing branch 'ci' on '9c7e08e'.
+#
+# Changes to be committed:
+#	modified:   .pre-commit-config.yaml
+#	modified:   .yamllint
+#	modified:   ansible/inventory/group_vars/clusters.yml
+#	modified:   ansible/inventory/host_vars/crc-cluster.yml
+#	modified:   ansible/inventory/host_vars/prod-cluster.yml
+#	modified:   ansible/inventory/host_vars/stage-cluster.yml
+#	modified:   ansible/roles/config-ocp-cluster/defaults/main.yml
+#	modified:   ansible/roles/config-ocp-cluster/tasks/main.yml
+#	modified:   ansible/roles/config-ocp-cluster/tasks/pipelinerun-listener.yml
+#	modified:   ansible/roles/index-signature-verification/defaults/main.yml
+#	modified:   ansible/roles/index-signature-verification/files/configmaps/index-signature-verification-config.yml
+#	modified:   ansible/roles/index-signature-verification/tasks/main.yml
+#	modified:   ansible/roles/integration-tests/tasks/tools.yml
+#	modified:   ansible/roles/nginx-proxy/tasks/main.yml
+#	modified:   ansible/roles/nginx-proxy/tasks/secrets.yml
+#	modified:   ansible/roles/nginx-proxy/templates/openshift/nginx-deployment.yml
+#	modified:   ansible/roles/nginx-proxy/templates/openshift/nginx-service.yml
+#	modified:   ansible/roles/operator-pipeline/tasks/community-signing-secrets.yml
+#	modified:   ansible/roles/operator-pipeline/tasks/community-signing.yml
+#	modified:   ansible/roles/operator-pipeline/tasks/operator-pipeline-import-index-images.yml
+#	modified:   ansible/roles/operator-pipeline/tasks/operator-pipeline-webhooks.yml
+#	modified:   ansible/roles/operator-pipeline/tasks/pipeline-secrets.yml
+#	modified:   ansible/roles/operator-pipeline/templates/openshift/openshift-pipeline-sa-scc-role.yml
+#	modified:   ansible/roles/operator-pipeline/templates/openshift/tasks/acquire-lock.yaml
+#	modified:   ansible/roles/operator-pipeline/templates/openshift/tasks/git-clone.yml
+#	modified:   ansible/roles/operator-pipeline/templates/openshift/tasks/release-lock.yaml
+#	modified:   ansible/roles/operator-pipeline/templates/openshift/tasks/yaml-lint.yml
+#	modified:   operator-pipeline-images/operatorcert/oidc_client.py
+#	modified:   pdm.lock
+#	modified:   pyproject.toml
+#	modified:   templates/crc-pod-template.yml
+#	modified:   tox.ini
+#
+# Untracked files:
+#	Makefile
+#	ansible/roles/operator-pipeline/templates/openshift/tasks/generate-temporary-index.yml
+#	htpasswd-community.txt
+#	htpasswd-notes.txt
+#	operator-pipeline-images/index-image-paths.txt
+#

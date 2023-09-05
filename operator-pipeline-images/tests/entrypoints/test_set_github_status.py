@@ -18,7 +18,7 @@ def test_main(
 def test_set_github_status(
     mock_url: MagicMock,
     mock_post: MagicMock,
-):
+) -> None:
     args = MagicMock()
     args.commit_sha = "b991e252da91df5429e9b2b26d6f88d681a8f754"
     args.context = "operator/test"

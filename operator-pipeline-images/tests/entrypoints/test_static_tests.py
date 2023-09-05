@@ -1,12 +1,11 @@
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from operatorcert.entrypoints import static_tests
 from operator_repo import Repo
 from operator_repo.checks import Fail, Warn
-
-from tests.utils import create_files, bundle_files
+from operatorcert.entrypoints import static_tests
+from tests.utils import bundle_files, create_files
 
 
 @pytest.mark.parametrize(
@@ -41,8 +40,8 @@ from tests.utils import create_files, bundle_files
             },
         ),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "No failures or warnings",
         "One warning",
         "One failure",
@@ -50,7 +49,9 @@ from tests.utils import create_files, bundle_files
     ],
 )
 @patch("operatorcert.entrypoints.static_tests.run_suite")
-def test_check_bundle(mock_run_suite: MagicMock, tmp_path, check_results, expected):
+def test_check_bundle(
+    mock_run_suite: MagicMock, tmp_path: Any, check_results: Any, expected: Any
+) -> None:
     operator_name = "test-operator"
     bundle_version = "0.0.1"
     create_files(tmp_path, bundle_files(operator_name, bundle_version))
@@ -67,7 +68,7 @@ def test_check_bundle(mock_run_suite: MagicMock, tmp_path, check_results, expect
 @patch("operatorcert.entrypoints.static_tests.check_bundle")
 @patch("operatorcert.entrypoints.static_tests.setup_logger")
 def test_static_tests_main(
-    mock_logger: MagicMock, mock_check_bundle: MagicMock, capsys, tmpdir
+    mock_logger: MagicMock, mock_check_bundle: MagicMock, capsys: Any, tmpdir: Any
 ) -> None:
     args = [
         "static-tests",

@@ -76,7 +76,7 @@ def open_pr(
     base: str,
     title: str,
     body: str,
-) -> Dict[str, Any]:
+) -> Any:
     """
     Open new Github pull request
 
@@ -92,7 +92,7 @@ def open_pr(
         Exception: Raises exception when request fails
 
     Returns:
-        Dict[str, Any]: Github API json response
+        Any: Github API json response
     """
 
     pr_url = f"{github_api_url}/repos/{repo_name}/pulls"

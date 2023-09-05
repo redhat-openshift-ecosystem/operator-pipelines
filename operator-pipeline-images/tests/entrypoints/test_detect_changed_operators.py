@@ -1,9 +1,10 @@
 import pathlib
 import tarfile
+from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from operatorcert.entrypoints import detect_changed_operators
 
 
@@ -156,8 +157,8 @@ from operatorcert.entrypoints import detect_changed_operators
             },
         ),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Add new bundle for new operator",
         "Add new bundle for existing operator",
         "Add bundles for multiple operators",
@@ -167,7 +168,9 @@ from operatorcert.entrypoints import detect_changed_operators
         "Delete an operator",
     ],
 )
-def test_detect_changed_operators(tmp_path, head_commit, base_commit, expected):
+def test_detect_changed_operators(
+    tmp_path: Path, head_commit: str, base_commit: str, expected: Any
+) -> None:
     data_dir = pathlib.Path(__file__).parent.parent.resolve() / "data"
     tar = tarfile.open(str(data_dir / "test-repo.tar"))
     tar.extractall(tmp_path)
@@ -185,7 +188,7 @@ def test_detect_changed_operators(tmp_path, head_commit, base_commit, expected):
 @patch("operatorcert.entrypoints.detect_changed_operators.detect_changed_operators")
 @patch("operatorcert.entrypoints.detect_changed_operators.setup_logger")
 def test_detect_changed_operators_main(
-    mock_logger: MagicMock, mock_detect: MagicMock, capsys, tmpdir
+    mock_logger: MagicMock, mock_detect: MagicMock, capsys: Any, tmpdir: Any
 ) -> None:
     args = [
         "detect_changed_operators",

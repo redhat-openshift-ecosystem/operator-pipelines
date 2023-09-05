@@ -16,7 +16,7 @@ def test_main(
 
 @patch("operatorcert.entrypoints.upload_artifacts.base64.b64encode")
 @patch("operatorcert.entrypoints.upload_artifacts.pyxis.post")
-def test_upload_artifact(mock_post: MagicMock, mock_b64) -> None:
+def test_upload_artifact(mock_post: MagicMock, mock_b64: MagicMock) -> None:
     args = MagicMock()
     args.pyxis_url = "http://foo.com/"
     args.certification_hash = "hashhash"
@@ -153,6 +153,9 @@ def test_upload_results_and_artifacts(
 
     mock_internal.return_value = True
     mock_get.return_value = {"_id": "some_id", "org_id": 100}
+
+    args.type = "unknown"
+    assert upload_artifacts.upload_results_and_artifacts(args) is None
 
     # PREFLIGHT-LOGS OR PIPELINE-LOGS TYPE
     args.type = "preflight-logs"

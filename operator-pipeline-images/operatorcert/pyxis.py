@@ -19,7 +19,7 @@ def is_internal() -> bool:
     """
     cert = os.environ.get("PYXIS_CERT_PATH")
     key = os.environ.get("PYXIS_KEY_PATH")
-    return cert and key
+    return bool(cert and key)
 
 
 def _get_session(pyxis_url: str, auth_required: bool = True) -> requests.Session:
@@ -87,7 +87,7 @@ def _get_session(pyxis_url: str, auth_required: bool = True) -> requests.Session
     return session
 
 
-def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
+def post(url: str, body: Dict[str, Any]) -> Any:
     """
     POST pyxis API request to given URL with given payload
 
@@ -96,7 +96,7 @@ def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
         body (Dict[str, Any]): Request payload
 
     Returns:
-        Dict[str, Any]: Pyxis response
+        Any: Pyxis response
     """
     session = _get_session(url)
 
@@ -113,7 +113,7 @@ def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
     return resp.json()
 
 
-def put(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
+def put(url: str, body: Dict[str, Any]) -> Any:
     """
     PUT pyxis API request to given URL with given payload
 
@@ -122,7 +122,7 @@ def put(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
         body (Dict[str, Any]): Request payload
 
     Returns:
-        Dict[str, Any]: Pyxis response
+        Any: Pyxis response
     """
     session = _get_session(url)
 
@@ -139,7 +139,7 @@ def put(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
     return resp.json()
 
 
-def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
+def patch(url: str, body: Dict[str, Any]) -> Any:
     """
     PATCH pyxis API request to given URL with given payload
 
@@ -148,7 +148,7 @@ def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
         body (Dict[str, Any]): Request payload
 
     Returns:
-        Dict[str, Any]: Pyxis response
+        Any: Pyxis response
     """
     session = _get_session(url)
 
@@ -166,7 +166,7 @@ def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get(
-    url: str, params: Optional[Dict[str, str]] = None, auth_required: bool = True
+    url: str, params: Optional[Dict[str, Any]] = None, auth_required: bool = True
 ) -> Any:
     """
     Pyxis GET request
@@ -189,7 +189,7 @@ def get(
     return resp
 
 
-def get_project(base_url: str, project_id: str) -> Dict[str, Any]:
+def get_project(base_url: str, project_id: str) -> Any:
     """
     Get project details for given project ID
 
@@ -198,7 +198,7 @@ def get_project(base_url: str, project_id: str) -> Dict[str, Any]:
         project_id (str): certification project ID
 
     Returns:
-        Dict[str, Any]: Pyxis project response
+       Any: Pyxis project response
     """
     session = _get_session(base_url)
 
@@ -216,7 +216,7 @@ def get_project(base_url: str, project_id: str) -> Dict[str, Any]:
     return resp.json()
 
 
-def get_vendor_by_org_id(base_url: str, org_id: str) -> Dict[str, Any]:
+def get_vendor_by_org_id(base_url: str, org_id: str) -> Any:
     """
     Get vendor using organization ID
 
@@ -225,7 +225,7 @@ def get_vendor_by_org_id(base_url: str, org_id: str) -> Dict[str, Any]:
         org_id (str): Organization ID
 
     Returns:
-        Dict[str, Any]: Vendor Pyxis response
+        Any: Vendor Pyxis response
     """
     session = _get_session(base_url)
 
@@ -243,7 +243,7 @@ def get_vendor_by_org_id(base_url: str, org_id: str) -> Dict[str, Any]:
     return resp.json()
 
 
-def get_repository_by_isv_pid(base_url: str, isv_pid: str) -> Dict[str, Any]:
+def get_repository_by_isv_pid(base_url: str, isv_pid: str) -> Any:
     """
     Get container repository using ISV pid
 
@@ -252,7 +252,7 @@ def get_repository_by_isv_pid(base_url: str, isv_pid: str) -> Dict[str, Any]:
         isv_pid (str): Project's isv_pid
 
     Returns:
-        Dict[str, Any]: Repository Pyxis response
+        Any: Repository Pyxis response
     """
     session = _get_session(base_url)
 

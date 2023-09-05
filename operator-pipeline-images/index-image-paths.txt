@@ -1,0 +1,1 @@
+registry.stage.redhat.io/redhat/community-operator-index:v4.12+registry-proxy.engineering.redhat.com/rh-osbs/iib@sha256:ce8f1446ac6dcd8d602b9b3d7c2ac42c22af3b15ef8b221fd98113bf38e65e14

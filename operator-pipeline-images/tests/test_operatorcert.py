@@ -158,7 +158,7 @@ def test_ocp_version_info(
     )
 
 
-def test_get_repo_and_org_from_github_url():
+def test_get_repo_and_org_from_github_url() -> None:
     # test http and ssh
     for url in [
         "git@github.com:redhat-openshift-ecosystem/operator-pipelines.git",
@@ -182,7 +182,7 @@ def test_get_repo_and_org_from_github_url():
 
 
 @patch("operatorcert.github.get")
-def test_get_files_added_in_pr(mock_get: MagicMock):
+def test_get_files_added_in_pr(mock_get: MagicMock) -> None:
     mock_get.return_value = {
         "irrelevant_key": "abc",
         "files": [
@@ -201,7 +201,7 @@ def test_get_files_added_in_pr(mock_get: MagicMock):
 
 
 @patch("operatorcert.github.get")
-def test_get_files_added_in_pr_changed_files(mock_get: MagicMock):
+def test_get_files_added_in_pr_changed_files(mock_get: MagicMock) -> None:
     mock_get.return_value = {
         "irrelevant_key": "abc",
         "files": [
@@ -218,7 +218,7 @@ def test_get_files_added_in_pr_changed_files(mock_get: MagicMock):
 
 
 @patch("operatorcert.github.get")
-def test_get_files_added_in_pr_changed_ci_yaml(mock_get: MagicMock):
+def test_get_files_added_in_pr_changed_ci_yaml(mock_get: MagicMock) -> None:
     mock_get.return_value = {
         "irrelevant_key": "abc",
         "files": [
@@ -252,7 +252,7 @@ def test_get_files_added_in_pr_changed_ci_yaml(mock_get: MagicMock):
         "sample-repository/operators/sample-operator/1.txt",
     ],
 )
-def test_verify_changed_files_location(wrong_change: str):
+def test_verify_changed_files_location(wrong_change: str) -> None:
     changed_files = [
         "operators/sample-operator/0.1.0/1.txt",
         "operators/sample-operator/0.1.0/directory/2.txt",
@@ -289,7 +289,7 @@ def test_verify_changed_files_location(wrong_change: str):
         ("operator operator-test123 (1)", True, "operator-test123", "1"),
     ],
 )
-def test_parse_pr_title(pr_title: str, is_valid: bool, name: str, version: str):
+def test_parse_pr_title(pr_title: str, is_valid: bool, name: str, version: str) -> None:
     if is_valid:
         res_name, res_version = operatorcert.parse_pr_title(pr_title)
         assert res_name == name
@@ -300,7 +300,7 @@ def test_parse_pr_title(pr_title: str, is_valid: bool, name: str, version: str):
 
 
 @patch("operatorcert.github.get")
-def test_verify_pr_uniqueness(mock_get: MagicMock):
+def test_verify_pr_uniqueness(mock_get: MagicMock) -> None:
     base_pr_url = "https://github.com/user/repo/pulls/1"
     pr_rsp = [
         # At first call get return:
@@ -353,7 +353,7 @@ def test_verify_pr_uniqueness(mock_get: MagicMock):
         )
 
 
-def test_validate_user():
+def test_validate_user() -> None:
     contacts = ["some_user", "some_other_user"]
 
     operatorcert.validate_user("some_user", contacts)
@@ -363,7 +363,7 @@ def test_validate_user():
 
 
 @patch("operatorcert.pyxis.get")
-def test_download_test_results(mock_get: MagicMock):
+def test_download_test_results(mock_get: MagicMock) -> None:
     # Arrange
     args = MagicMock()
     args.pyxis_url = "https://pyxis.engineering.redhat.com"

@@ -91,7 +91,7 @@ def upload_signature(data: Any, pyxis_url: str) -> None:
             raise
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     """
     Main func
     """

@@ -45,7 +45,7 @@ def _get_session(auth_required: bool = False) -> requests.Session:
 
 def get(
     url: str, params: Optional[Dict[str, str]] = None, auth_required: bool = True
-) -> Dict[str, Any]:
+) -> Any:
     """
     Issue a GET request to the GitHub API
 
@@ -55,7 +55,7 @@ def get(
         auth_required (bool): Whether authentication should be required for the session
 
     Returns:
-        Dict[str, Any]: GitHub response
+       Any: GitHub response
     """
     session = _get_session(auth_required=auth_required)
     LOGGER.debug(f"GET GitHub request url: {url}")
@@ -73,7 +73,7 @@ def get(
     return resp.json()
 
 
-def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
+def post(url: str, body: Dict[str, Any]) -> Any:
     """
     POST Github API request to given URL with given payload
 
@@ -82,7 +82,7 @@ def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
         body (Dict[str, Any]): Request payload
 
     Returns:
-        Dict[str, Any]: Github response
+        Any: Github response
     """
     session = _get_session(auth_required=True)
 
@@ -99,7 +99,7 @@ def post(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
     return resp.json()
 
 
-def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
+def patch(url: str, body: Dict[str, Any]) -> Any:
     """
     PATCH GitHub API request to given URL with given payload
 
@@ -108,7 +108,7 @@ def patch(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
         body (Dict[str, Any]): Request payload
 
     Returns:
-        Dict[str, Any]: Github response
+        Any: Github response
     """
     session = _get_session(auth_required=True)
 

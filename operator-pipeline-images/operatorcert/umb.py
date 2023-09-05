@@ -4,7 +4,7 @@ import ssl
 import stomp
 from stomp import ConnectionListener
 import sys
-from typing import Any
+from typing import Any, List
 import uuid
 
 
@@ -14,7 +14,7 @@ LOGGER = logging.getLogger("operator-cert")
 class UmbClient:
     def __init__(
         self,
-        hostnames: list,
+        hostnames: List[tuple[str, int]],
         cert_file: str,
         key_file: str,
         handler: ConnectionListener,
@@ -82,7 +82,7 @@ class UmbClient:
         """
         self.connection.disconnect()
 
-    def unsubscribe(self, destination: str):
+    def unsubscribe(self, destination: str) -> None:
         """
         Unsubscribe from the given destination.
         """
@@ -90,7 +90,7 @@ class UmbClient:
         self.connection.unsubscribe(destination=destination, id=self.id)
 
 
-def start_umb_client(hosts: list, client_name: str, handler: Any) -> UmbClient:
+def start_umb_client(hosts: List[str], client_name: str, handler: Any) -> UmbClient:
     """
     Start the UMB message bus listener and return the instantiated client object.
     Args:
@@ -113,8 +113,8 @@ def start_umb_client(hosts: list, client_name: str, handler: Any) -> UmbClient:
 
             umb_client = UmbClient(
                 host_list,
-                os.getenv("UMB_CERT_PATH"),
-                os.getenv("UMB_KEY_PATH"),
+                os.getenv("UMB_CERT_PATH") or "",
+                os.getenv("UMB_KEY_PATH") or "",
                 handler,
                 client_name,
             )
