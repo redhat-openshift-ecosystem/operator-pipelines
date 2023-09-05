@@ -368,6 +368,8 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
+        - name: force_merge
+          value: true
       workspaces:
         - name: source
           workspace: repository
