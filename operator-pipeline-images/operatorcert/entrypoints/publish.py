@@ -54,7 +54,7 @@ def setup_argparser() -> Any:
     return parser
 
 
-def publish_vendor(args: Any) -> Dict[str, Any]:
+def publish_vendor(args: Any) -> Any:
     """
     Publish container vendor
 
@@ -62,7 +62,7 @@ def publish_vendor(args: Any) -> Dict[str, Any]:
         args (Any): CLI arguments
 
     Returns:
-        Dict[str, Any]: Vendor object
+        Any: Vendor object
     """
     LOGGER.info("Publishing vendor...")
     vendor = pyxis.get_vendor_by_org_id(args.pyxis_url, args.org_id)
@@ -84,7 +84,7 @@ def publish_vendor(args: Any) -> Dict[str, Any]:
     return resp
 
 
-def publish_repository(args: Any) -> Dict[str, Any]:
+def publish_repository(args: Any) -> Any:
     """
     Publish container repository.
     The function either set a published flag for existing repository or
@@ -94,7 +94,7 @@ def publish_repository(args: Any) -> Dict[str, Any]:
         args (Any): CLI arguments
 
     Returns:
-        Dict[str, Any]: Repository object
+        Any: Repository object
     """
     LOGGER.info("Publishing repository...")
     project = pyxis.get_project(args.pyxis_url, args.cert_project_id)
@@ -142,11 +142,11 @@ def create_repository(args: Any, project: Dict[str, Any]) -> Any:
         )
         return None
 
-    vendor = pyxis.get_vendor_by_org_id(args.pyxis_url, project.get("org_id"))
+    vendor = pyxis.get_vendor_by_org_id(args.pyxis_url, project.get("org_id") or "")
     vendor_label = vendor["label"]
 
     repo_name = container.get("repository_name")
-    repository = f"{vendor_label}/{repo_name}"
+    repository_name = f"{vendor_label}/{repo_name}"
 
     long_description = container.get("repository_description") or " "
     # strip html, trim by word boundary, max length 100, add ellipsis
@@ -167,7 +167,7 @@ def create_repository(args: Any, project: Dict[str, Any]) -> Any:
         "protected_for_pull": False,
         "protected_for_search": False,
         "registry": args.connect_registry,
-        "repository": repository,
+        "repository": repository_name,
         "build_categories": ["Operator bundle"],
         "isv_pid": container.get("isv_pid"),
         "application_categories": container.get("application_categories", []),

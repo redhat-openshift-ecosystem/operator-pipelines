@@ -89,7 +89,7 @@ def share_github_gist(
     return pull_request.create_issue_comment(f"Pipeline logs: {gist.html_url}")
 
 
-def main():
+def main() -> None:
     """
     Main func
     """

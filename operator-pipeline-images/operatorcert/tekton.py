@@ -1,6 +1,6 @@
 import datetime
 import json
-from typing import Any
+from typing import Any, Dict
 
 import humanize
 from dateutil.parser import isoparse
@@ -14,11 +14,11 @@ class TaskRun:
     FAILED = "failed"
     UNKNOWN = "unknown"
 
-    def __init__(self, obj: dict) -> None:
+    def __init__(self, obj: Dict[str, Any]) -> None:
         self.obj = obj
 
     @property
-    def pipelinetask(self) -> str:
+    def pipelinetask(self) -> Any:
         return self.obj["metadata"]["labels"]["tekton.dev/pipelineTask"]
 
     @property
@@ -30,7 +30,7 @@ class TaskRun:
         return isoparse(self.obj["status"]["completionTime"])
 
     @property
-    def duration(self) -> str:
+    def duration(self) -> Any:
         return humanize.naturaldelta(self.completion_time - self.start_time)
 
     @property
@@ -86,7 +86,7 @@ Start Time: *{start_time}*
     # Markdown TaskRun template
     TASKRUN_TEMPLATE = "| {icon} | {name} | {start_time} | {duration} |"
 
-    def __init__(self, obj: dict, taskruns: list[TaskRun]) -> None:
+    def __init__(self, obj: Dict[str, Any], taskruns: list[TaskRun]) -> None:
         self.obj = obj
         self.taskruns = taskruns
 
@@ -111,15 +111,15 @@ Start Time: *{start_time}*
         return cls(obj, taskruns)
 
     @property
-    def pipeline(self) -> str:
+    def pipeline(self) -> Any:
         return self.obj["metadata"]["labels"]["tekton.dev/pipeline"]
 
     @property
-    def name(self) -> str:
+    def name(self) -> Any:
         return self.obj["metadata"]["name"]
 
     @property
-    def start_time(self) -> datetime:
+    def start_time(self) -> datetime.datetime:
         return isoparse(self.obj["status"]["startTime"])
 
     @property

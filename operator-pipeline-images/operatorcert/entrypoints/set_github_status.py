@@ -1,5 +1,6 @@
 import argparse
 import logging
+from typing import Any
 from urllib.parse import urljoin
 
 from operatorcert import get_repo_and_org_from_github_url, github
@@ -37,7 +38,7 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     return parser
 
 
-def set_github_status(args) -> None:
+def set_github_status(args: Any) -> None:
     org, repo = get_repo_and_org_from_github_url(args.git_repo_url)
     status_uri = "/repos/{org}/{repo}/statuses/{sha}"
     post_data = {

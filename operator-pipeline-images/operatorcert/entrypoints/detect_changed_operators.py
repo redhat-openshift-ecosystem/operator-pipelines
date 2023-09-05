@@ -4,7 +4,7 @@ import logging
 import pathlib
 import tempfile
 from typing import Tuple, Optional, Set, Dict, List
-from git import Repo as GitRepo
+from git.repo import Repo as GitRepo
 from operator_repo import Repo as OperatorRepo
 
 from operatorcert.logger import setup_logger
@@ -109,14 +109,14 @@ def detect_changed_operators(
 
         git_repo_head = GitRepo(repo_path)
         # Ensure the head commit is checked out (mostly needed for tests)
-        git_repo_head.head.reference = git_repo_head.create_head(
+        git_repo_head.head.reference = git_repo_head.create_head(  # type: ignore
             "pr_head", head_commit, force=True
         )
         git_repo_head.head.reset(index=True, working_tree=True)
         # Make a temporary clone of the repo and check out the base commit
         git_repo_base = git_repo_head.clone(repo_clone_path)
         git_repo_base.create_head("pr_head", head_commit, force=True)
-        git_repo_base.head.reference = git_repo_base.create_head(
+        git_repo_base.head.reference = git_repo_base.create_head(  # type: ignore
             "pr_base", base_commit, force=True
         )
         git_repo_base.head.reset(index=True, working_tree=True)

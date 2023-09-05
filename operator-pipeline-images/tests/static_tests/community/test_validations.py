@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict
 
 import pytest
 from operatorcert.static_tests.community.validations import (
@@ -18,8 +18,8 @@ from operatorcert.static_tests.community.validations import (
 @pytest.mark.parametrize(
     "value, expected",
     [("", False), (1, False), ("Full Lifecycle", True)],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Empty",
         "Invalid type",
         "Valid value",
@@ -38,8 +38,8 @@ def test_validate_capabilities(value: Any, expected: bool) -> None:
         ("Networking,Storage", True),
         ("Networking,foo", False),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Empty",
         "Invalid type",
         "Valid single value",
@@ -59,8 +59,8 @@ def test_validate_categories(value: Any, expected: bool) -> None:
         ("2023-08-17T12:00:00Z", True),
         (datetime.now(), True),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Empty",
         "Invalid type",
         "Valid string value",
@@ -79,8 +79,8 @@ def test_validate_timestamp(value: Any, expected: bool) -> None:
         ("1.0.0", True),
         ("1.2.3.4", False),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Empty",
         "Invalid type",
         "Valid semver value",
@@ -102,8 +102,8 @@ def test_validate_semver(value: Any, expected: bool) -> None:
         ([{"foo": "bar"}], {"foo": str, "bar": str}, False),
         ([1], {"foo": str}, False),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Empty",
         "Invalid type",
         "Empty list",
@@ -113,7 +113,9 @@ def test_validate_semver(value: Any, expected: bool) -> None:
         "Invalid item type",
     ],
 )
-def test_validate_list_of_dicts(value: Any, schema: dict, expected: bool) -> None:
+def test_validate_list_of_dicts(
+    value: Any, schema: Dict[str, Any], expected: bool
+) -> None:
     assert validate_list_of_dicts(value, schema) == expected
 
 
@@ -126,8 +128,8 @@ def test_validate_list_of_dicts(value: Any, schema: dict, expected: bool) -> Non
         ([{"base64data": "foobar", "mediatype": "image/png"}], False),
         ([{"base64data": "Zm9v", "mediatype": "text/plain"}], False),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Empty",
         "Valid icon",
         "Empty base64data",
@@ -145,13 +147,13 @@ def test_validate_icon(value: Any, expected: bool) -> None:
         ([], False),
         ([{"name": "foo", "email": "foo@bar.com"}], True),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Empty",
         "Valid",
     ],
 )
-def test_validate_maintainers(value, expected):
+def test_validate_maintainers(value: Any, expected: Any) -> None:
     assert validate_maintainers(value) == expected
 
 
@@ -161,8 +163,8 @@ def test_validate_maintainers(value, expected):
         ([], False),
         ([{"name": "foo", "url": "https://foo.com/"}], True),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Empty",
         "Valid",
     ],
@@ -178,8 +180,8 @@ def test_validate_links(value: Any, expected: bool) -> None:
         (["foo"], True),
         ([1], False),
     ],
-    False,
-    [
+    indirect=False,
+    ids=[
         "Empty",
         "Valid",
         "Invalid element type",

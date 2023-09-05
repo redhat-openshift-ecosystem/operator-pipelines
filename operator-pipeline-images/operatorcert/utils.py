@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import pathlib
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from requests import Session
 from requests.adapters import HTTPAdapter
@@ -32,7 +32,7 @@ def find_file(
     return None
 
 
-def store_results(results: Dict[str, str]):
+def store_results(results: Dict[str, Any]) -> None:
     """
     Store the given results into files in given directory.
 
@@ -52,7 +52,7 @@ def store_results(results: Dict[str, str]):
                 result_file.write(str(result_value))
 
 
-def set_client_keytab(keytab_file: str):
+def set_client_keytab(keytab_file: str) -> None:
     """
     Set env variable with default client keytab.
     Args:
@@ -71,8 +71,8 @@ def set_client_keytab(keytab_file: str):
 def add_session_retries(
     session: Session,
     total: int = 10,
-    backoff_factor: int = 1,
-    status_forcelist: Optional[Tuple[int]] = (408, 500, 502, 503, 504),
+    backoff_factor: float = 1,
+    status_forcelist: Optional[Tuple[int, ...]] = (408, 500, 502, 503, 504),
 ) -> None:
     """
     Adds retries to a requests HTTP/HTTPS session.

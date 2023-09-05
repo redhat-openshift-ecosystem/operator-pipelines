@@ -75,7 +75,7 @@ def validate_semver(value: Any) -> bool:
         return False
 
 
-def validate_list_of_dicts(value: Any, fields: dict[str, Type]) -> bool:
+def validate_list_of_dicts(value: Any, fields: dict[str, type]) -> bool:
     """
     Return True if the value is a list of dicts and all entries in the
     list respect the given schema.

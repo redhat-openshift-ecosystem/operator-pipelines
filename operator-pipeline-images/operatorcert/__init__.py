@@ -3,14 +3,13 @@ import logging
 import pathlib
 import re
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
-from typing import Dict, List, Optional, Tuple
 
 import yaml
 from dateutil.parser import isoparse
-from operatorcert import github
-from operatorcert import pyxis
-from operatorcert.utils import find_file, store_results
+from operatorcert import github, pyxis
+from operatorcert.utils import find_file
 
 # Bundle annotations
 OCP_VERSIONS_ANNOTATION = "com.redhat.openshift.versions"
@@ -19,7 +18,7 @@ PACKAGE_ANNOTATION = "operators.operatorframework.io.bundle.package.v1"
 LOGGER = logging.getLogger("operator-cert")
 
 
-def get_bundle_annotations(bundle_path: pathlib.Path) -> Dict:
+def get_bundle_annotations(bundle_path: pathlib.Path) -> Dict[str, Any]:
     """
     Gets all the annotations from the bundle metadata
 
@@ -33,16 +32,16 @@ def get_bundle_annotations(bundle_path: pathlib.Path) -> Dict:
         ("metadata", "annotations.yaml"),
         ("metadata", "annotations.yml"),
     ]
-    annotations_path = find_file(bundle_path, paths)
+    annotations_path = find_file(bundle_path, paths)  # type: ignore
     if not annotations_path:
         raise RuntimeError("Annotations file not found")
 
     with annotations_path.open() as fh:
         content = yaml.safe_load(fh)
-        return content.get("annotations", {})
+        return content.get("annotations") or {}
 
 
-def get_csv_content(bundle_path: pathlib.Path, package: str) -> Dict:
+def get_csv_content(bundle_path: pathlib.Path, package: str) -> Any:
     """
     Gets all the content of the bundle CSV
 
@@ -57,7 +56,7 @@ def get_csv_content(bundle_path: pathlib.Path, package: str) -> Dict:
         ("manifests", f"{package}.clusterserviceversion.yaml"),
         ("manifests", f"{package}.clusterserviceversion.yml"),
     ]
-    csv_path = find_file(bundle_path, paths)
+    csv_path = find_file(bundle_path, paths)  # type: ignore
     if not csv_path:
         raise RuntimeError("Cluster service version (CSV) file not found")
 
@@ -67,9 +66,9 @@ def get_csv_content(bundle_path: pathlib.Path, package: str) -> Dict:
 
 def get_supported_indices(
     pyxis_url: str,
-    ocp_versions_range: str,
+    ocp_versions_range: Any,
     organization: str,
-) -> List[str]:
+) -> List[Dict[str, Any]]:
     """
     Gets all the known supported OCP indices for this bundle.
 
@@ -98,10 +97,10 @@ def get_supported_indices(
 
     rsp = pyxis.get(url, params=params, auth_required=False)
     rsp.raise_for_status()
-    return rsp.json()["data"]
+    return rsp.json().get("data") or []
 
 
-def filter_out_eol_versions(indices: List[Dict]) -> List[Dict]:
+def filter_out_eol_versions(indices: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Filters out indices that have reached their end of life.
 
@@ -128,8 +127,8 @@ def filter_out_eol_versions(indices: List[Dict]) -> List[Dict]:
 
 
 def get_skipped_versions(
-    all_indices: List[Dict], supported_indices: List[Dict]
-) -> List[Dict]:
+    all_indices: List[Dict[str, Any]], supported_indices: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
     """
     Compares the list of all indices to the list of supported indices and
     returns a diff with a list of not supported indices.
@@ -155,7 +154,7 @@ def get_skipped_versions(
 
 def ocp_version_info(
     bundle_path: pathlib.Path, pyxis_url: str, organization: str
-) -> Dict:
+) -> Dict[str, Any]:
     """
     Gathers some information pertaining to the OpenShift versions defined in the
     Operator bundle.
@@ -315,19 +314,19 @@ def parse_pr_title(pr_title: str) -> Tuple[str, str]:
     regex = rf"^operator ([a-zA-Z0-9-]+) \(([^\s]+)\)$"
     regex_pattern = re.compile(regex)
 
-    if not regex_pattern.match(pr_title):
+    matching = regex_pattern.search(pr_title)
+    if not matching:
         raise ValueError(
             f"Pull request title {pr_title} does not follow the regex 'operator <operator_name> (<version>)"
         )
 
-    matching = regex_pattern.search(pr_title)
     bundle_name = matching.group(1)
     bundle_version = matching.group(2)
 
     return bundle_name, bundle_version
 
 
-def validate_user(git_username: str, contacts: List[str]):
+def validate_user(git_username: str, contacts: List[str]) -> None:
     if git_username not in contacts:
         raise Exception(
             f"User {git_username} doesn't have permissions to submit the bundle."
@@ -379,7 +378,7 @@ def verify_pr_uniqueness(
             raise RuntimeError("Multiple pull requests for one Operator Bundle")
 
 
-def download_test_results(args) -> Optional[str]:
+def download_test_results(args: Any) -> Any:
     """
     Try to get the test results for given parameters from the Pyxis.
     On success, store the results in file and return it's id, on failure- return None.

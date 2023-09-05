@@ -17,7 +17,6 @@ def test_update_cert_project_status(
     args.pyxis_url = "https://example.com"
     args.cert_project_id = "id1234"
     args.certification_date = "Started"
-    mock_rsp = MagicMock()
     mock_rsp = {
         "org_id": 123,
         "container": {

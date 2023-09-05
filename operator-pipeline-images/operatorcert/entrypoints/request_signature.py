@@ -6,7 +6,7 @@ import os
 import sys
 import threading
 import time
-from typing import Any
+from typing import Any, Dict
 import uuid
 
 import stomp
@@ -91,15 +91,15 @@ def setup_argparser() -> Any:  # pragma: no cover
     return parser
 
 
-request_ids = None
-result_file = None
+request_ids: Any = None
+result_file: Any = None
 
 # wait for signing response for a total of 5 min, at 5 second intervals
 TIMEOUT_COUNT = 60
-WAIT_INTERVAL_SEC = 5
+WAIT_INTERVAL_SEC: float = 5
 
 
-class UmbHandler(stomp.ConnectionListener):  # pragma: no cover
+class UmbHandler(stomp.ConnectionListener):  # type: ignore  # pragma: no cover
     def on_error(self, frame: Any) -> None:
         LOGGER.error("Received an error frame:\n{}".format(frame.body))
 
@@ -157,8 +157,8 @@ def gen_sig_claim_file(reference: str, digest: str, requested_by: str) -> str:
         "optional": {"creator": requested_by},
     }
 
-    claim = base64.b64encode(json.dumps(claim).encode("utf-8"))
-    return claim.decode("utf-8")
+    claim_b64 = base64.b64encode(json.dumps(claim).encode("utf-8"))
+    return claim_b64.decode("utf-8")
 
 
 def gen_image_name(reference: str) -> str:
@@ -173,7 +173,9 @@ def gen_image_name(reference: str) -> str:
     return "/".join(image_parts[1:])
 
 
-def gen_request_msg(args, digest, reference, request_id):
+def gen_request_msg(
+    args: Any, digest: str, reference: str, request_id: str
+) -> Dict[str, Any]:
     """
     Generate the request message to send to RADAS.
     Args:
@@ -299,7 +301,7 @@ def request_signature(args: Any) -> None:
                 json.dump(results, f)
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     """
     Main func
     """

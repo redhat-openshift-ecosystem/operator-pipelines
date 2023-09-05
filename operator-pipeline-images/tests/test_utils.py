@@ -6,6 +6,7 @@ import pytest
 import os
 
 from operatorcert import utils
+from requests import Session
 from operatorcert.utils import store_results
 
 
@@ -21,6 +22,7 @@ def test_find_file(tmp_path: Path) -> None:
             ("foo", "baz.txt"),
         ],
     )
+    assert result is not None
     assert str(result.relative_to(tmp_path)) == "foo/bar/baz.txt"
 
     result = utils.find_file(
@@ -53,7 +55,7 @@ def test_store_results() -> None:
 
 
 def test_set_client_keytab() -> None:
-    assert utils.set_client_keytab("") is None
+    utils.set_client_keytab("")
 
     with pytest.raises(IOError):
         utils.set_client_keytab("non-existent")
@@ -68,7 +70,7 @@ def test_add_session_retries() -> None:
     status_forcelist = (404, 503)
     total = 3
     backoff_factor = 0.5
-    session = utils.Session()
+    session = Session()
     utils.add_session_retries(
         session,
         total=total,

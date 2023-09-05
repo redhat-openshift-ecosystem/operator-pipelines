@@ -19,7 +19,7 @@ def test_github_add_comment_post(mock_post: MagicMock) -> None:
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = REQUEST_URL
-    args.comment_file = COMMENT_PATH
+    args.comment_file = str(COMMENT_PATH)
     args.comment_tag = "test_tag"
 
     github_add_comment.github_add_comment(
@@ -41,7 +41,7 @@ def test_github_add_comment_patch(mock_patch: MagicMock, mock_get: MagicMock) ->
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = REQUEST_URL
-    args.comment_file = COMMENT_PATH
+    args.comment_file = str(COMMENT_PATH)
     args.comment_tag = "test_tag_2"
     args.replace = "true"
 
@@ -71,7 +71,7 @@ def test_github_add_comment_no_tag_replace_true() -> None:
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = REQUEST_URL
-    args.comment_file = COMMENT_PATH
+    args.comment_file = str(COMMENT_PATH)
     args.comment_tag = ""
     args.replace = "true"
 
@@ -91,7 +91,7 @@ def test_github_add_comment_bad_address_post(mock_post: MagicMock) -> None:
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = "https://github.com/foo/bar/pull/202"
-    args.comment_file = COMMENT_PATH
+    args.comment_file = str(COMMENT_PATH)
 
     mock_post.side_effect = HTTPError
 
@@ -114,7 +114,7 @@ def test_github_add_comment_bad_address_patch(
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = "https://github.com/foo/bar/pull/202"
-    args.comment_file = COMMENT_PATH
+    args.comment_file = str(COMMENT_PATH)
     args.comment_tag = "test_tag_3"
     args.replace = "true"
 
@@ -143,7 +143,7 @@ def test_github_add_comment_bad_address_replace(mock_get: MagicMock) -> None:
     args = MagicMock()
     args.github_host_url = GITHUB_HOST_URL
     args.request_url = "https://github.com/foo/bar/pull/202"
-    args.comment_file = COMMENT_PATH
+    args.comment_file = str(COMMENT_PATH)
     args.comment_tag = "test_tag_4"
     args.replace = "true"
 

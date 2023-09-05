@@ -11,7 +11,7 @@ from operatorcert.oidc_client import OIDCClientCredentials, OIDCClientCredential
 LOGGER = logging.getLogger("operator-cert")
 
 
-def get(url: str) -> Dict[str, Any]:
+def get(url: str) -> Any:
     """
     GET Hydra API request to given URL with given payload
 
@@ -19,7 +19,7 @@ def get(url: str) -> Dict[str, Any]:
         url (str): Hydra API URL
 
     Returns:
-        Dict[str, Any]: Hydra response
+        Any: Hydra response
     """
     auth = OIDCClientCredentials(
         token_url=os.environ["HYDRA_SSO_TOKEN_URL"],

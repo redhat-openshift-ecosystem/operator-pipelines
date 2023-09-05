@@ -143,10 +143,10 @@ def add_or_remove_labels(
             removal of existing labels within a namespace given
             by add_labels argument
     """
-    repository, pr_id = parse_github_issue_url(github_issue_url)
+    repository_name, pr_id = parse_github_issue_url(github_issue_url)
 
-    LOGGER.info(f"Adding labels {add_labels} to {repository}")
-    repository = github_client.get_repo(repository)
+    LOGGER.info(f"Adding labels {add_labels} to {repository_name}")
+    repository = github_client.get_repo(repository_name)
     pull_request = repository.get_pull(pr_id)
     current_labels = pull_request.get_labels()
 

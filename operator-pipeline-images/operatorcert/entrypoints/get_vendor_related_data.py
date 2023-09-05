@@ -2,8 +2,9 @@ import argparse
 import logging
 from urllib.parse import urljoin
 
-from operatorcert import pyxis, store_results
+from operatorcert import pyxis
 from operatorcert.logger import setup_logger
+from operatorcert.utils import store_results
 
 LOGGER = logging.getLogger("operator-cert")
 

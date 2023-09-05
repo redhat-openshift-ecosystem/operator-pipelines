@@ -72,7 +72,7 @@ def get_artifacts(artifacts_dir: str) -> List[str]:
     Returns:
         List[str]: List of artifacts files
     """
-    artifact_paths = []
+    artifact_paths: List[str] = []
     if not os.path.isdir(artifacts_dir):
         LOGGER.warning(f"{artifacts_dir} is not directory")
         return artifact_paths
@@ -84,7 +84,7 @@ def get_artifacts(artifacts_dir: str) -> List[str]:
     return artifact_paths
 
 
-def upload_artifact(args: Any, file_path: str, org_id: Any = None) -> Dict[str, Any]:
+def upload_artifact(args: Any, file_path: str, org_id: Any = None) -> Any:
     """
     Upload artifact using Pyxis API
 
@@ -94,7 +94,7 @@ def upload_artifact(args: Any, file_path: str, org_id: Any = None) -> Dict[str, 
         org_id (Any): organization ID - optional
 
     Returns:
-        Dict[str, Any]: Pyxis response
+        Any: Pyxis response
     """
     upload_url = urljoin(
         args.pyxis_url, f"v1/projects/certification/id/{args.cert_project_id}/artifacts"
@@ -144,7 +144,7 @@ def upload_artifacts(args: Any, org_id: Any = None) -> List[Dict[str, Any]]:
     return responses
 
 
-def upload_test_results(args: Any, org_id: Any = None) -> Dict[str, Any]:
+def upload_test_results(args: Any, org_id: Any = None) -> Any:
     """
     Upload test results using Pyxis API
 
@@ -153,7 +153,7 @@ def upload_test_results(args: Any, org_id: Any = None) -> Dict[str, Any]:
         org_id (Any): organization ID - optional
 
     Returns:
-        Dict[str, Any]: Pyxis test results response
+        Any: Pyxis test results response
     """
     with open(args.path, "r") as result_file:
         results = json.load(result_file)
@@ -173,7 +173,7 @@ def upload_test_results(args: Any, org_id: Any = None) -> Dict[str, Any]:
     return pyxis.post(upload_url, results)
 
 
-def upload_results_and_artifacts(args: Any) -> Dict[str, Any]:
+def upload_results_and_artifacts(args: Any) -> Any:
     """
     Upload test results and artifacts using Pyxis API
 
@@ -181,7 +181,7 @@ def upload_results_and_artifacts(args: Any) -> Dict[str, Any]:
         args (Any): CLI arguments
 
     Returns:
-        Dict[str, Any]]: Artifacts respones
+        Any: Artifacts responses
     """
     org_id = None
     if pyxis.is_internal():
@@ -191,16 +191,16 @@ def upload_results_and_artifacts(args: Any) -> Dict[str, Any]:
         org_id = project.get("org_id")
 
     if args.type in ["preflight-logs", "pipeline-logs"]:
-        response = upload_artifact(args, args.path, org_id=org_id)
+        return upload_artifact(args, args.path, org_id=org_id)
     elif args.type == "preflight-artifacts":
-        response = upload_artifacts(args, org_id=org_id)
+        return upload_artifacts(args, org_id=org_id)
     elif args.type == "preflight-results":
-        response = upload_test_results(args, org_id=org_id)
+        return upload_test_results(args, org_id=org_id)
 
-    return response
+    return None
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     """
     Main func
     """
