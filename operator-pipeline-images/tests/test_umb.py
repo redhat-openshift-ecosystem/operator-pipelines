@@ -89,4 +89,4 @@ def test_start_umb_client_no_auth(
     monkeypatch.setenv("UMB_KEY_PATH", "/tmp/umb/key")
     mock_path_exists.return_value = False
     start_umb_client(["foo.bar"], "test-client", MagicMock())
-    mock_exit.assert_called_once()
+    assert mock_exit.call_count == 2

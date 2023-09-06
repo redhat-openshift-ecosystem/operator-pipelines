@@ -1,3 +1,4 @@
+"""Hydra checklist entrypoint""" ""
 import argparse
 import logging
 import sys
@@ -52,10 +53,12 @@ def check_single_hydra_checklist(checklist: Dict[str, Any]) -> bool:
         completed = completed and item["completed"]
         if not item["completed"]:
             LOGGER.error(
-                f"FAILED: Checklist item not completed: {item['title']} - {item['reasons']}"
+                "FAILED: Checklist item not completed: %s - %s",
+                item["title"],
+                item["reasons"],
             )
         else:
-            LOGGER.info(f"PASSED: Checklist item completed: {item['title']}")
+            LOGGER.info("PASSED: Checklist item completed: %s", item["title"])
     return completed
 
 
@@ -82,8 +85,8 @@ def check_hydra_checklist_status(
     hydra_resp = hydra.get(hydra_checklist_url)
     if hydra_resp["completed"]:
         LOGGER.info(
-            f"Pre-certification checklist is completed for cert project with id "
-            f"{cert_project_id}."
+            "Pre-certification checklist is completed for cert project with id %s.",
+            cert_project_id,
         )
         return
 
@@ -97,8 +100,8 @@ def check_hydra_checklist_status(
         completed = completed and check_single_hydra_checklist(checklist)
     if not completed:
         LOGGER.info(
-            f"Pre-certification checklist is not completed for cert project with id "
-            f"{cert_project_id}."
+            "Pre-certification checklist is not completed for cert project with id %s",
+            cert_project_id,
         )
         if ignore_publishing_checklist:
             return

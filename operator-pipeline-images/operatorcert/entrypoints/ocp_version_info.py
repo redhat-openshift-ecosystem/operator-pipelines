@@ -1,8 +1,8 @@
+"""OpenShift version info entrypoint."""
 import argparse
 import json
 import logging
 import pathlib
-import sys
 
 from operatorcert import ocp_version_info
 from operatorcert.logger import setup_logger
@@ -11,6 +11,12 @@ LOGGER = logging.getLogger("operator-cert")
 
 
 def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
+    """
+    Setup argument parser
+
+    Returns:
+        argparse.ArgumentParser: Argument parser
+    """
     parser = argparse.ArgumentParser(
         description="Determines the OCP version under test."
     )
@@ -35,6 +41,9 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def main() -> None:
+    """
+    Main function for ocp version info.
+    """
     parser = setup_argparser()
     args = parser.parse_args()
     log_level = "DEBUG" if args.verbose else "INFO"
@@ -46,7 +55,7 @@ def main() -> None:
     LOGGER.info(json.dumps(version_info))
 
     if args.output_file:
-        with open(args.output_file, "w") as output_file:
+        with open(args.output_file, "w", encoding="utf-8") as output_file:
             json.dump(version_info, output_file)
 
 

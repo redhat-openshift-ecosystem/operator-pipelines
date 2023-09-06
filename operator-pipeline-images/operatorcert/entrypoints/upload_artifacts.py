@@ -1,3 +1,4 @@
+"""Upload artifacts to Pyxis API"""
 import argparse
 import base64
 import json
@@ -74,10 +75,10 @@ def get_artifacts(artifacts_dir: str) -> List[str]:
     """
     artifact_paths: List[str] = []
     if not os.path.isdir(artifacts_dir):
-        LOGGER.warning(f"{artifacts_dir} is not directory")
+        LOGGER.warning("%s is not directory", artifacts_dir)
         return artifact_paths
     files = os.listdir(artifacts_dir)
-    LOGGER.debug(f"Found following artifacts: {files}")
+    LOGGER.debug("Found following artifacts: %s", files)
     for artifact in files:
         if os.path.isfile(os.path.join(artifacts_dir, artifact)):
             artifact_paths.append(artifact)
@@ -136,7 +137,7 @@ def upload_artifacts(args: Any, org_id: Any = None) -> List[Dict[str, Any]]:
     artifacts = get_artifacts(args.path)
     responses = []
     for artifact_path in artifacts:
-        LOGGER.info(f"Uploading artifact: {artifact_path}")
+        LOGGER.info("Uploading artifact: %s", artifact_path)
         full_path = os.path.join(args.path, artifact_path)
 
         response = upload_artifact(args, full_path, org_id)
@@ -155,7 +156,7 @@ def upload_test_results(args: Any, org_id: Any = None) -> Any:
     Returns:
         Any: Pyxis test results response
     """
-    with open(args.path, "r") as result_file:
+    with open(args.path, "r", encoding="utf-8") as result_file:
         results = json.load(result_file)
 
     upload_url = urljoin(
@@ -192,9 +193,9 @@ def upload_results_and_artifacts(args: Any) -> Any:
 
     if args.type in ["preflight-logs", "pipeline-logs"]:
         return upload_artifact(args, args.path, org_id=org_id)
-    elif args.type == "preflight-artifacts":
+    if args.type == "preflight-artifacts":
         return upload_artifacts(args, org_id=org_id)
-    elif args.type == "preflight-results":
+    if args.type == "preflight-results":
         return upload_test_results(args, org_id=org_id)
 
     return None
@@ -211,9 +212,9 @@ def main() -> None:  # pragma: no cover
     setup_logger(level=log_level)
 
     response = upload_results_and_artifacts(args)
-    with open(args.output, "w") as output:
+    with open(args.output, "w", encoding="utf-8") as output:
         json.dump(response, output)
-    LOGGER.info(f"Output stored in: {args.output}")
+    LOGGER.info("Output stored in: %s", args.output)
 
 
 if __name__ == "__main__":  # pragma: no cover

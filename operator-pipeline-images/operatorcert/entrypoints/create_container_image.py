@@ -1,10 +1,10 @@
+"""Create ContainerImage resource in Pyxis"""
 import argparse
-from urllib.parse import quote
-from datetime import datetime
 import json
 import logging
-from typing import Any, Dict, List
-from urllib.parse import urljoin
+from datetime import datetime
+from typing import Any, Dict, List, Tuple
+from urllib.parse import quote, urljoin
 
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
@@ -72,6 +72,15 @@ def setup_argparser() -> Any:  # pragma: no cover
 
 
 def check_if_image_already_exists(args: Any) -> bool:
+    """
+    Check if image with given docker_image_digest and isv_pid already exists
+
+    Args:
+        args (Any): CLI arguments
+
+    Returns:
+        bool: True if image already exists, False otherwise
+    """
     # quote is needed to urlparse the quotation marks
     filter_str = quote(
         f'isv_pid=="{args.isv_pid}";'
@@ -101,6 +110,15 @@ def check_if_image_already_exists(args: Any) -> bool:
 
 
 def prepare_parsed_data(skopeo_result: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Prepare parsed_data for ContainerImage
+
+    Args:
+        skopeo_result (Dict[str, Any]): Skopeo inspect result
+
+    Returns:
+        Dict[str, Any]: Parsed data section of ContainerImage
+    """
     parsed_data = {
         "docker_version": skopeo_result.get("DockerVersion", ""),
         "layers": skopeo_result.get("Layers", []),
@@ -114,12 +132,23 @@ def prepare_parsed_data(skopeo_result: Dict[str, Any]) -> Dict[str, Any]:
 def create_container_image(
     args: Any, skopeo_result: Dict[str, Any], podman_result: List[Dict[str, Any]]
 ) -> Any:
+    """
+    Create ContainerImage resource in Pyxis
+
+    Args:
+        args (Any): CLI arguments
+        skopeo_result (Dict[str, Any]): Skopeo inspect result
+        podman_result (List[Dict[str, Any]]): Podman inspect result
+
+    Returns:
+        Any: Pyxis POST response
+    """
     LOGGER.info("Creating new container image")
 
     date_now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
     parsed_data = prepare_parsed_data(skopeo_result)
 
-    upload_url = urljoin(args.pyxis_url, f"v1/images")
+    upload_url = urljoin(args.pyxis_url, "v1/images")
     container_image_payload = {
         "isv_pid": args.isv_pid,
         "repositories": [
@@ -155,12 +184,45 @@ def create_container_image(
     return pyxis.post(upload_url, container_image_payload)
 
 
+def clean_latest_tag(repositories: List[Any]) -> Tuple[List[Any], bool]:
+    """
+    Clean LATEST tag from repositories
+
+    Args:
+        repositories (List[Any]): List of repositories
+
+    Returns:
+        _type_: List[Any]: List of repositories without LATEST tag and
+        flag if LATEST
+    """
+    new_repositories = []
+    is_latest = False
+    for repo in repositories:
+        new_tags = []
+        for tag in repo["tags"]:
+            if tag["name"] != "latest":
+                new_tags.append(tag)
+            else:
+                is_latest = True
+        repo["tags"] = new_tags
+        new_repositories.append(repo)
+
+    return new_repositories, is_latest
+
+
 def remove_latest_from_previous_image(pyxis_url: str, isv_pid: str) -> None:
+    """
+    Remove LATEST tag from previous image
+
+    Args:
+        pyxis_url (str): Pyxis URL
+        isv_pid (str): ISV pid which is used to identify the image
+    """
     # quote is needed to urlparse the quotation marks
     filter_str = quote(f'isv_pid=="{isv_pid}";' "not(deleted==true)")
 
-    # If there are multiple results, we only want the most recent one- we enforce it by sorting by creation_date
-    # and getting only the first result.
+    # If there are multiple results, we only want the most recent one- we enforce
+    # it by sorting by creation_date and getting only the first result.
     get_previous_image_url = urljoin(
         pyxis_url,
         f"v1/images?filter={filter_str}" f"&sort_by=creation_date[desc]&page_size=1",
@@ -177,17 +239,11 @@ def remove_latest_from_previous_image(pyxis_url: str, isv_pid: str) -> None:
 
     LOGGER.info("Found previous image")
 
-    latest_exists = False
     prev_image = query_results[0]
-    for repo_no, repo in enumerate(prev_image["repositories"]):
-        for tag_no, tag in enumerate(repo["tags"]):
-            if tag["name"] == "latest":
-                latest_exists = True
-                break
-
-    if latest_exists:
+    new_repositories, is_latest = clean_latest_tag(prev_image["repositories"])
+    if is_latest:
         LOGGER.info("Removing LATEST tag")
-        del prev_image["repositories"][repo_no]["tags"][tag_no]
+        prev_image["repositories"] = new_repositories
 
         put_image_url = urljoin(pyxis_url, f"v1/images/id/{prev_image['_id']}")
 
@@ -204,10 +260,10 @@ def main() -> None:  # pragma: no cover
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(level=log_level)
 
-    with open(args.skopeo_result) as json_file:
+    with open(args.skopeo_result, encoding="utf-8") as json_file:
         skopeo_result = json.load(json_file)
 
-    with open(args.podman_result) as json_file:
+    with open(args.podman_result, encoding="utf-8") as json_file:
         podman_result = json.load(json_file)
 
     exists = check_if_image_already_exists(args)

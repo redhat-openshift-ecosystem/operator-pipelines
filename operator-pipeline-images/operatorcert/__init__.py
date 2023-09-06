@@ -1,9 +1,12 @@
+"""
+Main module for the operator certification tool
+"""
 import json
 import logging
 import pathlib
 import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 from urllib.parse import urljoin
 
 import yaml
@@ -36,8 +39,8 @@ def get_bundle_annotations(bundle_path: pathlib.Path) -> Dict[str, Any]:
     if not annotations_path:
         raise RuntimeError("Annotations file not found")
 
-    with annotations_path.open() as fh:
-        content = yaml.safe_load(fh)
+    with annotations_path.open() as annotation_file:
+        content = yaml.safe_load(annotation_file)
         return content.get("annotations") or {}
 
 
@@ -60,8 +63,8 @@ def get_csv_content(bundle_path: pathlib.Path, package: str) -> Any:
     if not csv_path:
         raise RuntimeError("Cluster service version (CSV) file not found")
 
-    with csv_path.open() as fh:
-        return yaml.safe_load(fh)
+    with csv_path.open() as csv_file:
+        return yaml.safe_load(csv_file)
 
 
 def get_supported_indices(
@@ -264,11 +267,12 @@ def get_files_added_in_pr(
         for modified_file in modified_files:
             if not modified_file["filename"].endswith("ci.yaml"):
                 LOGGER.error(
-                    f"Change not permitted: file: {modified_file['filename']}, status: {modified_file['status']}"
+                    "Change not permitted: file: %s, status: %s",
+                    modified_file["filename"],
+                    modified_file["status"],
                 )
                 raise RuntimeError("There are changes done to previously merged files")
-            else:
-                allowed_files.append(modified_file["filename"])
+            allowed_files.append(modified_file["filename"])
 
     return allowed_files
 
@@ -286,18 +290,22 @@ def verify_changed_files_location(
     config_path = parent_path + "/ci.yaml"
 
     LOGGER.info(
-        f"Changes for operator {operator_name} in version {bundle_version}"
-        f" are expected to be in paths: \n"
-        f" {path}/* \n"
-        f" {config_path}"
+        "Changes for operator %s in version %s"
+        " are expected to be in paths: \n"
+        " %s/* \n"
+        " %s",
+        operator_name,
+        bundle_version,
+        path,
+        config_path,
     )
 
     wrong_changes = False
     for file_path in changed_files:
         if file_path.startswith(path) or file_path == config_path:
-            LOGGER.info(f"Permitted change: {file_path}")
+            LOGGER.info("Permitted change: %s ", file_path)
         else:
-            LOGGER.error(f"Unpermitted change: {file_path}")
+            LOGGER.error("Unpermitted change: %s", file_path)
             wrong_changes = True
 
     if wrong_changes:
@@ -311,13 +319,14 @@ def parse_pr_title(pr_title: str) -> Tuple[str, str]:
     """
     # Verify if PR title follows convention- it should contain the bundle name and version.
     # Any non- empty string without whitespaces makes a valid version.
-    regex = rf"^operator ([a-zA-Z0-9-]+) \(([^\s]+)\)$"
+    regex = r"^operator ([a-zA-Z0-9-]+) \(([^\s]+)\)$"
     regex_pattern = re.compile(regex)
 
     matching = regex_pattern.search(pr_title)
     if not matching:
         raise ValueError(
-            f"Pull request title {pr_title} does not follow the regex 'operator <operator_name> (<version>)"
+            f"Pull request title {pr_title} does not follow the regex "
+            "'operator <operator_name> (<version>)"
         )
 
     bundle_name = matching.group(1)
@@ -327,12 +336,19 @@ def parse_pr_title(pr_title: str) -> Tuple[str, str]:
 
 
 def validate_user(git_username: str, contacts: List[str]) -> None:
+    """
+    Check if git username is in the allowed list of contacts
+
+    Args:
+        git_username (str): Git username
+        contacts (List[str]): List of allowed contacts
+
+    """
     if git_username not in contacts:
-        raise Exception(
+        raise ValueError(
             f"User {git_username} doesn't have permissions to submit the bundle."
         )
-    else:
-        LOGGER.info(f"User {git_username} has permission to submit the bundle.")
+    LOGGER.info("User %s has permission to submit the bundle.", git_username)
 
 
 def verify_pr_uniqueness(
@@ -350,13 +366,13 @@ def verify_pr_uniqueness(
 
     for repo in available_repositories:
         # List the open PRs in the given repositories,
-        prs = github.get(base_url + repo + "/pulls", auth_required=False)
+        pull_requests = github.get(base_url + repo + "/pulls", auth_required=False)
 
         # find duplicates
         duplicate_prs = []
-        for pr in prs:
-            pr_title = pr["title"]
-            pr_url = pr["html_url"]
+        for pull_request in pull_requests:
+            pr_title = pull_request["title"]
+            pr_url = pull_request["html_url"]
             if base_pr_url == pr_url:
                 # We found the base PR
                 continue
@@ -371,10 +387,11 @@ def verify_pr_uniqueness(
         # Log duplicates and exit with error
         if duplicate_prs:
             LOGGER.error(
-                f"There is more than one pull request for the Operator Bundle {base_pr_bundle_name}"
+                "There is more than one pull request for the Operator Bundle %s",
+                base_pr_bundle_name,
             )
             for duplicate in duplicate_prs:
-                LOGGER.error(f"DUPLICATE: {duplicate}")
+                LOGGER.error("DUPLICATE: %s", duplicate)
             raise RuntimeError("Multiple pull requests for one Operator Bundle")
 
 
@@ -384,7 +401,8 @@ def download_test_results(args: Any) -> Any:
     On success, store the results in file and return it's id, on failure- return None.
     """
 
-    # If there are multiple results, we only want the most recent one- we enforce it by sorting by creation_date
+    # If there are multiple results, we only want the most recent one- we enforce
+    # it by sorting by creation_date
     # and getting only the first result.
     test_results_url = urljoin(
         args.pyxis_url,
@@ -401,7 +419,7 @@ def download_test_results(args: Any) -> Any:
     query_results = rsp.json()["data"]
 
     if len(query_results) == 0:
-        LOGGER.error(f"There is no test results for given parameters")
+        LOGGER.error("There is no test results for given parameters")
         return None
 
     # Get needed data from the query result
@@ -417,8 +435,8 @@ def download_test_results(args: Any) -> Any:
     file_path = "test_results.json"
 
     # Save needed data
-    with open(file_path, "w") as file:
+    with open(file_path, "w", encoding="utf-8") as file:
         file.write(result)
 
-    LOGGER.info(f"Test results retrieved successfully for given parameters")
+    LOGGER.info("Test results retrieved successfully for given parameters")
     return query_results[0]["_id"]

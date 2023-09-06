@@ -5,7 +5,7 @@
 import binascii
 import datetime
 from base64 import b64decode
-from typing import Any, Type
+from typing import Any
 
 from dateutil.parser import isoparse
 from semver import Version

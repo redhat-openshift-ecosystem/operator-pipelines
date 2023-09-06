@@ -1,3 +1,4 @@
+"""Create a Dockerfile for bundle image"""
 import argparse
 import logging
 import pathlib

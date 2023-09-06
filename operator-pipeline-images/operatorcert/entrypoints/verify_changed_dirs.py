@@ -1,3 +1,4 @@
+""""A module that contains entrypoint for verifying changed directories in a PR.""" ""
 import argparse
 import logging
 
@@ -40,6 +41,9 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def main() -> None:
+    """
+    Entrypoint for verifying changed directories in a PR.
+    """
     # Args
     parser = setup_argparser()
     args = parser.parse_args()

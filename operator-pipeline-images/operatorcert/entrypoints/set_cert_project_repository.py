@@ -3,13 +3,11 @@ Script for setting the cert project status
 """
 import argparse
 import logging
-from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urljoin
 
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
-
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -21,7 +19,9 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     Returns:
         Any: Initialized argument parser
     """
-    parser = argparse.ArgumentParser(description="Get the Certification Project Status")
+    parser = argparse.ArgumentParser(
+        description="Set the Certification container details"
+    )
     parser.add_argument(
         "--cert-project-id",
         help="Identifier of certification project from Red Hat Connect",
@@ -34,7 +34,8 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser.add_argument(
         "--registry",
         default="quay.io",
-        help="Hostname of the registry where the repository can be accessed (certProject.container.registry)",
+        help="Hostname of the registry where the repository can be accessed "
+        "(certProject.container.registry)",
     )
     parser.add_argument(
         "--repository",
@@ -53,6 +54,12 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def set_cert_project_repository(args: Any) -> None:
+    """
+    Set the repository info for the cert project
+
+    Args:
+        args (Any): Command line arguments
+    """
     payload = {
         "container": {
             "registry": args.registry,
@@ -79,6 +86,9 @@ def set_cert_project_repository(args: Any) -> None:
 
 
 def main() -> None:  # pragma: no cover
+    """
+    Main function
+    """
     parser = setup_argparser()
     args = parser.parse_args()
 

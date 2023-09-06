@@ -1,3 +1,4 @@
+"""Set github status for a commit"""
 import argparse
 import logging
 from typing import Any
@@ -39,6 +40,12 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def set_github_status(args: Any) -> None:
+    """
+    Set github status for a commit
+
+    Args:
+        args (Any): CLI arguments
+    """
     org, repo = get_repo_and_org_from_github_url(args.git_repo_url)
     status_uri = "/repos/{org}/{repo}/statuses/{sha}"
     post_data = {
@@ -55,12 +62,17 @@ def set_github_status(args: Any) -> None:
     )
 
     LOGGER.info(
-        f"Successfully set status to {args.status} for commit {args.commit_sha} in "
-        f"github repo {args.git_repo_url}"
+        "Successfully set status to %s for commit %s in github repo %s",
+        args.status,
+        args.commit_sha,
+        args.git_repo_url,
     )
 
 
 def main() -> None:
+    """
+    Main function
+    """
     parser = setup_argparser()
     args = parser.parse_args()
 

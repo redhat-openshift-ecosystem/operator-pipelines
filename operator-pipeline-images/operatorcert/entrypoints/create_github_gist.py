@@ -54,8 +54,8 @@ def create_github_gist(github_api: Github, input_file: str) -> Gist.Gist:
     """
     github_auth_user = github_api.get_user()
 
-    with open(input_file, "r") as f:
-        file_content = f.read()
+    with open(input_file, "r", encoding="utf-8") as input_file_handler:
+        file_content = input_file_handler.read()
 
     LOGGER.info("Creating gist from %s", input_file)
     gist = github_auth_user.create_gist(
@@ -113,8 +113,8 @@ def main() -> None:
         share_github_gist(github, repository, pr_id, gist)
 
     if args.output_file:
-        with open(args.output_file, "w") as f:
-            json.dump({"gist_url": gist.html_url}, f)
+        with open(args.output_file, "w", encoding="utf-8") as output_file_handler:
+            json.dump({"gist_url": gist.html_url}, output_file_handler)
 
 
 if __name__ == "__main__":  # pragma: no cover

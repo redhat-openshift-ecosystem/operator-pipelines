@@ -28,7 +28,9 @@ def test_process_message_match(mock_exit: MagicMock) -> None:
     with mock.patch("builtins.open", mock_open):
         request_signature.process_message(json.dumps(mock_msg))
 
-    mock_open.assert_called_once_with(f"{mock_request_id}-signing_response.json", "w")
+    mock_open.assert_called_once_with(
+        f"{mock_request_id}-signing_response.json", "w", encoding="utf-8"
+    )
     mock_exit.assert_called_once_with(0)
 
 

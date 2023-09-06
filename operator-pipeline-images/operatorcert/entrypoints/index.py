@@ -91,27 +91,27 @@ def wait_for_results(
 
         # all builds have completed
         if all(build.get("state") == "complete" for build in builds):
-            LOGGER.info(f"IIB batch build completed successfully: {batch_id}")
+            LOGGER.info("IIB batch build completed successfully: %s", batch_id)
             return response
         # any have failed
         if any(build.get("state") == "failed" for build in builds):
             for build in builds:
                 if build.get("state") == "failed":
-                    LOGGER.error(f"IIB build failed: {build['id']}")
+                    LOGGER.error("IIB build failed: %s", build["id"])
                     reason = build.get("state_reason")
-                    LOGGER.info(f"Reason: {reason}")
+                    LOGGER.info("Reason: %s", reason)
             return response
 
-        LOGGER.debug(f"Waiting for IIB batch build: {batch_id}")
+        LOGGER.debug("Waiting for IIB batch build: %s", batch_id)
         LOGGER.debug("Current states [build id - state]:")
         for build in builds:
-            LOGGER.debug(f"{build['id']} - {build['state']}")
+            LOGGER.debug("%s - %s", build["id"], build["state"])
 
         if datetime.now() - start_time > timedelta(seconds=timeout):
-            LOGGER.error(f"Timeout: Waiting for IIB batch build failed: {batch_id}.")
+            LOGGER.error("Timeout: Waiting for IIB batch build failed: %s.", batch_id)
             break
 
-        LOGGER.info(f"Waiting for IIB batch build to finish: {batch_id}")
+        LOGGER.info("Waiting for IIB batch build to finish: %s", batch_id)
         time.sleep(delay)
     return None
 
@@ -157,7 +157,7 @@ def add_bundle_to_index(
     if response is None or not all(
         build.get("state") == "complete" for build in response["items"]
     ):
-        raise Exception("IIB build failed")
+        raise RuntimeError("IIB build failed")
 
     output_index_image_paths(image_output, response)
 
@@ -181,9 +181,9 @@ def output_index_image_paths(
         # The original from_index is used for signing
         index_images.append(f"{build['from_index']}+{build['index_image_resolved']}")
 
-    with open(image_output, "w") as output_file:
+    with open(image_output, "w", encoding="utf-8") as output_file:
         output_file.write(",".join(index_images))
-    LOGGER.info(f"Index image paths written to output file {image_output}.")
+    LOGGER.info("Index image paths written to output file %s.", image_output)
 
 
 def copy_images_to_destination(
@@ -213,7 +213,7 @@ def copy_images_to_destination(
         if auth_file:
             cmd.extend(["--authfile", auth_file])
 
-        LOGGER.info(f"Copying image to destination: {cmd}")
+        LOGGER.info("Copying image to destination: %s", cmd)
         subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
 

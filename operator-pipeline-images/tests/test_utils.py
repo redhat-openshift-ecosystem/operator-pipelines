@@ -47,10 +47,10 @@ def test_store_results() -> None:
 
     assert mock_open.call_count == 4
     assert mock_open.call_args_list == [
-        call("example_name", "w"),
-        call("other_name", "w"),
-        call("third_name", "w"),
-        call("none", "w"),
+        call("example_name", "w", encoding="utf-8"),
+        call("other_name", "w", encoding="utf-8"),
+        call("third_name", "w", encoding="utf-8"),
+        call("none", "w", encoding="utf-8"),
     ]
 
 

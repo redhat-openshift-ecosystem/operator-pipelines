@@ -1,3 +1,4 @@
+"""Utility functions for operator certification."""
 import json
 import logging
 import os
@@ -6,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from requests import Session
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from urllib3 import Retry
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -43,10 +44,10 @@ def store_results(results: Dict[str, Any]) -> None:
     for result_name, result_value in results.items():
         if result_value is None:
             result_value = ""
-            LOGGER.error(f"Result {result_name} is empty")
-        LOGGER.debug(f"Storing {result_name}")
-        with open(result_name, "w") as result_file:
-            if type(result_value) is dict:
+            LOGGER.error("Result %s is empty", result_name)
+        LOGGER.debug("Storing %s", result_name)
+        with open(result_name, "w", encoding="utf-8") as result_file:
+            if isinstance(result_value, dict):
                 json.dump(result_value, result_file)
             else:
                 result_file.write(str(result_value))
@@ -61,8 +62,8 @@ def set_client_keytab(keytab_file: str) -> None:
     if not keytab_file:
         return
     if not os.path.isfile(keytab_file):
-        raise IOError("Keytab file %s does not exist", keytab_file)
-    os.environ["KRB5_CLIENT_KTNAME"] = "FILE:{}".format(keytab_file)
+        raise IOError(f"Keytab file {keytab_file} does not exist")
+    os.environ["KRB5_CLIENT_KTNAME"] = f"FILE:{keytab_file}"
     LOGGER.debug(
         "Set KRB5_CLIENT_KTNAME env variable: %s", os.environ["KRB5_CLIENT_KTNAME"]
     )

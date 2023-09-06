@@ -1,3 +1,7 @@
+"""
+Github API client - should be replaced by github library
+"""
+
 import logging
 import os
 from typing import Any, Dict, Optional
@@ -31,7 +35,9 @@ def _get_session(auth_required: bool = False) -> requests.Session:
         token = os.environ.get("GITHUB_TOKEN")
 
         if not token:
-            raise Exception("No auth details provided for Github. Define GITHUB_TOKEN.")
+            raise ValueError(
+                "No auth details provided for Github. Define GITHUB_TOKEN."
+            )
 
         session.headers.update(
             {
@@ -58,15 +64,18 @@ def get(
        Any: GitHub response
     """
     session = _get_session(auth_required=auth_required)
-    LOGGER.debug(f"GET GitHub request url: {url}")
-    LOGGER.debug(f"GET GitHub request params: {params}")
+    LOGGER.debug("GET GitHub request url: %s", url)
+    LOGGER.debug("GET GitHub request params: %s", params)
     resp = session.get(url, params=params)
 
     try:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"GitHub GET query failed with {url} - {resp.status_code} - {resp.text}"
+            "GitHub GET query failed with %s - %s - %s",
+            url,
+            resp.status_code,
+            resp.text,
         )
         raise
 
@@ -86,14 +95,17 @@ def post(url: str, body: Dict[str, Any]) -> Any:
     """
     session = _get_session(auth_required=True)
 
-    LOGGER.debug(f"POST Github request: {url}")
+    LOGGER.debug("POST Github request: %s", url)
     resp = session.post(url, json=body)
 
     try:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Github POST query failed with {url} - {resp.status_code} - {resp.text}"
+            "GitHub POST query failed with %s - %s - %s",
+            url,
+            resp.status_code,
+            resp.text,
         )
         raise
     return resp.json()
@@ -112,14 +124,17 @@ def patch(url: str, body: Dict[str, Any]) -> Any:
     """
     session = _get_session(auth_required=True)
 
-    LOGGER.debug(f"PATCH Github request: {url}")
+    LOGGER.debug("PATCH Github request: %s", url)
     resp = session.patch(url, json=body)
 
     try:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Github PATCH query failed with {url} - {resp.status_code} - {resp.text}"
+            "GitHub PATCH query failed with %s - %s - %s",
+            url,
+            resp.status_code,
+            resp.text,
         )
         raise
     return resp.json()

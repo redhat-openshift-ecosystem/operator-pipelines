@@ -1,3 +1,4 @@
+"""Static test for operator bundle."""
 import argparse
 import json
 import logging
@@ -83,6 +84,9 @@ def check_bundle(
 
 
 def main() -> None:
+    """
+    Main function for static test runner
+    """
     # Args
     parser = setup_argparser()
     args = parser.parse_args()

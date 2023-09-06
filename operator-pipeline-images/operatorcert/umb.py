@@ -1,18 +1,23 @@
+"""A simple UMB client for the operator-certification pipeline."""
 import logging
 import os
 import ssl
+import sys
+import uuid
+from typing import Any, List
+
 import stomp
 from stomp import ConnectionListener
-import sys
-from typing import Any, List
-import uuid
-
 
 LOGGER = logging.getLogger("operator-cert")
 
 
 class UmbClient:
-    def __init__(
+    """
+    A UMB client for sending and receiving messages from the UMB.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         hostnames: List[tuple[str, int]],
         cert_file: str,
@@ -20,7 +25,7 @@ class UmbClient:
         handler: ConnectionListener,
         umb_client_name: str,
     ):
-        self.id = str(uuid.uuid4())
+        self.id = str(uuid.uuid4())  # pylint: disable=invalid-name
         self.umb_client_name = umb_client_name
         self.key_file = key_file
         self.cert_file = cert_file
@@ -59,7 +64,7 @@ class UmbClient:
             ack="auto",
             headers={"activemq.prefetchSize": 1},
         )
-        LOGGER.info(f"Subscribed to {destination} with id={self.id}")
+        LOGGER.info("Subscribed to %s with id=%s", destination, self.id)
 
     def send(self, destination: str, message: str) -> None:
         """
@@ -72,8 +77,8 @@ class UmbClient:
             LOGGER.info("Connecting to the UMB...")
             self.connection.connect(wait=True)
 
-        LOGGER.debug(f"Publishing to topic: /topic/{destination}")
-        LOGGER.info(f"Writing message to UMB: {message}")
+        LOGGER.debug("Publishing to topic: /topic/%s", destination)
+        LOGGER.info("Writing message to UMB: %s", message)
         self.connection.send(body=message, destination=f"/topic/{destination}")
 
     def stop(self) -> None:
@@ -119,13 +124,11 @@ def start_umb_client(hosts: List[str], client_name: str, handler: Any) -> UmbCli
                 client_name,
             )
             return umb_client
-        else:
-            LOGGER.error(
-                "UMB_CERT_PATH or UMB_KEY_PATH does not point to a file that exists"
-            )
-            sys.exit(1)
-    else:
         LOGGER.error(
-            "No auth details provided for umb. Define UMB_CERT_PATH + UMB_KEY_PATH."
+            "UMB_CERT_PATH or UMB_KEY_PATH does not point to a file that exists"
         )
         sys.exit(1)
+    LOGGER.error(
+        "No auth details provided for umb. Define UMB_CERT_PATH + UMB_KEY_PATH."
+    )
+    sys.exit(1)

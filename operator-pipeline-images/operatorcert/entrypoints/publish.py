@@ -8,7 +8,7 @@ from typing import Any, Dict
 from urllib.parse import urljoin
 
 import html2text
-from operatorcert import pyxis, utils
+from operatorcert import pyxis
 from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
@@ -70,7 +70,7 @@ def publish_vendor(args: Any) -> Any:
     identifier = vendor.get("_id")
     published = vendor.get("published", False)
     if published:
-        LOGGER.info(f"Vendor {identifier} is already published")
+        LOGGER.info("Vendor %s is already published", identifier)
         return vendor
 
     patch_vendor_url = urljoin(
@@ -80,7 +80,7 @@ def publish_vendor(args: Any) -> Any:
     payload = {"published": True}
 
     resp = pyxis.patch(patch_vendor_url, payload)
-    LOGGER.info(f"Vendor {identifier} is published now")
+    LOGGER.info("Vendor %s is published now", identifier)
     return resp
 
 
@@ -103,7 +103,7 @@ def publish_repository(args: Any) -> Any:
     repository = pyxis.get_repository_by_isv_pid(args.pyxis_url, isv_pid)
     if repository:
         repo_id = repository.get("_id")
-        LOGGER.info(f"Repository already exists: {repo_id}")
+        LOGGER.info("Repository already exists: %s", repo_id)
         published = repository.get("published", False)
         if published:
             LOGGER.info("Repository is already published")
@@ -115,7 +115,7 @@ def publish_repository(args: Any) -> Any:
         payload = {"published": True}
 
         repo_resp = pyxis.patch(patch_repo_url, payload)
-        LOGGER.info(f"Repository {repo_id} is published now")
+        LOGGER.info("Repository %s is published now", repo_id)
         return repo_resp
     return create_repository(args, project)
 
@@ -138,7 +138,7 @@ def create_repository(args: Any, project: Dict[str, Any]) -> Any:
 
     if distribution_type not in ["rhcc", "marketplace_only"]:
         LOGGER.warning(
-            f"Unsupported distribution type for operator project: {distribution_type}"
+            "Unsupported distribution type for operator project: %s", distribution_type
         )
         return None
 
@@ -182,7 +182,7 @@ def create_repository(args: Any, project: Dict[str, Any]) -> Any:
     )
 
     resp = pyxis.post(post_repository_url, repository)
-    LOGGER.info(f"A new repository has been created: {resp['_id']}")
+    LOGGER.info("A new repository has been created: %s", resp["_id"])
     return resp
 
 
