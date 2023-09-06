@@ -347,6 +347,34 @@ spec:
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
 
+    # merge PR
+    - name: merge-pr
+      when:
+        - input: "$(tasks.get-ci-reviewer.results.author_is_reviewer)"
+          operator: in
+          values: ["true"]
+      runAfter:
+        - wait-prow-tests
+      taskRef:
+        name: merge-pr
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_pr_url
+          value: $(params.git_pr_url)
+        - name: bundle_path
+          value: *addedBundlePath
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: force_merge
+          value: "true"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
   finally:
 
     - name: set-github-passed-label
