@@ -46,29 +46,40 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser.add_argument(
         "--replace",
         default="false",
-        help="When a tag is specified, and `replace` is `true`, look for a comment with a matching tag and replace it with the new comment.",
+        help="When a tag is specified, and `replace` is `true`, look for a "
+        "comment with a matching tag and replace it with the new comment.",
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     return parser
 
 
-def github_add_comment(
+def github_add_comment(  # pylint: disable=too-many-locals
     github_host_url: str,
     request_url: str,
     comment_file: str,
     commen_tag: str,
     replace: str,
 ) -> None:
+    """
+    Add a comment to a pull request or an issue.
+
+    Args:
+        github_host_url (str): GitHub host url
+        request_url (str): GitHub issue or pull request URL
+        comment_file (str): File with actual comment to post
+        commen_tag (str): An invisible tag to be added into the comment
+        replace (str): A flag to replace an existing comment with the new one
+    """
     split_url = urllib.parse.urlparse(request_url).path.split("/")
 
     # This will convert https://github.com/foo/bar/pull/202 to
     # api url path https://api.github.com/repos/foo/issues/202/comments
     package = "/".join(split_url[1:3])
-    id = split_url[-1]
-    api_url = f"{github_host_url}/repos/{package}/issues/{id}/comments"
+    issue_id = split_url[-1]
+    api_url = f"{github_host_url}/repos/{package}/issues/{issue_id}/comments"
 
-    with open(comment_file, "r") as f:
-        comment_param_value = f.read()
+    with open(comment_file, "r", encoding="utf-8") as comment_file_handler:
+        comment_param_value = comment_file_handler.read()
 
     # If a tag was specified, append it to the comment
     if commen_tag != "":
@@ -85,7 +96,7 @@ def github_add_comment(
             comments = github.get(api_url)
         except HTTPError:
             LOGGER.error(
-                f"GitHub query failed with {api_url}, check if address is corect."
+                "GitHub query failed with %s, check if address is correct.", api_url
             )
             sys.exit(1)
 
@@ -101,7 +112,7 @@ def github_add_comment(
         try:
             github.patch(target_url, data)
         except HTTPError:
-            LOGGER.error(f"GitHub query failed with {target_url}.")
+            LOGGER.error("GitHub query failed with %s.", target_url)
             sys.exit(1)
     else:
         LOGGER.info("Sending this data to GitHub with POST")
@@ -109,14 +120,17 @@ def github_add_comment(
         try:
             github.post(api_url, data)
         except HTTPError:
-            LOGGER.error(f"GitHub query failed with {api_url}.")
+            LOGGER.error("GitHub query failed with %s", api_url)
             sys.exit(1)
 
     method_used = "updated" if matching_comment else "added"
-    LOGGER.info(f"a GitHub comment has been {method_used} to {request_url}")
+    LOGGER.info("A GitHub comment has been %s to %s", method_used, request_url)
 
 
 def main() -> None:  # pragma: no cover
+    """
+    Main function
+    """
     parser = setup_argparser()
     args = parser.parse_args()
 

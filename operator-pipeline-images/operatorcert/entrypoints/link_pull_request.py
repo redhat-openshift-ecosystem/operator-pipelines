@@ -1,9 +1,9 @@
+"""Link pull request to test results"""
 import argparse
 import logging
-from typing import Any, Dict
+from typing import Any
 from urllib.parse import urljoin
 
-import magic
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
 
@@ -68,8 +68,10 @@ def link_pr_to_test_results(
     pr_id = pull_request_url.split("/")[-1]
     try:
         pr_id_int = int(pr_id)
-    except ValueError:
-        raise ValueError(f"Invalid ID in pull request link: {pull_request_url}")
+    except ValueError as exc:
+        raise ValueError(
+            f"Invalid ID in pull request link: {pull_request_url}"
+        ) from exc
 
     data = {
         "pull_request": {"status": status, "url": pull_request_url, "id": pr_id_int}

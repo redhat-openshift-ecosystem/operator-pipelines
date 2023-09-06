@@ -3,8 +3,7 @@ Script for opening GitHub pull request
 """
 import argparse
 import logging
-import os
-from typing import Any, Dict
+from typing import Any
 
 import giturlparse
 import operatorcert
@@ -69,7 +68,7 @@ def setup_argparser() -> Any:  # pragma: no cover
     return parser
 
 
-def open_pr(
+def open_pr(  # pylint: disable=too-many-arguments
     github_api_url: str,
     repo_name: str,
     head: str,
@@ -113,7 +112,7 @@ def get_head(git_repo_url: str, branch: str) -> str:
         str: Git head for PR that serves as a source
     """
     parsed_url = giturlparse.parse(git_repo_url)
-    namespace = parsed_url.owner
+    namespace = parsed_url.owner  # pylint: disable=no-member
 
     return f"{namespace}:{branch}"
 
@@ -165,7 +164,7 @@ def main() -> None:  # pragma: no cover
         pr_body,
     )
     url = response.get("url")
-    LOGGER.info(f"Pull request URL: {url}")
+    LOGGER.info("Pull request URL: %s", url)
 
 
 if __name__ == "__main__":  # pragma: no cover

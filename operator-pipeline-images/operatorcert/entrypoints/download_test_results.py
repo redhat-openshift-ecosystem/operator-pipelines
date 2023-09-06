@@ -1,5 +1,5 @@
+"""Download the test results and logs from the CI pipeline."""
 import argparse
-import logging
 
 from operatorcert import download_test_results
 from operatorcert.logger import setup_logger
@@ -7,8 +7,15 @@ from operatorcert.utils import store_results
 
 
 def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
+    """
+    Setup argument parser
+
+    Returns:
+        argparse.ArgumentParser: Argument parser
+    """
     parser = argparse.ArgumentParser(
-        description="Get the test results and logs from the CI pipeline. Test results can be found in the file test_results.json"
+        description="Get the test results and logs from the CI pipeline."
+        "Test results can be found in the file test_results.json"
     )
     parser.add_argument(
         "--pyxis-url",
@@ -31,6 +38,9 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def main() -> None:
+    """
+    Download the test results and logs from the CI pipeline.
+    """
     # Args
     parser = setup_argparser()
     args = parser.parse_args()

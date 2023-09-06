@@ -1,8 +1,11 @@
+"""
+Hydra API client
+"""
 import logging
 import os
 import re
 import sys
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 
@@ -36,14 +39,17 @@ def get(url: str) -> Any:
 
     client = OIDCClientCredentialsClient(auth, proxy)
 
-    LOGGER.debug(f"GET Hydra API request: {url}")
+    LOGGER.debug("GET Hydra API request: %s", url)
     resp = client.get(url)
 
     try:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Hydra API GET query failed with {url} - {resp.status_code} - {resp.text}"
+            "Hydra API GET query failed with %s - %s - %s",
+            url,
+            resp.status_code,
+            resp.text,
         )
         sys.exit(1)
     return resp.json()

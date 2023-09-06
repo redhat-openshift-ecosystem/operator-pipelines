@@ -50,7 +50,7 @@ def test_get_session_cert_not_exist(
     monkeypatch.setenv("PYXIS_CERT_PATH", "/path/to/cert.pem")
     monkeypatch.setenv("PYXIS_KEY_PATH", "/path/to/key.key")
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         pyxis._get_session("test")
 
 
@@ -61,7 +61,7 @@ def test_get_session_no_auth() -> None:
 
 
 def test_get_session_no_credentials(monkeypatch: Any) -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         pyxis._get_session("test")
 
 

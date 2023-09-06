@@ -1,3 +1,4 @@
+"""Verify if the Github user can submit the bundle""" ""
 import argparse
 import logging
 
@@ -8,6 +9,12 @@ LOGGER = logging.getLogger("operator-cert")
 
 
 def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
+    """
+    Setup argument parser
+
+    Returns:
+        argparse.ArgumentParser: Argument parser
+    """
     parser = argparse.ArgumentParser(
         description="Verify if the Github user can submit the bundle"
     )
@@ -23,6 +30,9 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def main() -> None:
+    """
+    Main function
+    """
     # Args
     parser = setup_argparser()
     args = parser.parse_args()

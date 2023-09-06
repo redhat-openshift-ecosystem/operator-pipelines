@@ -21,7 +21,7 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     Returns:
         Any: Initialized argument parser
     """
-    parser = argparse.ArgumentParser(description="Get the Certification Project Status")
+    parser = argparse.ArgumentParser(description="Set the Certification Project Status")
     parser.add_argument(
         "--cert-project-id",
         help="Identifier of certification project from Red Hat Connect",
@@ -44,6 +44,12 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def update_cert_project_status(args: Any) -> None:
+    """
+    Update the cert project status
+
+    Args:
+        args (Any): CLI arguments
+    """
     payload = {
         "certification_status": args.certification_status,
         "certification_date": datetime.now(timezone.utc).isoformat(),
@@ -62,6 +68,9 @@ def update_cert_project_status(args: Any) -> None:
 
 
 def main() -> None:  # pragma: no cover
+    """
+    Main function for updating the cert project status
+    """
     parser = setup_argparser()
     args = parser.parse_args()
 

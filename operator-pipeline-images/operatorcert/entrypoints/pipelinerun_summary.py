@@ -1,3 +1,4 @@
+"""Generate a markdown summary for a Tekton PipelineRun."""
 import argparse
 import logging
 from typing import Any
@@ -9,6 +10,12 @@ LOGGER = logging.getLogger("operator-cert")
 
 
 def parse_args() -> Any:  # pragma: no cover
+    """
+    Create an argument parser and parse the arguments.
+
+    Returns:
+        Any: Argument parser
+    """
     parser = argparse.ArgumentParser(
         description="Construct a markdown summary for a Tekton PipelineRun."
     )
@@ -25,12 +32,17 @@ def parse_args() -> Any:  # pragma: no cover
 
 
 def main() -> None:
+    """
+    Generate a markdown summary for a Tekton PipelineRun.
+    """
     args = parse_args()
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(level=log_level, log_format="%(message)s")
-    pr = PipelineRun.from_files(args.pr_path, args.trs_path)
+    pipeline_run = PipelineRun.from_files(args.pr_path, args.trs_path)
 
-    LOGGER.info(pr.markdown_summary(include_final_tasks=args.include_final_tasks))
+    LOGGER.info(
+        pipeline_run.markdown_summary(include_final_tasks=args.include_final_tasks)
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover

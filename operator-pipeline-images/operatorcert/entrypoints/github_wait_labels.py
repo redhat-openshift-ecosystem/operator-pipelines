@@ -2,18 +2,17 @@
 CLI utility to wait on pull request labels conditionally.
 """
 import argparse as ap
-import re
-import os
-from enum import Enum
-import time
 import logging
+import os
+import re
+import sys
+import time
+from enum import Enum
 
 from github import Auth, Github
-
+from github.GithubException import GithubException
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-from github.GithubException import GithubException
-
 from operatorcert.entrypoints.github_labels import parse_github_issue_url
 from operatorcert.logger import setup_logger
 
@@ -24,12 +23,12 @@ class WaitType(Enum):
     """
     Enum representing the possible label wait conditions
 
-    WaitAny -> Wait until at least one label matches the regular expression
-    WaitNone -> Wait until no label matches the regular expression
+    WAIT_ANY -> Wait until at least one label matches the regular expression
+    WAIT_NONE -> Wait until no label matches the regular expression
     """
 
-    WaitAny = 0
-    WaitNone = 1
+    WAIT_ANY = 0
+    WAIT_NONE = 1
 
 
 class WaitCondition:
@@ -46,11 +45,12 @@ class WaitCondition:
         """
         Decide whether waiting conditions hold for PR labels
         """
-        if self.wait_type == WaitType.WaitAny:
+        if self.wait_type == WaitType.WAIT_ANY:
             return any(self.pattern.fullmatch(label) for label in labels)
 
-        if self.wait_type == WaitType.WaitNone:
+        if self.wait_type == WaitType.WAIT_NONE:
             return not any(self.pattern.fullmatch(label) for label in labels)
+        return False
 
     @staticmethod
     def get_wait_conditions(args: ap.Namespace) -> list["WaitCondition"]:
@@ -60,10 +60,10 @@ class WaitCondition:
         conditions = []
 
         for regexp in args.any:
-            conditions.append(WaitCondition(WaitType.WaitAny, regexp))
+            conditions.append(WaitCondition(WaitType.WAIT_ANY, regexp))
 
         for regexp in args.none:
-            conditions.append(WaitCondition(WaitType.WaitNone, regexp))
+            conditions.append(WaitCondition(WaitType.WAIT_NONE, regexp))
 
         return conditions
 
@@ -139,7 +139,7 @@ def get_pr_labels(
         pull_request: PullRequest = repository.get_pull(pull_request_id)
     except GithubException as exc:
         LOGGER.error("Unable to get pull request: %s", str(exc))
-        exit(1)
+        sys.exit(1)
 
     label_names = [label.name for label in pull_request.labels]
 
@@ -185,6 +185,9 @@ def wait_on_pr_labels(
 
 
 def main() -> int:
+    """
+    Main function
+    """
     parser = setup_argparser()
     args = parser.parse_args()
 
@@ -218,4 +221,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    exit(main())
+    sys.exit(main())

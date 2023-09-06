@@ -59,9 +59,9 @@ def test_main(
 
     # want to test with __eq__ here to avoid mocking
     assert mock_wait_on_pr_labels.call_args[0][2] == [
-        WaitCondition(WaitType.WaitAny, r"ocp/4\.10/(pass|fail)"),
-        WaitCondition(WaitType.WaitAny, r"ocp/4\.11/(pass|fail)"),
-        WaitCondition(WaitType.WaitNone, r"do-not-merge"),
+        WaitCondition(WaitType.WAIT_ANY, r"ocp/4\.10/(pass|fail)"),
+        WaitCondition(WaitType.WAIT_ANY, r"ocp/4\.11/(pass|fail)"),
+        WaitCondition(WaitType.WAIT_NONE, r"do-not-merge"),
     ]
 
     assert mock_wait_on_pr_labels.call_args[0][1] == 999
@@ -138,24 +138,25 @@ def test_get_wait_conditions() -> None:
     args.none = ["three"]
 
     assert WaitCondition.get_wait_conditions(args) == [
-        WaitCondition(WaitType.WaitAny, "one"),
-        WaitCondition(WaitType.WaitAny, "two"),
-        WaitCondition(WaitType.WaitNone, "three"),
+        WaitCondition(WaitType.WAIT_ANY, "one"),
+        WaitCondition(WaitType.WAIT_ANY, "two"),
+        WaitCondition(WaitType.WAIT_NONE, "three"),
     ]
 
 
 @pytest.mark.parametrize(
     ["wait_type", "regexp", "labels", "result"],
     [
-        (WaitType.WaitAny, "test", ["test"], True),
-        (WaitType.WaitAny, "test", ["one", "another-one", "hello", "test"], True),
-        (WaitType.WaitAny, "test", ["test", "more-labels"], True),
-        (WaitType.WaitAny, "test", [], False),
-        (WaitType.WaitAny, "t..t", ["test"], True),
-        (WaitType.WaitNone, "test", ["test"], False),
-        (WaitType.WaitNone, "test", ["more-labels"], True),
-        (WaitType.WaitNone, "test", ["one", "two", "three"], True),
-        (WaitType.WaitNone, "test", ["one", "two", "test"], False),
+        (WaitType.WAIT_ANY, "test", ["test"], True),
+        (WaitType.WAIT_ANY, "test", ["one", "another-one", "hello", "test"], True),
+        (WaitType.WAIT_ANY, "test", ["test", "more-labels"], True),
+        (WaitType.WAIT_ANY, "test", [], False),
+        (WaitType.WAIT_ANY, "t..t", ["test"], True),
+        (WaitType.WAIT_NONE, "test", ["test"], False),
+        (WaitType.WAIT_NONE, "test", ["more-labels"], True),
+        (WaitType.WAIT_NONE, "test", ["one", "two", "three"], True),
+        (WaitType.WAIT_NONE, "test", ["one", "two", "test"], False),
+        (None, "test", ["test"], False),
     ],
 )
 def test_condition_holds(
@@ -170,69 +171,69 @@ def test_condition_holds(
     [
         pytest.param(
             [["label_one", "label_two"]],
-            [WaitCondition(WaitType.WaitAny, ".*two")],
+            [WaitCondition(WaitType.WAIT_ANY, ".*two")],
             id="any one label",
         ),
         pytest.param(
             [["label_one"], ["label_one", "label_two"]],
-            [WaitCondition(WaitType.WaitAny, ".*two")],
+            [WaitCondition(WaitType.WAIT_ANY, ".*two")],
             id="any one label repoll",
         ),
         pytest.param(
             [["label_one", "label_two"]],
             [
-                WaitCondition(WaitType.WaitAny, "label_two"),
-                WaitCondition(WaitType.WaitAny, "label_one"),
+                WaitCondition(WaitType.WAIT_ANY, "label_two"),
+                WaitCondition(WaitType.WAIT_ANY, "label_one"),
             ],
             id="any two labels",
         ),
         pytest.param(
             [["label_one"], ["label_one", "label_two"]],
             [
-                WaitCondition(WaitType.WaitAny, "label_two"),
-                WaitCondition(WaitType.WaitAny, "label_one"),
+                WaitCondition(WaitType.WAIT_ANY, "label_two"),
+                WaitCondition(WaitType.WAIT_ANY, "label_one"),
             ],
             id="any two labels repoll",
         ),
         pytest.param(
             [["label_one", "label_two"]],
-            [WaitCondition(WaitType.WaitNone, "three")],
+            [WaitCondition(WaitType.WAIT_NONE, "three")],
             id="none one label",
         ),
         pytest.param(
             [["label_one", "label_two"], ["label_one"]],
-            [WaitCondition(WaitType.WaitNone, "label_two")],
+            [WaitCondition(WaitType.WAIT_NONE, "label_two")],
             id="none one label repoll",
         ),
         pytest.param(
             [["label_one", "label_two"]],
             [
-                WaitCondition(WaitType.WaitNone, "three"),
-                WaitCondition(WaitType.WaitNone, "four"),
+                WaitCondition(WaitType.WAIT_NONE, "three"),
+                WaitCondition(WaitType.WAIT_NONE, "four"),
             ],
             id="none two labels",
         ),
         pytest.param(
             [["label_one", "label_two"], ["label_two"]],
             [
-                WaitCondition(WaitType.WaitNone, "label_one"),
-                WaitCondition(WaitType.WaitNone, "label_three"),
+                WaitCondition(WaitType.WAIT_NONE, "label_one"),
+                WaitCondition(WaitType.WAIT_NONE, "label_three"),
             ],
             id="none two labels repoll",
         ),
         pytest.param(
             [["label_one", "label_two"]],
             [
-                WaitCondition(WaitType.WaitAny, "label_one"),
-                WaitCondition(WaitType.WaitNone, "label_three"),
+                WaitCondition(WaitType.WAIT_ANY, "label_one"),
+                WaitCondition(WaitType.WAIT_NONE, "label_three"),
             ],
             id="mixed conditions",
         ),
         pytest.param(
             [["label_one", "label_two"], ["label_one"]],
             [
-                WaitCondition(WaitType.WaitAny, "label_one"),
-                WaitCondition(WaitType.WaitNone, "label_two"),
+                WaitCondition(WaitType.WAIT_ANY, "label_one"),
+                WaitCondition(WaitType.WAIT_NONE, "label_two"),
             ],
             id="mixed conditions repoll",
         ),
@@ -255,8 +256,8 @@ def test_wait_on_pr_labels_success(
 @pytest.mark.parametrize(
     ["pr_labels", "wait_conditions"],
     [
-        pytest.param(["label"], [WaitCondition(WaitType.WaitAny, "test")]),
-        pytest.param(["label"], [WaitCondition(WaitType.WaitNone, "label")]),
+        pytest.param(["label"], [WaitCondition(WaitType.WAIT_ANY, "test")]),
+        pytest.param(["label"], [WaitCondition(WaitType.WAIT_NONE, "label")]),
     ],
 )
 @patch("operatorcert.entrypoints.github_wait_labels.get_pr_labels")
@@ -269,7 +270,7 @@ def test_wait_on_pr_labels_timeout(
     assert not wait_on_pr_labels(None, 1, wait_conditions, 1, 0.1)
 
 
-@patch("operatorcert.entrypoints.github_wait_labels.exit")
+@patch("operatorcert.entrypoints.github_wait_labels.sys.exit")
 def test_get_pr_labels_exception(mock_exit: MagicMock) -> None:
     mock_repo = MagicMock()
     mock_repo.get_pull.side_effect = GithubException(0, "err", None)

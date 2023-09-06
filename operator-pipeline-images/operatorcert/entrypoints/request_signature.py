@@ -1,3 +1,4 @@
+"""Sign a container image using RADAS."""
 import argparse
 import base64
 import json
@@ -100,15 +101,34 @@ WAIT_INTERVAL_SEC: float = 5
 
 
 class UmbHandler(stomp.ConnectionListener):  # type: ignore  # pragma: no cover
+    """
+    UmbHandler class
+    """
+
     def on_error(self, frame: Any) -> None:
-        LOGGER.error("Received an error frame:\n{}".format(frame.body))
+        """
+        On error callback
+
+        Args:
+            frame (Any): Message frame
+        """
+        LOGGER.error("Received an error frame:\n%s", frame.body)
 
     def on_message(self, frame: Any) -> None:
+        """
+        On message callback
+
+        Args:
+            frame (Any): Message frame
+        """
         # handle response from radas in a thread
-        t = threading.Thread(target=process_message, args=[frame.body])
-        t.start()
+        thread = threading.Thread(target=process_message, args=[frame.body])
+        thread.start()
 
     def on_disconnected(self: Any) -> None:
+        """
+        On disconnected callback
+        """
         LOGGER.error("Disconnected from umb.")
 
 
@@ -120,23 +140,22 @@ def process_message(msg: Any) -> None:
     """
     msg = json.loads(msg)["msg"]
 
-    global request_ids
     msg_request_id = msg.get("request_id")
     if request_ids and msg_request_id in request_ids:
-        LOGGER.info(f"Received radas response: {msg}")
+        LOGGER.info("Received radas response: %s", msg)
 
-        global result_file
+        global result_file  # pylint: disable=global-statement
         result_file_path = f"{msg_request_id}-{result_file}"
-        with open(result_file_path, "w") as f:
-            json.dump(msg, f)
+        with open(result_file_path, "w", encoding="utf-8") as result_file:
+            json.dump(msg, result_file)
         LOGGER.info(
-            f"Response from radas successfully received for request {msg_request_id}"
+            "Response from radas successfully received for request %s", msg_request_id
         )
         # Give some time for logs to be written to disk
         time.sleep(1)
         sys.exit(0)
     else:
-        LOGGER.info(f"Ignored message from another request ({msg_request_id})")
+        LOGGER.info("Ignored message from another request (%s)", msg_request_id)
 
 
 def gen_sig_claim_file(reference: str, digest: str, requested_by: str) -> str:
@@ -203,7 +222,9 @@ def gen_request_msg(
     return request_msg
 
 
-def request_signature(args: Any) -> None:
+def request_signature(  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+    args: Any,
+) -> None:
     """
     Format and send out a UMB message to request signing, and retry as needed.
     """
@@ -219,18 +240,18 @@ def request_signature(args: Any) -> None:
     umb = start_umb_client(
         hosts=[args.umb_url], client_name=args.umb_client_name, handler=UmbHandler()
     )
-    global result_file
+    global result_file  # pylint: disable=global-statement
     result_file = args.output
 
     request_msgs = {}
-    global request_ids
+    global request_ids  # pylint: disable=global-statement
     request_ids = set()
-    for i in range(len(manifests)):
+    for manifest, reference in zip(manifests, references):
         request_id = str(uuid.uuid4())
         request_msgs[request_id] = gen_request_msg(
             args=args,
-            digest=manifests[i],
-            reference=references[i],
+            digest=manifest,
+            reference=reference,
             request_id=request_id,
         )
         request_ids.add(request_id)
@@ -242,15 +263,17 @@ def request_signature(args: Any) -> None:
         retry_count = 3
         for i in range(retry_count + 1):
             LOGGER.info(
-                f"Sending {len(request_ids)} signing request messages...attempt #{i+1}"
+                "Sending %s signing request messages...attempt #%s",
+                len(request_ids),
+                i + 1,
             )
             for request_id in request_ids:
                 umb.send(args.umb_publish_topic, json.dumps(request_msgs[request_id]))
 
             wait_count = 0
             LOGGER.debug(
-                f"Checking for signing response result files with prefixes "
-                f"{request_ids}"
+                "Checking for signing response result files with prefixes %s",
+                request_ids,
             )
             while len(request_ids) != 0:
                 wait_count += 1
@@ -263,20 +286,24 @@ def request_signature(args: Any) -> None:
                 sig_received = set()
                 for request_id in request_ids:
                     if os.path.exists(f"{request_id}-{result_file}"):
-                        with open(f"{request_id}-{result_file}", "r") as f:
-                            result_json = json.load(f)
+                        with open(
+                            f"{request_id}-{result_file}", "r", encoding="utf-8"
+                        ) as result_file:
+                            result_json = json.load(result_file)
                             signing_status = result_json["signing_status"]
                             if signing_status == "success":
                                 results.append(result_json)
                                 sig_received.add(request_id)
                             elif signing_status == "failure":
                                 LOGGER.error(
-                                    f"Signing failure received for request {request_id}"
+                                    "Signing failure received for request %s",
+                                    request_id,
                                 )
                             else:
                                 LOGGER.warning(
-                                    f"Unknown signing status received for request "
-                                    f"{request_id}: {signing_status}"
+                                    "Unknown signing status received for request %s: %s",
+                                    request_id,
+                                    signing_status,
                                 )
 
                 request_ids = request_ids - sig_received
@@ -284,7 +311,7 @@ def request_signature(args: Any) -> None:
                 # exit retry loop if all response files detected
                 break
 
-            LOGGER.info(f"Not all successful signing responses received. Retrying.")
+            LOGGER.info("Not all successful signing responses received. Retrying.")
     finally:
         # unsubscribe to free up the queue
         LOGGER.info("Unsubscribing from queue and disconnecting from UMB...")
@@ -292,13 +319,13 @@ def request_signature(args: Any) -> None:
         umb.stop()
         if request_ids:
             LOGGER.error(
-                f"Missing signing responses after all 3 retries for {request_ids}"
+                "Missing signing responses after all 3 retries for %s", request_ids
             )
             sys.exit(1)
         else:
             LOGGER.info("All signing responses received. Writing result to file...")
-            with open(args.output, "w") as f:
-                json.dump(results, f)
+            with open(args.output, "w", encoding="utf-8") as results_file:
+                json.dump(results, results_file)
 
 
 def main() -> None:  # pragma: no cover

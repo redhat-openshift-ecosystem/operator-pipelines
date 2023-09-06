@@ -67,7 +67,7 @@ def add_labels_to_pull_request(
         label_names (List[str]): List of label names to add
     """
     for label in label_names:
-        LOGGER.info(f"Adding label {label}")
+        LOGGER.info("Adding label %s", label)
         pull_request.add_to_labels(label)
 
 
@@ -82,7 +82,7 @@ def remove_labels_from_pull_request(
         label_names (List[str]):List of label names to remove
     """
     for label in label_names:
-        LOGGER.info(f"Removing label {label}")
+        LOGGER.info("Removing label %s", label)
         pull_request.remove_from_labels(label)
 
 
@@ -124,7 +124,7 @@ def parse_github_issue_url(github_issue_url: str) -> tuple[str, int]:
     return repository, issue_id
 
 
-def add_or_remove_labels(
+def add_or_remove_labels(  # pylint: disable=too-many-locals
     github_client: Github,
     github_issue_url: str,
     add_labels: List[str],
@@ -145,7 +145,7 @@ def add_or_remove_labels(
     """
     repository_name, pr_id = parse_github_issue_url(github_issue_url)
 
-    LOGGER.info(f"Adding labels {add_labels} to {repository_name}")
+    LOGGER.info("Adding labels %s to %s", add_labels, repository_name)
     repository = github_client.get_repo(repository_name)
     pull_request = repository.get_pull(pr_id)
     current_labels = pull_request.get_labels()
@@ -177,18 +177,21 @@ def add_or_remove_labels(
 
         # Exclude labels that are already in the "add" list
         labels_to_remove_in_namespace = list(set(namespace_labels) - set(add_labels))
-        LOGGER.info(f"Labels to remove in namespace: {labels_to_remove_in_namespace}")
+        LOGGER.info("Labels to remove in namespace: %s", labels_to_remove_in_namespace)
         labels_to_remove.extend(labels_to_remove_in_namespace)
 
-    LOGGER.info(f"Current labels: {current_labels}")
-    LOGGER.info(f"Labels to add: {labels_to_add}")
-    LOGGER.info(f"Labels to remove: {labels_to_remove}")
+    LOGGER.info("Current labels: %s", current_labels)
+    LOGGER.info("Labels to add: %s", labels_to_add)
+    LOGGER.info("Labels to remove: %s", labels_to_remove)
 
     add_labels_to_pull_request(pull_request, labels_to_add)
     remove_labels_from_pull_request(pull_request, labels_to_remove)
 
 
 def main() -> None:
+    """
+    Main function
+    """
     parser = setup_argparser()
     args = parser.parse_args()
 

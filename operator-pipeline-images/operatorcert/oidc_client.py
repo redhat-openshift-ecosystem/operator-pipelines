@@ -4,7 +4,6 @@ Generic OIDC client.
 
 from dataclasses import dataclass
 import logging
-import os
 from threading import Lock
 import time
 from typing import Any, Optional
@@ -41,7 +40,7 @@ class OIDCClientCredentials:
     client_secret: str
 
 
-class OIDCClientCredentialsClient:
+class OIDCClientCredentialsClient:  # pylint: disable=too-few-public-methods
     """
     Generic OIDC client credential client
 

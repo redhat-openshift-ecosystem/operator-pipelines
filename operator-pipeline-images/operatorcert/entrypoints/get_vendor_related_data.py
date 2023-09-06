@@ -1,3 +1,4 @@
+"""Get vendor related data from Pyxis"""
 import argparse
 import logging
 from urllib.parse import urljoin
@@ -33,6 +34,13 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def get_vendor_related_data(pyxis_url: str, org_id: str) -> None:
+    """
+    Get vendor related data from Pyxis based on the organization ID
+
+    Args:
+        pyxis_url (str): Pyxis base URL
+        org_id (str): Organization ID
+    """
     rsp = pyxis.get(
         urljoin(
             pyxis_url,
@@ -48,6 +56,9 @@ def get_vendor_related_data(pyxis_url: str, org_id: str) -> None:
 
 
 def main() -> None:  # pragma: no cover
+    """
+    Main function
+    """
     parser = setup_argparser()
     args = parser.parse_args()
 

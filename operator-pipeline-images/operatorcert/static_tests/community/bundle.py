@@ -55,7 +55,8 @@ def check_osdk_bundle_validate(bundle: Bundle) -> Iterator[CheckResult]:
 
 def check_required_fields(bundle: Bundle) -> Iterator[CheckResult]:
     """Ensure the CSV contains all required fields"""
-    # From https://github.com/operator-framework/community-operators/blob/master/docs/packaging-required-fields.md#required-fields-for-operatorhub
+    # From https://github.com/operator-framework/community-operators/blob/master/
+    # docs/packaging-required-fields.md#required-fields-for-operatorhub
     required_fields = [
         # Field, validation, fatal
         ("metadata.annotations.capabilities", validate_capabilities, True),

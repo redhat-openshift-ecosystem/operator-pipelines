@@ -1,13 +1,13 @@
+"""Upload signature to Pyxis"""
 import argparse
 import json
 import logging
 from typing import Any
-from urllib.parse import urljoin
-from requests.exceptions import HTTPError
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
+from requests.exceptions import HTTPError
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -101,8 +101,8 @@ def main() -> None:  # pragma: no cover
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(log_level)
 
-    with open(args.signature_data, "r") as f:
-        signature_data = json.load(f)
+    with open(args.signature_data, "r", encoding="utf-8") as signature_file:
+        signature_data = json.load(signature_file)
     for data in signature_data:
         upload_signature(data, args.pyxis_url)
 

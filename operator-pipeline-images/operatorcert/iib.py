@@ -1,3 +1,4 @@
+"""II Builder API client"""
 import logging
 from typing import Any, Dict
 from urllib.parse import urljoin
@@ -42,7 +43,7 @@ def add_builds(base_url: str, body: Dict[str, Any]) -> Any:
     """
     session = get_session()
 
-    add_build_url = urljoin(base_url, f"api/v1/builds/add-rm-batch")
+    add_build_url = urljoin(base_url, "api/v1/builds/add-rm-batch")
 
     resp = session.post(add_build_url, json=body)
 
@@ -50,7 +51,10 @@ def add_builds(base_url: str, body: Dict[str, Any]) -> Any:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"IIB POST query failed with {add_build_url} - {resp.status_code} - {resp.text}"
+            "IIB POST query failed with %s - %s - %s",
+            add_build_url,
+            resp.status_code,
+            resp.text,
         )
         raise
     return resp.json()
@@ -70,7 +74,7 @@ def get_builds(base_url: str, batch_id: int) -> Any:
 
     session = get_session(False)
 
-    add_build_url = urljoin(base_url, f"api/v1/builds")
+    add_build_url = urljoin(base_url, "api/v1/builds")
 
     resp = session.get(add_build_url, params={"batch": batch_id})
 
@@ -78,8 +82,11 @@ def get_builds(base_url: str, batch_id: int) -> Any:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"IIB GET query failed with {add_build_url} and batch {batch_id} - "
-            f"{resp.status_code} - {resp.text}"
+            "IIB GET query failed with %s and batch %s - %s - %s",
+            add_build_url,
+            batch_id,
+            resp.status_code,
+            resp.text,
         )
         raise
     return resp.json()

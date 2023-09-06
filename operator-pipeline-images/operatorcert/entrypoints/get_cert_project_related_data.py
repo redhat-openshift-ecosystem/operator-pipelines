@@ -1,3 +1,4 @@
+"""Get the Certification Project related data"""
 import argparse
 import logging
 from urllib.parse import urljoin
@@ -34,6 +35,13 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
 
 def get_cert_project_related_data(pyxis_url: str, cert_project_id: str) -> None:
+    """
+    Get the Certification Project related data
+
+    Args:
+        pyxis_url (str): Pyxis URL
+        cert_project_id (str): Certification Project ID
+    """
     rsp = pyxis.get(
         urljoin(
             pyxis_url,
@@ -49,6 +57,9 @@ def get_cert_project_related_data(pyxis_url: str, cert_project_id: str) -> None:
 
 
 def main() -> None:  # pragma: no cover
+    """
+    Main function
+    """
     parser = setup_argparser()
     args = parser.parse_args()
 

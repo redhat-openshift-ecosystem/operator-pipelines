@@ -98,7 +98,7 @@ def test_add_bundle_to_index(
         "items": [{"state": "failed", "batch": "some_batch_id"}]
     }
     # if there is no version
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         index.add_bundle_to_index(
             "redhat-isv/some-pullspec",
             "https://iib.engineering.redhat.com",
@@ -127,7 +127,7 @@ def test_output_index_image_paths() -> None:
     with mock.patch("builtins.open", mock_open):
         index.output_index_image_paths(image_output, response)
 
-    mock_open.assert_called_once_with("test-image-path.txt", "w")
+    mock_open.assert_called_once_with("test-image-path.txt", "w", encoding="utf-8")
 
     mock_open.return_value.write.assert_called_once_with(
         "registry/index:v4.8+registry.test/test@sha256:1234,"

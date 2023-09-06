@@ -358,7 +358,7 @@ def test_validate_user() -> None:
 
     operatorcert.validate_user("some_user", contacts)
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         operatorcert.validate_user("one_without_permissions", contacts)
 
 
@@ -408,4 +408,4 @@ def test_download_test_results(mock_get: MagicMock) -> None:
     # Assert
     assert result_id == "1234"
     mock_get.assert_called_with(test_results_url)
-    mock_open.assert_called_with("test_results.json", "w")
+    mock_open.assert_called_with("test_results.json", "w", encoding="utf-8")

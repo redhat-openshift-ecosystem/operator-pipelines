@@ -1,3 +1,4 @@
+"""Detect which operator bundles are affected by a PR"""
 import argparse
 import json
 import logging
@@ -41,7 +42,7 @@ def setup_argparser() -> argparse.ArgumentParser:
     return parser
 
 
-def detect_changed_operators(
+def detect_changed_operators(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     repo_path: str,
     head_commit: str,
     base_commit: str,
@@ -163,7 +164,10 @@ def detect_changed_operators(
         head_repo = OperatorRepo(repo_path)
         base_repo = OperatorRepo(repo_clone_path)
 
-        for operator_name, operator_bundles in all_affected_bundles.items():
+        for (  # pylint: disable=too-many-nested-blocks
+            operator_name,
+            operator_bundles,
+        ) in all_affected_bundles.items():
             base_operator = None
             head_operator = None
             if head_repo.has(operator_name):
@@ -217,6 +221,9 @@ def detect_changed_operators(
 
 
 def main() -> None:
+    """
+    Main function
+    """
     # Args
     parser = setup_argparser()
     args = parser.parse_args()

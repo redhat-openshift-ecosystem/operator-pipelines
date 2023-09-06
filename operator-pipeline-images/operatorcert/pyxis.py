@@ -1,3 +1,4 @@
+"""Pyxis API client"""
 import logging
 import os
 from typing import Any, Dict, Optional
@@ -65,13 +66,13 @@ def _get_session(pyxis_url: str, auth_required: bool = True) -> requests.Session
                 LOGGER.debug("Pyxis session using cert + key is created")
                 session.cert = (cert, key)
             else:
-                raise Exception(
+                raise ValueError(
                     "PYXIS_CERT_PATH or PYXIS_KEY_PATH does not point to a file that "
                     "exists."
                 )
         else:
             # API key or cert + key need to be provided using env variable
-            raise Exception(
+            raise ValueError(
                 "No auth details provided for Pyxis. "
                 "Either define PYXIS_API_KEY or PYXIS_CERT_PATH + PYXIS_KEY_PATH"
             )
@@ -100,14 +101,17 @@ def post(url: str, body: Dict[str, Any]) -> Any:
     """
     session = _get_session(url)
 
-    LOGGER.debug(f"POST Pyxis request: {url}")
+    LOGGER.debug("POST Pyxis request: %s", url)
     resp = session.post(url, json=body)
 
     try:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Pyxis POST query failed with {url} - {resp.status_code} - {resp.text}"
+            "Pyxis POST query failed with %s - %s - %s",
+            url,
+            resp.status_code,
+            resp.text,
         )
         raise
     return resp.json()
@@ -126,14 +130,17 @@ def put(url: str, body: Dict[str, Any]) -> Any:
     """
     session = _get_session(url)
 
-    LOGGER.debug(f"PATCH Pyxis request: {url}")
+    LOGGER.debug("PATCH Pyxis request: %s", url)
     resp = session.put(url, json=body)
 
     try:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Pyxis PUT query failed with {url} - {resp.status_code} - {resp.text}"
+            "Pyxis PUT query failed with %s - %s - %s",
+            url,
+            resp.status_code,
+            resp.text,
         )
         raise
     return resp.json()
@@ -152,14 +159,17 @@ def patch(url: str, body: Dict[str, Any]) -> Any:
     """
     session = _get_session(url)
 
-    LOGGER.debug(f"PATCH Pyxis request: {url}")
+    LOGGER.debug("PATCH Pyxis request: %s", url)
     resp = session.patch(url, json=body)
 
     try:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Pyxis PATCH query failed with {url} - {resp.status_code} - {resp.text}"
+            "Pyxis PATCH query failed with %s - %s - %s",
+            url,
+            resp.status_code,
+            resp.text,
         )
         raise
     return resp.json()
@@ -180,8 +190,8 @@ def get(
         Any: Pyxis GET request response
     """
     session = _get_session(url, auth_required=auth_required)
-    LOGGER.debug(f"GET Pyxis request url: {url}")
-    LOGGER.debug(f"GET Pyxis request params: {params}")
+    LOGGER.debug("GET Pyxis request url: %s", url)
+    LOGGER.debug("GET Pyxis request params: %s", params)
     resp = session.get(url, params=params)
     # Not raising exception for error statuses, because GET request can be used to check
     # if something exists. We don't want a 404 to cause failures.
@@ -203,14 +213,17 @@ def get_project(base_url: str, project_id: str) -> Any:
     session = _get_session(base_url)
 
     project_url = urljoin(base_url, f"v1/projects/certification/id/{project_id}")
-    LOGGER.debug(f"Getting project details: {project_id}")
+    LOGGER.debug("Getting project details: %s", project_id)
     resp = session.get(project_url)
 
     try:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Unable to get project details {project_url} - {resp.status_code} - {resp.text}"
+            "Unable to get project details %s - %s - %s",
+            project_url,
+            resp.status_code,
+            resp.text,
         )
         raise
     return resp.json()
@@ -230,14 +243,17 @@ def get_vendor_by_org_id(base_url: str, org_id: str) -> Any:
     session = _get_session(base_url)
 
     project_url = urljoin(base_url, f"v1/vendors/org-id/{org_id}")
-    LOGGER.debug(f"Getting project details by org_id: {org_id}")
+    LOGGER.debug("Getting project details by org_id: %s", org_id)
     resp = session.get(project_url)
 
     try:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Unable to get vendor details {project_url} - {resp.status_code} - {resp.text}"
+            "Unable to get vendor details %s - %s - %s",
+            project_url,
+            resp.status_code,
+            resp.text,
         )
         raise
     return resp.json()
@@ -257,7 +273,7 @@ def get_repository_by_isv_pid(base_url: str, isv_pid: str) -> Any:
     session = _get_session(base_url)
 
     repo_url = urljoin(base_url, "v1/repositories")
-    LOGGER.debug(f"Getting repository details by isv_pid: {isv_pid}")
+    LOGGER.debug("Getting repository details by isv_pid: %s", isv_pid)
     query_filter = f"isv_pid=={isv_pid}"
     resp = session.get(repo_url, params={"filter": query_filter})
 
@@ -265,7 +281,10 @@ def get_repository_by_isv_pid(base_url: str, isv_pid: str) -> Any:
         resp.raise_for_status()
     except requests.HTTPError:
         LOGGER.exception(
-            f"Unable to get vendor details {repo_url} - {resp.status_code} - {resp.text}"
+            "Unable to get repo details %s - %s - %s",
+            repo_url,
+            resp.status_code,
+            resp.text,
         )
         raise
     json_resp = resp.json()

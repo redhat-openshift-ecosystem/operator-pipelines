@@ -1,3 +1,4 @@
+"""Tekton PipelineRun and TaskRun representations"""
 import datetime
 import json
 from typing import Any, Dict
@@ -19,18 +20,42 @@ class TaskRun:
 
     @property
     def pipelinetask(self) -> Any:
+        """
+        Get the name of the PipelineTask associated with the TaskRun.
+
+        Returns:
+            Any: Name of the PipelineTask
+        """
         return self.obj["metadata"]["labels"]["tekton.dev/pipelineTask"]
 
     @property
     def start_time(self) -> datetime.datetime:
+        """
+        Get the start time of the TaskRun.
+
+        Returns:
+            datetime.datetime: A datetime object representing the start time
+        """
         return isoparse(self.obj["status"]["startTime"])
 
     @property
     def completion_time(self) -> datetime.datetime:
+        """
+        Get the completion time of the TaskRun.
+
+        Returns:
+            datetime.datetime: A datetime object representing the completion time
+        """
         return isoparse(self.obj["status"]["completionTime"])
 
     @property
     def duration(self) -> Any:
+        """
+        Get the duration of the TaskRun.
+
+        Returns:
+            Any: A human readable duration of the TaskRun
+        """
         return humanize.naturaldelta(self.completion_time - self.start_time)
 
     @property
@@ -52,10 +77,9 @@ class TaskRun:
 
         if condition_reason.lower() == self.SUCCEEDED:
             return self.SUCCEEDED
-        elif condition_reason.lower() == self.FAILED:
+        if condition_reason.lower() == self.FAILED:
             return self.FAILED
-        else:
-            return self.UNKNOWN
+        return self.UNKNOWN
 
 
 class PipelineRun:
@@ -102,24 +126,42 @@ Start Time: *{start_time}*
         Returns:
             A PipelineRun object
         """
-        with open(taskruns_path) as fh:
-            taskruns = [TaskRun(tr) for tr in json.load(fh)]
+        with open(taskruns_path, encoding="utf-8") as taskruns_file:
+            taskruns = [TaskRun(tr) for tr in json.load(taskruns_file)]
 
-        with open(obj_path) as fh:
-            obj = json.load(fh)
+        with open(obj_path, encoding="utf-8") as pipeline_run_file:
+            obj = json.load(pipeline_run_file)
 
         return cls(obj, taskruns)
 
     @property
     def pipeline(self) -> Any:
+        """
+        Get the name of the Pipeline associated with the PipelineRun.
+
+        Returns:
+            Any: A name of the Pipeline
+        """
         return self.obj["metadata"]["labels"]["tekton.dev/pipeline"]
 
     @property
     def name(self) -> Any:
+        """
+        Get the name of the PipelineRun.
+
+        Returns:
+            Any: A name of the PipelineRun
+        """
         return self.obj["metadata"]["name"]
 
     @property
     def start_time(self) -> datetime.datetime:
+        """
+        Get the start time of the PipelineRun.
+
+        Returns:
+            datetime.datetime: A datetime object representing the start time
+        """
         return isoparse(self.obj["status"]["startTime"])
 
     @property
@@ -156,13 +198,13 @@ Start Time: *{start_time}*
 
             icon = self.TASKRUN_STATUS_ICONS[taskrun.status]
 
-            tr = self.TASKRUN_TEMPLATE.format(
+            task_run = self.TASKRUN_TEMPLATE.format(
                 icon=icon,
                 name=taskrun.pipelinetask,
                 start_time=taskrun.start_time,
                 duration=taskrun.duration,
             )
-            taskrun_parts.append(tr)
+            taskrun_parts.append(task_run)
 
         taskruns_md = "\n".join(taskrun_parts)
 

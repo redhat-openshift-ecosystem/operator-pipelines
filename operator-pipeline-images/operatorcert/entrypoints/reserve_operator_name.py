@@ -1,3 +1,4 @@
+"""Reserve operator name for given combination of association and operator name"""
 import argparse
 import logging
 import sys
@@ -55,20 +56,23 @@ def check_operator_name_registered_for_association(args: Any) -> None:
         package = packages[0]
         if package["package_name"] != args.operator_name:
             LOGGER.error(
-                f"Requested operator name {args.operator_name} "
-                f"does not match operator name {package['package_name']} "
-                f"already reserved for certification project."
+                "Requested operator name %s does not match operator name %s"
+                "already reserved for certification project.",
+                args.operator_name,
+                package["package_name"],
             )
             sys.exit(1)
         else:
             LOGGER.info(
-                f"Requested operator name {args.operator_name} match "
-                f"with operator name already reserved."
+                "Requested operator name %s match "
+                "with operator name already reserved.",
+                args.operator_name,
             )
     else:
         LOGGER.info(
-            f"There isn't any operator name registered for project "
-            f"with association/isv_pid {args.association}."
+            "There isn't any operator name registered for project "
+            "with association/isv_pid %s",
+            args.association,
         )
 
 
@@ -94,18 +98,20 @@ def check_operator_name(args: Any) -> None:
         package = packages[0]
         if package["association"] != args.association:
             LOGGER.error(
-                f"Operator name {args.operator_name} is already taken by another "
-                f"association ({package['association']})."
+                "Operator name %s is already taken by another association (%s).",
+                args.operator_name,
+                package["association"],
             )
             sys.exit(1)
         else:
             LOGGER.info(
-                f"Operator name {args.operator_name} is already reserved by this "
-                f"association ({args.association})."
+                "Operator name %s is already reserved by this association (%s).",
+                args.operator_name,
+                args.association,
             )
             sys.exit(0)
     else:
-        LOGGER.info(f"Operator name {args.operator_name} is available.")
+        LOGGER.info("Operator name %s is available.", args.operator_name)
 
 
 def reserve_operator_name(args: Any) -> None:
@@ -124,12 +130,16 @@ def reserve_operator_name(args: Any) -> None:
     )
 
     LOGGER.info(
-        f"Operator name {args.operator_name} successfully reserved by "
-        f"{args.association}"
+        "Operator name %s successfully reserved by %s",
+        args.operator_name,
+        args.association,
     )
 
 
 def main() -> None:
+    """
+    Main function
+    """
     parser = setup_argparser()
     args = parser.parse_args()
 
