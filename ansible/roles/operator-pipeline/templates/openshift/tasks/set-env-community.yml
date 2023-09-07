@@ -29,14 +29,11 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
-        
         ENV="$(params.env)"
-        
         if ! [[ "$ENV" =~ ^(prod|stage)$ ]]; then
           echo "Unknown environment."
           exit1
         fi
-        
         case $ENV in
             prod)
                 IIB_URL="https://iib.engineering.redhat.com"
