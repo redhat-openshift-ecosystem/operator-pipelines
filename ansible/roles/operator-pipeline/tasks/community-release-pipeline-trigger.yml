@@ -30,12 +30,16 @@
                 value: $(body.pull_request.merge_commit_sha)
               - name: git_commit_base
                 value: $(body.pull_request.base.sha)
+              - name: git_head_sha
+                value: $(body.pull_request.head.sha)
               - name: env
                 value: "{{ env }}"
               - name: pipeline_image
                 value: "{{ operator_pipeline_image_pull_spec }}"
               - name: metrics_endpoint
                 value: "{{ pipelines_metrics_endpoint }}"
+              - name: image_namespace
+                value: "{{ community_operator_pipeline_pending_namespace }}"
 
     - name: Create Community release pipeline Trigger Binding
       k8s:
@@ -59,9 +63,11 @@
               - name: git_username
               - name: git_commit
               - name: git_commit_base
+              - name: git_head_sha
               - name: env
               - name: pipeline_image
               - name: metrics_endpoint
+              - name: image_namespace
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
@@ -94,12 +100,16 @@
                       value: $(tt.params.git_commit)
                     - name: git_commit_base
                       value: $(tt.params.git_commit_base)
+                    - name: git_head_sha
+                      value: $(tt.params.git_head_sha)
                     - name: env
                       value: $(tt.params.env)
                     - name: pipeline_image
                       value: $(tt.params.pipeline_image)
                     - name: metrics_endpoint
                       value: $(tt.params.metrics_endpoint)
+                    - name: image_namespace
+                      value: $(tt.params.image_namespace)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
@@ -117,3 +127,6 @@
                           resources:
                             requests:
                               storage: 100Mi
+                    - name: registry-credentials
+                      secret:
+                        secretName: community-hosted-pipeline-registry-auth-secret

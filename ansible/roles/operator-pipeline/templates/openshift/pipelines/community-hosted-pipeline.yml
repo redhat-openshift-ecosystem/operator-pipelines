@@ -80,12 +80,23 @@ spec:
         - name: remove-matching-namespace-labels
           value: "true"
 
+    # set environment
+    - name: set-env-community
+      runAfter:
+        - set-github-started-label
+      taskRef:
+        name: set-env-community
+        kind: Task
+      params:
+        - name: env
+          value: $(params.env)
+
     - name: clone-repository
       taskRef:
         name: git-clone
         kind: Task
       runAfter:
-        - set-github-started-label
+        - set-env-community
       params:
         - name: url
           value: "$(params.git_fork_url)"
@@ -302,7 +313,7 @@ spec:
         # Production IIB instance doesn't support the upgrade path feature yet.
         # TODO: switch it to PROD when the feature is available
         - name: iib_url
-          value: https://iib.stage.engineering.redhat.com
+          value: "$(tasks.set-env-community.results.iib_url)"
       workspaces:
         - name: credentials
           workspace: registry-credentials
