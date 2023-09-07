@@ -19,7 +19,7 @@ spec:
       default: token
     - name: force_merge
       description: The boolean which will indicate when to ignore the verification of ci.yaml file.
-      deafult: "false"
+      default: "false"
   workspaces:
     - name: source
   results:
