@@ -12,6 +12,7 @@ spec:
     - name: git_username
     - name: git_commit
     - name: git_commit_base
+    - name: git_head_sha
     - name: env
     - name: pipeline_image
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
@@ -35,11 +36,14 @@ spec:
     - name: umb_ssl_secret_name
       description: Kubernetes secret that contains SSL files
       default: operator-pipeline-api-certs
+
     - name: umb_ssl_cert_secret_key
       description: Kubernetes secret that contains SSL cert
-      default: operator-pipeline.key
+      default: operator-pipeline.pem
+
     - name: umb_ssl_key_secret_key
       description: Kubernetes secret that contains SSL key
+      default: operator-pipeline.key
 
     - name: kerberos_keytab_secret_name
       description: >-
@@ -171,7 +175,7 @@ spec:
     # call IIB to add the bundle to index
     - name: add-bundle-to-index
       runAfter:
-        - acquire-lease
+        - get-supported-versions
       taskRef:
         name: add-bundle-to-index
       params:
@@ -180,7 +184,7 @@ spec:
         - name: index_images
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: bundle_pullspec
-          value: "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)-$(params.git_commit)"
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)-$(params.git_head_sha)"
         - name: iib_url
           value: "$(tasks.set-env-community.results.iib_url)"
         - name: environment
@@ -191,6 +195,8 @@ spec:
           value: "$(params.kerberos_keytab_secret_key)"
         - name: index-image-destination
           value: "$(params.registry)/$(params.image_namespace)/catalog"
+        - name: index-image-destination-tag-suffix
+          value: "-$(params.git_head_sha)"
       workspaces:
         - name: credentials
           workspace: registry-credentials
@@ -225,7 +231,7 @@ spec:
         - name: reference
           value: "$(tasks.get-manifest-digests.results.docker_references)"
         - name: requester
-          value: "Allda"
+          value: "araszka"
         - name: sig_key_id
           value: "$(tasks.set-env-community.results.sig_key_id)"
         - name: sig_key_name
@@ -257,12 +263,14 @@ spec:
           value: "$(params.pipeline_image)"
         - name: signature_data_file
           value: "$(tasks.request-signature.results.signature_data_file)"
-        - name: umb_ssl_secret_name
+        - name: pyxis_ssl_secret_name
           value: "$(params.umb_ssl_secret_name)"
-        - name: umb_ssl_cert_secret_key
+        - name: pyxis_ssl_cert_secret_key
           value: "$(params.umb_ssl_cert_secret_key)"
-        - name: umb_ssl_key_secret_key
+        - name: pyxis_ssl_key_secret_key
           value: "$(params.umb_ssl_key_secret_key)"
+        - name: pyxis_url
+          value: "$(tasks.set-env-community.results.pyxis_url)"
         - name: signing_pub_secret_name
           value: "$(params.signing_pub_secret_name)"
         - name: signing_pub_secret_key

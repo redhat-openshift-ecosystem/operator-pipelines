@@ -21,6 +21,8 @@ spec:
       description: umb host to connect to for messaging, e.g. for signing
     - name: umb_client_name
       description: Client name to connect to umb, usually a service account name
+    - name: pyxis_url
+      description: Container API URL based for selected environment
   steps:
     - name: set-env-community
       image: "$(params.ubi8_minimal_image)"
@@ -42,6 +44,7 @@ spec:
                 SIG_KEY_NAME="containerisvsign"
                 UMB_URL="umb.api.redhat.com"
                 UMB_CLIENT_NAME="operatorpipelines"
+                PYXIS_URL="https://pyxis.engineering.redhat.com"
             ;;
             stage | integration-tests)
                 IIB_URL="https://iib.stage.engineering.redhat.com"
@@ -49,6 +52,7 @@ spec:
                 SIG_KEY_NAME="redhate2etesting"
                 UMB_URL="umb.stage.api.redhat.com"
                 UMB_CLIENT_NAME="nonprod-operatorpipelines"
+                PYXIS_URL="https://pyxis.stage.engineering.redhat.com"
             ;;
         esac
 
@@ -57,3 +61,4 @@ spec:
         echo -n $SIG_KEY_NAME | tee $(results.sig_key_name.path)
         echo -n $UMB_URL | tee $(results.umb_url.path)
         echo -n $UMB_CLIENT_NAME | tee $(results.umb_client_name.path)
+        echo -n $PYXIS_URL | tee $(results.pyxis_url.path)
