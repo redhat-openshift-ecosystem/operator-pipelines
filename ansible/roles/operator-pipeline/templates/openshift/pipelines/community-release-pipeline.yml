@@ -144,10 +144,26 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: read-config
+      taskRef:
+        name: read-config
+        kind: Task
+      runAfter:
+        - detect-changes
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: operator_path
+          value: &addedOperatorPath "operators/$(tasks.detect-changes.results.added_operator)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # get supported versions
     - name: get-supported-versions
       runAfter:
-        - detect-changes
+        - read-config
       taskRef:
         name: get-supported-versions
       params:
@@ -175,7 +191,7 @@ spec:
     # call IIB to add the bundle to index
     - name: add-bundle-to-index
       runAfter:
-        - get-supported-versions
+        - acquire-lease
       taskRef:
         name: add-bundle-to-index
       params:
@@ -193,10 +209,8 @@ spec:
           value: "$(params.kerberos_keytab_secret_name)"
         - name: kerberos_keytab_secret_key
           value: "$(params.kerberos_keytab_secret_key)"
-        - name: index-image-destination
-          value: "$(params.registry)/$(params.image_namespace)/catalog"
-        - name: index-image-destination-tag-suffix
-          value: "-$(params.git_head_sha)"
+        - name: upgrade-graph-mode
+          value: "$(tasks.read-config.results.upgrade-graph-mode)"
       workspaces:
         - name: credentials
           workspace: registry-credentials

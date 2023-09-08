@@ -310,8 +310,6 @@ spec:
           value: "-$(params.git_commit)"
         - name: upgrade-graph-mode
           value: "$(tasks.read-config.results.upgrade-graph-mode)"
-        # Production IIB instance doesn't support the upgrade path feature yet.
-        # TODO: switch it to PROD when the feature is available
         - name: iib_url
           value: "$(tasks.set-env-community.results.iib_url)"
       workspaces:
