@@ -2,10 +2,13 @@ import pathlib
 import tarfile
 from pathlib import Path
 from typing import Any
+from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
 
+from git.repo import Repo as GitRepo
 import pytest
 from operatorcert.entrypoints import detect_changed_operators
+from operatorcert.entrypoints.detect_changed_operators import github_pr_affected_files
 
 
 @pytest.mark.parametrize(
@@ -168,15 +171,40 @@ from operatorcert.entrypoints import detect_changed_operators
         "Delete an operator",
     ],
 )
+@patch("operatorcert.entrypoints.detect_changed_operators.github_pr_affected_files")
 def test_detect_changed_operators(
-    tmp_path: Path, head_commit: str, base_commit: str, expected: Any
+    mock_affected_files: MagicMock,
+    tmp_path: pathlib.Path,
+    head_commit: str,
+    base_commit: str,
+    expected: Any,
 ) -> None:
     data_dir = pathlib.Path(__file__).parent.parent.resolve() / "data"
     tar = tarfile.open(str(data_dir / "test-repo.tar"))
-    tar.extractall(tmp_path)
+    before_dir = tmp_path / "before"
+    after_dir = tmp_path / "after"
+    before_dir.mkdir()
+    after_dir.mkdir()
+    tar.extractall(before_dir)
+    tar.extractall(after_dir)
+    before_git = GitRepo(before_dir)
+    after_git = GitRepo(after_dir)
+    before_git.head.reset(base_commit, index=True, working_tree=True)
+    after_git.head.reset(head_commit, index=True, working_tree=True)
+
+    affected_files = {
+        y
+        for x in after_git.head.commit.diff(base_commit)
+        for y in (x.a_path, x.b_path)
+        if y
+        is not None  # According to the GitPython docs, a_path and b_path can be None
+    }
+    mock_affected_files.return_value = affected_files
 
     result = detect_changed_operators.detect_changed_operators(
-        str(tmp_path), head_commit, base_commit
+        after_dir,
+        before_dir,
+        "https://example.com/foo/bar/pull/1",
     )
 
     for key in set(result.keys()) | set(expected.keys()):
@@ -193,13 +221,17 @@ def test_detect_changed_operators_main(
     args = [
         "detect_changed_operators",
         "--repo-path=/tmp/repo",
-        "--head-commit=2",
-        "--base-commit=1",
+        "--base-repo-path=/tmp/base-repo",
+        "--pr-url=https://example.com/foo/bar/pull/1",
     ]
     mock_detect.return_value = {"foo": ["bar"]}
     with patch("sys.argv", args):
         detect_changed_operators.main()
-    mock_detect.assert_called_once_with("/tmp/repo", "2", "1")
+    mock_detect.assert_called_once_with(
+        pathlib.Path("/tmp/repo"),
+        pathlib.Path("/tmp/base-repo"),
+        "https://example.com/foo/bar/pull/1",
+    )
     assert capsys.readouterr().out.strip() == '{"foo": ["bar"]}'
     mock_logger.assert_called_once_with(level="INFO")
 
@@ -210,15 +242,90 @@ def test_detect_changed_operators_main(
     out_file_name = str(out_file)
     args = [
         "detect_changed_operators",
-        "--repo-path=/tmp/other_repo",
-        "--head-commit=4",
-        "--base-commit=3",
+        "--repo-path=/tmp/repo",
+        "--base-repo-path=/tmp/base-repo",
+        "--pr-url=https://example.com/foo/bar/pull/1",
         f"--output-file={out_file_name}",
         "--verbose",
     ]
     mock_detect.return_value = {"bar": ["baz"]}
     with patch("sys.argv", args):
         detect_changed_operators.main()
-    mock_detect.assert_called_once_with("/tmp/other_repo", "4", "3")
+    mock_detect.assert_called_once_with(
+        pathlib.Path("/tmp/repo"),
+        pathlib.Path("/tmp/base-repo"),
+        "https://example.com/foo/bar/pull/1",
+    )
     assert out_file.read().strip() == '{"bar": ["baz"]}'
     mock_logger.assert_called_once_with(level="DEBUG")
+
+
+@pytest.fixture
+def mock_pull() -> MagicMock:
+    @dataclass
+    class FileMock:
+        filename: str
+
+    result = MagicMock()
+    result.get_files = MagicMock(
+        return_value=[FileMock("foo.txt"), FileMock("bar.yaml")]
+    )
+    return result
+
+
+@patch("operatorcert.entrypoints.detect_changed_operators.Auth.Token")
+@patch("operatorcert.entrypoints.detect_changed_operators.Github")
+def test_github_pr_affected_files(
+    mock_github: MagicMock,
+    mock_token: MagicMock,
+    mock_pull: MagicMock,
+    monkeypatch: Any,
+) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "fake-token")
+    mock_token.return_value = "auth_result"
+
+    mock_repo = MagicMock()
+    mock_repo.get_pull = MagicMock(return_value=mock_pull)
+    mock_gh = MagicMock()
+    mock_gh.get_repo = MagicMock(return_value=mock_repo)
+    mock_github.return_value = mock_gh
+
+    assert github_pr_affected_files("https://example.com/foo/bar/pull/123") == {
+        "foo.txt",
+        "bar.yaml",
+    }
+    mock_github.assert_called_once_with(auth="auth_result")
+    mock_gh.get_repo.assert_called_once_with("foo/bar")
+    mock_repo.get_pull.assert_called_once_with(123)
+    mock_pull.get_files.assert_called_once()
+
+
+@patch("operatorcert.entrypoints.detect_changed_operators.Github")
+def test_github_pr_affected_files_no_token(
+    mock_github: MagicMock,
+    mock_pull: MagicMock,
+    monkeypatch: Any,
+) -> None:
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
+    mock_repo = MagicMock()
+    mock_repo.get_pull = MagicMock(return_value=mock_pull)
+    mock_gh = MagicMock()
+    mock_gh.get_repo = MagicMock(return_value=mock_repo)
+    mock_github.return_value = mock_gh
+
+    assert github_pr_affected_files("https://example.com/foo/bar/pull/123") == {
+        "foo.txt",
+        "bar.yaml",
+    }
+    mock_github.assert_called_once_with()
+    mock_gh.get_repo.assert_called_once_with("foo/bar")
+    mock_repo.get_pull.assert_called_once_with(123)
+    mock_pull.get_files.assert_called_once()
+
+
+def test_github_pr_affected_files_invalid_url(
+    monkeypatch: Any,
+) -> None:
+    with pytest.raises(ValueError):
+        github_pr_affected_files("http://example.com/invalid/url")

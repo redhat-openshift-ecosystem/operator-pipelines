@@ -91,6 +91,7 @@ spec:
         - name: env
           value: $(params.env)
 
+    # Clone the repository contents from the PR branch
     - name: clone-repository
       taskRef:
         name: git-clone
@@ -102,8 +103,6 @@ spec:
           value: "$(params.git_fork_url)"
         - name: revision
           value: "$(params.git_pr_branch)"
-        - name: depth
-          value: 25
         - name: gitInitImage
           value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
       workspaces:
@@ -113,12 +112,33 @@ spec:
         - name: ssh-directory
           workspace: ssh-dir
 
+    # Clone the repository contents from the base branch
+    - name: clone-repository-base
+      taskRef:
+        name: git-clone
+        kind: Task
+      runAfter:
+        - clone-repository
+      params:
+        - name: url
+          value: "$(params.git_fork_url)"
+        - name: revision
+          value: "$(params.git_commit_base)"
+        - name: gitInitImage
+          value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
+      workspaces:
+        - name: output
+          workspace: repository
+          subPath: base
+        - name: ssh-directory
+          workspace: ssh-dir
+
     - name: detect-changes
       taskRef:
         name: parse-repo-changes
         kind: Task
       runAfter:
-        - clone-repository
+        - clone-repository-base
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -126,10 +146,19 @@ spec:
           value: "$(params.git_commit)"
         - name: base_commit
           value: "$(params.git_commit_base)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
       workspaces:
-        - name: repo
+        - name: pr
           workspace: repository
           subPath: src
+        - name: base
+          workspace: repository
+          subPath: base
 
     # parse ci.yaml file and look for the reviewer and or author of the PR
     - name: get-ci-reviewer
