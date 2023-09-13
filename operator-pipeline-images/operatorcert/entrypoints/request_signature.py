@@ -144,10 +144,9 @@ def process_message(msg: Any) -> None:
     if request_ids and msg_request_id in request_ids:
         LOGGER.info("Received radas response: %s", msg)
 
-        global result_file  # pylint: disable=global-statement
         result_file_path = f"{msg_request_id}-{result_file}"
-        with open(result_file_path, "w", encoding="utf-8") as result_file:
-            json.dump(msg, result_file)
+        with open(result_file_path, "w", encoding="utf-8") as result_file_handler:
+            json.dump(msg, result_file_handler)
         LOGGER.info(
             "Response from radas successfully received for request %s", msg_request_id
         )
