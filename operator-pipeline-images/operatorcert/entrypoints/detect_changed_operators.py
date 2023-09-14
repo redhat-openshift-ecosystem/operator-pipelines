@@ -5,7 +5,8 @@ import logging
 import os
 import pathlib
 import re
-from typing import Tuple, Optional, Set, Dict, List
+from dataclasses import dataclass, field
+from typing import Optional
 from operator_repo import Repo as OperatorRepo
 
 from github import Auth, Github
@@ -85,7 +86,7 @@ def github_pr_affected_files(pr_url: str) -> set[str]:
     return {x.filename for x in gh_pr.get_files()}
 
 
-def _find_owner(path: str) -> Tuple[Optional[str], Optional[str]]:
+def _find_owner(path: str) -> tuple[Optional[str], Optional[str]]:
     """
     Given a relative file name within an operator repo, return a pair
     (operator_name, bundle_version) indicating what bundle the file belongs to.
@@ -110,11 +111,76 @@ def _find_owner(path: str) -> Tuple[Optional[str], Optional[str]]:
     return detected_operator_name, detected_bundle_version
 
 
-def detect_changed_operators(  # pylint: disable=too-many-locals,too-many-branches
+def _affected_bundles_from_files(
+    affected_files: set[str],
+) -> tuple[dict[str, set[Optional[str]]], set[str]]:
+    """
+    Group a given set of file names depending on the operator and bundle they
+    belong to
+
+    Args:
+        affected_files: set of files names to parse
+
+    Returns:
+        A tuple containing:
+        - a dictionary mapping operator names to the set of bundles affected
+          (or None if there are files for that operator that do not belong
+          to a bundle)
+        - a set of file names that do not belong to an operator
+    """
+    non_operator_files: set[str] = set()
+    all_affected_bundles: dict[str, set[Optional[str]]] = {}
+
+    for filename in affected_files:
+        operator_name, bundle_version = _find_owner(filename)
+        if operator_name is None:
+            non_operator_files.add(filename)
+        else:
+            all_affected_bundles.setdefault(operator_name, set()).add(
+                # This is None for files within an operator but outside
+                # a bundle (i.e.: ci.yaml)
+                bundle_version
+            )
+    return all_affected_bundles, non_operator_files
+
+
+AffectedBundle = tuple[str, str]
+AffectedOperator = str
+
+
+@dataclass
+class AffectedBundleCollection:
+    """A collection of affected bundles"""
+
+    added: set[AffectedBundle] = field(default_factory=set)
+    modified: set[AffectedBundle] = field(default_factory=set)
+    deleted: set[AffectedBundle] = field(default_factory=set)
+
+    @property
+    def union(self) -> set[AffectedBundle]:
+        """All the affected bundles"""
+        return self.added | self.modified | self.deleted
+
+
+@dataclass
+class AffectedOperatorCollection:
+    """A collection of affected operators"""
+
+    added: set[AffectedOperator] = field(default_factory=set)
+    modified: set[AffectedOperator] = field(default_factory=set)
+    deleted: set[AffectedOperator] = field(default_factory=set)
+
+    @property
+    def union(self) -> set[AffectedOperator]:
+        """All the affected operators"""
+        return self.added | self.modified | self.deleted
+
+
+def detect_changed_operators(
     repo_path: pathlib.Path,
     base_path: pathlib.Path,
     pr_url: str,
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """
     Given two snapshots of an operator repository returns a dictionary
     containing information on what operators and bundles have changed and how.
@@ -152,23 +218,9 @@ def detect_changed_operators(  # pylint: disable=too-many-locals,too-many-branch
     # Phase 1: using the diff between PR head and base, detect which bundles
     # have been affected by the PR
 
-    affected_files = github_pr_affected_files(pr_url)
-
-    LOGGER.debug("Affected files: %s", affected_files)
-
-    non_operator_files: Set[str] = set()
-    all_affected_bundles: Dict[str, Set[Optional[str]]] = {}
-
-    for filename in affected_files:
-        operator_name, bundle_version = _find_owner(filename)
-        if operator_name is None:
-            non_operator_files.add(filename)
-        else:
-            all_affected_bundles.setdefault(operator_name, set()).add(
-                # This is None for files within an operator but outside
-                # a bundle (i.e.: ci.yaml)
-                bundle_version
-            )
+    all_affected_bundles, non_operator_files = _affected_bundles_from_files(
+        github_pr_affected_files(pr_url)
+    )
 
     LOGGER.debug("Affected bundles: %s", all_affected_bundles)
     LOGGER.debug("Files not belonging to an operator: %s", non_operator_files)
@@ -176,12 +228,8 @@ def detect_changed_operators(  # pylint: disable=too-many-locals,too-many-branch
     # Phase 2: Now that we know which operators and bundles have changed, determine exactly
     # what was added, modified or removed
 
-    added_operators: Set[str] = set()
-    modified_operators: Set[str] = set()
-    deleted_operators: Set[str] = set()
-    added_bundles: Set[Tuple[str, str]] = set()
-    modified_bundles: Set[Tuple[str, str]] = set()
-    deleted_bundles: Set[Tuple[str, str]] = set()
+    affected_operators = AffectedOperatorCollection()
+    affected_bundles = AffectedBundleCollection()
 
     head_repo = OperatorRepo(repo_path)
     base_repo = OperatorRepo(base_path)
@@ -196,49 +244,43 @@ def detect_changed_operators(  # pylint: disable=too-many-locals,too-many-branch
             head_operator = head_repo.operator(operator_name)
             if base_repo.has(operator_name):
                 base_operator = base_repo.operator(operator_name)
-                modified_operators.add(operator_name)
+                affected_operators.modified.add(operator_name)
             else:
-                added_operators.add(operator_name)
+                affected_operators.added.add(operator_name)
         else:
-            deleted_operators.add(operator_name)
+            affected_operators.deleted.add(operator_name)
         for bundle_version in operator_bundles:
             if bundle_version is not None:
                 if head_operator is None:
                     # The operator is not present in the new commit, therefore
                     # all of its bundles must have been removed too
-                    deleted_bundles.add((operator_name, bundle_version))
+                    affected_bundles.deleted.add((operator_name, bundle_version))
                 else:
                     if head_operator.has(bundle_version):
                         if base_operator is not None and base_operator.has(
                             bundle_version
                         ):
-                            modified_bundles.add((operator_name, bundle_version))
+                            affected_bundles.modified.add(
+                                (operator_name, bundle_version)
+                            )
                         else:
-                            added_bundles.add((operator_name, bundle_version))
+                            affected_bundles.added.add((operator_name, bundle_version))
                     else:
-                        deleted_bundles.add((operator_name, bundle_version))
+                        affected_bundles.deleted.add((operator_name, bundle_version))
 
-    LOGGER.debug("Added operators: %s", added_operators)
-    LOGGER.debug("Modified operators: %s", modified_operators)
-    LOGGER.debug("Deleted operators: %s", deleted_operators)
-    LOGGER.debug("Added bundles: %s", added_bundles)
-    LOGGER.debug("Modified bundles: %s", modified_bundles)
-    LOGGER.debug("Deleted bundles: %s", deleted_bundles)
+    LOGGER.debug("Affected operators: %s", affected_operators)
+    LOGGER.debug("Affected bundles: %s", affected_bundles)
 
     return {
         "extra_files": list(non_operator_files),
-        "affected_operators": list(
-            added_operators | modified_operators | deleted_operators
-        ),
-        "added_operators": list(added_operators),
-        "modified_operators": list(modified_operators),
-        "deleted_operators": list(deleted_operators),
-        "affected_bundles": [
-            f"{x}/{y}" for x, y in added_bundles | modified_bundles | deleted_bundles
-        ],
-        "added_bundles": [f"{x}/{y}" for x, y in added_bundles],
-        "modified_bundles": [f"{x}/{y}" for x, y in modified_bundles],
-        "deleted_bundles": [f"{x}/{y}" for x, y in deleted_bundles],
+        "affected_operators": list(affected_operators.union),
+        "added_operators": list(affected_operators.added),
+        "modified_operators": list(affected_operators.modified),
+        "deleted_operators": list(affected_operators.deleted),
+        "affected_bundles": [f"{x}/{y}" for x, y in affected_bundles.union],
+        "added_bundles": [f"{x}/{y}" for x, y in affected_bundles.added],
+        "modified_bundles": [f"{x}/{y}" for x, y in affected_bundles.modified],
+        "deleted_bundles": [f"{x}/{y}" for x, y in affected_bundles.deleted],
     }
 
 
