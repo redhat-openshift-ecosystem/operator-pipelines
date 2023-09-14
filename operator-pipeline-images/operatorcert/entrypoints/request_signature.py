@@ -93,7 +93,6 @@ def setup_argparser() -> Any:  # pragma: no cover
 
 
 request_ids: Any = None
-result_file: Any = None
 
 # wait for signing response for a total of 5 min, at 5 second intervals
 TIMEOUT_COUNT = 60
@@ -104,6 +103,10 @@ class UmbHandler(stomp.ConnectionListener):  # type: ignore  # pragma: no cover
     """
     UmbHandler class
     """
+
+    def __init__(self, output_file: str) -> None:
+        super().__init__()
+        self.output_file = output_file
 
     def on_error(self, frame: Any) -> None:
         """
@@ -122,7 +125,9 @@ class UmbHandler(stomp.ConnectionListener):  # type: ignore  # pragma: no cover
             frame (Any): Message frame
         """
         # handle response from radas in a thread
-        thread = threading.Thread(target=process_message, args=[frame.body])
+        thread = threading.Thread(
+            target=process_message, args=[frame.body, self.output_file]
+        )
         thread.start()
 
     def on_disconnected(self: Any) -> None:
@@ -132,11 +137,12 @@ class UmbHandler(stomp.ConnectionListener):  # type: ignore  # pragma: no cover
         LOGGER.error("Disconnected from umb.")
 
 
-def process_message(msg: Any) -> None:
+def process_message(msg: Any, output_file: str) -> None:
     """
     Process a message received from UMB.
     Args:
         msg: The message body received.
+        output_file (str): Path to an output file.
     """
     msg = json.loads(msg)["msg"]
 
@@ -144,7 +150,7 @@ def process_message(msg: Any) -> None:
     if request_ids and msg_request_id in request_ids:
         LOGGER.info("Received radas response: %s", msg)
 
-        result_file_path = f"{msg_request_id}-{result_file}"
+        result_file_path = f"{msg_request_id}-{output_file}"
         with open(result_file_path, "w", encoding="utf-8") as result_file_handler:
             json.dump(msg, result_file_handler)
         LOGGER.info(
@@ -236,11 +242,13 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
         )
         sys.exit(1)
 
+    output_file = args.output
+
     umb = start_umb_client(
-        hosts=[args.umb_url], client_name=args.umb_client_name, handler=UmbHandler()
+        hosts=[args.umb_url],
+        client_name=args.umb_client_name,
+        handler=UmbHandler(output_file=output_file),
     )
-    global result_file  # pylint: disable=global-statement
-    result_file = args.output
 
     request_msgs = {}
     global request_ids  # pylint: disable=global-statement
@@ -284,11 +292,11 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
 
                 sig_received = set()
                 for request_id in request_ids:
-                    if os.path.exists(f"{request_id}-{result_file}"):
+                    if os.path.exists(f"{request_id}-{output_file}"):
                         with open(
-                            f"{request_id}-{result_file}", "r", encoding="utf-8"
-                        ) as result_file:
-                            result_json = json.load(result_file)
+                            f"{request_id}-{output_file}", "r", encoding="utf-8"
+                        ) as result_file_handler:
+                            result_json = json.load(result_file_handler)
                             signing_status = result_json["signing_status"]
                             if signing_status == "success":
                                 results.append(result_json)
