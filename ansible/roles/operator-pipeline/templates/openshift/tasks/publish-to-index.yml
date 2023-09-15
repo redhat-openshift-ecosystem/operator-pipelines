@@ -79,19 +79,35 @@ spec:
 
         TEMP_IMAGES=$(echo $(params.index_image_paths) | tr "," " ")
 
+        SUFFIX=`date +%s`
+
         for i in $TEMP_IMAGES
         do
           SRC_IMAGE=$(echo $i | awk -F '+' '{print $2}')
           echo "Source image: $SRC_IMAGE"
           VERSION=$(echo $i | awk -F '+' '{print $1}' | awk -F ':' '{print $2}')
-          DEST_IMAGE="${FROM_INDEX}:${VERSION}"
-          echo "Dest image: $DEST_IMAGE"
+          DEST_IMAGE_VERSION_TAG="${FROM_INDEX}:${VERSION}"
+          DEST_IMAGE_PERMANENT_TAG="${DEST_IMAGE_VERSION_TAG}-${SUFFIX}"
 
+          echo "Dest images:"
+          echo " - $DEST_IMAGE_VERSION_TAG"
+          echo " - $DEST_IMAGE_PERMANENT_TAG"
+
+          # Add version tag to an index
           skopeo \
             --command-timeout 300s copy \
             --format v2s2 --all \
             --src-no-creds \
             --dest-creds $QUAY_USER:$QUAY_TOKEN \
             docker://$SRC_IMAGE \
-            docker://$DEST_IMAGE
+            docker://$DEST_IMAGE_VERSION_TAG
+
+          # Add permanent tag to an index
+          skopeo \
+            --command-timeout 300s copy \
+            --format v2s2 --all \
+            --src-no-creds \
+            --dest-creds $QUAY_USER:$QUAY_TOKEN \
+            docker://$SRC_IMAGE \
+            docker://$DEST_IMAGE_PERMANENT_TAG
         done
