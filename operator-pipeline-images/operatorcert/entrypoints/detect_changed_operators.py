@@ -234,39 +234,53 @@ def detect_changed_operators(
     head_repo = OperatorRepo(repo_path)
     base_repo = OperatorRepo(base_path)
 
-    for (  # pylint: disable=too-many-nested-blocks
-        operator_name,
-        operator_bundles,
-    ) in all_affected_bundles.items():
-        base_operator = None
-        head_operator = None
-        if head_repo.has(operator_name):
-            head_operator = head_repo.operator(operator_name)
-            if base_repo.has(operator_name):
-                base_operator = base_repo.operator(operator_name)
-                affected_operators.modified.add(operator_name)
-            else:
-                affected_operators.added.add(operator_name)
-        else:
-            affected_operators.deleted.add(operator_name)
-        for bundle_version in operator_bundles:
-            if bundle_version is not None:
-                if head_operator is None:
-                    # The operator is not present in the new commit, therefore
-                    # all of its bundles must have been removed too
-                    affected_bundles.deleted.add((operator_name, bundle_version))
-                else:
-                    if head_operator.has(bundle_version):
-                        if base_operator is not None and base_operator.has(
-                            bundle_version
-                        ):
-                            affected_bundles.modified.add(
-                                (operator_name, bundle_version)
-                            )
-                        else:
-                            affected_bundles.added.add((operator_name, bundle_version))
-                    else:
-                        affected_bundles.deleted.add((operator_name, bundle_version))
+    affected_operators.added = {
+        operator
+        for operator in all_affected_bundles
+        if head_repo.has(operator) and not base_repo.has(operator)
+    }
+    affected_operators.modified = {
+        operator
+        for operator in all_affected_bundles
+        if head_repo.has(operator) and base_repo.has(operator)
+    }
+    affected_operators.deleted = {
+        operator
+        for operator in all_affected_bundles
+        if not head_repo.has(operator) and base_repo.has(operator)
+    }
+
+    non_null_bundles = {
+        (operator, bundle)
+        for operator, bundles in all_affected_bundles.items()
+        for bundle in bundles
+        if bundle is not None
+    }
+
+    affected_bundles.added = {
+        (operator, bundle)
+        for operator, bundle in non_null_bundles
+        if head_repo.has(operator)
+        and head_repo.operator(operator).has(bundle)
+        and not (base_repo.has(operator) and base_repo.operator(operator).has(bundle))
+    }
+    affected_bundles.modified = {
+        (operator, bundle)
+        for operator, bundle in non_null_bundles
+        if head_repo.has(operator)
+        and base_repo.has(operator)
+        and head_repo.operator(operator).has(bundle)
+        and base_repo.operator(operator).has(bundle)
+    }
+    affected_bundles.deleted = {
+        (operator, bundle)
+        for operator, bundle in non_null_bundles
+        if (not head_repo.has(operator) and base_repo.has(operator))
+        or (
+            not head_repo.operator(operator).has(bundle)
+            and base_repo.operator(operator).has(bundle)
+        )
+    }
 
     LOGGER.debug("Affected operators: %s", affected_operators)
     LOGGER.debug("Affected bundles: %s", affected_bundles)
