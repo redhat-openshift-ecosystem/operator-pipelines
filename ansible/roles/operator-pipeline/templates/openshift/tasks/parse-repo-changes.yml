@@ -10,6 +10,15 @@ spec:
       description: Commit ID of the head of the PR
     - name: base_commit
       description: Commit ID of the base of the PR
+    - name: request_url
+      description: URL of the GitHub pull request we want to check
+      type: string
+    - name: github_token_secret_name
+      description: Name of the Kubernetes Secret that contains the GitHub token
+      default: github
+    - name: github_token_secret_key
+      description: Key within the Kubernetes Secret that contains the GitHub token
+      default: token
   results:
     - name: added_operator
       description: >
@@ -20,23 +29,28 @@ spec:
           New bundle version that have been added.
           Bundle version is in the format "bundle_version".
   workspaces:
-    - name: repo
-      description: Local repo clone
+    - name: pr
+      description: Clone of the repo at the PR head
+    - name: base
+      description: Clone of the repo at head of the base branch
   steps:
     - name: parse-repo-changes
       image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        cd "$(workspaces.repo.path)"
-        git config --global --add safe.directory "$(workspaces.repo.path)"
-
         detect-changed-operators \
-          --repo-path="$(workspaces.repo.path)" \
-          --head-commit="$(params.head_commit)" \
-          --base-commit="$(params.base_commit)" \
-          --output-file /tmp/changes.json       \
+          --repo-path="$(workspaces.pr.path)" \
+          --base-repo-path="$(workspaces.base.path)" \
+          --pr-url="$(params.request_url)" \
+          --output-file /tmp/changes.json \
           --verbose
 
         function fail() {
