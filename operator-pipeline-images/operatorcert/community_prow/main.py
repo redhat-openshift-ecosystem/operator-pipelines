@@ -11,8 +11,8 @@ def main() -> None:
     """
     Main function for initializing prow tests
     """
-    setup_logger(level="DEBUG")
-    LOGGER.debug("Testing prow")
+    setup_logger()
+    LOGGER.info("Testing prow")
 
 
 if __name__ == "__main__":  # pragma: no cover
