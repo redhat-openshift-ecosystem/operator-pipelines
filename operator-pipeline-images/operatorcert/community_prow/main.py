@@ -7,7 +7,7 @@ from operatorcert.logger import setup_logger
 LOGGER = logging.getLogger("operator-cert")
 
 
-def main():
+def main() -> None:
     """
     Main function for initializing prow tests
     """
