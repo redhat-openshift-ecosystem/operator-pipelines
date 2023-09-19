@@ -27,12 +27,12 @@ spec:
         - name: QUAY_USER
           valueFrom:
             secretKeyRef:
-              name: "$(params.quay_credentials_secret)"
+              name: "$(params.quay_push_final_index_secret)"
               key: username
         - name: QUAY_TOKEN
           valueFrom:
             secretKeyRef:
-              name: "$(params.quay_credentials_secret)"
+              name: "$(params.quay_push_final_index_secret)"
               key: password
         - name: DIST_METHOD
           value: "$(params.operator_distribution_method)"
