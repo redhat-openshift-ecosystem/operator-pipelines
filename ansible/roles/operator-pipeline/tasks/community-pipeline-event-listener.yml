@@ -22,22 +22,29 @@
               # run community hosted pipeline on PR opened, reopened, synchronized
               - name: github-community-pull-request-listener
                 interceptors:
-                  - github:
-                      secretRef:
-                        secretName: github-webhook-secret
-                        secretKey: webhook-secret
-                      eventTypes:
-                        - pull_request
-                      addChangedFiles:
-                        enabled: true
-                  - cel:
-                      filter: >-
-                        (
-                          header.match("X-GitHub-Event", "pull_request")
-                          && body.action in ["opened", "reopened", "synchronize"]
-                          && body.pull_request.base.ref == "tbak-test"
-                          && extensions.changed_files.matches("operators/")
-                        )
+                  - ref:
+                      name: "github"
+                    params:
+                      - name: "secretRef"
+                        value:
+                          secretName: github-webhook-secret
+                          secretKey: webhook-secret
+                      - name: "eventTypes"
+                        value: ["pull_request"]
+                      - name: "addChangedFiles"
+                        value:
+                          enabled: true
+                  - ref:
+                      name: cel
+                    params:
+                      - name: filter
+                        value: >-
+                          (
+                            header.match("X-GitHub-Event", "pull_request")
+                            && body.action in ["opened", "reopened", "synchronize"]
+                            && body.pull_request.base.ref == "{{ branch }}"
+                            && extensions.changed_files.matches("operators/")
+                          )
                 bindings:
                   - ref: community-operator-hosted-pipeline-trigger-binding
                 template:
@@ -45,20 +52,30 @@
               # run community release pipeline on merged PR
               - name: github-community-pull-request-listener
                 interceptors:
-                  - github:
-                      secretRef:
-                        secretName: github-webhook-secret
-                        secretKey: webhook-secret
-                      eventTypes:
-                        - pull_request
-                  - cel:
-                      filter: >-
-                        (
-                          header.match("X-GitHub-Event", "pull_request")
-                          && body.action == "closed"
-                          && body.pull_request.base.ref == "tbak-test"
-                          && body.pull_request.merged == true
-                        )
+                  - ref:
+                      name: "github"
+                    params:
+                      - name: "secretRef"
+                        value:
+                          secretName: github-webhook-secret
+                          secretKey: webhook-secret
+                      - name: "eventTypes"
+                        value: ["pull_request"]
+                      - name: "addChangedFiles"
+                        value:
+                          enabled: true
+                  - ref:
+                      name: cel
+                    params:
+                      - name: filter
+                        value: >-
+                          (
+                            header.match("X-GitHub-Event", "pull_request")
+                            && body.action == "closed"
+                            && body.pull_request.base.ref == "{{ branch }}"
+                            && body.pull_request.merged == true
+                            && extensions.changed_files.matches("operators/")
+                          )
                 bindings:
                   - ref: community-operator-release-pipeline-trigger-binding
                 template:

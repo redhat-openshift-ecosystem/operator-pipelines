@@ -40,6 +40,8 @@
                 value: "{{ pipelines_metrics_endpoint }}"
               - name: image_namespace
                 value: "{{ community_operator_pipeline_pending_namespace }}"
+              - name: changed_files
+                value: $(extensions.changed_files)
 
     - name: Create Community release pipeline Trigger Binding
       k8s:
@@ -68,6 +70,7 @@
               - name: pipeline_image
               - name: metrics_endpoint
               - name: image_namespace
+              - name: changed_files
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
                 kind: PipelineRun
@@ -110,6 +113,8 @@
                       value: $(tt.params.metrics_endpoint)
                     - name: image_namespace
                       value: $(tt.params.image_namespace)
+                    - name: changed_files
+                      value: $(tt.params.changed_files)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
