@@ -49,6 +49,7 @@ spec:
       description: >-
         The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
       default: kerberos-keytab
+
     - name: kerberos_keytab_secret_key
       description: >-
         The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
@@ -57,6 +58,7 @@ spec:
     - name: signing_pub_secret_name
       description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
       default: signing-pub-key
+
     - name: signing_pub_secret_key
       description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
       default: sig-key.pub
@@ -295,6 +297,23 @@ spec:
         - name: source
           workspace: repository
           subPath: signing
+
+    - name: publish-to-index
+      runAfter:
+        - upload-signature
+      taskRef:
+        name: publish-to-index
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: index_image_paths
+          value: "$(tasks.add-bundle-to-index.results.index_image_paths)"
+        - name: environment
+          value: "$(params.env)"
+        - name: quay_push_final_index_secret
+          value: community-push-final-index-quay-credentials
+        - name: operator_distribution_method
+          value: community
 
   finally:
     # Release the acquired resource

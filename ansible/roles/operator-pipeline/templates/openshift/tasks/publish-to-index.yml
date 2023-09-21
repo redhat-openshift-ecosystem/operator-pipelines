@@ -15,7 +15,13 @@ spec:
       description: |
         Which environment the pipeline is running in. Can be one of [dev, qa, stage, prod]
     - name: operator_distribution_method
-      description: Operator distribution method. Can be one of [connect, marketplace]
+      description: Operator distribution method. Can be one of [connect, marketplace, community]
+    - name: quay_push_final_index_secret
+      description: |
+        Name of the Quay credentials secret:
+        - iib-quay-credentials (default) - for connect and marketplace repositories
+        - community-push-final-index-quay-credentials - for community repositories
+      default: iib-quay-credentials
   steps:
     - name: skopeo-copy
       # Pipeline image is needed for Red Hat internal SSL cert
@@ -24,12 +30,12 @@ spec:
         - name: QUAY_USER
           valueFrom:
             secretKeyRef:
-              name: iib-quay-credentials
+              name: "$(params.quay_push_final_index_secret)"
               key: username
         - name: QUAY_TOKEN
           valueFrom:
             secretKeyRef:
-              name: iib-quay-credentials
+              name: "$(params.quay_push_final_index_secret)"
               key: password
         - name: DIST_METHOD
           value: "$(params.operator_distribution_method)"
@@ -48,6 +54,9 @@ spec:
                     marketplace)
                       FROM_INDEX="quay.io/redhat/redhat----redhat-marketplace-index"
                     ;;
+                    community)
+                      FROM_INDEX="quay.io/redhat/redhat----community-operator-index"
+                    ;;
                     *)
                       echo "Unknown value for operator_distribution_method: $DIST_METHOD"
                       exit 1
@@ -61,6 +70,9 @@ spec:
                     ;;
                     marketplace)
                       FROM_INDEX="quay.io/redhat-pending/redhat----redhat-marketplace-index"
+                    ;;
+                    community)
+                      FROM_INDEX="quay.io/redhat-pending/redhat----community-operator-index"
                     ;;
                     *)
                       echo "Unknown value for operator_distribution_method: $DIST_METHOD"
