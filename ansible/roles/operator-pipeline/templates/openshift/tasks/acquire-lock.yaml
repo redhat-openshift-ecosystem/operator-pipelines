@@ -83,3 +83,4 @@ spec:
         create_lease_yaml
         # Acquire Lease
         acquire_lease
+      timeout: "0h35m0s"

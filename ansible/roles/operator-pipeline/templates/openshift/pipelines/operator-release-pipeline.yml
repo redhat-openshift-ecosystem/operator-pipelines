@@ -442,6 +442,7 @@ spec:
 
     # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
     - name: acquire-lease
+      retries: 8
       runAfter:
         - publish-resources
         - get-supported-versions
