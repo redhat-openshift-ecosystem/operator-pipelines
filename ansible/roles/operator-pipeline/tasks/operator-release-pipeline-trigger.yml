@@ -80,7 +80,7 @@
                     git_pull_request_url: $(tt.params.git_pr_url)
                     git_pull_request_title: $(tt.params.git_pr_title)
                 spec:
-                  timeout: "1h30m0s"
+                  timeout: "4h15m0s"
                   pipelineRef:
                     name: operator-release-pipeline
                   params:
