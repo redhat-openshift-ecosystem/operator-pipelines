@@ -31,7 +31,7 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           pip install --user openshift
@@ -58,7 +58,7 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           pip install --user openshift
@@ -86,7 +86,7 @@ jobs:
       - deploy-qa
       - deploy-dev
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           pip install --user openshift
@@ -113,7 +113,7 @@ jobs:
       - prepare-env
       - deploy-stage
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           pip install --user openshift
@@ -136,7 +136,7 @@ jobs:
     needs:
       - deploy-prod
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bump version and push tag
         id: tag_version

@@ -19,7 +19,7 @@ jobs:
       bundle_image: ${{ steps.push-bundle.outputs.pullspec }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install tekton CLI
         id: install-deps
