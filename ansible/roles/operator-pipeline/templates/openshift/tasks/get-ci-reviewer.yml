@@ -43,10 +43,10 @@ spec:
         echo "Getting reviewers from the ci.yaml ..."
         if [ ! -e "$CI" ]; then
           echo >$(results.list_reviewers.path)
-          echo false >$(results.author_is_reviewer.path)
+          echo -n false >$(results.author_is_reviewer.path)
         else
           yq -r '(.reviewers//[])[]' $CI >$(results.list_reviewers.path)
-          yq -r ".reviewers//[]|index(\"$(params.git_username)\") != null" $CI >$(results.author_is_reviewer.path)
+          yq -r ".reviewers//[]|index(\"$(params.git_username)\") != null" $CI | tr -d '\r\n' >$(results.author_is_reviewer.path)
         fi
     - name: approve-pull-request
       env:
