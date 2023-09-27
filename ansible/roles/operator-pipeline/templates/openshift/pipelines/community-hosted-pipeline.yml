@@ -102,7 +102,7 @@ spec:
         - name: url
           value: "$(params.git_fork_url)"
         - name: revision
-          value: "$(params.git_pr_branch)"
+          value: "$(params.git_commit)"
         - name: gitInitImage
           value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
       workspaces:
@@ -121,7 +121,7 @@ spec:
         - clone-repository
       params:
         - name: url
-          value: "$(params.git_fork_url)"
+          value: "$(params.git_repo_url)"
         - name: revision
           value: "$(params.git_commit_base)"
         - name: gitInitImage
