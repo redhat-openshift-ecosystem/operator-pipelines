@@ -2774,7 +2774,7 @@
                     "steps": [
                         {
                             "container": "step-gather-info",
-                            "imageID": "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:4e548e1dcd98031563f5c4208edd552ff09cb635e5b519ce8166c8debdda73b9",
+                            "imageID": "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:7fdeb7eae1727957ba7a7c0e812e5306ffbc594b7759ab058b262251c1ad6fd2",
                             "name": "gather-info",
                             "terminated": {
                                 "containerID": "cri-o://712c79de24855d303e4a4d5ca8eb3d17d066ef4cec4ec7294be8ebb7c1bde80d",
@@ -2860,7 +2860,7 @@
                         ],
                         "steps": [
                             {
-                                "image": "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49",
+                                "image": "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:7fdeb7eae1727957ba7a7c0e812e5306ffbc594b7759ab058b262251c1ad6fd2",
                                 "name": "gather-info",
                                 "resources": {},
                                 "script": "#! /usr/bin/env bash\nset -xe\n\nPR_NAME=\"$(params.pipelinerun)\"\nmkdir $PR_NAME\n\necho \"Getting PipelineRun details\"\ntkn pipelinerun describe $PR_NAME -o json \u003e $PR_NAME/pipelinerun.json\n\necho \"Getting TaskRun details\"\ntkn taskrun list \\\n  --label 'tekton.dev/pipelineRun'==\"$PR_NAME\" \\\n  -o jsonpath='{.items}' \\\n  \u003e $PR_NAME/taskruns.json\n\nchmod -R 777 $PR_NAME\n",
