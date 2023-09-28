@@ -13,7 +13,7 @@ spec:
   params:
     - name: pipelines_cli_tkn_image
       description: Teknton cli image
-      default: "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:cc8bbdb079578605a66447529d7de76f32882dc2ada571e39ff18e483cdbdf49"
+      default: "registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:7fdeb7eae1727957ba7a7c0e812e5306ffbc594b7759ab058b262251c1ad6fd2"
     - name: github_host_url
       description: |
         The GitHub host, adjust this if you run a GitHub enteprise.
