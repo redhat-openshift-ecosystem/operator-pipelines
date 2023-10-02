@@ -61,7 +61,7 @@ operatorcert = [
     "stomp-py>=8.0.1",
     "requests-kerberos>=0.14.0",
     "PyGithub>=1.59.0",
-    "GitPython>=3.1.32",
+    "GitPython>=3.1.37",
     "semver>=3.0.1",
     "operator-repo@git+https://github.com/mporrato/operator-repo.git@v0.1.0",
     "openshift-client>=1.0.19",

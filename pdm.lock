@@ -189,7 +189,7 @@ dependencies = [
 
 [[package]]
 name = "gitpython"
-version = "3.1.32"
+version = "3.1.37"
 requires_python = ">=3.7"
 summary = "GitPython is a Python library used to interact with Git repositories"
 dependencies = [
@@ -741,7 +741,7 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "operatorcert", "operatorcert-dev", "tox"]
-content_hash = "sha256:57089fa72ee7e3cec1e7f29f45aeedb8b20d58c4f0050a58f5f5dbd004639d14"
+content_hash = "sha256:9a7f70840e200a60f31cb9737770f1357326fa9501440ba83fc47ccb4b29dc05"
 
 [metadata.files]
 "argcomplete 3.1.1" = [
@@ -1088,9 +1088,9 @@ content_hash = "sha256:57089fa72ee7e3cec1e7f29f45aeedb8b20d58c4f0050a58f5f5dbd00
     {url = "https://files.pythonhosted.org/packages/21/a6/35f83efec687615c711fe0a09b67e58f6d1254db27b1013119de46f450bd/gitdb-4.0.10-py3-none-any.whl", hash = "sha256:c286cf298426064079ed96a9e4a9d39e7f3e9bf15ba60701e95f5492f28415c7"},
     {url = "https://files.pythonhosted.org/packages/4b/47/dc98f3d5d48aa815770e31490893b92c5f1cd6c6cf28dd3a8ae0efffac14/gitdb-4.0.10.tar.gz", hash = "sha256:6eb990b69df4e15bad899ea868dc46572c3f75339735663b81de79b06f17eb9a"},
 ]
-"gitpython 3.1.32" = [
-    {url = "https://files.pythonhosted.org/packages/67/50/742c2fb60989b76ccf7302c7b1d9e26505d7054c24f08cc7ec187faaaea7/GitPython-3.1.32-py3-none-any.whl", hash = "sha256:e3d59b1c2c6ebb9dfa7a184daf3b6dd4914237e7488a1730a6d8f6f5d0b4187f"},
-    {url = "https://files.pythonhosted.org/packages/87/56/6dcdfde2f3a747988d1693100224fb88fc1d3bbcb3f18377b2a3ef53a70a/GitPython-3.1.32.tar.gz", hash = "sha256:8d9b8cb1e80b9735e8717c9362079d3ce4c6e5ddeebedd0361b228c3a67a62f6"},
+"gitpython 3.1.37" = [
+    {url = "https://files.pythonhosted.org/packages/8a/7e/20f7e45878b5aed34320fbeeae8f78acc806e7bd708d00b1c6e64b016f5b/GitPython-3.1.37-py3-none-any.whl", hash = "sha256:5f4c4187de49616d710a77e98ddf17b4782060a1788df441846bddefbb89ab33"},
+    {url = "https://files.pythonhosted.org/packages/c6/33/5e633d3a8b3dbec3696415960ed30f6718ed04ef423ce0fbc6512a92fa9a/GitPython-3.1.37.tar.gz", hash = "sha256:f9b9ddc0761c125d5780eab2d64be4873fc6817c2899cbcb34b02344bdc7bc54"},
 ]
 "giturlparse 0.10.0" = [
     {url = "https://files.pythonhosted.org/packages/70/ad/4526ec3dde02eddbc1b860bd0861a770b95bdb95f5fae30f26f3d587ca7d/giturlparse-0.10.0.tar.gz", hash = "sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337"},
