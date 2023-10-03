@@ -1,5 +1,5 @@
 ---
-- name: Create trigger enabling running Community hosted pipeline via Github webhook
+- name: Create trigger enabling running Community hosted pipeline via Github PR webhook
   tags:
     - triggers
   block:
@@ -132,3 +132,86 @@
                     - name: registry-credentials
                       secret:
                         secretName: community-hosted-pipeline-registry-auth-secret
+
+
+- name: Create trigger enabling running PR comment parsing pipeline
+  tags:
+    - triggers
+  block:
+    - name: Create parsing pipeline Trigger Binding
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerBinding
+          metadata:
+            name: community-operator-comment-pipeline-trigger-binding
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_comment_body
+                value: $(body.comment.body)
+              - name: git_pr_url
+                value: $(body.issue.pull_request.url)
+              - name: env
+                value: "{{ env }}"
+              - name: pipeline_image
+                value: "{{ operator_pipeline_image_pull_spec }}"
+
+    - name: Create Community comment pipeline Trigger template
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerTemplate
+          metadata:
+            name: community-operator-comment-pipeline-trigger-template
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_comment_body
+              - name: git_pr_url
+              - name: env
+              - name: pipeline_image
+              - name: metrics_endpoint
+            resourcetemplates:
+              - apiVersion: tekton.dev/v1beta1
+                kind: PipelineRun
+                metadata:
+                  generateName: community-comment-pipeline-run
+                  labels:
+                    app: operator-pipeline
+                    suffix: "{{ suffix }}"
+                    env: "{{ env }}"
+                  annotations:
+                    git_pull_request_url: $(tt.params.git_pr_url)
+                spec:
+                  timeout: "1m"
+                  pipelineRef:
+                    name: community-comment-pipeline
+                  params:
+                    - name: git_comment_body
+                      value: $(tt.params.git_comment_body)
+                    - name: git_pr_url
+                      value: $(tt.params.git_repo_url)
+                    - name: env
+                      value: $(tt.params.env)
+                    - name: pipeline_image
+                      value: $(tt.params.pipeline_image)
+                  workspaces:
+                    - name: results
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 1Mi

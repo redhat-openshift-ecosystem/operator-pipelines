@@ -49,6 +49,36 @@
                   - ref: community-operator-hosted-pipeline-trigger-binding
                 template:
                   ref: community-operator-hosted-pipeline-trigger-template
+              # run comment parsing pipeline on PR comment
+              - name: github-community-pull-request-listener
+                interceptors:
+                  - ref:
+                      name: "github"
+                    params:
+                      - name: "secretRef"
+                        value:
+                          secretName: github-webhook-secret
+                          secretKey: webhook-secret
+                      - name: "eventTypes"
+                        value: ["issue_comment"]
+                  - ref:
+                      name: cel
+                    params:
+                      - name: filter
+                        value: >-
+                          (
+                            header.match("X-GitHub-Event", "issue_comment")
+                            && body.action in ["created"]
+                            && (
+                                  body.comment.body.matches("^/retest\s*$")
+                                  || body.comment.body.matches("^/retest-required\s*$")
+                                  || body.comment.body.matches("^/test\s*[^?]*$")
+                               )
+                          )
+                bindings:
+                  - ref: community-operator-comment-pipeline-trigger-binding
+                template:
+                  ref: community-operator-comment-pipeline-trigger-template
               # run community release pipeline on merged PR
               - name: github-community-pull-request-listener
                 interceptors:
