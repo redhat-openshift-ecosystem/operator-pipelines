@@ -1,0 +1,121 @@
+---
+- name: Check prow jobs finish
+  tags:
+    - test-ci-pipeline
+  block:
+    - name:
+      tags:
+        - test-community-hosted-pipeline
+      shell: |
+        URL="https://api.github.com/repos/{{ git_upstream_repo }}/statuses/{{ bundle_branch_commit_sha }}"
+        
+        check_initial_prow_event() {
+            # Set a 5-minute timeout in seconds for waiting on first pending prow
+            timeout_seconds=300
+            start_time=$(date +%s)
+            
+            response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "${URL}")
+        
+            # Iterate over events and wait for first pending prow
+            while read -r event; do
+                current_time=$(date +%s)
+                elapsed_time=$((current_time - start_time))
+        
+                # Check if the elapsed time exceeds the timeout
+                if [ "$elapsed_time" -ge "$timeout_seconds" ]; then
+                    echo "Timeout reached no pending prows found."
+                    return 1
+                fi
+    
+                context=$(echo "$event" | jq -r '.context')
+                state=$(echo "$event" | jq -r '.state')
+        
+                # Check if the state is "pending" and context matches the prow
+                if [ "$state" == "pending" ] && [[ "$context" =~ ^ci/prow/4\.[0-9]+-deploy-and-test-operator$ ]]; then
+                    echo "Pending prow event found."
+                    return
+                fi
+        
+                sleep 10
+            done <<< "$(echo "$response" | jq -c '.[]')"
+        }
+
+        # Check for the initial prow event
+        check_initial_prow_event
+
+
+        # Track unique prow jobs with pending state
+        declare -A pending_prows
+        
+        # Start timestamp
+        start_time=$(date +%s)
+        
+        # Timeout duration (1 hour) for prow job resolution
+        timeout_duration=3600
+        
+        # Set initial exit code. If all prows will be successful, this value does not change.
+        # If some of prows will be unsuccessful this will change to 1.
+        exit_code=0
+        
+        while true; do
+            response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "${URL}")
+        
+            # Process each event and collect all pending prow jobs
+            while read -r event; do
+                context=$(echo "$event" | jq -r '.context')
+                state=$(echo "$event" | jq -r '.state')
+        
+                # Check if the state of prow job is "pending" and context matches the regex
+                # Saved into associative array as keys to avoid duplicities
+                if [ "$state" == "pending" ] && [[ "$context" =~ ^ci/prow/4\.[0-9]+-deploy-and-test-operator$ ]]; then
+                    # Add context to the pending_prows array
+                    pending_prows["$context"]=1
+                fi
+            done <<< "$(echo "$response" | jq -c '.[]')"
+        
+            # Check if the timeout has been reached
+            current_time=$(date +%s)
+            elapsed_time=$((current_time - start_time))
+            if [ "$elapsed_time" -ge "$timeout_duration" ]; then
+                echo "Timeout reached. Some pending prow jobs did not reach a success state in time."
+                for context in "${!pending_prows[@]}"; do
+                  echo "Timed-out prow job: $context"
+                done
+                exit 1
+            fi
+        
+            # Process each event and unset success prows
+            while read -r event; do
+                context=$(echo "$event" | jq -r '.context')
+                state=$(echo "$event" | jq -r '.state')
+                target_url=$(echo "$event" | jq -r '.target_url')
+        
+                # Check if the state is "success" and context is in pending_prows
+                if [ "$state" == "success" ] && [ "${pending_prows[$context]}" == "1" ]; then
+                    # Remove successful prow from the pending_prows array
+                    echo "Successful prow job: $context | URL: $target_url"
+                    unset "pending_prows[$context]"
+                elif [ "$state" == "failure" ] && [[ "$context" =~ ^ci/prow/4\.[0-9]+-deploy-and-test-operator$ ]]; then
+                    # Notify user about failure
+                    echo "Failed prow job: $context | URL: $target_url"
+                    # Remove unsuccessful prow from the pending_prows array
+                    unset "pending_prows[$context]"
+                    exit_code=1
+                fi
+            done <<< "$(echo "$response" | jq -c '.[]')"
+        
+            # When array with collected prows is exhausted script finishes,
+            # if not script is indicating prows
+            if [ ${#pending_prows[@]} -eq 0 ]; then
+                echo "All pending prows have been finished."
+                exit $exit_code
+            elif [ ${#pending_prows[@]} -gt 0 ]; then
+              echo "Prow jobs waiting for resolution:"
+              for item in "${!pending_prows[@]}"; do
+                echo "$item"
+              done
+            fi
+        
+            # Sleep for a while before checking again
+            sleep 60
+        done

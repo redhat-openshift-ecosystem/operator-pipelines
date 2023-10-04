@@ -41,7 +41,7 @@ jobs:
             --output $HOME/.ssh/id_rsa \
             ansible/vaults/integration-tests/ci-pipeline-github-ssh-key
 
-      - name: Run the integration tests ansible playbook
+      - name: Run the certified operators integration tests ansible playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: playbooks/operator-pipeline-integration-tests.yml
@@ -55,3 +55,18 @@ jobs:
             -e "operator_pipeline_image_tag=${{ github.sha }}"
             -e "suffix=${{ steps.prepare.outputs.suffix }}"
             -v
+
+      - name: Run the community integration tests ansible playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbooks/community-operators-integration-tests.yaml
+          directory: ./ansible
+          requirements: playbooks/requirements.yml
+          vault_password: ${{secrets.VAULT_PASSWORD}}
+          options: |
+            -i inventory/operator-pipeline-integration-tests
+            -e "oc_namespace=integration-tests-community-operators"
+            -e "operator_bundle_version=0.1.${{ github.run_number }}-${{ github.run_attempt }}"
+            -e "operator_pipeline_image_tag=${{ github.sha }}"
+            -e "suffix=${{ steps.prepare.outputs.suffix }}"
+            -v      

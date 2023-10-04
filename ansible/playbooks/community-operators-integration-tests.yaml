@@ -1,0 +1,134 @@
+---
+- name: Execute integration tests
+  hosts: all
+  vars_files:
+    - ../vaults/{{ env }}/secret-vars.yml
+    - ../vaults/{{ env }}/ocp-token.yml
+  vars:
+    # Customized defaults for the test-e2e-operator package
+    git_upstream_repo: redhat-openshift-ecosystem/community-operators-pipeline-preprod
+    git_repo_url: "git@github.com:{{ git_upstream_repo }}.git"
+    git_upstream_branch: "{{ branch }}"  # oc namespace
+    git_bundle_branch: "{{ branch }}-{{ operator_package_name }}-{{ operator_bundle_version }}"
+    src_operator_git_branch: e2e-test-community-operator # here needs to be created definition of the community operator (branch needs to be created)
+    src_operator_bundle_version: 0.0.1
+    operator_package_name: test-e2e-community-operator
+    git_base_branch: stage
+  environment:
+    K8S_AUTH_API_KEY: '{{ ocp_token }}'
+    K8S_AUTH_HOST: '{{ ocp_host }}'
+
+  tasks:
+    - block:
+        - name: Install CLI tools
+          tags:
+            - prepare-tools
+            - test-community-hosted-pipeline
+            - test-community-release-pipeline
+          include_role:
+            name: integration-tests
+            tasks_from: tools
+            apply:
+              tags:
+                - prepare-tools
+                - test-community-hosted-pipeline
+                - test-community-release-pipeline
+
+        - name: Prepare integration test data
+          tags:
+            - prepare-test-data
+          include_role:
+            name: integration-tests
+            tasks_from: test_data
+            apply:
+              tags:
+                - prepare-test-data
+
+        - name: Deploy operator pipelines
+          tags:
+            - deploy-operator-pipelines
+          include_role:
+            name: operator-pipeline
+            apply:
+              tags:
+                - deploy-operator-pipelines
+
+        - name: Deploy nginx proxy
+          tags:
+            - deploy-nginx-proxy
+          include_role:
+            name: nginx-proxy
+            apply:
+              tags:
+                - deploy-nginx-proxy
+
+        - name: Run the Community operator pipeline
+          tags:
+            - test-community-hosted-pipeline
+          include_role:
+            name: integration-tests
+            tasks_from: community_pipeline
+            apply:
+              tags:
+                - test-community-hosted-pipeline
+
+        - name: Verify the Community hosted pipeline run succeeds
+          tags:
+            - test-community-hosted-pipeline
+          vars:
+            pipeline_name: community-hosted-pipeline
+          include_role:
+            name: integration-tests
+            tasks_from: check_pipeline_run
+            apply:
+              tags:
+                - test-community-hosted-pipeline
+
+        - name: Verify the Community prow job run succeeds
+          tags:
+            - test-community-hosted-pipeline
+          include_role:
+            name: integration-tests
+            tasks_from: check_prow_status
+            apply:
+              tags:
+                - test-community-hosted-pipeline
+
+        - name: Verify the Community release pipeline run succeeds
+          tags:
+            - test-community-release-pipeline
+          vars:
+            pipeline_name: community-release-pipeline
+          include_role:
+            name: integration-tests
+            tasks_from: check_pipeline_run
+            apply:
+              tags:
+                - test-community-release-pipeline
+
+      always:
+        - name: Cleanup test data
+          tags:
+            - clean
+            - clean-test-data
+          include_role:
+            name: integration-tests
+            tasks_from: clean
+            apply:
+              tags:
+                - clean
+                - clean-test-data
+
+        - name: Cleanup operator pipeline
+          tags:
+            - clean
+            - clean-deployment
+          include_role:
+            name: operator-pipeline
+            apply:
+              tags:
+                - clean
+                - clean-deployment
+          vars:
+            namespace_state: absent
+            github_webhook_state: absent

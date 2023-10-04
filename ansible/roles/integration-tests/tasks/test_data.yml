@@ -38,3 +38,11 @@
   args:
     executable: /bin/bash
     chdir: "{{ git_temp_dir.path }}"
+
+- name: Get tested Operator Bundle commit SHA
+  command: git rev-parse HEAD
+  register: git_commit_result
+
+- name: Store tested Operator Bundle commit SHA as Ansible variable
+  set_fact:
+    bundle_branch_commit_sha: "{{ git_commit_result.stdout }}"
