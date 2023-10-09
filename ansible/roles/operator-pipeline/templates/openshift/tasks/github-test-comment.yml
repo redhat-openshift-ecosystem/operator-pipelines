@@ -1,0 +1,70 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: github-test-comment
+spec:
+  params:
+    - name: pipeline_image
+    - name: git_pr_url
+    - name: git_comment_body
+  steps:
+    - name: parse-github-comment
+      image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #! /usr/bin/env bash
+
+        set -ex
+
+        COMMENT_BODY=$(params.git_comment_body)
+
+        # TODO: parse message here
+
+        PR=$(curl -L \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                $(params.git_pr_url))
+
+        BASE_REF=$(echo ${PR} | jq '.base.ref')
+        if [ ${BASE_REF} != "{{ branch }}" ]; then
+                exit 0
+        fi
+
+        PR_CHANGED_FILES=$(curl -L \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                $(params.git_pr_url)/files)
+
+        if ! echo ${PR_CHANGED_FILES} | jq '.[].filename' | grep '^\"operators/'; then
+            exit 0
+        fi
+
+        GIT_REPO_URL=$(echo ${PR} | jq '.base.repo.clone_url')
+        GIT_PR_BRANCH=$(echo ${PR} | jq '.head.ref')
+        GIT_FORK_URL=$(echo ${PR} | jq '.head.repo.clone_url')
+        GIT_PR_URL=$(echo ${PR} | jq '.url')
+        GIT_PR_TITLE=$(echo ${PR} | jq '.title')
+        GIT_USERNAME=$(echo ${PR} | jq '.user.login')
+        GIT_COMMIT=$(echo ${PR} | jq '.head.sha')
+        GIT_COMMIT_BASE=$(echo $PR | jq '.base.sha')
+
+        PAYLOAD=$(
+                jq -n \
+                        --arg git_repo_url "${GIT_REPO_URL}" \
+                        --arg git_pr_branch "${GIT_PR_BRANCH}" \
+                        --arg git_fork_url "${GIT_FORK_URL}" \
+                        --arg git_pr_url "${GIT_PR_URL}" \
+                        --arg git_pr_title "${GIT_PR_TITLE}" \
+                        --arg git_username "${GIT_USERNAME}" \
+                        --arg git_commit "${GIT_COMMIT}" \
+                        --arg git_commit_base "${GIT_COMMIT_BASE}" \
+                        '$ARGS.named'
+        )
+
+        # TODO: send payload to event listener
