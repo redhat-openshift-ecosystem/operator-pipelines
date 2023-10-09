@@ -46,7 +46,6 @@
                             && extensions.changed_files.matches("operators/")
                           )
                 bindings:
-                  - ref: community-operator-hosted-pipeline-trigger-binding
                   - ref: community-operator-hosted-pipeline-pr-trigger-binding
                 template:
                   ref: community-operator-hosted-pipeline-trigger-template
