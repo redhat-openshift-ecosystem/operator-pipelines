@@ -47,6 +47,7 @@
                           )
                 bindings:
                   - ref: community-operator-hosted-pipeline-trigger-binding
+                  - ref: community-operator-hosted-pipeline-pr-trigger-binding
                 template:
                   ref: community-operator-hosted-pipeline-trigger-template
               # run comment parsing pipeline on PR comment

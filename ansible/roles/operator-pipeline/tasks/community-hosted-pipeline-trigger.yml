@@ -1,9 +1,9 @@
 ---
-- name: Create trigger enabling running Community hosted pipeline via Github PR webhook
+- name: Create trigger enabling running Community hosted pipeline via Github PR webhook and comment pipeline
   tags:
     - triggers
   block:
-    - name: Create Community hosted pipeline Trigger Binding
+    - name: Create Community hosted pipeline pull request Trigger Binding
       k8s:
         state: present
         namespace: "{{ oc_namespace }}"
@@ -11,7 +11,7 @@
           apiVersion: triggers.tekton.dev/v1alpha1
           kind: TriggerBinding
           metadata:
-            name: community-operator-hosted-pipeline-trigger-binding
+            name: community-operator-hosted-pipeline-pr-trigger-binding
             labels:
               app: operator-pipeline
               suffix: "{{ suffix }}"
