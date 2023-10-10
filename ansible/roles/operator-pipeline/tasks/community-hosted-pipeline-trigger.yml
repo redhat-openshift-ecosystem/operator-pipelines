@@ -207,7 +207,7 @@
                     - name: git_comment_body
                       value: $(tt.params.git_comment_body)
                     - name: git_pr_url
-                      value: $(tt.params.git_repo_url)
+                      value: $(tt.params.git_pr_url)
                     - name: env
                       value: $(tt.params.env)
                     - name: pipeline_image
@@ -217,11 +217,11 @@
                     - name: metrics_endpoint
                       value: $(tt.params.metrics_endpoint)
                   workspaces:
-                    - name: results
+                    - name: output
                       volumeClaimTemplate:
                         spec:
                           accessModes:
                             - ReadWriteOnce
                           resources:
                             requests:
-                              storage: 1Mi
+                              storage: 8Mi

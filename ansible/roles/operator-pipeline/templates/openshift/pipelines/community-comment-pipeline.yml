@@ -8,19 +8,20 @@ spec:
     - name: git_comment_body
     - name: git_pr_url
     - name: env
-
     - name: pipeline_image
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
+    - name: image_namespace
+    - name: metrics_endpoint
   workspaces:
-    - name: results
+    - name: output
   tasks:
     - name: parse-github-pr-comment
       taskRef:
         name: github-test-comment
       params:
-        - name: request_url
+        - name: git_pr_url
           value: "$(params.git_pr_url)"
-        - name: comment_body
+        - name: git_comment_body
           value: "$(params.git_comment_body)"
         - name: pipeline_image
           value: "$(params.pipeline_image)"
