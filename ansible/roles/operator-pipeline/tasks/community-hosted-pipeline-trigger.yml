@@ -43,45 +43,6 @@
               - name: metrics_endpoint
                 value: "{{ pipelines_metrics_endpoint }}"
 
-    - name: Create Community hosted pipeline comment Trigger Binding
-      k8s:
-        state: present
-        namespace: "{{ oc_namespace }}"
-        definition:
-          apiVersion: triggers.tekton.dev/v1alpha1
-          kind: TriggerBinding
-          metadata:
-            name: community-operator-hosted-pipeline-comment-trigger-binding
-            labels:
-              app: operator-pipeline
-              suffix: "{{ suffix }}"
-              env: "{{ env }}"
-          spec:
-            params:
-              - name: git_repo_url
-                value: $(body.git_repo_url)
-              - name: git_pr_branch
-                value: $(body.git_pr_branch)
-              - name: git_fork_url
-                value: $(body.git_fork_url)
-              - name: git_pr_url
-                value: $(body.git_pr_url)
-              - name: git_pr_title
-                value: $(body.git_pr_title)
-              - name: git_username
-                value: $(body.git_username)
-              - name: git_commit
-                value: $(body.git_commit)
-              - name: git_commit_base
-                value: $(body.git_commit_base)
-              - name: env
-                value: "{{ env }}"
-              - name: pipeline_image
-                value: "{{ operator_pipeline_image_pull_spec }}"
-              - name: image_namespace
-                value: "{{ community_operator_pipeline_pending_namespace }}"
-              - name: metrics_endpoint
-                value: "{{ pipelines_metrics_endpoint }}"
 
     - name: Create Community hosted pipeline Trigger template
       k8s:
