@@ -18,9 +18,15 @@ spec:
       taskRef:
         name: github-test-comment
       params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
         - name: request_url
           value: "$(params.git_pr_url)"
         - name: comment_body
           value: "$(params.git_comment_body)"
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: env
+          value: "$(params.env)"
+        - name: image_namespace
+          value: "$(params.image_namespace)"
+        - name: metrics_endpoint
+          value: "$(params.metrics_endpoint)"
