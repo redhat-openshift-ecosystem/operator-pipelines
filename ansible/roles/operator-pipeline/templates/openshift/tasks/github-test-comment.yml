@@ -41,7 +41,7 @@ spec:
                 -H "X-GitHub-Api-Version: 2022-11-28" \
                 $(params.git_pr_url)/files)
 
-        if ! echo ${PR_CHANGED_FILES} | jq '.[].filename' | grep '^\"operators/'; then
+        if ! echo ${PR_CHANGED_FILES} | jq '.[].filename' | grep '^"operators/'; then
             exit 0
         fi
 
