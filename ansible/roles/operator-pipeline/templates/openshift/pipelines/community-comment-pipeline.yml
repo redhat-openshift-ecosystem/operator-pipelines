@@ -13,8 +13,6 @@ spec:
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
   workspaces:
     - name: results
-    - name: ssh-dir
-      optional: true
   tasks:
     - name: parse-github-pr-comment
       taskRef:
