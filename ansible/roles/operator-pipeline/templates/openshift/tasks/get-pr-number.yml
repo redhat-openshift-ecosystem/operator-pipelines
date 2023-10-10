@@ -1,0 +1,25 @@
+---
+# Given a GitHub PR URL, return the corresponding PR number
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-pr-number
+spec:
+  params:
+    - name: pipeline_image
+    - name: git_pr_url
+      description: "URL of the pull request (i.e.: https://github.com/foo/bar/pull/123)"
+  results:
+    - name: git_pr_number
+      description: Pull request number extracted from the URL
+  steps:
+    - name: parse-pr-url
+      image: "$(params.pipeline_image)"
+      env:
+        - name: PR_URL
+          value: $(params.git_pr_url)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        echo -n "${PR_URL##*/}" | tee "$(results.git_pr_number.path)"
