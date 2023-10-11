@@ -70,9 +70,9 @@
                             header.match("X-GitHub-Event", "issue_comment")
                             && body.action in ["created"]
                             && (
-                                  body.comment.body.matches("^/retest\s*$")
-                                  || body.comment.body.matches("^/retest-required\s*$")
-                                  || body.comment.body.matches("^/test\s*[^?]*$")
+                                  body.comment.body.matches(R"^/retest\s*$")
+                                  || body.comment.body.matches(R"^/retest-required\s*$")
+                                  || body.comment.body.matches(R"^/test\s*[^?]*$")
                                )
                           )
                 bindings:
