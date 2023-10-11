@@ -216,12 +216,3 @@
                       value: $(tt.params.image_namespace)
                     - name: metrics_endpoint
                       value: $(tt.params.metrics_endpoint)
-                  workspaces:
-                    - name: output
-                      volumeClaimTemplate:
-                        spec:
-                          accessModes:
-                            - ReadWriteOnce
-                          resources:
-                            requests:
-                              storage: 8Mi
