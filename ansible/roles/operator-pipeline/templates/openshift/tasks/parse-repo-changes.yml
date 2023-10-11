@@ -66,9 +66,14 @@ spec:
             || fail "The PR modifies existing bundles"
         jq -e '.deleted_bundles|length==0' </tmp/changes.json \
             || fail "The PR deletes existing bundles"
-        jq -e '.added_bundles|length==1' </tmp/changes.json \
+        jq -e '.added_bundles|length<=1' </tmp/changes.json \
             || fail "The PR affects more than one bundle"
 
-
-        jq -r '.added_bundles[0] | split("/")[0]' </tmp/changes.json | tr -d '\n' >$(results.added_operator.path)
-        jq -r '.added_bundles[0] | split("/")[1]' </tmp/changes.json | tr -d '\n' >$(results.added_bundle.path)
+        if jq -e '.added_bundles|length==1' </tmp/changes.json ; then
+            jq -r '.added_bundles[0] | split("/")[0]' </tmp/changes.json | tr -d '\n' >$(results.added_operator.path)
+            jq -r '.added_bundles[0] | split("/")[1]' </tmp/changes.json | tr -d '\n' >$(results.added_bundle.path)
+        else
+            # no bundle was added (i.e.: only ci.yaml was added/modified/deleted)
+            jq -r '.affected_operators[0]' </tmp/changes.json | tr -d '\n' >$(results.added_operator.path)
+            echo -n >$(results.added_bundle.path)
+        fi

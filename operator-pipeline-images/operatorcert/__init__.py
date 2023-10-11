@@ -6,7 +6,7 @@ import logging
 import pathlib
 import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 from urllib.parse import urljoin
 
 import yaml
@@ -156,11 +156,12 @@ def get_skipped_versions(
 
 
 def ocp_version_info(
-    bundle_path: pathlib.Path, pyxis_url: str, organization: str
+    bundle_path: Optional[pathlib.Path], pyxis_url: str, organization: str
 ) -> Dict[str, Any]:
     """
     Gathers some information pertaining to the OpenShift versions defined in the
-    Operator bundle.
+    Operator bundle. If bundle_path is None, retrieve information about all
+    currently supported OpenShift versions.
 
     Args:
         bundle_path (Path): A path to the root of the bundle
@@ -170,16 +171,19 @@ def ocp_version_info(
     Returns:
         A dict of pertinent OCP version information
     """
-    bundle_annotations = get_bundle_annotations(bundle_path)
+    if bundle_path is None:
+        ocp_versions_range: Any = None
+    else:
+        bundle_annotations = get_bundle_annotations(bundle_path)
 
-    ocp_versions_range = bundle_annotations.get(OCP_VERSIONS_ANNOTATION)
-    if not ocp_versions_range and organization != "community-operators":
-        # Community operators are not required to have this annotation
-        raise ValueError(f"'{OCP_VERSIONS_ANNOTATION}' annotation not defined")
+        ocp_versions_range = bundle_annotations.get(OCP_VERSIONS_ANNOTATION)
+        if not ocp_versions_range and organization != "community-operators":
+            # Community operators are not required to have this annotation
+            raise ValueError(f"'{OCP_VERSIONS_ANNOTATION}' annotation not defined")
 
-    package = bundle_annotations.get(PACKAGE_ANNOTATION)
-    if not package:
-        raise ValueError(f"'{PACKAGE_ANNOTATION}' annotation not defined")
+        package = bundle_annotations.get(PACKAGE_ANNOTATION)
+        if not package:
+            raise ValueError(f"'{PACKAGE_ANNOTATION}' annotation not defined")
 
     indices = get_supported_indices(pyxis_url, ocp_versions_range, organization)
     supported_indices = filter_out_eol_versions(indices)
