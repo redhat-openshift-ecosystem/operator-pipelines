@@ -203,6 +203,9 @@
                   timeout: "1m"
                   pipelineRef:
                     name: community-comment-pipeline
+                  workspaces:
+                    - name: output
+                      emptyDir: {}
                   params:
                     - name: git_comment_body
                       value: $(tt.params.git_comment_body)
