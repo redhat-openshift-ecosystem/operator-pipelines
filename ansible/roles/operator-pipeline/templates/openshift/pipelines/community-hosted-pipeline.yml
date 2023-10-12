@@ -205,9 +205,9 @@ spec:
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
       workspaces:
-        - name: repo
+        - name: base
           workspace: repository
-          subPath: src
+          subPath: base
 
     - name: read-config
       taskRef:

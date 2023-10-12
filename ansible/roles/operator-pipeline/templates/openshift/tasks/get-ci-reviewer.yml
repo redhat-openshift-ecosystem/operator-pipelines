@@ -16,8 +16,8 @@ spec:
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github
   workspaces:
-    - name: repo
-      description: Cloned repository
+    - name: base
+      description: Cloned repository at the base branch
   results:
     - name: author_is_reviewer
       description: >-
@@ -31,7 +31,7 @@ spec:
   steps:
     - name: get-ci-reviewer
       image: "$(params.pipeline_image)"
-      workingDir: $(workspaces.repo.path)
+      workingDir: $(workspaces.base.path)
       script: |
         #! /usr/bin/env bash
         set -e
