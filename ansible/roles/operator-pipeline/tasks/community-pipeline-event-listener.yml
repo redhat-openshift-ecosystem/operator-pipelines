@@ -20,7 +20,7 @@
             serviceAccountName: pipeline
             triggers:
               # run community hosted pipeline on PR opened, reopened, synchronized
-              - name: github-community-pull-request-listener
+              - name: github-community-pull-request-listener-hosted
                 interceptors:
                   - ref:
                       name: "github"
@@ -50,7 +50,7 @@
                 template:
                   ref: community-operator-hosted-pipeline-trigger-template
               # run community release pipeline on merged PR
-              - name: github-community-pull-request-listener
+              - name: github-community-pull-request-listener-release
                 interceptors:
                   - ref:
                       name: "github"
@@ -75,6 +75,66 @@
                             && body.pull_request.base.ref == "{{ branch }}"
                             && body.pull_request.merged == true
                             && extensions.changed_files.matches("operators/")
+                          )
+                bindings:
+                  - ref: community-operator-release-pipeline-trigger-binding
+                template:
+                  ref: community-operator-release-pipeline-trigger-template
+
+              # Run community hosted pipeline on pipeline/trigger-hosted label
+              - name: github-community-label-listener-hosted
+                interceptors:
+                  - ref:
+                      name: "github"
+                    params:
+                      - name: "secretRef"
+                        value:
+                          secretName: github-webhook-secret
+                          secretKey: webhook-secret
+                      - name: "eventTypes"
+                        value: ["pull_request"]
+                      - name: "addChangedFiles"
+                        value:
+                          enabled: true
+                  - ref:
+                      name: cel
+                    params:
+                      - name: filter
+                        value: >-
+                          (
+                            body.action == "labeled"
+                            && body.label.name == "pipeline/trigger-hosted"
+                            && body.pull_request.base.ref == "{{ branch }}"
+                          )
+                bindings:
+                  - ref: community-operator-hosted-pipeline-trigger-binding
+                template:
+                  ref: community-operator-hosted-pipeline-trigger-template
+
+              # Run community release pipeline on pipeline/trigger-release label
+              - name: github-community-label-listener-release
+                interceptors:
+                  - ref:
+                      name: "github"
+                    params:
+                      - name: "secretRef"
+                        value:
+                          secretName: github-webhook-secret
+                          secretKey: webhook-secret
+                      - name: "eventTypes"
+                        value: ["pull_request"]
+                      - name: "addChangedFiles"
+                        value:
+                          enabled: true
+                  - ref:
+                      name: cel
+                    params:
+                      - name: filter
+                        value: >-
+                          (
+                            body.action == "labeled"
+                            && body.label.name == "pipeline/trigger-release"
+                            && body.pull_request.base.ref == "{{ branch }}"
                           )
                 bindings:
                   - ref: community-operator-release-pipeline-trigger-binding
