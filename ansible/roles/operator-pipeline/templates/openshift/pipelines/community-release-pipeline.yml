@@ -174,47 +174,21 @@ spec:
           workspace: repository
           subPath: base
 
-    # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
-    - name: acquire-lease
-      runAfter:
-        - detect-changes
+    - name: read-config
       taskRef:
-        name: acquire-lease
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: lease-name
-          value: "community-pipeline"
-
-    - name: get-paths
-      taskRef:
-        name: get-paths-from-name-and-version
+        name: read-config
         kind: Task
       runAfter:
-        - acquire-lease
-      when:
+        - detect-changes
+      when: &bundleAdded
         - input: "$(tasks.detect-changes.results.added_bundle)"
           operator: notin
           values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: operator_name
-          value: "$(tasks.detect-changes.results.added_operator)"
-        - name: bundle_version
-          value: "$(tasks.detect-changes.results.added_bundle)"
-
-    - name: read-config
-      taskRef:
-        name: read-config
-        kind: Task
-      runAfter:
-        - get-paths
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
         - name: operator_path
-          value: "$(tasks.get-paths.results.operator_path)"
+          value: "$(tasks.detect-changes.results.operator_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -230,16 +204,28 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-paths.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
           subPath: src
 
+    # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
+    - name: acquire-lease
+      runAfter:
+        - get-supported-versions
+      taskRef:
+        name: acquire-lease
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: lease-name
+          value: "community-pipeline"
+
     # call IIB to add the bundle to index
     - name: add-bundle-to-index
       runAfter:
-        - get-supported-versions
+        - acquire-lease
       taskRef:
         name: add-bundle-to-index
       params:
@@ -366,6 +352,7 @@ spec:
     - name: release-lease
       taskRef:
         name: release-lease
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"

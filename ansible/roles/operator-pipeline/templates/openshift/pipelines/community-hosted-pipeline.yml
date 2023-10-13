@@ -185,27 +185,13 @@ spec:
           workspace: repository
           subPath: base
 
-    - name: get-paths
-      taskRef:
-        name: get-paths-from-name-and-version
-        kind: Task
-      runAfter:
-        - detect-changes
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: operator_name
-          value: "$(tasks.detect-changes.results.added_operator)"
-        - name: bundle_version
-          value: "$(tasks.detect-changes.results.added_bundle)"
-
     # parse ci.yaml file and look for the reviewer and or author of the PR
     - name: get-ci-reviewer
       taskRef:
         name: get-ci-reviewer
         kind: Task
       runAfter:
-        - get-paths
+        - detect-changes
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -234,7 +220,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: operator_path
-          value: "$(tasks.get-paths.results.operator_path)"
+          value: "$(tasks.detect-changes.results.operator_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -249,7 +235,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-paths.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -313,7 +299,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-paths.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -332,7 +318,7 @@ spec:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)-$(params.git_commit)"
         - name: CONTEXT
-          value: "$(tasks.get-paths.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -469,7 +455,7 @@ spec:
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: bundle_path
-          value: "$(tasks.get-paths.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key

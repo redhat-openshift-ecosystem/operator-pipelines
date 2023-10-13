@@ -21,13 +21,13 @@ spec:
       default: token
   results:
     - name: added_operator
-      description: >
-          New operator that have been added.
-          Bundle name is in the format "operator_name".
+      description: Name of the operator that contains the new bundle
     - name: added_bundle
-      description: >
-          New bundle version that have been added.
-          Bundle version is in the format "bundle_version".
+      description: Version of the new bundle
+    - name: operator_path
+      description: Path to the operator containing the new bundle
+    - name: bundle_path
+      description: Path to the new bundle
   workspaces:
     - name: pr
       description: Clone of the repo at the PR head
@@ -70,10 +70,25 @@ spec:
             || fail "The PR affects more than one bundle"
 
         if jq -e '.added_bundles|length==1' </tmp/changes.json ; then
-            jq -r '.added_bundles[0] | split("/")[0]' </tmp/changes.json | tr -d '\n' >$(results.added_operator.path)
-            jq -r '.added_bundles[0] | split("/")[1]' </tmp/changes.json | tr -d '\n' >$(results.added_bundle.path)
+            operator_name="$(jq -r '.added_bundles[0] | split("/")[0]' </tmp/changes.json)"
+            bundle_version="$(jq -r '.added_bundles[0] | split("/")[1]' </tmp/changes.json)"
         else
             # no bundle was added (i.e.: only ci.yaml was added/modified/deleted)
-            jq -r '.affected_operators[0]' </tmp/changes.json | tr -d '\n' >$(results.added_operator.path)
-            echo -n >$(results.added_bundle.path)
+            operator_name="$(jq -r '.affected_operators[0]' </tmp/changes.json)"
+            bundle_version=""
+        fi
+
+        echo -n "$operator_name" >$(results.added_operator.path)
+        echo -n "$bundle_version" >$(results.added_bundle.path)
+
+        if [ -n "${operator_name}" ] ; then
+            echo -n "operators/${operator_name}" >"$(results.operator_path.path)"
+        else
+            echo -n >"$(results.operator_path.path)"
+        fi
+
+        if [ -n "${bundle_version}" ] ; then
+            echo -n "operators/${operator_name}/${bundle_version}" >"$(results.bundle_path.path)"
+        else
+            echo -n >"$(results.bundle_path.path)"
         fi
