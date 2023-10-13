@@ -20,7 +20,7 @@
             serviceAccountName: pipeline
             triggers:
               # run Hosted pipeline on PR opened, reopened, synchronized
-              - name: github-pull-request-listener
+              - name: github-pull-request-listener-hosted
                 interceptors:
                   - github:
                       secretRef:
@@ -40,7 +40,7 @@
                 template:
                   ref: operator-hosted-pipeline-trigger-template
               # run Hosted pipeline on PR labeled with label "pipeline/trigger-hosted"
-              - name: github-label-listener
+              - name: github-label-listener-hosted
                 interceptors:
                   - github:
                       secretRef:
@@ -60,7 +60,7 @@
                 template:
                   ref: operator-hosted-pipeline-trigger-template
               # run Release pipeline on merged PR
-              - name: github-pull-request-listener
+              - name: github-pull-request-listener-release
                 interceptors:
                   - github:
                       secretRef:
@@ -82,7 +82,7 @@
                 template:
                   ref: operator-release-pipeline-trigger-template
               # run Release pipeline on PR labeled with label "pipeline/trigger-release"
-              - name: github-label-listener
+              - name: github-label-listener-release
                 interceptors:
                   - github:
                       secretRef:
