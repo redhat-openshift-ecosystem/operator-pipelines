@@ -1,0 +1,37 @@
+---
+
+- name: Create small community pipeline workspace PVC
+  k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: community-small-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: 100Mi
+
+- name: Create large community pipeline workspace PVC
+  k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: community-large-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: 5Gi

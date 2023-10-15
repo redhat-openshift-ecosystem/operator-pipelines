@@ -5,18 +5,25 @@ metadata:
   name: github-test-comment
 spec:
   params:
-    - name: pipeline_image
     - name: git_pr_url
     - name: git_comment_body
+    - name: env
+    - name: pipeline_image
+    - name: image_namespace
+    - name: metrics_endpoint
+    - name: tkn_image
+      description: Tekton CLI image
+      default: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:19ed78054fc0f7f26f1198637a10d83f837734c8abf7ffc78836a6fa37ad9033
+    - name: payload_path
+      description: Path to PR payload data
+      default: pr_data
+  workspaces:
+    - name: output
+      description: Scratch space and storage for pull request data
   steps:
-    - name: parse-github-comment
+    - name: prepare-payload
       image: "$(params.pipeline_image)"
-      env:
-        - name: GITHUB_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: $(params.github_token_secret_name)
-              key: $(params.github_token_secret_key)
+      workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
 
@@ -31,9 +38,9 @@ spec:
                 -H "X-GitHub-Api-Version: 2022-11-28" \
                 $(params.git_pr_url))
 
-        BASE_REF=$(echo ${PR} | jq '.base.ref')
+        BASE_REF=$(echo ${PR} | jq -r '.base.ref')
         if [ ${BASE_REF} != "{{ branch }}" ]; then
-                exit 0
+            exit 0
         fi
 
         PR_CHANGED_FILES=$(curl -L \
@@ -41,30 +48,47 @@ spec:
                 -H "X-GitHub-Api-Version: 2022-11-28" \
                 $(params.git_pr_url)/files)
 
-        if ! echo ${PR_CHANGED_FILES} | jq '.[].filename' | grep '^"operators/'; then
+        if ! echo ${PR_CHANGED_FILES} | jq -r '.[].filename' | grep '^operators/'; then
             exit 0
         fi
 
-        GIT_REPO_URL=$(echo ${PR} | jq '.base.repo.clone_url')
-        GIT_PR_BRANCH=$(echo ${PR} | jq '.head.ref')
-        GIT_FORK_URL=$(echo ${PR} | jq '.head.repo.clone_url')
-        GIT_PR_URL=$(echo ${PR} | jq '.url')
-        GIT_PR_TITLE=$(echo ${PR} | jq '.title')
-        GIT_USERNAME=$(echo ${PR} | jq '.user.login')
-        GIT_COMMIT=$(echo ${PR} | jq '.head.sha')
-        GIT_COMMIT_BASE=$(echo $PR | jq '.base.sha')
+        PAYLOAD_PATH=$(params.payload_path)
+        mkdir -p ${PAYLOAD_PATH}
 
-        PAYLOAD=$(
-                jq -n \
-                        --arg git_repo_url "${GIT_REPO_URL}" \
-                        --arg git_pr_branch "${GIT_PR_BRANCH}" \
-                        --arg git_fork_url "${GIT_FORK_URL}" \
-                        --arg git_pr_url "${GIT_PR_URL}" \
-                        --arg git_pr_title "${GIT_PR_TITLE}" \
-                        --arg git_username "${GIT_USERNAME}" \
-                        --arg git_commit "${GIT_COMMIT}" \
-                        --arg git_commit_base "${GIT_COMMIT_BASE}" \
-                        '$ARGS.named'
-        )
+        echo ${PR} | jq -r '.base.repo.clone_url' > ${PAYLOAD_PATH}/git_repo_url
+        echo ${PR} | jq -r '.head.ref' > ${PAYLOAD_PATH}/git_pr_branch
+        echo ${PR} | jq -r '.head.repo.clone_url' > ${PAYLOAD_PATH}/git_fork_url
+        echo ${PR} | jq -r '.url' > ${PAYLOAD_PATH}/git_pr_url
+        echo ${PR} | jq -r '.title' > ${PAYLOAD_PATH}/git_pr_title
+        echo ${PR} | jq -r '.user.login' > ${PAYLOAD_PATH}/git_username
+        echo ${PR} | jq -r '.head.sha' > ${PAYLOAD_PATH}/git_commit
+        echo ${PR} | jq -r '.base.sha' > ${PAYLOAD_PATH}/git_commit_base
 
-        # TODO: send payload to event listener
+
+    - name: start-hosted-pipeline
+      image: "$(params.tkn_image)"
+      workingDir: $(workspaces.output.path)
+      script: |
+        #! /usr/bin/env bash
+        set -ex
+
+        PAYLOAD_PATH=$(params.payload_path)
+
+        tkn pipeline start community-hosted-pipeline \
+          --use-param-defaults \
+          --param git_repo_url=$(cat ${PAYLOAD_PATH}/git_repo_url) \
+          --param git_pr_branch=$(cat ${PAYLOAD_PATH}/git_pr_branch)\
+          --param git_fork_url=$(cat ${PAYLOAD_PATH}/git_fork_url) \
+          --param git_pr_url=$(cat ${PAYLOAD_PATH}/git_pr_url) \
+          --param git_pr_title=$(cat ${PAYLOAD_PATH}/git_pr_title) \
+          --param git_username=$(cat ${PAYLOAD_PATH}/git_username) \
+          --param git_commit=$(cat ${PAYLOAD_PATH}/git_commit) \
+          --param git_commit_base=$(cat ${PAYLOAD_PATH}/git_commit_base) \
+          --param env=$(params.env) \
+          --param pipeline_image=$(params.pipeline_image) \
+          --param image_namespace=$(params.image_namespace) \
+          --param metrics_endpoint=$(params.metrics_endpoint) \
+          --workspace name=repository,claimName=community-large-pvc \
+          --workspace name=results,claimName=community-small-pvc \
+          --workspace name=registry-credentials,secret=community-hosted-pipeline-registry-auth-secret \
+          --showlog
