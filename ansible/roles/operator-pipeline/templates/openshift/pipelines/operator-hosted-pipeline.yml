@@ -678,8 +678,6 @@ spec:
           workspace: results
           subPath: results
 
-    # TODO: this step runs always now, despite if the results exists or not
-    # https://issues.redhat.com/browse/ISV-1223
     - name: preflight-trigger
       runAfter:
         - get-ci-results-attempt

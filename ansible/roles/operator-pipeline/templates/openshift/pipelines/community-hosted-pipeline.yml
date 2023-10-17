@@ -50,6 +50,30 @@ spec:
     - name: quay_oauth_secret_key
       default: token
 
+    - name: preflight_trigger_environment
+      description: Which openshift-ci step-registry steps and ProwJob templates to use. Can be one of [preprod, prod]
+      default: "prod"
+
+    - name: prow_kubeconfig_secret_name
+      description: The name of the Kubernetes Secret that contains the prow kubeconfig for preflight tests.
+      default: prow-kubeconfig
+
+    - name: prow_kubeconfig_secret_key
+      description: The key within the Kubernetes Secret that contains the prow kubeconfig for preflight tests.
+      default: kubeconfig
+
+    - name: preflight_decryption_key_secret_name
+      description: The name of the Kubernetes Secret that contains the gpg decryption key.
+      default: preflight-decryption-key
+
+    - name: preflight_decryption_private_key_secret_key
+      description: The key within the Kubernetes Secret that contains the gpg private key.
+      default: private
+
+    - name: preflight_decryption_public_key_secret_key
+      description: The key within the Kubernetes Secret that contains the gpg public key.
+      default: public
+
     - name: metrics_endpoint
       description: Prometheus metrics endpoint
       default: http://pipeline-metrics.pipeline-metrics-prod
@@ -347,7 +371,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: index_images
-          value: "$(tasks.get-supported-versions.results.indices)"
+          value: "$(tasks.get-supported-versions.results.max_supported_index)"
         - name: bundle_pullspec
           value: *bundleImage
         - name: environment
@@ -357,7 +381,7 @@ spec:
         - name: kerberos_keytab_secret_key
           value: "$(params.kerberos_keytab_secret_key)"
         - name: index-image-destination
-          value: "$(params.registry)/$(params.image_namespace)/catalog"
+          value: &tempIndexRepo "$(params.registry)/$(params.image_namespace)/catalog"
         # Adding a commit hash as a suffix to the image tag
         - name: index-image-destination-tag-suffix
           value: "-$(params.git_commit)"
@@ -371,12 +395,47 @@ spec:
         - name: results
           workspace: results
 
+    - name: preflight-trigger
+      runAfter:
+        - add-bundle-to-index
+      taskRef:
+        kind: Task
+        name: preflight-trigger
+      params:
+        - name: preflight_trigger_environment
+          value: "$(params.preflight_trigger_environment)"
+        - name: ocp_version
+          value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
+        - name: asset_type
+          value: operator
+        - name: bundle_index_image
+          value: >-
+            $(params.registry)/$(params.image_namespace)/catalog:$(tasks.get-supported-versions.results.max_supported_ocp_version)-$(params.git_commit)
+        - name: bundle_image
+          value: *bundleImage
+        - name: gpg_decryption_key_secret_name
+          value: "$(params.preflight_decryption_key_secret_name)"
+        - name: gpg_decryption_private_key_secret_key
+          value: "$(params.preflight_decryption_private_key_secret_key)"
+        - name: gpg_decryption_public_key_secret_key
+          value: "$(params.preflight_decryption_public_key_secret_key)"
+        - name: prow_kubeconfig_secret_name
+          value: "$(params.prow_kubeconfig_secret_name)"
+        - name: prow_kubeconfig_secret_key
+          value: "$(params.prow_kubeconfig_secret_key)"
+      workspaces:
+        - name: credentials
+          workspace: registry-credentials
+        - name: output
+          subPath: preflight-trigger
+          workspace: results
+
     - name: trigger-prow-tests
       taskRef:
         name: trigger-prow-tests
         kind: Task
       runAfter:
-        - add-bundle-to-index
+        - preflight-trigger
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
