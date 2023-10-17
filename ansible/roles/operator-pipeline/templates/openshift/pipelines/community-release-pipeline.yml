@@ -200,6 +200,7 @@ spec:
         - read-config
       taskRef:
         name: get-supported-versions
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -216,6 +217,7 @@ spec:
         - get-supported-versions
       taskRef:
         name: acquire-lease
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
