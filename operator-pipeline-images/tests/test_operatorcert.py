@@ -97,8 +97,8 @@ def test_ocp_version_info(
     ]
 
     all_indices = [
-        {"ocp_version": "4.7", "path": "quay.io/foo:4.7"},
         {"ocp_version": "4.8", "path": "quay.io/foo:4.8"},
+        {"ocp_version": "4.7", "path": "quay.io/foo:4.7"},
     ]
 
     # Happy path
@@ -110,7 +110,20 @@ def test_ocp_version_info(
         "indices": supported_indices[:1],
         "max_version_index": supported_indices[0],
         "all_indices": all_indices,
-        "not_supported_indices": all_indices[1:],
+        "not_supported_indices": all_indices[:1],
+    }
+
+    # No bundle path
+    mock_indices.reset_mock()
+    mock_indices.side_effect = (all_indices,)
+    info = operatorcert.ocp_version_info(None, "", organization)
+
+    assert info == {
+        "versions_annotation": None,
+        "indices": all_indices,
+        "max_version_index": all_indices[0],
+        "all_indices": all_indices,
+        "not_supported_indices": [],
     }
 
     # No supported indices found

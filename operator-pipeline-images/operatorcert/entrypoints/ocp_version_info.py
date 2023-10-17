@@ -20,7 +20,9 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Determines the OCP version under test."
     )
-    parser.add_argument("bundle_path", help="Location of operator bundle")
+    parser.add_argument(
+        "--bundle-path", type=pathlib.Path, help="Location of operator bundle"
+    )
     parser.add_argument(
         "organization",
         choices=("certified-operators", "redhat-marketplace", "community-operators"),
@@ -49,8 +51,7 @@ def main() -> None:
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(level=log_level, log_format="%(message)s")
 
-    bundle_path = pathlib.Path(args.bundle_path)
-    version_info = ocp_version_info(bundle_path, args.pyxis_url, args.organization)
+    version_info = ocp_version_info(args.bundle_path, args.pyxis_url, args.organization)
 
     LOGGER.info(json.dumps(version_info))
 

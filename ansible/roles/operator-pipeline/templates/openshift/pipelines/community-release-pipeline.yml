@@ -131,7 +131,7 @@ spec:
         name: git-clone
         kind: Task
       runAfter:
-        - clone-repository
+        - set-env-community
       params:
         - name: url
           value: "$(params.git_repo_url)"
@@ -151,6 +151,7 @@ spec:
         name: parse-repo-changes
         kind: Task
       runAfter:
+        - clone-repository
         - clone-repository-base
       params:
         - name: pipeline_image
@@ -179,11 +180,15 @@ spec:
         kind: Task
       runAfter:
         - detect-changes
+      when: &bundleAdded
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: operator_path
-          value: &addedOperatorPath "operators/$(tasks.detect-changes.results.added_operator)"
+          value: "$(tasks.detect-changes.results.operator_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -195,11 +200,12 @@ spec:
         - read-config
       taskRef:
         name: get-supported-versions
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: &addedBundlePath "operators/$(tasks.detect-changes.results.added_operator)/$(tasks.detect-changes.results.added_bundle)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -208,9 +214,10 @@ spec:
     # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
     - name: acquire-lease
       runAfter:
-        - detect-changes
+        - get-supported-versions
       taskRef:
         name: acquire-lease
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -347,6 +354,7 @@ spec:
     - name: release-lease
       taskRef:
         name: release-lease
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"

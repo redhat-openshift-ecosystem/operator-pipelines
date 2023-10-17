@@ -166,7 +166,7 @@ spec:
         name: git-clone
         kind: Task
       runAfter:
-        - clone-repository
+        - set-env-community
       params:
         - name: url
           value: "$(params.git_repo_url)"
@@ -186,6 +186,7 @@ spec:
         name: parse-repo-changes
         kind: Task
       runAfter:
+        - clone-repository
         - clone-repository-base
       params:
         - name: pipeline_image
@@ -243,7 +244,22 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: operator_path
-          value: &addedOperatorPath "operators/$(tasks.detect-changes.results.added_operator)"
+          value: "$(tasks.detect-changes.results.operator_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: get-supported-versions
+      runAfter:
+        - read-config
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -254,7 +270,11 @@ spec:
         name: run-static-tests
         kind: Task
       runAfter:
-        - read-config
+        - get-supported-versions
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -303,7 +323,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: &addedBundlePath "operators/$(tasks.detect-changes.results.added_operator)/$(tasks.detect-changes.results.added_bundle)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -322,7 +342,7 @@ spec:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)-$(params.git_commit)"
         - name: CONTEXT
-          value: *addedBundlePath
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -347,24 +367,9 @@ spec:
         - name: oauth_secret_key
           value: "$(params.quay_oauth_secret_key)"
 
-    - name: get-supported-versions
-      runAfter:
-        - make-bundle-repo-public
-      taskRef:
-        name: get-supported-versions
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: *addedBundlePath
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
     - name: add-bundle-to-index
       runAfter:
-        - get-supported-versions
+        - make-bundle-repo-public
       taskRef:
         name: add-bundle-to-index
       params:
@@ -468,6 +473,30 @@ spec:
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
 
+    - name: skip-prow-tests
+      taskRef:
+        name: trigger-prow-tests
+        kind: Task
+      runAfter:
+        - get-supported-versions
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: in
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: supported_ocp_versions
+          value: ""
+        - name: skipped_ocp_versions
+          value: "$(tasks.get-supported-versions.results.indices_ocp_versions)"
+
     # merge PR
     - name: merge-pr
       when:
@@ -476,6 +505,7 @@ spec:
           values: ["true"]
       runAfter:
         - wait-prow-tests
+        - skip-prow-tests
       taskRef:
         name: merge-pr
       params:
@@ -484,7 +514,7 @@ spec:
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: bundle_path
-          value: *addedBundlePath
+          value: "$(tasks.detect-changes.results.bundle_path)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key

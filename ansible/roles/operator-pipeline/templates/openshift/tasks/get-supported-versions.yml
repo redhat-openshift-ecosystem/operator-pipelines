@@ -44,10 +44,16 @@ spec:
 
         ORGANIZATION=$(cat config.yaml | yq -r '.organization')
         OCP_VERSIONS_OUTPUT_FILE="./ocp_versions.json"
-        ocp-version-info \
-          --output-file $OCP_VERSIONS_OUTPUT_FILE \
-          $(params.bundle_path) \
-          $ORGANIZATION
+        if [ -n "$(params.bundle_path)" ] ; then
+            ocp-version-info \
+              --output-file $OCP_VERSIONS_OUTPUT_FILE \
+              --bundle-path "$(params.bundle_path)" \
+              $ORGANIZATION
+        else
+            ocp-version-info \
+              --output-file $OCP_VERSIONS_OUTPUT_FILE \
+              $ORGANIZATION
+        fi
 
         VERSION_INFO=$(cat $OCP_VERSIONS_OUTPUT_FILE)
         echo $VERSION_INFO | jq
