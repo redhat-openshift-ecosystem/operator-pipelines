@@ -1,0 +1,102 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: evaluate-preflight-result
+spec:
+  description: >-
+    This task evaluates results generated from preflight and filters out
+    tests that are not relevant to community.
+  workspaces:
+    - name: input
+      description: A workspace for a preflight artifacts
+
+  params:
+
+    - name: request_url
+      description: |
+        The GitHub issue or pull request URL where we want to add a new
+        comment with artifacts.
+
+    - name: github_token_secret_name
+      description: |
+        The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+
+    - name: github_token_secret_key
+      description: |
+        The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+
+    - name: pipeline_image
+      description: The common pipeline image.
+
+    - name: preflight_result_file_path
+      description: A path to a preflight test results.
+      type: string
+
+    - name: preflight_log_file_path
+      description: A path to a preflight log file.
+      type: string
+
+    - name: preflight_artifacts_output_dir
+      description: A path to a preflight artifacts directory.
+      type: string
+
+  results:
+    - name: test_result
+      description: Result from the preflight test.
+
+
+  steps:
+    - name: evaluate-results
+      workingDir: $(workspaces.input.path)
+      image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #! /usr/bin/env bash
+        set -e -o pipefail
+
+        RESULT_FILE_FILTERED=community-results.json
+
+        preflight-result-filter \
+          --test-results "$(params.preflight_result_file_path)" \
+          --output-file $RESULT_FILE_FILTERED \
+          --verbose
+
+
+        echo "Posting GitHub comment to issue (or PR) $(params.request_url)"
+
+        FILES="$RESULT_FILE_FILTERED $(params.preflight_log_file_path)"
+
+        if [ -f "$(params.preflight_artifacts_output_dir)/preflight.stdout" ]; then
+            FILES+=" $(params.preflight_artifacts_output_dir)/preflight.stdout"
+        fi
+
+        if [ -f "$(params.preflight_artifacts_output_dir)/preflight.stderr" ]; then
+            FILES+=" $(params.preflight_artifacts_output_dir)/preflight.stderr"
+        fi
+
+        create-github-gist \
+          --pull-request-url "$(params.request_url)" \
+          --input-file $FILES \
+          --comment-prefix "Test artifacts: "
+
+        # Did the tests pass?
+        echo "Checking preflight test status"
+        CHECK_RESULTS=$(cat community-results.json | jq -r '.passed')
+        if [ $CHECK_RESULTS = "false" ]; then
+          echo "Not all preflight tests passed."
+          cat community-results.json
+          echo "\n"
+
+          echo -n "failure" | tee $(results.test_result.path)
+          exit 1
+        fi
+
+        echo -n "success" | tee $(results.test_result.path)
