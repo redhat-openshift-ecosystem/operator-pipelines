@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import urllib
-from typing import Any
+from typing import Any, List
 
 from github import Auth, Gist, Github, InputFileContent, IssueComment
 from operatorcert.logger import setup_logger
@@ -27,6 +27,7 @@ def setup_argparser() -> Any:
     parser.add_argument(
         "--input-file",
         help="The file that will be used to create github gist",
+        nargs="+",
         required=True,
     )
     parser.add_argument(
@@ -37,11 +38,16 @@ def setup_argparser() -> Any:
         "--pull-request-url",
         help="The pull request URL where we want to add a new comment with the gist link.",
     )
+    parser.add_argument(
+        "--comment-prefix",
+        help="The prefix that will be added to the comment with the gist link.",
+        default="",
+    )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     return parser
 
 
-def create_github_gist(github_api: Github, input_file: str) -> Gist.Gist:
+def create_github_gist(github_api: Github, input_files: List[str]) -> Gist.Gist:
     """
     Create a Github gist from a file
 
@@ -54,20 +60,28 @@ def create_github_gist(github_api: Github, input_file: str) -> Gist.Gist:
     """
     github_auth_user = github_api.get_user()
 
-    with open(input_file, "r", encoding="utf-8") as input_file_handler:
-        file_content = input_file_handler.read()
+    gist_content = {}
 
-    LOGGER.info("Creating gist from %s", input_file)
+    for input_file in input_files:
+        with open(input_file, "r", encoding="utf-8") as input_file_handler:
+            file_content = input_file_handler.read()
+            gist_content[os.path.basename(input_file)] = InputFileContent(file_content)
+
+    LOGGER.info("Creating gist from %s", input_files)
     gist = github_auth_user.create_gist(
         True,
-        {os.path.basename(input_file): InputFileContent(file_content)},
+        gist_content,
     )
     LOGGER.info("Gist created: %s", gist.html_url)
     return gist
 
 
 def share_github_gist(
-    github_api: Github, github_repo: str, github_pr_id: int, gist: Gist.Gist
+    github_api: Github,
+    github_repo: str,
+    github_pr_id: int,
+    gist: Gist.Gist,
+    comment_prefix: str = "",
 ) -> IssueComment.IssueComment:
     """
     Add a comment to the PR with a link to the gist
@@ -86,7 +100,7 @@ def share_github_gist(
 
     LOGGER.info("Adding gist link to PR %s (%s)", github_repo, github_pr_id)
 
-    return pull_request.create_issue_comment(f"Pipeline logs: {gist.html_url}")
+    return pull_request.create_issue_comment(f"{comment_prefix}{gist.html_url}")
 
 
 def main() -> None:
@@ -110,7 +124,7 @@ def main() -> None:
         split_url = urllib.parse.urlparse(args.pull_request_url).path.split("/")
         repository = "/".join(split_url[1:3])
         pr_id = int(split_url[-1])
-        share_github_gist(github, repository, pr_id, gist)
+        share_github_gist(github, repository, pr_id, gist, args.comment_prefix)
 
     if args.output_file:
         with open(args.output_file, "w", encoding="utf-8") as output_file_handler:

@@ -400,9 +400,26 @@ spec:
         - name: results
           workspace: results
 
-    - name: preflight-trigger
+    - name: make-index-repo-public
       runAfter:
         - add-bundle-to-index
+      taskRef:
+        name: set-quay-repo-visibility
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: repository
+          value: "$(params.image_namespace)/catalog"
+        - name: visibility
+          value: public
+        - name: oauth_secret_name
+          value: "$(params.quay_oauth_secret_name)"
+        - name: oauth_secret_key
+          value: "$(params.quay_oauth_secret_key)"
+
+    - name: preflight-trigger
+      runAfter:
+        - make-index-repo-public
       taskRef:
         kind: Task
         name: preflight-trigger
@@ -415,7 +432,7 @@ spec:
           value: operator
         - name: bundle_index_image
           value: >-
-            $(params.registry)/$(params.image_namespace)/catalog:$(tasks.get-supported-versions.results.max_supported_ocp_version)-$(params.git_commit)
+            $(params.registry)/$(params.image_namespace)/catalog:v$(tasks.get-supported-versions.results.max_supported_ocp_version)-$(params.git_commit)
         - name: bundle_image
           value: *bundleImage
         - name: gpg_decryption_key_secret_name
@@ -435,12 +452,38 @@ spec:
           subPath: preflight-trigger
           workspace: results
 
+    - name: evaluate-preflight-result
+      runAfter:
+        - preflight-trigger
+      taskRef:
+        kind: Task
+        name: evaluate-preflight-result
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: preflight_result_file_path
+          value: "$(tasks.preflight-trigger.results.result_output_file)"
+        - name: preflight_log_file_path
+          value: "$(tasks.preflight-trigger.results.log_output_file)"
+        - name: preflight_artifacts_output_dir
+          value: "$(tasks.preflight-trigger.results.artifacts_output_dir)"
+      workspaces:
+        - name: input
+          subPath: preflight-trigger
+          workspace: results
+
     - name: trigger-prow-tests
       taskRef:
         name: trigger-prow-tests
         kind: Task
       runAfter:
-        - preflight-trigger
+        - evaluate-preflight-result
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
