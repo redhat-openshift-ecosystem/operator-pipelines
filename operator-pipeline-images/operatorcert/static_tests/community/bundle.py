@@ -34,8 +34,10 @@ class GraphLoopException(Exception):
     """
 
 
-def check_osdk_bundle_validate(bundle: Bundle) -> Iterator[CheckResult]:
-    """Run `operator-sdk bundle validate` using operatorhub settings"""
+def run_operator_sdk_bundle_validate(
+    bundle: Bundle, test_suite_selector: str
+) -> Iterator[CheckResult]:
+    """Run `operator-sdk bundle validate` using given test suite settings"""
     cmd = [
         "operator-sdk",
         "bundle",
@@ -44,7 +46,7 @@ def check_osdk_bundle_validate(bundle: Bundle) -> Iterator[CheckResult]:
         "json-alpha1",
         bundle.root,
         "--select-optional",
-        "name=operatorhub",
+        test_suite_selector,
     ]
     sdk_result = json.loads(
         subprocess.run(
@@ -58,6 +60,18 @@ def check_osdk_bundle_validate(bundle: Bundle) -> Iterator[CheckResult]:
             yield Fail(output_message)
         else:
             yield Warn(output_message)
+
+
+def check_osdk_bundle_validate_operatorhub(bundle: Bundle) -> Iterator[CheckResult]:
+    """Run `operator-sdk bundle validate` using operatorhub settings"""
+    yield from run_operator_sdk_bundle_validate(bundle, "name=operatorhub")
+
+
+def check_osdk_bundle_validate_operator_framework(
+    bundle: Bundle,
+) -> Iterator[CheckResult]:
+    """Run `operator-sdk bundle validate` using operatorframework settings"""
+    yield from run_operator_sdk_bundle_validate(bundle, "suite=operatorframework")
 
 
 def check_required_fields(bundle: Bundle) -> Iterator[CheckResult]:

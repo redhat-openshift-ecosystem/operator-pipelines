@@ -8,9 +8,11 @@ from operator_repo import Repo
 from operator_repo.checks import CheckResult, Fail, Warn
 from operatorcert.static_tests.community.bundle import (
     check_dangling_bundles,
-    check_osdk_bundle_validate,
+    check_osdk_bundle_validate_operator_framework,
+    check_osdk_bundle_validate_operatorhub,
     check_required_fields,
     check_upgrade_graph_loop,
+    run_operator_sdk_bundle_validate,
 )
 from tests.utils import bundle_files, create_files, merge
 
@@ -35,7 +37,7 @@ from tests.utils import bundle_files, create_files, merge
     ],
 )
 @patch("subprocess.run")
-def test_osdk_bundle_validate(
+def test_run_operator_sdk_bundle_validate(
     mock_run: MagicMock, osdk_output: str, expected: set[CheckResult], tmp_path: Path
 ) -> None:
     create_files(tmp_path, bundle_files("test-operator", "0.0.1"))
@@ -44,7 +46,21 @@ def test_osdk_bundle_validate(
     process_mock = MagicMock()
     process_mock.stdout = osdk_output
     mock_run.return_value = process_mock
-    assert set(check_osdk_bundle_validate(bundle)) == expected
+    assert set(run_operator_sdk_bundle_validate(bundle, "")) == expected
+
+
+@patch("operatorcert.static_tests.community.bundle.run_operator_sdk_bundle_validate")
+def test_check_osdk_bundle_validate_operator_framework(mock_sdk: MagicMock) -> None:
+    bundle = MagicMock()
+    list(check_osdk_bundle_validate_operator_framework(bundle))
+    mock_sdk.assert_called_once_with(bundle, "suite=operatorframework")
+
+
+@patch("operatorcert.static_tests.community.bundle.run_operator_sdk_bundle_validate")
+def test_check_osdk_bundle_validate_operatorhub(mock_sdk: MagicMock) -> None:
+    bundle = MagicMock()
+    list(check_osdk_bundle_validate_operatorhub(bundle))
+    mock_sdk.assert_called_once_with(bundle, "name=operatorhub")
 
 
 def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
