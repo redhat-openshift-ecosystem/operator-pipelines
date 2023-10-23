@@ -7,8 +7,10 @@ import pytest
 from operator_repo import Repo
 from operator_repo.checks import CheckResult, Fail, Warn
 from operatorcert.static_tests.community.bundle import (
+    check_dangling_bundles,
     check_osdk_bundle_validate,
     check_required_fields,
+    check_upgrade_graph_loop,
 )
 from tests.utils import bundle_files, create_files, merge
 
@@ -184,3 +186,65 @@ def test_required_fields(
         t == "missing" for k, (_, t) in collected_results.items() if k not in fields
     )
     assert expected_successes.intersection(collected_results.keys()) == set()
+
+
+def test_check_dangling_bundles(tmp_path: Path) -> None:
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1"),
+        bundle_files("hello", "0.0.2", csv={"spec": {"replaces": "hello.v0.0.1"}}),
+        bundle_files("hello", "0.0.3", csv={"spec": {"replaces": "hello.v0.0.2"}}),
+    )
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle3 = operator.bundle("0.0.3")
+    failures = list(check_dangling_bundles(bundle3))
+    assert failures == []
+
+    # Bundle 0.0.2 is not referenced by any bundle and it is not a HEAD of channel
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1"),
+        bundle_files("hello", "0.0.2", csv={"spec": {"replaces": "hello.v0.0.1"}}),
+        bundle_files("hello", "0.0.3", csv={"spec": {"replaces": "hello.v0.0.1"}}),
+    )
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle3 = operator.bundle("0.0.3")
+    failures = list(check_dangling_bundles(bundle3))
+    assert len(failures) == 1 and isinstance(failures[0], Fail)
+    assert (
+        failures[0].reason == "Channel beta has dangling bundles: {Bundle(hello/0.0.2)}"
+    )
+
+
+def test_check_upgrade_graph_loop(tmp_path: Path) -> None:
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1"),
+        bundle_files("hello", "0.0.2", csv={"spec": {"replaces": "hello.v0.0.1"}}),
+    )
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle = operator.bundle("0.0.1")
+    is_loop = list(check_upgrade_graph_loop(bundle))
+    assert is_loop == []
+
+    # Both bundles replace each other
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1", csv={"spec": {"replaces": "hello.v0.0.2"}}),
+        bundle_files("hello", "0.0.2", csv={"spec": {"replaces": "hello.v0.0.1"}}),
+    )
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle = operator.bundle("0.0.1")
+    is_loop = list(check_upgrade_graph_loop(bundle))
+    assert len(is_loop) == 1 and isinstance(is_loop[0], Fail)
+    assert (
+        is_loop[0].reason
+        == "Upgrade graph loop detected for bundle: [Bundle(hello/0.0.1), "
+        "Bundle(hello/0.0.2), Bundle(hello/0.0.1)]"
+    )

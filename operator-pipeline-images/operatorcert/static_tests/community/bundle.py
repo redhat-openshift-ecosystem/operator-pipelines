@@ -10,6 +10,7 @@ import json
 import re
 import subprocess
 from collections.abc import Iterator
+from typing import Any, List
 
 from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
@@ -25,6 +26,12 @@ from .validations import (
     validate_semver,
     validate_timestamp,
 )
+
+
+class GraphLoopException(Exception):
+    """
+    Exception raised when a loop is detected in the update graph
+    """
 
 
 def check_osdk_bundle_validate(bundle: Bundle) -> Iterator[CheckResult]:
@@ -97,3 +104,92 @@ def check_required_fields(bundle: Bundle) -> Iterator[CheckResult]:
         if success:
             continue
         yield Fail(message) if fatal else Warn(message)
+
+
+def check_dangling_bundles(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Check dangling bundles in the operator update graph
+    A dangling bundle is a bundle that is not referenced by any other bundle
+    and is not a HEAD of a channel
+
+    Example:
+    Channel beta: A -> B -> C (head)
+                    -> D
+
+    Bundle D is dangling
+
+    Args:
+        bundle (Bundle): Operator bundle that is being checked
+
+    Yields:
+        Iterator[CheckResult]: Failure if a dangling bundle is found
+    """
+    all_channels: set[str] = set(bundle.channels)
+    if bundle.default_channel is not None:
+        all_channels.add(bundle.default_channel)
+    operator = bundle.operator
+    for channel in sorted(all_channels):
+        channel_bundles = operator.channel_bundles(channel)
+        channel_head = operator.head(channel)
+        graph = operator.update_graph(channel)
+        dangling_bundles = {
+            x for x in channel_bundles if x not in graph and x != channel_head
+        }
+        if dangling_bundles:
+            yield Fail(f"Channel {channel} has dangling bundles: {dangling_bundles}")
+
+
+def check_upgrade_graph_loop(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Detect loops in the upgrade graph
+
+    Example:
+
+    Channel beta: A -> B -> C -> B
+
+    Args:
+        bundle (Bundle): Operator bundle
+
+    Yields:
+        Iterator[CheckResult]: Failure if a loop is detected
+    """
+    all_channels: set[str] = set(bundle.channels)
+    if bundle.default_channel is not None:
+        all_channels.add(bundle.default_channel)
+    operator = bundle.operator
+    for channel in sorted(all_channels):
+        visited: List[Bundle] = []
+        try:
+            channel_bundles = operator.channel_bundles(channel)
+            graph = operator.update_graph(channel)
+            follow_graph(graph, channel_bundles[0], visited)
+        except GraphLoopException as exc:
+            yield Fail(str(exc))
+
+
+def follow_graph(graph: Any, bundle: Bundle, visited: List[Bundle]) -> List[Bundle]:
+    """
+    Follow operator upgrade graph and raise exception if loop is detected
+
+    Args:
+        graph (Any): Operator update graph
+        bundle (Bundle): Current bundle that started the graph traversal
+        visited (List[Bundle]): List of bundles visited so far
+
+    Raises:
+        GraphLoopException: Graph loop detected
+
+    Returns:
+        List[Bundle]: List of bundles visited so far
+    """
+    if bundle in visited:
+        visited.append(bundle)
+        raise GraphLoopException(f"Upgrade graph loop detected for bundle: {visited}")
+    if bundle not in graph:
+        return visited
+
+    visited.append(bundle)
+    next_bundles = graph[bundle]
+    for next_bundle in next_bundles:
+        follow_graph(graph, next_bundle, visited)
+    return visited
