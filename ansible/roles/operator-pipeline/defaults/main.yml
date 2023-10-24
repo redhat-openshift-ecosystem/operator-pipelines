@@ -1,9 +1,0 @@
----
-# defaults file for operator-pipeline
-
-## General settings
-env: unset
-oc_namespace: null
-suffix: unknown
-namespace_state: present
-github_webhook_state: present

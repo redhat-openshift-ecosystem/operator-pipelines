@@ -7,13 +7,13 @@ This project uses GitHub Actions and Ansible for CI (tests, linters) and CD (dep
 Both deployment and integration tests need GitHub secrets to work properly.
 The following secrets should be kept in the repository:
 
-| Secret name | Secret value | Purpose |
-| ----------- | ------------ | ------- |
-| VAULT_PASSWORD | Password to the preprod Ansible Vault stored in the repository | Deployment of preprod and integration test environments
-| VAULT_PASSWORD_PROD | Password to the prod Ansible Vault stored in the repository | Deployment of the production environment
-| REGISTRY_USERNAME | Username for authentication to the container registry | Building images
-| REGISTRY_PASSWORD | Password for authentication to the container registry | Building images
-| GITHUB_TOKEN | GitHub authentication token | Creation of GitHub tags and releases
+| Secret name         | Secret value                                                   | Purpose                                                 |
+|---------------------|----------------------------------------------------------------|---------------------------------------------------------|
+| VAULT_PASSWORD      | Password to the preprod Ansible Vault stored in the repository | Deployment of preprod and integration test environments |
+| VAULT_PASSWORD_PROD | Password to the prod Ansible Vault stored in the repository    | Deployment of the production environment                |
+| REGISTRY_USERNAME   | Username for authentication to the container registry          | Building images                                         |
+| REGISTRY_PASSWORD   | Password for authentication to the container registry          | Building images                                         |
+| GITHUB_TOKEN        | GitHub authentication token                                    | Creation of GitHub tags and releases                    |
 
 ## Run order
 
@@ -35,8 +35,9 @@ Integration tests are a stage of the CI/CD that runs only in two cases:
 
 The orchestration of the integration tests is handled by Ansible. A couple dependencies
 must be installed to get started:
-  - Ansible
-  - Python packages: `openshift`, `pygithub`
+
+- Ansible
+- Python packages: `openshift`, `pygithub`
 
 To execute the integration tests in a custom environment:
 
@@ -56,7 +57,7 @@ To manually run the integration tests from the local environment:
     careful for duplicity (can override existing projects)
   - SSH key need to be set in GitHub account for local user
     (Ansible use SSH to clone/manipulate repositories)
-  - Python dependencies (mentioned above) need to be installed globally 
+  - Python dependencies (mentioned above) need to be installed globally
 
 ```bash
 ansible-playbook -v \

@@ -1,6 +1,7 @@
 # Community pipeline secrets usage
 
 ## Editing secrets
+
 The community pipeline uses a HashiCorp vault collection to store secrets.
 Adding new secrets can be achieved using this [guide][1]. If you need to edit
 secrets in the community-pipeline collection, you need to ask a maintainer for
@@ -12,6 +13,7 @@ itself using the OIDC method.
 
 The collection is mounted into the prow job configuration ([example][2]) as
 such:
+
 ```yaml
 ...
 - mount_path: /var/run/cred
@@ -22,6 +24,7 @@ such:
 
 The secret can then be used in the prow job script. An example with a github
 token:
+
 ```sh
 $ test -f /var/run/cred/operator_bundle_bot_github_token # test if secret exists
 $ echo $?

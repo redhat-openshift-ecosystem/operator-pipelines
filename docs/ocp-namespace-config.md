@@ -1,4 +1,5 @@
 # OpenShift namespaces configuration
+
 Operator pipelines are deployed and run in OpenShift Dedicated clusters.
 The deployment of all resources including pipelines, tasks, secrets and others
 is managed using Ansible playbooks. In order to be able run the ansible

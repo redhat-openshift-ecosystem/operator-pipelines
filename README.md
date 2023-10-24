@@ -6,7 +6,8 @@ Red Hat OpenShift pipelines for certifying ISV Operator Bundles.
 
 Refer to the [developer guide](docs/developer-guide.md).
 
-> **Note**: This documentation is intended for pipeline **developers/maintainers** only.
+> **Note**: This documentation is intended for pipeline
+> **developers/maintainers** only.
 >
 > Partners/users should refer to
 [this](https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/operator-cert-workflow.md)
@@ -16,16 +17,19 @@ documentation instead.
 
 ### Operator CI Pipeline
 
-The Operator CI pipeline is a Tekton pipeline that can be triggered by a partner using on-premise
-infrastructure. The pipeline validates an Operator Bundle, builds it and installs it to an OpenShift
-environment. After installation, pre-flight tests are executed which validate that the Operator meets
-minimum requirements for Red Hat OpenShift Certification. If all preceding tasks pass, the CI pipeline
-optionally uploads results and submits a pull request to trigger the next stages of the operator
-certification workflow.
+The Operator CI pipeline is a Tekton pipeline that can be triggered by
+a partner using on-premise infrastructure. The pipeline validates an Operator
+Bundle, builds it and installs it to an OpenShift environment. After
+installation, pre-flight tests are executed which validate that the Operator
+meets minimum requirements for Red Hat OpenShift Certification. If all
+preceding tasks pass, the CI pipeline optionally uploads results and submits a
+pull request to trigger the next stages of the operator certification workflow.
 
-> **Note:** Execution of the CI pipeline is NOT required in the overall certification workflow.
+> **Note:** Execution of the CI pipeline is NOT required in the overall
+> certification workflow.
 
-If using the default internal registry, the CI pipeline can be triggered using the tkn CLI like so:
+If using the default internal registry, the CI pipeline can be triggered using
+the tkn CLI like so:
 
 ```bash
 tkn pipeline start operator-ci-pipeline \
@@ -37,6 +41,7 @@ tkn pipeline start operator-ci-pipeline \
   --workspace name=pipeline,volumeClaimTemplateFile=templates/workspace-template.yml \
   --showlog
 ```
+
 If using an external registry, the CI pipeline can be triggered using the tkn CLI like so:
 
 ```bash
@@ -53,10 +58,12 @@ tkn pipeline start operator-ci-pipeline \
   --showlog
 ```
 
-If using an kind cluster with registry, the CI pipeline can be triggered using the tkn CLI like so:
+If using an kind cluster with registry, the CI pipeline can be triggered using
+the tkn CLI like so:
 > Warning: This mode is currently in development and it might not work yet.
 
 > Note: kind cluster with registry setup is documented [here](docs/kind-cluster.md#kind-cluster-setup)
+
 ```bash
 tkn pipeline start operator-ci-pipeline \
   --use-param-defaults \
@@ -72,10 +79,12 @@ tkn pipeline start operator-ci-pipeline \
   --showlog
 ```
 
-A subset of tasks in the pipeline requires privilege escalation which is no longer
-supported with OpenShift Pipelines 1.9. Thus a new `SCC` needs to be created and linked
-with `pipeline` service account. Creating [SCC](https://docs.openshift.com/container-platform/4.11/authentication/managing-security-context-constraints.html#security-context-constraints-creating_configuring-internal-oauth)
+A subset of tasks in the pipeline requires privilege escalation which is no
+longer supported with OpenShift Pipelines 1.9. Thus a new `SCC` needs to be
+created and linked with `pipeline` service account. Creating
+[SCC](https://docs.openshift.com/container-platform/4.11/authentication/managing-security-context-constraints.html#security-context-constraints-creating_configuring-internal-oauth)
 requires user with cluster-admin privileges.
+
 ```bash
 # Create a new SCC
 oc apply -f ansible/roles/operator-pipeline/templates/openshift/openshift-pipelines-custom-scc.yml
@@ -83,29 +92,28 @@ oc apply -f ansible/roles/operator-pipeline/templates/openshift/openshift-pipeli
 oc adm policy add-scc-to-user pipelines-custom-scc -z pipeline
 ```
 
-
 To enable opening the PR and uploading the pipeline logs (visible to the certification project
 owner in Red Hat Connect), pass the following argument:
 
 ```bash
-    --param submit=true
+--param submit=true
 ```
 
 To open the PR with submission, upstream repository name
 must be supplied (eg. test-org/test-repo):
 
 ```bash
-    --param upstream_repo_name=<repository_name>
+--param upstream_repo_name=<repository_name>
 ```
 
 To enable digest pinning, pass the following arguments:
 
 ```bash
-  --param pin_digests=true \
-  --param git_repo_url=<github_repo_ssh_url> \
-  --param git_username=<github_user_name> \
-  --param git_email=<github_email> \
-  --workspace name=ssh-dir,secret=github-ssh-credentials
+--param pin_digests=true \
+--param git_repo_url=<github_repo_ssh_url> \
+--param git_username=<github_user_name> \
+--param git_email=<github_email> \
+--workspace name=ssh-dir,secret=github-ssh-credentials
 ```
 
 > **Note:** The `git_repo_url` param needs an SSH URL to commit the pinned digests.

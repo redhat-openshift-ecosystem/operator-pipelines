@@ -1,0 +1,11 @@
+---
+- name: Customize TektonConfig
+  kubernetes.core.k8s:
+    state: present
+    validate_certs: "{{ k8s_validate_certs }}"
+    definition: "{{ lookup('file', '{{ item }}') }}"
+  with_items:
+    - ../files/tektonconfig.yml
+
+- name: Include pipelinerun listener task
+  ansible.builtin.include_tasks: tasks/pipelinerun-listener.yml

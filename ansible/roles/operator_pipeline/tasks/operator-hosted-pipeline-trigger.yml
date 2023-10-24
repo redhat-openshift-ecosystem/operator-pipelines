@@ -1,0 +1,167 @@
+---
+- name: Create trigger enabling running Hosted pipeline via GitHub webhook
+  tags:
+    - triggers
+  block:
+    - name: Create Hosted pipeline Trigger Binding
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          # To see the PR webhook payload, set the logLevel to debug in configmap config-logging-triggers
+          # Other GitHub PR webhook payload example: https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerBinding
+          metadata:
+            name: operator-hosted-pipeline-trigger-binding
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_pr_branch
+                value: $(body.pull_request.head.ref)
+              - name: git_pr_title
+                value: $(body.pull_request.title)
+              - name: git_pr_url
+                value: $(body.pull_request.html_url)
+              - name: git_fork_url
+                value: $(body.pull_request.head.repo.clone_url)
+              - name: git_repo_url
+                value: $(body.pull_request.base.repo.clone_url)
+              - name: git_username
+                value: $(body.pull_request.user.login)
+              - name: git_commit
+                value: $(body.pull_request.head.sha)
+              - name: git_base_branch
+                value: $(body.pull_request.base.ref)
+              - name: pr_head_label
+                value: $(body.pull_request.head.label)
+              - name: env
+                value: "{{ env }}"
+              - name: preflight_min_version
+                value: "{{ preflight_min_version }}"
+              - name: preflight_trigger_environment
+                value: "{{ preflight_trigger_environment }}"
+              - name: ci_min_version
+                value: "{{ ci_min_version }}"
+              - name: pipeline_image
+                value: "{{ operator_pipeline_image_pull_spec }}"
+              - name: metrics_endpoint
+                value: "{{ pipelines_metrics_endpoint }}"
+              - name: image_namespace
+                value: "{{ operator_pipeline_pending_namespace }}"
+              - name: hydra_sso_token_url
+                value: "{{ operator_pipeline_hydra_sso_token_url }}"
+
+    - name: Create Hosted pipeline Trigger Template
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerTemplate
+          metadata:
+            name: operator-hosted-pipeline-trigger-template
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: git_pr_branch
+              - name: git_pr_title
+              - name: git_pr_url
+              - name: git_fork_url
+              - name: git_repo_url
+              - name: git_username
+              - name: git_commit
+              - name: git_base_branch
+              - name: pr_head_label
+              - name: env
+              - name: preflight_min_version
+              - name: preflight_trigger_environment
+              - name: ci_min_version
+              - name: pipeline_image
+              - name: metrics_endpoint
+              - name: image_namespace
+              - name: hydra_sso_token_url
+            resourcetemplates:
+              - apiVersion: tekton.dev/v1beta1
+                kind: PipelineRun
+                metadata:
+                  generateName: operator-hosted-pipeline-run
+                  labels:
+                    app: operator-pipeline
+                    suffix: "{{ suffix }}"
+                    env: "{{ env }}"
+                    git_commit: $(tt.params.git_commit)
+                  annotations:
+                    git_pull_request_url: $(tt.params.git_pr_url)
+                    git_pull_request_title: $(tt.params.git_pr_title)
+                spec:
+                  timeout: "2h"
+                  pipelineRef:
+                    name: operator-hosted-pipeline
+                  params:
+                    - name: git_pr_branch
+                      value: $(tt.params.git_pr_branch)
+                    - name: git_pr_title
+                      value: $(tt.params.git_pr_title)
+                    - name: git_pr_url
+                      value: $(tt.params.git_pr_url)
+                    - name: git_fork_url
+                      value: $(tt.params.git_fork_url)
+                    - name: git_repo_url
+                      value: $(tt.params.git_repo_url)
+                    - name: git_username
+                      value: $(tt.params.git_username)
+                    - name: git_base_branch
+                      value: $(tt.params.git_base_branch)
+                    - name: pr_head_label
+                      value: $(tt.params.pr_head_label)
+                    - name: env
+                      value: $(tt.params.env)
+                    - name: preflight_min_version
+                      value: $(tt.params.preflight_min_version)
+                    - name: ci_min_version
+                      value: $(tt.params.ci_min_version)
+                    - name: git_commit
+                      value: $(tt.params.git_commit)
+                    - name: pipeline_image
+                      value: $(tt.params.pipeline_image)
+                    - name: metrics_endpoint
+                      value: $(tt.params.metrics_endpoint)
+                    - name: image_namespace
+                      value: $(tt.params.image_namespace)
+                    - name: hydra_sso_token_url
+                      value: $(tt.params.hydra_sso_token_url)
+                  workspaces:
+                    - name: repository
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 5Gi
+                    - name: results
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi
+                    - name: registry-credentials-all
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi
+                    - name: registry-credentials
+                      secret:
+                        secretName: hosted-pipeline-registry-auth-secret

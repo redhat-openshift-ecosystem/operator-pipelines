@@ -54,9 +54,9 @@ RUN curl -LO https://github.com/operator-framework/operator-registry/releases/do
     chmod +x operator-sdk_linux_${ARCH} && \
     mv operator-sdk_linux_${ARCH} /usr/local/bin/operator-sdk
 
-RUN useradd -ms /bin/bash -u "${USER_UID}" user
+RUN useradd -lms /bin/bash -u "${USER_UID}" user
 
-RUN useradd -u "${PODMAN_USER_UID}" podman; \
+RUN useradd -lu "${PODMAN_USER_UID}" podman; \
     echo podman:10000:5000 > /etc/subuid; \
     echo podman:10000:5000 > /etc/subgid;
 
@@ -66,7 +66,7 @@ WORKDIR /home/user
 COPY ./operator-pipeline-images ./
 
 # install PDM
-RUN pip3 install --upgrade pip setuptools wheel && pip3 install pdm
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && pip3 install --no-cache-dir pdm
 # install dependencies in virtual environment
 COPY ./pdm.lock ./pyproject.toml ./README.md ./
 RUN pdm venv create 3.11 && pdm install --no-lock --no-editable \

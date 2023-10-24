@@ -1,0 +1,91 @@
+---
+- name: Create trigger enabling running Community signing pipeline via webhook
+  tags:
+    - triggers
+    - community-signing
+  block:
+    - name: Create Community signing pipeline Trigger Binding
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerBinding
+          metadata:
+            name: "{{ community_signing_pipeline_name }}-trigger-binding"
+            labels:
+              app: "{{ community_signing_pipeline_name }}"
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: env
+                value: "{{ env }}"
+              - name: manifest_digest
+                value: $(body.manifest_digest)
+              - name: reference
+                value: $(body.reference)
+              - name: requester
+                value: $(body.requester)
+              - name: umb_client_name
+                value: "{{ community_signing_umb_client_name }}"
+              - name: pipeline_image
+                value: "{{ operator_pipeline_image_pull_spec }}"
+              - name: metrics_endpoint
+                value: "{{ pipelines_metrics_endpoint }}"
+
+    - name: Create Community signing pipeline Trigger Template
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerTemplate
+          metadata:
+            name: "{{ community_signing_pipeline_name }}-trigger-template"
+            labels:
+              app: "{{ community_signing_pipeline_name }}"
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            params:
+              - name: env
+              - name: manifest_digest
+              - name: reference
+              - name: requester
+              - name: umb_client_name
+              - name: pipeline_image
+              - name: metrics_endpoint
+            resourcetemplates:
+              - apiVersion: tekton.dev/v1beta1
+                kind: PipelineRun
+                metadata:
+                  generateName: "{{ community_signing_pipeline_name }}-run"
+                spec:
+                  timeout: "2h"
+                  pipelineRef:
+                    name: "{{ community_signing_pipeline_name }}"
+                  params:
+                    - name: env
+                      value: $(tt.params.env)
+                    - name: manifest_digest
+                      value: $(tt.params.manifest_digest)
+                    - name: reference
+                      value: $(tt.params.reference)
+                    - name: requester
+                      value: $(tt.params.requester)
+                    - name: umb_client_name
+                      value: $(tt.params.umb_client_name)
+                    - name: pipeline_image
+                      value: $(tt.params.pipeline_image)
+                    - name: metrics_endpoint
+                      value: $(tt.params.metrics_endpoint)
+                  workspaces:
+                    - name: pipeline
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi

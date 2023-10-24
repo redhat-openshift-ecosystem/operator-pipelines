@@ -3,8 +3,10 @@
 ## Workflow
 
 1. [Run through the setup](#setup) at least once.
-1. [Make changes to the pipeline image](#making-changes-to-the-pipeline-image), if desired.
-1. [Make changes to the Tekton pipelines and/or tasks](#making-changes-to-the-pipelines), if desired.
+1. [Make changes to the pipeline image](#making-changes-to-the-pipeline-image),
+   if desired.
+1. [Make changes to the Tekton pipelines and/or tasks](#making-changes-to-the-pipelines),
+   if desired.
 1. [Test all impacted pipelines](../README.md#usage).
    - [Override the pipeline image as necessary](../README.md#using-a-custom-pipeline-image).
 1. Submit a pull request with your changes.
@@ -17,14 +19,15 @@
 1. [Prepare an Operator bundle](#prepare-an-operator-bundle)
 1. [Prepare your `ci.yaml`](#prepare-your-ciyaml)
 1. [Create a bundle pull request](#create-a-bundle-pull-request) (optional)
-    - Required for testing hosted or release pipelines
+   - Required for testing hosted or release pipelines
 1. [Create an API key](#create-an-api-key) (optional)
-    - Required for testing submission with the CI pipeline
+   - Required for testing submission with the CI pipeline
 1. [Prepare the CI to run from your fork](ci-cd.md) (optional)
-    - Required to run integration testing on forks of this repo.
+   - Required to run integration testing on forks of this repo.
 
 ### Git leaks detection
-Since the repository contains a secret information in form of encrypted
+
+Since the repository contains secret information in form of encrypted
 Ansible Vault there is high chance that developer may push a commit with
 decrypted secrets by mistake. To avoid this problem we recommend
 to use `Gitleaks` tool that prevent you from commit secret code into git history.
@@ -58,7 +61,8 @@ ansible-playbook -v \
   ansible/playbooks/deploy.yml
 ```
 
-:warning: Conflicts may occur if the project already contains some resources. They may need to be removed first.
+:warning: Conflicts may occur if the project already contains some resources.
+They may need to be removed first.
 
 Cleanup can be performed by specifying the `absent` state for some of the resources.
 
@@ -72,8 +76,11 @@ ansible-playbook -v \
   --vault-password-file $VAULT_PASSWORD_PATH \
   ansible/playbooks/deploy.yml
 ```
+
 #### Integration tests
+
 See [integration tests section in ci-cd.md](ci-cd.md#integration-tests)
+
 #### Install tkn
 
 You should install the [tkn](https://docs.openshift.com/container-platform/4.7/cli_reference/tkn_cli/installing-tkn.html)
@@ -100,15 +107,15 @@ cluster for development/testing, purposes.
 
 1. Grant the `privileged` SCC to the default `pipeline` service account.
 
-    The `buildah` task requires the `privileged` security context constraint in order to call
-    `newuidmap`/`newgidmap`. This is only necessary because `runAsUser:0` is defined in
-    `templates/crc-pod-template.yml`.
+    The `buildah` task requires the `privileged` security context constraint
+    in order to call `newuidmap`/`newgidmap`. This is only necessary because
+    `runAsUser:0` is defined in `templates/crc-pod-template.yml`.
 
     ```bash
     oc adm policy add-scc-to-user privileged -z pipeline
     ```
 
-###### Running a Pipeline with CRC
+##### Running a Pipeline with CRC
 
 It may be necessary to pass the following `tkn` CLI arg to avoid
 permission issues with the default CRC PersistentVolumes.
@@ -182,9 +189,9 @@ If such errors are unclear, that is likely a bug which should be fixed.
 
 #### Prepare Your ci.yaml
 
-At the root of your operator package directory (note: **not** the bundle version directory)
-there needs to be a `ci.yaml` file. For development purposes, it should follow
-this format in most cases.
+At the root of your operator package directory (note: **not** the bundle
+version directory) there needs to be a `ci.yaml` file. For development
+purposes, it should follow this format in most cases.
 
 ```yaml
 ---
@@ -226,19 +233,22 @@ git commit -m "operator <operator-package-name> (<bundle-version>)"
 git push origin <insert-branch-name>
 ```
 
-> **Note:** You may need to merge the pull request to use it for testing the release pipeline.
+> **Note:** You may need to merge the pull request to use it for testing
+> the release pipeline.
 
 #### Create an API Key
 
-[File a ticket](https://url.corp.redhat.com/86973d1) with Pyxis admins to assist with this request.
-It must correspond to the `org_id` for the certification project under test.
+[File a ticket](https://url.corp.redhat.com/86973d1) with Pyxis admins
+to assist with this request. It must correspond to the `org_id`
+for the certification project under test.
 
 ## Making Changes to the Pipelines
 
 ### Guiding Principles
 
 - Avoid including credentials within Task scripts.
-  - Avoid the use of `set -x` in shell scripts which _could_ expose credentials to the console.
+  - Avoid the use of `set -x` in shell scripts which _could_ expose credentials
+    to the console.
 - Don't use workspaces for passing secrets. Use `secretKeyRef` and `volumeMount`
   with secret and key names instead.
   - Reason: It adds unnecessary complexity to `tkn` commands.
@@ -249,7 +259,8 @@ It must correspond to the `org_id` for the certification project under test.
   - quay.io/opdev
 - Use image pull specs with digests instead of tags wherever possible.
 - Tasks must implement their own skipping behavior, if needed.
-  - Reason: If a task is not executed, any dependent tasks will not be executed either.
+  - Reason: If a task is not executed, any dependent tasks will not be
+    executed either.
 - Don't use ClusterTasks or upstream tasks. All tasks are defined in this repo.
 - Document all params, especially pipeline params.
 - Output human readable logs.
@@ -266,26 +277,33 @@ oc apply -R -f ansible/roles/operator-pipeline/templates/openshift
 
 ## Making Changes to the Pipeline Image
 
-### Dependency manager
-Operator pipelines project is configured to automatically manage Python dependencies using [PDM][1] tool.
-The pdm automates definition, installation, upgrades and the whole lifecycle of
-dependency in a project. All dependencies are stored in `pyproject.toml` file in a groups
-that corresponds to individual applications within the Operator pipelines project.
+### Dependency
 
-Adding, removing and updating of dependency needs to be always done using `pdm` cli.
+Operator pipelines project is configured to automatically manage Python
+dependencies using [PDM][1] tool. The pdm automates definition, installation,
+upgrades and the whole lifecycle of dependency in a project. All dependencies
+are stored in `pyproject.toml` file in a groups that corresponds to individual
+applications within the Operator pipelines project.
+
+Adding, removing and updating of dependency needs to be always done
+using `pdm` cli.
+
 ```bash
 pdm add -G operator-pipelines gunicorn==20.1.0
 ```
+
 After a dependency is installed it is added to pdm.lock file. The lock file
 is always part of git repository.
 
 If you want to install specific group set of dependencies use following command:
+
 ```bash
 pdm install -G operator-pipelines
 ```
-Dependencies are stored into virtual environment (.venv) which is automatically created after `pdm install`
-If .venv wasn't created, configure pdm to automatically create it during installation with `pdm config python.use_venv true`.
 
+Dependencies are stored into virtual environment (.venv) which is automatically
+created after `pdm install`. If .venv wasn't created, configure pdm to
+automatically create it during installation with `pdm config python.use_venv true`.
 
 ### Run Unit Tests, Code Style Checkers, etc.
 
@@ -298,15 +316,17 @@ tox
 ### Local development
 
 Setup python virtual environment using pdm.
+
 ```shell
-$ pdm venv create 3.11
-$ pdm install
-$ source .venv/bin/activate
+pdm venv create 3.11
+pdm install
+source .venv/bin/activate
 ```
 
 ### Build & Push
 
-1. Ensure you have [buildah](https://github.com/containers/buildah/blob/main/install.md) installed
+1. Ensure you have [buildah](https://github.com/containers/buildah/blob/main/install.md)
+   installed
 
 2. Build the image
 

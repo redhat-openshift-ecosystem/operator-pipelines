@@ -23,7 +23,9 @@ jobs:
 
       - name: Install dependencies
         run: |
+          wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.10.0/hadolint-Linux-x86_64
           pdm sync -dG tox
+          python3 -m pip install ansible-lint
 
       - name: Run Tests
         run: |
