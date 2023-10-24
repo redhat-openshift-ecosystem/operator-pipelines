@@ -47,7 +47,7 @@ spec:
         if [ -n "$(params.bundle_path)" ] ; then
             ocp-version-info \
               --output-file $OCP_VERSIONS_OUTPUT_FILE \
-              --bundle-path "$(params.bundle_path)" \
+              "$(params.bundle_path)" \
               $ORGANIZATION
         else
             ocp-version-info \
