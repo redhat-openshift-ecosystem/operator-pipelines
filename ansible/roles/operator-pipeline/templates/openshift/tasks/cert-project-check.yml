@@ -25,7 +25,7 @@ spec:
 
         CI_FILE_PATH="$PKG_PATH/ci.yaml"
 
-        CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id')
+        CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id | select (.!=null)')
 
         if [ -z $CERT_PROJECT_ID ]; then
           echo "Certification project ID is missing in ci.yaml file (cert_project_id)"
