@@ -307,6 +307,35 @@ automatically create it during installation with `pdm config python.use_venv tru
 
 ### Run Unit Tests, Code Style Checkers, etc.
 
+Before running the tests locally, the environment needs to be prepared.
+Choose the preparation process according to your Linux version.
+
+#### Preparation on RPM-based Linux
+
+```bash
+sudo dnf -y install hadolint
+python3 -m pip install pdm
+pdm venv create 3.11
+pdm install
+source .venv/bin/activate
+python3 -m pip install ansible-lint
+```
+
+#### Preparation on other Linux systems
+
+Before starting, make sure you have installed the [Brew][2] package manager.
+
+```bash
+brew install hadolint
+python3 -m pip install pdm
+pdm venv create 3.11
+pdm install
+source .venv/bin/activate
+python3 -m pip install ansible-lint
+```
+
+#### Run the local tests
+
 To run unit tests and code style checkers:
 
 ```bash
@@ -347,3 +376,4 @@ source .venv/bin/activate
     ```
 
 [1]: https://pdm.fming.dev/latest/
+[2]: https://brew.sh/
