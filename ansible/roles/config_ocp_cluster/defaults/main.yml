@@ -1,3 +1,3 @@
 ---
 k8s_validate_certs: true   # noqa: var-naming[no-role-prefix]
-config_ocp_cluster_pipelinerun_listener_namespace: pipelinerun-listener
+pipelinerun_listener_namespace: pipelinerun-listener   # noqa: var-naming[no-role-prefix]

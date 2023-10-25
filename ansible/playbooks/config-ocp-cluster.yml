@@ -2,7 +2,7 @@
 - name: Configure OCP cluster
   hosts: "{{ clusters }}"
   roles:
-    - config-ocp-cluster
+    - config_ocp_cluster
   vars_files:
     - ../vaults/pipelinerun-listener/secret-vars.yml
   environment:

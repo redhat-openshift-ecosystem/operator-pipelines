@@ -1,7 +1,7 @@
 # Contributing Guide
 
 All changes contributed to the code are validated by GitHub CI. To ensure
-passing Ci workflow, the validation tests can also be run locally.
+passing CI workflow, the validation tests can also be run locally.
 
 To prepare the local testing environment, follow one of the guides below.
 

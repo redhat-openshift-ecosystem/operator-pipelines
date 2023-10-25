@@ -12,7 +12,7 @@
           kind: Namespace
           apiVersion: v1
           metadata:
-            name: "{{ config_ocp_cluster_pipelinerun_listener_namespace }}"
+            name: "{{ pipelinerun_listener_namespace }}"
             annotations:
               # TaskRuns are created without a corresponding PipelineRun.
               # Make sure the pruner cleans up both.
@@ -23,7 +23,7 @@
         state: present
         apply: true
         validate_certs: "{{ k8s_validate_certs }}"
-        namespace: "{{ config_ocp_cluster_pipelinerun_listener_namespace }}"
+        namespace: "{{ pipelinerun_listener_namespace }}"
         definition: "{{ lookup('file', '{{ item }}') }}"
       with_fileglob:
         - ../files/tasks/*
@@ -34,7 +34,7 @@
         state: present
         force: true
         validate_certs: "{{ k8s_validate_certs }}"
-        namespace: "{{ config_ocp_cluster_pipelinerun_listener_namespace }}"
+        namespace: "{{ pipelinerun_listener_namespace }}"
         definition:
           apiVersion: v1
           kind: Secret
@@ -48,7 +48,7 @@
       kubernetes.core.k8s:
         state: present
         apply: true
-        namespace: "{{ config_ocp_cluster_pipelinerun_listener_namespace }}"
+        namespace: "{{ pipelinerun_listener_namespace }}"
         validate_certs: "{{ k8s_validate_certs }}"
         definition:
           apiVersion: triggers.tekton.dev/v1alpha1
@@ -68,7 +68,7 @@
       kubernetes.core.k8s:
         state: present
         apply: true
-        namespace: "{{ config_ocp_cluster_pipelinerun_listener_namespace }}"
+        namespace: "{{ pipelinerun_listener_namespace }}"
         validate_certs: "{{ k8s_validate_certs }}"
         definition:
           apiVersion: triggers.tekton.dev/v1alpha1
@@ -104,7 +104,7 @@
       kubernetes.core.k8s:
         state: present
         apply: true
-        namespace: "{{ config_ocp_cluster_pipelinerun_listener_namespace }}"
+        namespace: "{{ pipelinerun_listener_namespace }}"
         validate_certs: "{{ k8s_validate_certs }}"
         definition:
           apiVersion: triggers.tekton.dev/v1alpha1
@@ -137,7 +137,7 @@
       kubernetes.core.k8s:
         state: present
         apply: true
-        namespace: "{{ config_ocp_cluster_pipelinerun_listener_namespace }}"
+        namespace: "{{ pipelinerun_listener_namespace }}"
         validate_certs: "{{ k8s_validate_certs }}"
         definition:
           apiVersion: rbac.authorization.k8s.io/v1
@@ -147,7 +147,7 @@
           subjects:
             - kind: ServiceAccount
               name: pipeline
-              namespace: "{{ config_ocp_cluster_pipelinerun_listener_namespace }}"
+              namespace: "{{ pipelinerun_listener_namespace }}"
           roleRef:
             apiGroup: rbac.authorization.k8s.io
             kind: ClusterRole
@@ -164,4 +164,4 @@
           metadata:
             name: config-defaults
           data:
-            default-cloud-events-sink: "http://el-pipelinerun-listener.{{ config_ocp_cluster_pipelinerun_listener_namespace }}.svc.cluster.local:8080"
+            default-cloud-events-sink: "http://el-pipelinerun-listener.{{ pipelinerun_listener_namespace }}.svc.cluster.local:8080"
