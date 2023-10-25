@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install Hadolint via Brew
         run: |
           wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.10.0/hadolint-Linux-x86_64
           sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
@@ -33,6 +33,9 @@ jobs:
           brew install hadolint
           /home/linuxbrew/.linuxbrew/bin/brew install hadolint
           sudo ln -s /home/linuxbrew/.linuxbrew/bin/hadolint /usr/bin/
+
+      - name: Install Python dependencies
+        run: |
           pdm sync -dG tox
           python3 -m pip install ansible-lint
 
