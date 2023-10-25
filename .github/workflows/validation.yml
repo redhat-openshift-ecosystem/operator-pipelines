@@ -28,6 +28,10 @@ jobs:
           NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           brew install hadolint
           /home/linuxbrew/.linuxbrew/bin/brew install hadolint
+          (echo; echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"') >> /home/runner/.bashrc
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install hadolint
+          pdm sync -dG tox
           python3 -m pip install ansible-lint
 
       - name: Run Tests
