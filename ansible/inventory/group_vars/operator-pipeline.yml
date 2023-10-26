@@ -12,7 +12,7 @@ ci_min_version: 0.0.0
 operator_pipeline_image_repo: quay.io/redhat-isv/operator-pipelines-images
 operator_pipeline_image_tag: latest
 operator_pipeline_image_pull_spec: "{{ operator_pipeline_image_repo }}:{{ operator_pipeline_image_tag }}"
-operator_pipeline_pending_namespace: "{{ oc_namespace }}"
+operator_pipeline_pending_namespace: "operator-pipeline-{{ env }}"
 
 tekton_pruner_keep: 10
 
@@ -43,7 +43,11 @@ operator_pipeline_gpg_passphrase_path: ../../vaults/{{ env }}/operator-pipeline-
 operator_pipeline_url: "https://operator-pipeline-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
 operator_pipeline_webhook_secret: ../../vaults/common/github-webhook-secret-preprod.txt
 
-kerberos_keytab: ../../vaults/common/nonprod-operatorpipelines.keytab
+# TODO: change path to keytabs once keytabs are available
+kerberos_keytab_isv: ../../vaults/common/nonprod-operatorpipelines.keytab
+kerberos_keytab_isv_pending: ../../vaults/common/nonprod-operatorpipelines.keytab
+kerberos_keytab_community: ../../vaults/common/nonprod-operatorpipelines.keytab
+kerberos_keytab_community_pending: ../../vaults/common/nonprod-operatorpipelines.keytab
 
 pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-nonprod
 

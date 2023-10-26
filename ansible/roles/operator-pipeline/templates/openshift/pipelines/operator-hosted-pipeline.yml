@@ -8,94 +8,140 @@ spec:
     # When adding a new param, make sure to also add it to the webhook in
     # operator-hosted-pipeline-trigger.yml if possible
     - name: git_pr_branch
+
     - name: git_pr_title
+
     - name: git_pr_url
+
     - name: git_fork_url
+
     - name: git_repo_url
+
     - name: git_username
+
     - name: git_commit
+
     - name: git_base_branch
       description: Name of the base branch. e.g. "main"
+
     - name: pr_head_label
+
     - name: env
       description: Which environment to run in. Can be one of [dev, qa, stage, prod]
       default: "prod"
+
     - name: preflight_min_version
+
     - name: preflight_trigger_environment
       description: Which openshift-ci step-registry steps and ProwJob templates to use. Can be one of [preprod, prod]
       default: "prod"
+
     - name: ci_min_version
+
     - name: registry
       description: Must be some variety of quay registry.
       default: quay.io
+
     - name: image_namespace
       default: $(context.pipelineRun.namespace)
       description: The namespace/organization all built images will be pushed to.
+
     - name: ignore_publishing_checklist
       default: "false"
       description: Ignore the results of the publishing checklist
+
     - name: pipeline_image
       description: An image of operator-pipeline-images.
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
       # Kubernetes secrets related params, usually with default values
+
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github-bot-token
+
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: github_bot_token
+
     - name: quay_oauth_secret_name
       default: quay-oauth-token
+
     - name: quay_oauth_secret_key
       default: token
+
     - name: hydra_secret_name
       description: Kubernetes secret name that contains the Hydra credentials.
       default: hydra-credentials
+
     - name: hydra_secret_sso_client_id_key
       description: |
         The key within the Kubernetes secret that contains Hydra SSO client ID.
       default: sso_client_id
+
     - name: hydra_secret_sso_client_secret_key
       description: |
         The key within the Kubernetes secret that contains the Hydra SSO password.
       default: sso_client_secret
+
     - name: hydra_sso_token_url
       description: SSO URL.
       default: https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token
+
     - name: pyxis_ssl_secret_name
       description: Kubernetes secret name that contains the Pyxis SSL files.
       default: operator-pipeline-api-certs
+
     - name: pyxis_ssl_cert_secret_key
       description: The key within the Kubernetes secret that contains the Pyxis SSL cert.
       default: operator-pipeline.pem
+
     - name: pyxis_ssl_key_secret_key
       description: The key within the Kubernetes secret that contains the Pyxis SSL key.
       default: operator-pipeline.key
+
+    - name: kerberos_keytab_secret_name
+      description: >-
+        The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+      default: kerberos-keytab
+
+    - name: kerberos_keytab_secret_key
+      description: >-
+        The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+      default: krb5-isv-pending.keytab
+
     - name: prow_kubeconfig_secret_name
       description: The name of the Kubernetes Secret that contains the prow kubeconfig for preflight tests.
       default: prow-kubeconfig
+
     - name: prow_kubeconfig_secret_key
       description: The key within the Kubernetes Secret that contains the prow kubeconfig for preflight tests.
       default: kubeconfig
+
     - name: preflight_decryption_key_secret_name
       description: The name of the Kubernetes Secret that contains the gpg decryption key.
       default: preflight-decryption-key
+
     - name: preflight_decryption_private_key_secret_key
       description: The key within the Kubernetes Secret that contains the gpg private key.
       default: private
+
     - name: preflight_decryption_public_key_secret_key
       description: The key within the Kubernetes Secret that contains the gpg public key.
       default: public
+
     - name: gpg_secret_name
       description: >-
         The name of the Kubernetes Secret that contains the GPG private key that is used for decryption of user's tokens.
       default: isv-gpg-key
+
     - name: gpg_key_secret_key
       description: The key within the Kubernetes Secret that contains the gpg key.
       default: operator-pipeline-gpg.key
+
     - name: gpg_passphrase_secret_key
       description: The key within the Kubernetes Secret that contains the gpg passphrase.
       default: operator-pipeline-gpg.passphrase
+
     - name: metrics_endpoint
       description: Prometheus metrics endpoint
       default: http://pipeline-metrics.pipeline-metrics-prod
@@ -587,50 +633,41 @@ spec:
         - name: oauth_secret_key
           value: "$(params.quay_oauth_secret_key)"
 
-    # Index image contains a record of bundle images from which
-    # manifests could be extract in order to install an operator.
-    - name: generate-index
+
+    # Build new temporary index using IIB
+    - name: add-bundle-to-index
       runAfter:
-        - build-bundle
+        - make-bundle-repo-public
       taskRef:
-        name: generate-index
+        name: add-bundle-to-index
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: bundle_image
-          value: *bundleImage
-        - name: from_index
+        - name: index_images
           value: "$(tasks.get-supported-versions.results.max_supported_index)"
+        - name: bundle_pullspec
+          value: *bundleImage
+        - name: environment
+          value: "$(params.env)"
+        - name: kerberos_keytab_secret_name
+          value: "$(params.kerberos_keytab_secret_name)"
+        - name: kerberos_keytab_secret_key
+          value: "$(params.kerberos_keytab_secret_key)"
+        - name: index-image-destination
+          value: &tempIndexRepo "$(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index"
+        - name: index-image-destination-tag-suffix
+          value: "-$(params.git_commit)"
+        - name: iib_url
+          value: "$(tasks.set-env.results.iib_url)"
       workspaces:
-        - name: output
-          workspace: repository
-          subPath: index
         - name: credentials
-          # Do not use registry-credentials-all. Project creds may replace quay.io push creds.
           workspace: registry-credentials
-
-    - name: build-index
-      runAfter:
-        - generate-index
-      taskRef:
-        name: buildah
-        kind: Task
-      params:
-        - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index:$(tasks.validate-pr-title.results.bundle_version)"
-        - name: DOCKERFILE
-          value: "$(tasks.generate-index.results.index_dockerfile)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: index
-        - name: credentials
-          # Do not use registry-credentials-all. Project creds may replace quay.io push creds.
-          workspace: registry-credentials
+        - name: results
+          workspace: results
 
     - name: make-index-repo-public
       runAfter:
-        - build-index
+        - add-bundle-to-index
       taskRef:
         name: set-quay-repo-visibility
       params:
@@ -693,7 +730,7 @@ spec:
           value: operator
         - name: bundle_index_image
           value: >-
-            $(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index:$(tasks.validate-pr-title.results.bundle_version)
+            $(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name)-index:v$(tasks.get-supported-versions.results.max_supported_ocp_version)-$(params.git_commit)
         - name: bundle_image
           value: >-
             $(params.registry)/$(params.image_namespace)/$(tasks.validate-pr-title.results.operator_name):$(tasks.validate-pr-title.results.bundle_version)
