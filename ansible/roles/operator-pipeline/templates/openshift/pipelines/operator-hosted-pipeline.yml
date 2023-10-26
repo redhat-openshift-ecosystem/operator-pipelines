@@ -359,6 +359,10 @@ spec:
           value: "$(tasks.get-cert-project-related-data.results.github_usernames)"
         - name: operator_name
           value: "$(tasks.validate-pr-title.results.operator_name)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
       workspaces:
         - name: source
           workspace: repository
@@ -525,6 +529,10 @@ spec:
           value: $(params.git_repo_url)
         - name: base_branch
           value: $(params.git_base_branch)
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
 
     # Build images- bundle and index and push them to registry.
     # Those steps are also a part of the CI pipeline.

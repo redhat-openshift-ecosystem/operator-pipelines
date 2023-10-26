@@ -12,6 +12,9 @@
           - "tekton.dev/pipeline={{ pipeline_name }}"
           - "suffix={{ suffix }}"
       register: pipeline_run
+      until: pipeline_run.resources | length > 0
+      retries: 5
+      delay: 5
       failed_when: pipeline_run.resources | length == 0
 
     - name: "Follow the {{ pipeline_name }} run logs"
