@@ -53,7 +53,7 @@ spec:
     - name: kerberos_keytab_secret_key
       description: >-
         The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
-      default: krb5.keytab
+      default: krb5-community.keytab
 
     - name: signing_pub_secret_name
       description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
