@@ -15,12 +15,28 @@ spec:
       description: List of accounts with permissions allowing operator submission
     - name: operator_name
       description: name of the submitted operator
+
+    - name: github_token_secret_name
+      description: |
+        The name of the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
+
+    - name: github_token_secret_key
+      description: |
+        The key within the Kubernetes Secret that contains the GitHub token.
+      default: github_bot_token
   workspaces:
     - name: source
   steps:
     - name: submission-validation
       workingDir: $(workspaces.source.path)
       image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: "$(params.github_token_secret_name)"
+              key: "$(params.github_token_secret_key)"
       script: |
         #! /usr/bin/env bash
         set -xe

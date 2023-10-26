@@ -208,7 +208,7 @@ def test_get_files_added_in_pr(mock_get: MagicMock) -> None:
     )
     mock_get.assert_called_with(
         "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup",
-        auth_required=False,
+        auth_required=True,
     )
     assert files == ["first", "second"]
 
@@ -226,7 +226,7 @@ def test_get_files_added_in_pr_changed_files(mock_get: MagicMock) -> None:
         operatorcert.get_files_added_in_pr("rh", "operator-repo", "main", "user:fixup")
     mock_get.assert_called_with(
         "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup",
-        auth_required=False,
+        auth_required=True,
     )
 
 
@@ -244,7 +244,7 @@ def test_get_files_added_in_pr_changed_ci_yaml(mock_get: MagicMock) -> None:
 
     mock_get.assert_called_with(
         "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup",
-        auth_required=False,
+        auth_required=True,
     )
 
     assert files == ["ci.yaml"]
@@ -356,8 +356,8 @@ def test_verify_pr_uniqueness(mock_get: MagicMock) -> None:
     mock_get.side_effect = pr_rsp
 
     assert mock_get.call_args_list == [
-        call("https://api.github.com/repos/org1/repo_a/pulls", auth_required=False),
-        call("https://api.github.com/repos/org2/repo_b/pulls", auth_required=False),
+        call("https://api.github.com/repos/org1/repo_a/pulls", auth_required=True),
+        call("https://api.github.com/repos/org2/repo_b/pulls", auth_required=True),
     ]
 
     with pytest.raises(RuntimeError):

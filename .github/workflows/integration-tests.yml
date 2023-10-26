@@ -12,7 +12,7 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
 
 jobs:
-  run-integration-tests:
+  integration-tests-certified-operators:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,21 +27,25 @@ jobs:
           # Install python dependencies
           pip install --user openshift pygithub
 
-          echo ${{ secrets.VAULT_PASSWORD }} > $HOME/.vault-password
+          echo "${{ secrets.VAULT_PASSWORD }}" > "$HOME"/.vault-password
 
-          mkdir -p $HOME/.kube
+          # secret used also in hosted pipeline for enabling
+          # access to cluster for tkn command log accessing
+          mkdir -p "$HOME"/.kube
           ansible-vault decrypt \
-            --vault-password-file $HOME/.vault-password \
-            --output $HOME/.kube/config \
+            --vault-password-file "$HOME"/.vault-password \
+            --output "$HOME"/.kube/config \
             ansible/vaults/integration-tests/ci-pipeline-kubeconfig
 
-          mkdir -p $HOME/.ssh
+          # secret used also in hosted pipeline for enabling
+          # cloning of the repository
+          mkdir -p "$HOME"/.ssh
           ansible-vault decrypt \
-            --vault-password-file $HOME/.vault-password \
-            --output $HOME/.ssh/id_rsa \
+            --vault-password-file "$HOME"/.vault-password \
+            --output "$HOME"/.ssh/id_rsa \
             ansible/vaults/integration-tests/ci-pipeline-github-ssh-key
 
-      - name: Run the integration tests ansible playbook
+      - name: Run the certified operators integration tests ansible playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: playbooks/operator-pipeline-integration-tests.yml
@@ -51,6 +55,54 @@ jobs:
           options: |
             -i inventory/operator-pipeline-integration-tests
             -e "oc_namespace=integration-tests-${{ github.run_number }}-${{ github.run_attempt }}"
+            -e "operator_bundle_version=0.1.${{ github.run_number }}-${{ github.run_attempt }}"
+            -e "operator_pipeline_image_tag=${{ github.sha }}"
+            -e "suffix=${{ steps.prepare.outputs.suffix }}"
+            -v
+
+  integration-tests-community-operators:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare
+        id: prepare
+        run: |
+          echo "suffix=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          # Install python dependencies
+          pip install --user openshift pygithub
+
+          echo "${{ secrets.VAULT_PASSWORD }}" > "$HOME"/.vault-password
+
+          # secret used also in hosted pipeline for enabling
+          # access to cluster for tkn command log accessing
+          mkdir -p "$HOME"/.kube
+          ansible-vault decrypt \
+            --vault-password-file "$HOME"/.vault-password \
+            --output "$HOME"/.kube/config \
+            ansible/vaults/integration-tests/ci-pipeline-kubeconfig
+
+          # secret used also in hosted pipeline for enabling
+          # cloning of the repository
+          mkdir -p "$HOME"/.ssh
+          ansible-vault decrypt \
+            --vault-password-file "$HOME"/.vault-password \
+            --output "$HOME"/.ssh/id_rsa \
+            ansible/vaults/integration-tests/ci-pipeline-github-ssh-key
+
+      - name: Run the community operators integration tests ansible playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbooks/community-operators-integration-tests.yaml
+          directory: ./ansible
+          requirements: playbooks/requirements.yml
+          vault_password: ${{secrets.VAULT_PASSWORD}}
+          options: |
+            -i inventory/operator-pipeline-integration-tests
+            -e "oc_namespace=integration-tests-community-${{ github.run_number }}-${{ github.run_attempt }}"
             -e "operator_bundle_version=0.1.${{ github.run_number }}-${{ github.run_attempt }}"
             -e "operator_pipeline_image_tag=${{ github.sha }}"
             -e "suffix=${{ steps.prepare.outputs.suffix }}"

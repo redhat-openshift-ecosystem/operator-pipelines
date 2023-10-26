@@ -12,9 +12,25 @@ spec:
     - name: git_repo_url
     - name: base_branch
       default: main
+
+    - name: github_token_secret_name
+      description: |
+        The name of the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
+
+    - name: github_token_secret_key
+      description: |
+        The key within the Kubernetes Secret that contains the GitHub token.
+      default: github_bot_token
   steps:
     - name: verify-changed-directories
       image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: "$(params.github_token_secret_name)"
+              key: "$(params.github_token_secret_key)"
       script: |
         #! /usr/bin/env bash
         set -xe

@@ -251,7 +251,7 @@ def get_files_added_in_pr(
         f"https://api.github.com/repos/{organization}/{repository}"
         f"/compare/{base_branch}...{pr_head_label}"
     )
-    comparison = github.get(compare_changes_url, auth_required=False)
+    comparison = github.get(compare_changes_url, auth_required=True)
 
     added_files = []
     modified_files = []
@@ -370,7 +370,7 @@ def verify_pr_uniqueness(
 
     for repo in available_repositories:
         # List the open PRs in the given repositories,
-        pull_requests = github.get(base_url + repo + "/pulls", auth_required=False)
+        pull_requests = github.get(base_url + repo + "/pulls", auth_required=True)
 
         # find duplicates
         duplicate_prs = []

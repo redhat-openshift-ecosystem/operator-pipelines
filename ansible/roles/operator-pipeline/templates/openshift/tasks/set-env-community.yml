@@ -30,7 +30,7 @@ spec:
         #! /usr/bin/env bash
         set -xe
         ENV="$(params.env)"
-        if ! [[ "$ENV" =~ ^(prod|stage|qa|dev)$ ]]; then
+        if ! [[ "$ENV" =~ ^(prod|stage|qa|dev|integration-tests)$ ]]; then
           echo "Unknown environment."
           exit 1
         fi
