@@ -1,10 +1,11 @@
 ---
-- include_tasks: tasks/clone.yml
+- name: Include cloning task
+  ansible.builtin.include_tasks: tasks/clone.yml
 
 - name: Prepare ci.yaml in target branch
   tags:
     - prepare-bundle
-  shell: |
+  ansible.builtin.shell: |
     UPSTREAM_BRANCH="{{ git_upstream_branch }}"
     OPERATOR_PACKAGE_NAME="{{ operator_package_name }}"
     SRC_BRANCH="{{ src_operator_git_branch }}"
@@ -23,3 +24,4 @@
   args:
     executable: /bin/bash
     chdir: "{{ git_temp_dir.path }}"
+  changed_when: true

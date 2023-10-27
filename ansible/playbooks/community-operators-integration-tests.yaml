@@ -27,7 +27,7 @@
             - test-community-hosted-pipeline
             - test-community-release-pipeline
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: tools
             apply:
               tags:
@@ -39,7 +39,7 @@
           tags:
             - deploy-operator-pipelines
           include_role:
-            name: operator-pipeline
+            name: operator_pipeline
             apply:
               tags:
                 - deploy-operator-pipelines
@@ -48,7 +48,7 @@
           tags:
             - prepare-test-data
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: test_data
             apply:
               tags:
@@ -58,7 +58,7 @@
           tags:
             - prepare-test-data
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: prepare_ci_file
             apply:
               tags:
@@ -68,7 +68,7 @@
           tags:
             - open-pull-request
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: open_pull_request
             apply:
               tags:
@@ -80,7 +80,7 @@
           vars:
             pipeline_name: community-hosted-pipeline
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: check_pipeline_run
             apply:
               tags:
@@ -92,7 +92,7 @@
           vars:
             pipeline_name: community-release-pipeline
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: check_pipeline_run
             apply:
               tags:
@@ -104,7 +104,7 @@
             - clean
             - clean-test-data
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: clean
             apply:
               tags:
@@ -116,7 +116,7 @@
             - clean
             - clean-deployment
           include_role:
-            name: operator-pipeline
+            name: operator_pipeline
             apply:
               tags:
                 - clean

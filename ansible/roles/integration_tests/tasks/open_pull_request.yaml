@@ -1,6 +1,6 @@
 ---
 - name: Create a pull request
-  uri:
+  ansible.builtin.uri:
     url: "https://api.github.com/repos/{{ git_upstream_repo }}/pulls"
     method: POST
     status_code: 201
@@ -17,5 +17,5 @@
   no_log: true
 
 - name: Display PR response
-  debug:
+  ansible.builtin.debug:
     var: pr_response
