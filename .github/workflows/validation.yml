@@ -23,14 +23,7 @@ jobs:
 
       - name: Install Hadolint via Brew
         run: |
-          wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.10.0/hadolint-Linux-x86_64
-          sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
           NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          brew install hadolint
-          /home/linuxbrew/.linuxbrew/bin/brew install hadolint
-          (echo; echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"') >> /home/runner/.bashrc
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install hadolint
           /home/linuxbrew/.linuxbrew/bin/brew install hadolint
           sudo ln -s /home/linuxbrew/.linuxbrew/bin/hadolint /usr/bin/
 
