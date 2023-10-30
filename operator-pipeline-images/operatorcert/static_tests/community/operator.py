@@ -9,7 +9,7 @@
 from collections.abc import Iterator
 
 from operator_repo import Operator
-from operator_repo.checks import CheckResult, Fail
+from operator_repo.checks import CheckResult, Fail, Warn
 
 
 def check_operator_name(operator: Operator) -> Iterator[CheckResult]:
@@ -17,3 +17,19 @@ def check_operator_name(operator: Operator) -> Iterator[CheckResult]:
     names = {bundle.csv_operator_name for bundle in operator}
     if len(names) > 1:
         yield Fail(f"Bundles use multiple operator names: {names}")
+
+
+def check_ci_upgrade_graph(operator: Operator) -> Iterator[CheckResult]:
+    """Ensure the operator has a valid upgrade graph for ci.yaml"""
+    upgrade_graph = operator.config.get("updateGraph")
+    if not upgrade_graph:
+        yield Warn(
+            "The 'updateGraph' option is missing in ci.yaml. "
+            "The default upgrade graph 'replaces-mode' will be used."
+        )
+    else:
+        allowed_graphs = ["replaces-mode", "semver-mode"]
+        if upgrade_graph not in allowed_graphs:
+            yield Fail(
+                f"The 'updateGraph' option in ci.yaml must be one of {allowed_graphs}"
+            )
