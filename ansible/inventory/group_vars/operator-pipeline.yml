@@ -43,11 +43,10 @@ operator_pipeline_gpg_passphrase_path: ../../vaults/{{ env }}/operator-pipeline-
 operator_pipeline_url: "https://operator-pipeline-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
 operator_pipeline_webhook_secret: ../../vaults/common/github-webhook-secret-preprod.txt
 
-# TODO: change path to keytabs once keytabs are available
 kerberos_keytab_isv: ../../vaults/common/nonprod-operatorpipelines.keytab
-kerberos_keytab_isv_pending: ../../vaults/common/nonprod-operatorpipelines.keytab
-kerberos_keytab_community: ../../vaults/common/nonprod-operatorpipelines.keytab
-kerberos_keytab_community_pending: ../../vaults/common/nonprod-operatorpipelines.keytab
+kerberos_keytab_isv_pending: ../../vaults/common/nonprod-operatorpipelines-pending.keytab
+kerberos_keytab_community: ../../vaults/common/nonprod-community-operatorpipelines.keytab
+kerberos_keytab_community_pending: ../../vaults/common/nonprod-community-operatorpipelines-pending.keytab
 
 community_signing_pipeline_name: community-signing-pipeline
 community_signing_pipeline_private_key_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.key
