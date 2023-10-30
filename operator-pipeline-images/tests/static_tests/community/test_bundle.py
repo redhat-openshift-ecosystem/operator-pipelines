@@ -204,7 +204,9 @@ def test_required_fields(
     assert expected_successes.intersection(collected_results.keys()) == set()
 
 
-def test_check_dangling_bundles(tmp_path: Path) -> None:
+@patch("operator_repo.core.Operator.config")
+def test_check_dangling_bundles(mock_config: MagicMock, tmp_path: Path) -> None:
+    mock_config.get.return_value = "replaces-mode"
     create_files(
         tmp_path,
         bundle_files("hello", "0.0.1"),
@@ -217,6 +219,13 @@ def test_check_dangling_bundles(tmp_path: Path) -> None:
     failures = list(check_dangling_bundles(bundle3))
     assert failures == []
 
+    mock_config.get.return_value = "unknown-mode"
+    is_loop = list(check_dangling_bundles(bundle3))
+    assert is_loop == [
+        Fail("Operator(hello): unsupported updateGraph value: unknown-mode")
+    ]
+
+    mock_config.get.return_value = "replaces-mode"
     # Bundle 0.0.2 is not referenced by any bundle and it is not a HEAD of channel
     create_files(
         tmp_path,
@@ -234,7 +243,9 @@ def test_check_dangling_bundles(tmp_path: Path) -> None:
     )
 
 
-def test_check_upgrade_graph_loop(tmp_path: Path) -> None:
+@patch("operator_repo.core.Operator.config")
+def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> None:
+    mock_config.get.return_value = "replaces-mode"
     create_files(
         tmp_path,
         bundle_files("hello", "0.0.1"),
@@ -247,6 +258,13 @@ def test_check_upgrade_graph_loop(tmp_path: Path) -> None:
     is_loop = list(check_upgrade_graph_loop(bundle))
     assert is_loop == []
 
+    mock_config.get.return_value = "unknown-mode"
+    is_loop = list(check_upgrade_graph_loop(bundle))
+    assert is_loop == [
+        Fail("Operator(hello): unsupported updateGraph value: unknown-mode")
+    ]
+
+    mock_config.get.return_value = "replaces-mode"
     # Both bundles replace each other
     create_files(
         tmp_path,
