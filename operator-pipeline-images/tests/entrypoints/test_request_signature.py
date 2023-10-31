@@ -103,10 +103,42 @@ def test_gen_request_msg(
     }
 
 
+def test_gen_request_msg_blob() -> None:
+    args = MagicMock()
+    args.output = "output.json"
+    args.requester = "test-requester"
+    args.sig_key_name = "testkey"
+    args.sig_key_id = "123"
+
+    request_msg_blob = request_signature.gen_request_msg_blob(
+        args,
+        blob="test-blob",
+        request_id="request_id123",
+    )
+    assert request_msg_blob == {
+        "artifact": "test-blob",
+        "request_id": "request_id123",
+        "requested_by": args.requester,
+        "sig_keyname": args.sig_key_name,
+        "sig_key_id": args.sig_key_id,
+    }
+
+
 def test_request_signature_uneven_manifest_and_reference() -> None:
     args = MagicMock
     args.manifest_digest = "a,b,c"
     args.reference = "d,e"
+    args.output = "signing_response.json"
+    with pytest.raises(SystemExit) as e:
+        request_signature.request_signature(args)
+
+
+def test_request_signature_manifest_and_blob() -> None:
+    args = MagicMock
+    args.manifest_digest = "manifest"
+    args.reference = None
+    args.blob = None
+    args.output = "signing_response.json"
     with pytest.raises(SystemExit) as e:
         request_signature.request_signature(args)
 
@@ -176,6 +208,91 @@ def test_request_signature_multi_request_no_retry(
     args.manifest_digest = "test-manifest1,test-manifest2,test-manifest3"
     args.reference = "test-reference1,test-reference2,test-reference3"
     args.output = "output.json"
+    args.umb_client_name = "test-client"
+    args.umb_url = "test.umb"
+    args.umb_listen_topic = "Virtualtopic.test.listen"
+    args.umb_publish_topic = "Virtualtopic.test.publish"
+
+    mock_open = mock.mock_open()
+    with mock.patch("builtins.open", mock_open):
+        request_signature.request_signature(args)
+    mock_umb.connect_and_subscribe.assert_called_once_with(args.umb_listen_topic)
+    mock_umb.send.assert_called_with(
+        args.umb_publish_topic, json.dumps({"request_id": "request_id123"})
+    )
+    assert mock_umb.send.call_count == 3
+    mock_sleep.assert_called_once()
+    mock_umb.unsubscribe.assert_called_once_with(args.umb_listen_topic)
+    mock_umb.stop.assert_called_once()
+
+
+@patch("json.load")
+@patch("time.sleep")
+@patch("os.path.exists")
+@patch("operatorcert.entrypoints.request_signature.gen_request_msg_blob")
+@patch("operatorcert.entrypoints.request_signature.start_umb_client")
+def test_request_signature_single_request_no_retry_blob(
+    mock_start_umb: MagicMock,
+    mock_request_msg: MagicMock,
+    mock_path_exists: MagicMock,
+    mock_sleep: MagicMock,
+    mock_json_load: MagicMock,
+) -> None:
+    mock_umb = MagicMock()
+    mock_start_umb.return_value = mock_umb
+    mock_path_exists.return_value = True
+    mock_request_msg.return_value = {"request_id": "request_id123"}
+    mock_json_load.return_value = {
+        "request_id": "request_id123",
+        "signing_status": "success",
+    }
+    args = MagicMock()
+    args.blob = "test-blob"
+    args.manifest_digest = None
+    args.reference = None
+    args.output = "output.json"
+    args.umb_client_name = "test-client"
+    args.umb_url = "test.umb"
+    args.umb_listen_topic = "Virtualtopic.test.listen"
+    args.umb_publish_topic = "Virtualtopic.test.publish"
+
+    mock_open = mock.mock_open()
+    with mock.patch("builtins.open", mock_open):
+        request_signature.request_signature(args)
+    mock_umb.connect_and_subscribe.assert_called_once_with(args.umb_listen_topic)
+    mock_umb.send.assert_called_once_with(
+        args.umb_publish_topic, json.dumps({"request_id": "request_id123"})
+    )
+    mock_sleep.assert_called_once()
+    mock_umb.unsubscribe.assert_called_once_with(args.umb_listen_topic)
+    mock_umb.stop.assert_called_once()
+
+
+@patch("json.load")
+@patch("time.sleep")
+@patch("os.path.exists")
+@patch("operatorcert.entrypoints.request_signature.gen_request_msg_blob")
+@patch("operatorcert.entrypoints.request_signature.start_umb_client")
+def test_request_signature_multi_request_no_retry_blob_with_ignored_reference(
+    mock_start_umb: MagicMock,
+    mock_request_msg: MagicMock,
+    mock_path_exists: MagicMock,
+    mock_sleep: MagicMock,
+    mock_json_load: MagicMock,
+) -> None:
+    mock_umb = MagicMock()
+    mock_start_umb.return_value = mock_umb
+    mock_path_exists.return_value = True
+    mock_request_msg.return_value = {"request_id": "request_id123"}
+    mock_json_load.return_value = {
+        "request_id": "request_id123",
+        "signing_status": "success",
+    }
+    args = MagicMock()
+    args.blob = "test-blob1,test-blob2,test-blob3"
+    args.output = "output.json"
+    args.manifest_digest = None
+    args.reference = "test-reference"
     args.umb_client_name = "test-client"
     args.umb_url = "test.umb"
     args.umb_listen_topic = "Virtualtopic.test.listen"

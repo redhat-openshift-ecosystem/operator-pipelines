@@ -28,11 +28,11 @@ def setup_argparser() -> Any:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Cli tool to request signature from RADAS"
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--manifest-digest",
         help="Manifest digest for the signed content, usually in the format sha256:xxx,"
         "separated by commas if there are multiple",
-        required=True,
     )
     parser.add_argument(
         "--output",
@@ -44,7 +44,11 @@ def setup_argparser() -> Any:  # pragma: no cover
         help="Docker reference for the signed content, "
         "e.g. registry.redhat.io/redhat/community-operator-index:v4.9,"
         "separated by commas if there are multiple",
-        required=True,
+    )
+    group.add_argument(
+        "--blob",
+        help="Blob that needs to be signed. Encoded in base64 format. "
+        "Separated by commas if there are multiple",
     )
     parser.add_argument(
         "--requester",
@@ -227,22 +231,60 @@ def gen_request_msg(
     return request_msg
 
 
+def gen_request_msg_blob(args: Any, blob: str, request_id: str) -> Dict[str, Any]:
+    """
+    Generate the request message to send to RADAS.
+    Args:
+        args: Args from script input.
+        blob: Blob that needs to be signed.
+        request_id: UUID to identify match the request with RADAS's response.
+
+    Returns:
+
+    """
+    request_msg = {
+        "artifact": blob,
+        "request_id": request_id,
+        "requested_by": args.requester,
+        "sig_keyname": args.sig_key_name,
+        "sig_key_id": args.sig_key_id,
+    }
+    return request_msg
+
+
 def request_signature(  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
     args: Any,
 ) -> None:
     """
     Format and send out a UMB message to request signing, and retry as needed.
     """
-    manifests = args.manifest_digest.strip(",").split(",")
-    references = args.reference.strip(",").split(",")
-
-    if len(manifests) != len(references):
-        LOGGER.error(
-            "Manifest digest list does not match the length of reference list."
-        )
-        sys.exit(1)
 
     output_file = args.output
+    manifests = []
+    references = []
+    blobs = []
+
+    # Fill the arrays for manifests and references, or blobs
+    if args.manifest_digest is not None and args.reference is not None:
+        manifests = args.manifest_digest.strip(",").split(",")
+        references = args.reference.strip(",").split(",")
+
+        if len(manifests) != len(references):
+            LOGGER.error(
+                "Manifest digest list does not match the length of reference list."
+            )
+            sys.exit(1)
+    elif args.blob is not None:
+        if args.reference is not None:
+            LOGGER.warning(
+                "When signing blobs, reference is not needed. It will be ignored."
+            )
+        blobs = args.blob.strip(",").split(",")
+    else:
+        LOGGER.error(
+            "--reference is needed when --manifest-digest is used to sign images"
+        )
+        sys.exit(1)
 
     umb = start_umb_client(
         hosts=[args.umb_url],
@@ -253,15 +295,26 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
     request_msgs = {}
     global request_ids  # pylint: disable=global-statement
     request_ids = set()
-    for manifest, reference in zip(manifests, references):
-        request_id = str(uuid.uuid4())
-        request_msgs[request_id] = gen_request_msg(
-            args=args,
-            digest=manifest,
-            reference=reference,
-            request_id=request_id,
-        )
-        request_ids.add(request_id)
+
+    if len(manifests) > 0:
+        for manifest, reference in zip(manifests, references):
+            request_id = str(uuid.uuid4())
+            request_msgs[request_id] = gen_request_msg(
+                args=args,
+                digest=manifest,
+                reference=reference,
+                request_id=request_id,
+            )
+            request_ids.add(request_id)
+    else:
+        for blob in blobs:
+            request_id = str(uuid.uuid4())
+            request_msgs[request_id] = gen_request_msg_blob(
+                args=args,
+                blob=blob,
+                request_id=request_id,
+            )
+            request_ids.add(request_id)
 
     umb.connect_and_subscribe(args.umb_listen_topic)
 
