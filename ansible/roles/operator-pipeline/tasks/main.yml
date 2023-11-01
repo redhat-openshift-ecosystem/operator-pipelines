@@ -17,7 +17,6 @@
   block:
 
     - import_tasks: tasks/pipeline-secrets.yml
-    - import_tasks: tasks/operator-pipeline-import-index-images.yml
 
     - name: Add custom pipeline SCC and link it with pipeline SA
       tags:
