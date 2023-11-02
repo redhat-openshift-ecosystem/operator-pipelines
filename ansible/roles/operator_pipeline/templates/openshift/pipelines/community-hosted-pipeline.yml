@@ -444,6 +444,10 @@ spec:
           value: "$(params.prow_kubeconfig_secret_name)"
         - name: prow_kubeconfig_secret_key
           value: "$(params.prow_kubeconfig_secret_key)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
       workspaces:
         - name: credentials
           workspace: registry-credentials

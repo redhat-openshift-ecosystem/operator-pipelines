@@ -8,30 +8,50 @@ spec:
     - name: preflight_trigger_image
       description: Preflight trigger image
       default: "quay.io/opdev/preflight-trigger:stable"
+
     - name: preflight_trigger_environment
       description: Which openshift-ci step-registry steps and ProwJob templates to use. Can be one of [preprod, prod]
+
     - default: '4.14'
       name: ocp_version
       type: string
+
     - default: trace
       name: log_level
       type: string
+
     - name: bundle_index_image
       type: string
+
     - name: bundle_image
       type: string
+
     - name: asset_type
       type: string
+
     - name: gpg_decryption_key_secret_name
       description: The name of the Kubernetes Secret that contains the gpg decryption key.
+
     - name: gpg_decryption_private_key_secret_key
       description: The key within the Kubernetes Secret that contains the gpg private key.
+
     - name: gpg_decryption_public_key_secret_key
       description: The key within the Kubernetes Secret that contains the gpg public key.
+
     - name: prow_kubeconfig_secret_name
       description: The name of the Kubernetes Secret that contains the prow kubeconfig.
+
     - name: prow_kubeconfig_secret_key
       description: The key within the Kubernetes Secret that contains the prow kubeconfig.
+
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+
     - name: skip
       description: "Set to 'true' to skip"
       default: 'false'
@@ -56,6 +76,11 @@ spec:
           value: /etc/gpg-key/$(params.gpg_decryption_private_key_secret_key)
         - name: PIPELINE_GPG_DECRYPTION_PUBLIC_KEY
           value: /etc/gpg-key/$(params.gpg_decryption_public_key_secret_key)
+        - name: GITHUB_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
       image: "$(params.preflight_trigger_image)"
       name: encrypt-and-encode-docker-config-json
       resources: {}
@@ -89,6 +114,11 @@ spec:
     - env:
         - name: KUBECONFIG
           value: /etc/kubeconfig-volume/$(params.prow_kubeconfig_secret_key)
+        - name: GITHUB_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
       image: "$(params.preflight_trigger_image)"
       imagePullPolicy: Always
       name: create-openshift-ci-prowjob
@@ -146,6 +176,11 @@ spec:
           value: /etc/gpg-key/$(params.gpg_decryption_private_key_secret_key)
         - name: PIPELINE_GPG_DECRYPTION_PUBLIC_KEY
           value: /etc/gpg-key/$(params.gpg_decryption_public_key_secret_key)
+        - name: GITHUB_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
       image: "$(params.preflight_trigger_image)"
       name: get-prowjob-artifacts-and-decrypt
       resources: {}
