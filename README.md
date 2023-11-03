@@ -87,7 +87,7 @@ requires user with cluster-admin privileges.
 
 ```bash
 # Create a new SCC
-oc apply -f ansible/roles/operator-pipeline/templates/openshift/openshift-pipelines-custom-scc.yml
+oc apply -f ansible/roles/operator_pipeline/templates/openshift/openshift-pipelines-custom-scc.yml
 # Add SCC to a pipeline service account
 oc adm policy add-scc-to-user pipelines-custom-scc -z pipeline
 ```

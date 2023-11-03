@@ -272,7 +272,7 @@ You can use the following command to apply all local changes to your OCP project
 It will add all the Tekton resources used across all the pipelines.
 
 ```bash
-oc apply -R -f ansible/roles/operator-pipeline/templates/openshift
+oc apply -R -f ansible/roles/operator_pipeline/templates/openshift
 ```
 
 ## Making Changes to the Pipeline Image
