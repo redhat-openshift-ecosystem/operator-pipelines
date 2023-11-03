@@ -1,0 +1,6 @@
+---
+# defaults file for operator_pipeline
+
+## General settings
+namespace_state: present    # noqa: var-naming[no-role-prefix]
+github_webhook_state: present    # noqa: var-naming[no-role-prefix]

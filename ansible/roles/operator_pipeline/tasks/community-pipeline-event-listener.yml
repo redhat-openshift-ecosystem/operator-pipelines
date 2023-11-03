@@ -1,0 +1,178 @@
+---
+- name: Create event listener allowing triggering the community pipelines via Github webhook
+  tags:
+    - triggers
+  block:
+    - name: Create event listener
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: EventListener
+          metadata:
+            name: community-operator-pipeline-github-listener
+            labels:
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+          spec:
+            serviceAccountName: pipeline
+            triggers:
+              # run community hosted pipeline on PR opened, reopened, synchronized
+              - name: github-community-pull-request-listener-hosted
+                interceptors:
+                  - ref:
+                      name: "github"
+                    params:
+                      - name: "secretRef"
+                        value:
+                          secretName: github-webhook-secret
+                          secretKey: webhook-secret
+                      - name: "eventTypes"
+                        value: ["pull_request"]
+                      - name: "addChangedFiles"
+                        value:
+                          enabled: true
+                          personalAccessToken:
+                            secretName: github-bot-token
+                            secretKey: github_bot_token
+                  - ref:
+                      name: cel
+                    params:
+                      - name: filter
+                        value: >-
+                          (
+                            header.match("X-GitHub-Event", "pull_request")
+                            && body.action in ["opened", "reopened", "synchronize"]
+                            && body.pull_request.base.ref == "{{ branch }}"
+                            && extensions.changed_files.matches("operators/")
+                          )
+                bindings:
+                  - ref: community-operator-hosted-pipeline-trigger-binding
+                template:
+                  ref: community-operator-hosted-pipeline-trigger-template
+              # run community release pipeline on merged PR
+              - name: github-community-pull-request-listener-release
+                interceptors:
+                  - ref:
+                      name: "github"
+                    params:
+                      - name: "secretRef"
+                        value:
+                          secretName: github-webhook-secret
+                          secretKey: webhook-secret
+                      - name: "eventTypes"
+                        value: ["pull_request"]
+                      - name: "addChangedFiles"
+                        value:
+                          enabled: true
+                          personalAccessToken:
+                            secretName: github-bot-token
+                            secretKey: github_bot_token
+                  - ref:
+                      name: cel
+                    params:
+                      - name: filter
+                        value: >-
+                          (
+                            header.match("X-GitHub-Event", "pull_request")
+                            && body.action == "closed"
+                            && body.pull_request.base.ref == "{{ branch }}"
+                            && body.pull_request.merged == true
+                            && extensions.changed_files.matches("operators/")
+                          )
+                bindings:
+                  - ref: community-operator-release-pipeline-trigger-binding
+                template:
+                  ref: community-operator-release-pipeline-trigger-template
+
+              # Run community hosted pipeline on pipeline/trigger-hosted label
+              - name: github-community-label-listener-hosted
+                interceptors:
+                  - ref:
+                      name: "github"
+                    params:
+                      - name: "secretRef"
+                        value:
+                          secretName: github-webhook-secret
+                          secretKey: webhook-secret
+                      - name: "eventTypes"
+                        value: ["pull_request"]
+                      - name: "addChangedFiles"
+                        value:
+                          enabled: true
+                          personalAccessToken:
+                            secretName: github-bot-token
+                            secretKey: github_bot_token
+                  - ref:
+                      name: cel
+                    params:
+                      - name: filter
+                        value: >-
+                          (
+                            body.action == "labeled"
+                            && body.label.name == "pipeline/trigger-hosted"
+                            && body.pull_request.base.ref == "{{ branch }}"
+                          )
+                bindings:
+                  - ref: community-operator-hosted-pipeline-trigger-binding
+                template:
+                  ref: community-operator-hosted-pipeline-trigger-template
+
+              # Run community release pipeline on pipeline/trigger-release label
+              - name: github-community-label-listener-release
+                interceptors:
+                  - ref:
+                      name: "github"
+                    params:
+                      - name: "secretRef"
+                        value:
+                          secretName: github-webhook-secret
+                          secretKey: webhook-secret
+                      - name: "eventTypes"
+                        value: ["pull_request"]
+                      - name: "addChangedFiles"
+                        value:
+                          enabled: true
+                          personalAccessToken:
+                            secretName: github-bot-token
+                            secretKey: github_bot_token
+                  - ref:
+                      name: cel
+                    params:
+                      - name: filter
+                        value: >-
+                          (
+                            body.action == "labeled"
+                            && body.label.name == "pipeline/trigger-release"
+                            && body.pull_request.base.ref == "{{ branch }}"
+                          )
+                bindings:
+                  - ref: community-operator-release-pipeline-trigger-binding
+                template:
+                  ref: community-operator-release-pipeline-trigger-template
+
+    - name: Create community pipeline trigger route
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: route.openshift.io/v1
+          kind: route
+          metadata:
+            labels:
+              eventlistener: community-operator-pipeline-github-listener
+              app: operator-pipeline
+              suffix: "{{ suffix }}"
+              env: "{{ env }}"
+            name: community-operator-pipeline
+          spec:
+            port:
+              targetPort: http-listener
+            tls:
+              termination: edge
+            to:
+              kind: Service
+              # el- prefix means, that the service was created by EventListener.
+              name: el-community-operator-pipeline-github-listener

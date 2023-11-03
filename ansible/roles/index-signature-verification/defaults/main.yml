@@ -1,3 +1,0 @@
----
-k8s_validate_certs: true
-k8s_namespace: index-signature-verification

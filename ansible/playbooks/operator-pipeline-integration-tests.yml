@@ -26,7 +26,7 @@
             - test-hosted-pipeline
             - test-release-pipeline
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: tools
             apply:
               tags:
@@ -39,7 +39,7 @@
           tags:
             - prepare-test-data
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: test_data
             apply:
               tags:
@@ -49,7 +49,7 @@
           tags:
             - deploy-operator-pipelines
           include_role:
-            name: operator-pipeline
+            name: operator_pipeline
             apply:
               tags:
                 - deploy-operator-pipelines
@@ -58,7 +58,7 @@
           tags:
             - deploy-nginx-proxy
           include_role:
-            name: nginx-proxy
+            name: nginx_proxy
             apply:
               tags:
                 - deploy-nginx-proxy
@@ -67,7 +67,7 @@
           tags:
             - test-ci-pipeline
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: ci_pipeline
             apply:
               tags:
@@ -79,7 +79,7 @@
           vars:
             pipeline_name: operator-ci-pipeline
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: check_pipeline_run
             apply:
               tags:
@@ -91,7 +91,7 @@
           vars:
             pipeline_name: operator-hosted-pipeline
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: check_pipeline_run
             apply:
               tags:
@@ -103,7 +103,7 @@
           vars:
             pipeline_name: operator-release-pipeline
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: check_pipeline_run
             apply:
               tags:
@@ -115,7 +115,7 @@
             - clean
             - clean-test-data
           include_role:
-            name: integration-tests
+            name: integration_tests
             tasks_from: clean
             apply:
               tags:
@@ -127,7 +127,7 @@
             - clean
             - clean-deployment
           include_role:
-            name: operator-pipeline
+            name: operator_pipeline
             apply:
               tags:
                 - clean

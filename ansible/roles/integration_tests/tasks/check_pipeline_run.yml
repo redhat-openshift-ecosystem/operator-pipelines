@@ -1,0 +1,47 @@
+---
+- name: "Verify success of running {{ pipeline_name }}"
+  tags:
+    - verify-pipeline
+  block:
+    - name: Find the run of {{ pipeline_name }}
+      kubernetes.core.k8s_info:
+        api_version: tekton.dev/v1beta1
+        kind: PipelineRun
+        namespace: "{{ oc_namespace }}"
+        label_selectors:
+          - "tekton.dev/pipeline={{ pipeline_name }}"
+          - "suffix={{ suffix }}"
+      register: pipeline_run
+      until: pipeline_run.resources | length > 0
+      retries: 5
+      delay: 5
+      failed_when: pipeline_run.resources | length == 0
+
+    - name: "Follow the run logs of {{ pipeline_name }}"
+      ansible.builtin.shell: |
+        ./tkn pipeline logs \
+          {{ pipeline_name }} \
+          {{ pipeline_run.resources[0].metadata.name }} \
+          --namespace {{ oc_namespace }} \
+          --follow
+      args:
+        executable: /bin/bash
+        chdir: "{{ temp_tools_dir.path }}"
+      register: pipeline_run_log
+      retries: 5
+      until: pipeline_run_log.rc == 0
+      changed_when: false
+
+    - name: Output the run logs of {{ pipeline_name }}
+      ansible.builtin.debug:
+        msg: "{{ pipeline_run_log.stdout_lines }}"
+
+    - name: Verify successful run of {{ pipeline_name }}
+      kubernetes.core.k8s_info:
+        api_version: tekton.dev/v1beta1
+        kind: PipelineRun
+        namespace: "{{ oc_namespace }}"
+        name: "{{ pipeline_run.resources[0].metadata.name }}"
+      register: pipeline_run
+      failed_when: >
+        pipeline_run.resources[0].status.conditions[-1].status != "True"

@@ -1,8 +1,9 @@
 # RHC4TP OpenShift Cluster Setup
 
-The release pipeline publishes bundle images to registry.connect.redhat.com. The registry
-behind that address is the RHC4TP OpenShift cluster. The following steps must be performed
-to prepare the RHC4TP clusters for use by the pipeline. 
+The release pipeline publishes bundle images to registry.connect.redhat.com.
+The registry behind that address is the RHC4TP OpenShift cluster. The
+following steps must be performed to prepare the RHC4TP clusters for use
+by the pipeline.
 
 1. Login to the chosen cluster
 
@@ -12,7 +13,8 @@ to prepare the RHC4TP clusters for use by the pipeline.
     oc create sa operator-pipelines -n default
     ```
 
-1. Create a kubeconfig for the service account. It should be stored in the repository Ansible Vault.
+1. Create a kubeconfig for the service account. It should be stored in the
+   repository Ansible Vault.
 
     ```bash
     clusterName=dev
@@ -47,14 +49,16 @@ to prepare the RHC4TP clusters for use by the pipeline.
     "
     ```
 
-1. Grant the service account the permissions to create projects and manage existing ones.
-Permissions are this high as we have to update roles in projects created by other service accounts.
+1. Grant the service account the permissions to create projects and manage
+   existing ones. Permissions are this high as we have to update roles in
+   projects created by other service accounts.
 
     ```bash
     oc adm policy add-cluster-role-to-user cluster-admin -z operator-pipelines -n default
     ```
 
-1. Create the dockerconfig secret, containing the credentials to registry that stores the images to be published
+1. Create the dockerconfig secret, containing the credentials to registry that
+   stores the images to be published
 
     ```bash
     cat << EOF > registry-secret.yml
@@ -70,7 +74,7 @@ Permissions are this high as we have to update roles in projects created by othe
     oc create -f registry-secret.yml
     ```
 
-1. Link this secret with the created service account 
+1. Link this secret with the created service account
 
     ```bash
     oc secret link operator-pipelines registry-dockerconfig-secret

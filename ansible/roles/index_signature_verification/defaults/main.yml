@@ -1,0 +1,3 @@
+---
+k8s_validate_certs: true    # noqa: var-naming[no-role-prefix]
+k8s_namespace: index-signature-verification    # noqa: var-naming[no-role-prefix]

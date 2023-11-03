@@ -1,0 +1,21 @@
+---
+- name: Create a pull request
+  ansible.builtin.uri:
+    url: "https://api.github.com/repos/{{ git_upstream_repo }}/pulls"
+    method: POST
+    status_code: 201
+    headers:
+      Authorization: "token {{ ci_pipeline_github_personal_access_token }}"
+      Accept: application/vnd.github.v3+json
+    body_format: json
+    body:
+      title: "operator {{ operator_package_name }} ({{ operator_bundle_version }})"
+      body: E2e test for community operators
+      head: "{{ git_bundle_branch }}"
+      base: "{{ git_upstream_branch }}"
+  register: pr_response
+  no_log: true
+
+- name: Display PR response
+  ansible.builtin.debug:
+    var: pr_response

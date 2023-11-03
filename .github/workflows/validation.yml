@@ -21,9 +21,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install Hadolint via Brew
+        run: |
+          NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          /home/linuxbrew/.linuxbrew/bin/brew install hadolint
+          sudo ln -s /home/linuxbrew/.linuxbrew/bin/hadolint /usr/bin/
+
+      - name: Install Python dependencies
         run: |
           pdm sync -dG tox
+          python3 -m pip install ansible-lint
 
       - name: Run Tests
         run: |
