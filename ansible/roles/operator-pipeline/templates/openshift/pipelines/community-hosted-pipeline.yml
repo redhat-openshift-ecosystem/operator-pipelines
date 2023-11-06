@@ -287,6 +287,8 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
+        - name: test_suite
+          value: "operatorcert.static_tests.community"
       workspaces:
         - name: source
           workspace: repository

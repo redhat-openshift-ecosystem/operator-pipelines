@@ -270,10 +270,25 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: content-hash
+      runAfter:
+        - bundle-path-validation
+      taskRef:
+        name: content-hash
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Get cert project id
     - name: certification-project-check
       runAfter:
-        - bundle-path-validation
+        - content-hash
       taskRef:
         name: certification-project-check
       params:
@@ -498,6 +513,53 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: static-tests
+      taskRef:
+        name: run-static-tests
+        kind: Task
+      runAfter:
+        - get-supported-versions
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: operator_name
+          value: "$(tasks.bundle-path-validation.results.package_name)"
+        - name: bundle_version
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
+        - name: test_suite
+          value: "operatorcert.static_tests.isv"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+        - name: output
+          workspace: results
+          subPath: summary
+
+    - name: static-tests-results
+      taskRef:
+        name: report-static-tests-results
+        kind: Task
+      runAfter:
+        - static-tests
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: messages_count
+          value: "$(tasks.static-tests.results.messages_count)"
+        - name: failures_count
+          value: "$(tasks.static-tests.results.failures_count)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: summary
+
     - name: yaml-lint
       runAfter:
         - reserve-operator-name
@@ -542,21 +604,6 @@ spec:
         - name: related_images_flag
           value: "$(tasks.digest-pinning.results.related_images_flag)"
 
-    - name: content-hash
-      runAfter:
-        - bundle-path-validation
-      taskRef:
-        name: content-hash
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
     - name: verify-changed-directories
       runAfter:
         - reserve-operator-name
@@ -590,6 +637,7 @@ spec:
         - verify-pinned-digest
         - verify-changed-directories
         - verify-project
+        - static-tests-results
       taskRef:
         name: dockerfile-creation
       params:
@@ -694,9 +742,7 @@ spec:
     # (they can run on premise)
     - name: get-ci-results-attempt
       runAfter:
-        - make-bundle-repo-public
         - make-index-repo-public
-        - content-hash
       taskRef:
         name: get-ci-results-attempt
       params:
