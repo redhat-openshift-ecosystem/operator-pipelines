@@ -2,14 +2,24 @@
 import argparse
 import json
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 from operator_repo import Repo
 from operator_repo.checks import Fail, run_suite
-
 from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
+
+
+class SplitArgs(argparse.Action):
+    """
+    Split comma separated list of arguments into a list
+    """
+
+    def __call__(
+        self, parser: Any, namespace: Any, values: Any, option_string: Any = None
+    ) -> None:
+        setattr(namespace, self.dest, values.split(","))
 
 
 def setup_argparser() -> argparse.ArgumentParser:
@@ -35,6 +45,12 @@ def setup_argparser() -> argparse.ArgumentParser:
         help="Name of the test suite to run",
         default="operatorcert.static_tests.community",
     )
+    parser.add_argument(
+        "--skip-tests",
+        help="Ignore specific checks. Comma separated list of test names.",
+        default=[],
+        action=SplitArgs,
+    )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     parser.add_argument("operator")
     parser.add_argument("bundle")
@@ -47,6 +63,7 @@ def check_bundle(
     operator_name: str,
     bundle_version: str,
     suite_name: str,
+    skip_tests: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Run a check suite against the given bundle and return warnings and
@@ -54,10 +71,11 @@ def check_bundle(
     tool's JSON output format
 
     Args:
-        repo_path: path to the root of the operator repository
-        operator_name: name of the operator
-        bundle_version: version of the bundle to check
-        suite_name: name of the suite to use
+        repo_path (str): path to the root of the operator repository
+        operator_name (str): name of the operator
+        bundle_version (str): version of the bundle to check
+        suite_name (str): name of the suite to use
+        skip_tests (Optional[List]): List of checks to skip
 
     Returns:
         The results of the checks in the suite applied to the given bundle
@@ -69,7 +87,7 @@ def check_bundle(
     outputs = []
     passed = True
 
-    for result in run_suite([bundle, operator], suite_name):
+    for result in run_suite([bundle, operator], suite_name, skip_tests=skip_tests):
         if isinstance(result, Fail):
             passed = False
         item = {
@@ -99,10 +117,7 @@ def main() -> None:
 
     # Logic
     result = check_bundle(
-        args.repo_path,
-        args.operator,
-        args.bundle,
-        args.suite,
+        args.repo_path, args.operator, args.bundle, args.suite, args.skip_tests
     )
 
     if args.output_file:
