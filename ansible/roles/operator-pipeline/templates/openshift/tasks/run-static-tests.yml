@@ -10,11 +10,22 @@ spec:
     - name: pipeline_image
       description: The common pipeline image.
 
+    - name: pull_request_url
+      description: URL to Github pull request with a new bundle submission.
+
     - name: operator_name
       description: Name of the operator under test.
 
     - name: bundle_version
       description: Version of the bundle under test.
+
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
 
   results:
     - name: messages_count
@@ -34,15 +45,34 @@ spec:
     - name: run-suite
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
+      env:
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
       script: |
         #!/usr/bin/env bash
         set -xe
 
+        EXTRA_ARGS=""
+
+        # Get labels from the pull request
+        gh pr view "$(params.pull_request_url)" --json labels > labels.json
+
+        # Following command filters out labels that start with prefix and merge them to single string separated by comma
+        SKIP_TESTS=`jq -r '.labels[] | select(.name | startswith("tests/skip")) | .name' labels.json | paste -sd "," |sed 's/tests\/skip\///g'`
+
+        if [[ $SKIP_TESTS != "" ]]; then
+          echo "Following tests are skipped: $SKIP_TESTS"
+          EXTRA_ARGS+=" --skip-tests $SKIP_TESTS"
+        fi
+
         JSON_RESULTS_FILE="$(workspaces.output.path)/static-test-results.json"
 
-        static-tests --verbose                                  \
-          --output-file "$JSON_RESULTS_FILE"                    \
-          --repo-path "$(workspaces.source.path)"               \
+        static-tests --verbose \
+          --output-file "$JSON_RESULTS_FILE" \
+          --repo-path "$(workspaces.source.path)" $EXTRA_ARGS \
           "$(params.operator_name)" "$(params.bundle_version)"
 
         jq . <$JSON_RESULTS_FILE

@@ -80,7 +80,7 @@ def test_static_tests_main(
     with patch("sys.argv", args):
         static_tests.main()
     mock_check_bundle.assert_called_once_with(
-        "/tmp/repo", "test-operator", "0.0.1", "operatorcert.static_tests.community"
+        "/tmp/repo", "test-operator", "0.0.1", "operatorcert.static_tests.community", []
     )
     assert capsys.readouterr().out.strip() == '{"foo": ["bar"]}'
     mock_logger.assert_called_once_with(level="INFO")
@@ -93,6 +93,7 @@ def test_static_tests_main(
     args = [
         "static-tests",
         "--repo-path=/tmp/other_repo",
+        "--skip-tests=check_123,check_456",
         "other-test-operator",
         "0.0.2",
         "--suite=other_suite",
@@ -103,7 +104,11 @@ def test_static_tests_main(
     with patch("sys.argv", args):
         static_tests.main()
     mock_check_bundle.assert_called_once_with(
-        "/tmp/other_repo", "other-test-operator", "0.0.2", "other_suite"
+        "/tmp/other_repo",
+        "other-test-operator",
+        "0.0.2",
+        "other_suite",
+        ["check_123", "check_456"],
     )
     assert out_file.read().strip() == '{"bar": ["baz"]}'
     mock_logger.assert_called_once_with(level="DEBUG")
