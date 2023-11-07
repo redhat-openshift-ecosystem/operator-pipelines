@@ -49,7 +49,7 @@ jobs:
           registry: quay.io/redhat-isv
           repository: tkn-signing-bundle
         run: |
-          cd ansible/roles/operator_pipeline/templates/openshift/tasks
+          cd ansible/roles/operator-pipeline/templates/openshift/tasks
           tkn bundle push ${registry}/${repository}:${tag} \
             -f verify-whitelisted-index-image.yml \
             -f request-signature.yml \

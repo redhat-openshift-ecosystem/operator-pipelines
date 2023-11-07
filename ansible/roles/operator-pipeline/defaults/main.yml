@@ -1,5 +1,5 @@
 ---
-# defaults file for operator_pipeline
+# defaults file for operator-pipeline
 
 ## General settings
 namespace_state: present    # noqa: var-naming[no-role-prefix]

@@ -39,7 +39,7 @@
           tags:
             - deploy-operator-pipelines
           include_role:
-            name: operator_pipeline
+            name: operator-pipeline
             apply:
               tags:
                 - deploy-operator-pipelines
@@ -116,7 +116,7 @@
             - clean
             - clean-deployment
           include_role:
-            name: operator_pipeline
+            name: operator-pipeline
             apply:
               tags:
                 - clean
