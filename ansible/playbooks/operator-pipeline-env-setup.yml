@@ -5,5 +5,5 @@
   tasks:
     - name: Configure namespace + service account
       include_role:
-        name: operator_pipeline
+        name: operator-pipeline
         tasks_from: operator-pipeline-service-account
