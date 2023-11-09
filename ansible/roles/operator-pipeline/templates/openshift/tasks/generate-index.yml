@@ -13,9 +13,6 @@ spec:
       description: Pull spec of a bundle image
     - name: from_index
       description: Parent index image the bundle will be added to
-    - name: internal_registry
-      description: Host for the internal OpenShift registry
-      default: image-registry.openshift-image-registry.svc:5000
   results:
     - name: index_dockerfile
       description: Path to the generated index Dockerfile
