@@ -13,6 +13,9 @@ spec:
       description: Pull spec of a bundle image
     - name: from_index
       description: Parent index image the bundle will be added to
+    - name: internal_registry
+      description: Host for the internal OpenShift registry
+      default: image-registry.openshift-image-registry.svc:5000
   results:
     - name: index_dockerfile
       description: Path to the generated index Dockerfile
@@ -57,9 +60,11 @@ spec:
         # Pull the index image from a pre-configured imagestream in the current namespace.
         # It may be possible to eliminate this once sqlite-based index images are no
         # longer supported.
+        INDEX_IMG_STREAM=$(echo $(params.from_index) | rev | cut -f1 -d/ | rev)
+        FROM_INDEX="$(params.internal_registry)/$(context.taskRun.namespace)/$INDEX_IMG_STREAM"
 
-        podman pull $(params.from_index)
-        podman image inspect $(params.from_index) | tee -a podman-inspect.json
+        podman pull $FROM_INDEX
+        podman image inspect $FROM_INDEX | tee -a podman-inspect.json
     - name: determine-index-format
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.output.path)
@@ -125,9 +130,11 @@ spec:
           # Pull the index image from a pre-configured imagestream in the current namespace.
           # It may be possible to eliminate this once sqlite-based index images are no
           # longer supported.
+          INDEX_IMG_STREAM=$(echo $(params.from_index) | rev | cut -f1 -d/ | rev)
+          FROM_INDEX="$(params.internal_registry)/$(context.taskRun.namespace)/$INDEX_IMG_STREAM"
 
           opm index add \
-            --from-index "$(params.from_index)" \
+            --from-index "$FROM_INDEX" \
             --bundles "$(params.bundle_image)" \
             --container-tool none \
             --out-dockerfile index.Dockerfile \
