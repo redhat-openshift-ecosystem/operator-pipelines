@@ -18,6 +18,9 @@
 
     - name: Import pipeline secrets
       ansible.builtin.import_tasks: tasks/pipeline-secrets.yml
+    - name: Import index image stream
+      ansible.builtin.import_tasks: tasks/operator-pipeline-import-index-images.yml
+
     - name: Add custom pipeline SCC and link it with pipeline SA
       tags:
         - pipeline-scc
