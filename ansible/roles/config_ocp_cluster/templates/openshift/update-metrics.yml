@@ -5,7 +5,7 @@ metadata:
   name: update-metrics
 spec:
   description: >-
-    This task updates a Prometheus metrics.
+    This task updates Prometheus metrics.
 
   workspaces:
     - name: output
@@ -24,6 +24,8 @@ spec:
       default: "http://pipeline-metrics.pipeline-metrics-prod"
     - name: pipelinerun
       description: The name of the PipelineRun to summarize.
+    - name: pipelinerun_namespace
+      description: The namespace of the specified PipelineRun.
 
   steps:
     - name: gather-info
@@ -34,10 +36,11 @@ spec:
         set -xe
         PR_NAME="$(params.pipelinerun)"
         PR_NAME_PATH="metrics/$(params.pipelinerun)"
+        PIPELINERUN_NAMESPACE="$(params.pipelinerun_namespace)"
         mkdir -p $PR_NAME_PATH
 
         echo "Getting PipelineRun details"
-        tkn pipelinerun describe $PR_NAME -o json > $PR_NAME_PATH/pipelinerun.json
+        tkn pipelinerun describe $PR_NAME -o json -n "$PIPELINERUN_NAMESPACE" > $PR_NAME_PATH/pipelinerun.json
 
         chmod -R 777 $PR_NAME_PATH
 

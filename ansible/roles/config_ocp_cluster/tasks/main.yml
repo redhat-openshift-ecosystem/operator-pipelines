@@ -8,4 +8,28 @@
     - ../files/tektonconfig.yml
 
 - name: Include pipelinerun listener task
+  tags:
+    - metrics-listener
+    - gchat-listener
   ansible.builtin.include_tasks: tasks/pipelinerun-listener.yml
+
+- name: Create metrics pipeline and task
+  tags:
+    - metrics-listener
+  kubernetes.core.k8s:
+    state: present
+    validate_certs: "{{ k8s_validate_certs }}"
+    definition: "{{ lookup('file', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/update-metrics.yml
+    - ../templates/openshift/metrics-pipeline.yml
+
+- name: Include Metrics trigger
+  tags:
+    - metrics-listener
+  ansible.builtin.include_tasks: tasks/metrics-trigger.yml
+
+- name: Include GChat trigger
+  tags:
+    - gchat-listener
+  ansible.builtin.include_tasks: tasks/gchat-trigger.yml

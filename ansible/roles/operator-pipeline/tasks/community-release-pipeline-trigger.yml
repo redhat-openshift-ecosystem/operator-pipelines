@@ -36,8 +36,6 @@
                 value: "{{ env }}"
               - name: pipeline_image
                 value: "{{ operator_pipeline_image_pull_spec }}"
-              - name: metrics_endpoint
-                value: "{{ pipelines_metrics_endpoint }}"
               - name: image_namespace
                 value: "{{ community_operator_pipeline_pending_namespace }}"
 
@@ -66,7 +64,6 @@
               - name: git_head_sha
               - name: env
               - name: pipeline_image
-              - name: metrics_endpoint
               - name: image_namespace
             resourcetemplates:
               - apiVersion: tekton.dev/v1beta1
@@ -106,8 +103,6 @@
                       value: $(tt.params.env)
                     - name: pipeline_image
                       value: $(tt.params.pipeline_image)
-                    - name: metrics_endpoint
-                      value: $(tt.params.metrics_endpoint)
                     - name: image_namespace
                       value: $(tt.params.image_namespace)
                   workspaces:
