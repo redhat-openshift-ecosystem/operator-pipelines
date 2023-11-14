@@ -4,9 +4,6 @@
     - metrics
   block:
     - name: Create metrics pipeline and task
-      tags:
-        - never
-        - metrics-listener
       kubernetes.core.k8s:
         namespace: "{{ pipelinerun_listener_namespace }}"
         state: present

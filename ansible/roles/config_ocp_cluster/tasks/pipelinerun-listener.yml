@@ -1,8 +1,8 @@
 ---
 - name: Create PipelineRun listener resources
   tags:
-    - gchat-listener
-    - metrics-listener
+    - gchat
+    - metrics
   block:
     - name: Create Namespace
       kubernetes.core.k8s:
