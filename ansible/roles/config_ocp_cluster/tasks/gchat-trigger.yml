@@ -1,8 +1,7 @@
 ---
 - name: Create Google Chat trigger resources
   tags:
-    - metrics-listener
-    - gchat-listener
+    - gchat
   block:
     - name: Create Tasks
       kubernetes.core.k8s:

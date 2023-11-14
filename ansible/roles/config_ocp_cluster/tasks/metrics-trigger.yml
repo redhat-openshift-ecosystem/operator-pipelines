@@ -1,8 +1,21 @@
 ---
 - name: Create Metrics trigger resources
   tags:
-    - metrics-listener
+    - metrics
   block:
+    - name: Create metrics pipeline and task
+      tags:
+        - never
+        - metrics-listener
+      kubernetes.core.k8s:
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        state: present
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition: "{{ lookup('file', '{{ item }}') }}"
+      with_items:
+        - ../templates/openshift/update-metrics.yml
+        - ../templates/openshift/metrics-pipeline.yml
+
     - name: Create metrics TriggerBinding
       kubernetes.core.k8s:
         state: present

@@ -1,18 +1,8 @@
 ---
-- name: Include GChat secret vars
-  tags:
-    - gchat-listener
-  hosts: "{{ clusters }}"
-  vars_files:
-    - ../vaults/pipelinerun-listener/secret-vars.yml
-
 - name: Configure OCP cluster
-  tags:
-    - gchat-listener
-    - metrics-listener
   hosts: "{{ clusters }}"
   roles:
-    - config_ocp_cluster
+    - name: config_ocp_cluster
   environment:
     K8S_AUTH_API_KEY: "{{ ocp_token }}"
     K8S_AUTH_HOST: "{{ ocp_host }}"
