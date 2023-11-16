@@ -47,25 +47,26 @@ def test_extract_ocp_version_from_bundle_metadata(
         "No warnings or errors",
     ],
 )
+@patch(
+    "operatorcert.static_tests.community.bundle.extract_ocp_version_from_bundle_metadata"
+)
 @patch("subprocess.run")
 def test_run_operator_sdk_bundle_validate(
     mock_run: MagicMock,
+    mock_version: MagicMock,
     version: Any,
     osdk_output: str,
     expected: set[CheckResult],
     tmp_path: Path,
 ) -> None:
-    with patch(
-        "operatorcert.static_tests.community.bundle.extract_ocp_version_from_bundle_metadata",
-        return_value=version,
-    ):
-        create_files(tmp_path, bundle_files("test-operator", "0.0.1"))
-        repo = Repo(tmp_path)
-        bundle = repo.operator("test-operator").bundle("0.0.1")
-        process_mock = MagicMock()
-        process_mock.stdout = osdk_output
-        mock_run.return_value = process_mock
-        assert set(run_operator_sdk_bundle_validate(bundle, "")) == expected
+    create_files(tmp_path, bundle_files("test-operator", "0.0.1"))
+    repo = Repo(tmp_path)
+    bundle = repo.operator("test-operator").bundle("0.0.1")
+    mock_version.return_value = version
+    process_mock = MagicMock()
+    process_mock.stdout = osdk_output
+    mock_run.return_value = process_mock
+    assert set(run_operator_sdk_bundle_validate(bundle, "")) == expected
 
 
 @patch("operatorcert.static_tests.community.bundle.run_operator_sdk_bundle_validate")
