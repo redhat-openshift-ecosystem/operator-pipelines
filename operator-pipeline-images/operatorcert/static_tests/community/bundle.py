@@ -34,10 +34,51 @@ class GraphLoopException(Exception):
     """
 
 
+def extract_ocp_version_from_bundle_metadata(ocp_metadata_version: Any) -> Any:
+    """
+    Helper function to process the OCP version from bundle
+    metadata annotations yaml file. OCP version can be either range
+    of mim-max supported versions (v4.7-v4.9) or single version (v4.9)
+    """
+    # in case of range of versions, we would extract and use
+    # the max supported version for the API deprecation tests
+    # because that will cover all past deprecations
+    if "-" in ocp_metadata_version:
+        ocp_version = ocp_metadata_version.split("-")[1]
+    else:
+        ocp_version = ocp_metadata_version
+    return ocp_version
+
+
 def run_operator_sdk_bundle_validate(
     bundle: Bundle, test_suite_selector: str
 ) -> Iterator[CheckResult]:
     """Run `operator-sdk bundle validate` using given test suite settings"""
+
+    # convert table for OCP <-> k8s versions
+    # for now these are hardcoded pairs -> if new version of OCP:k8s is released,
+    # this table should be updated
+    k8s_to_ocp = {
+        "v4.6": "1.19",
+        "v4.7": "1.20",
+        "v4.8": "1.21",
+        "v4.9": "1.22",
+        "v4.10": "1.23",
+        "v4.11": "1.24",
+        "v4.12": "1.25",
+        "v4.13": "1.26",
+        "v4.14": "1.27",
+        "v4.15": "1.28",
+    }
+    ocp_annotation = bundle.annotations.get("com.redhat.openshift.versions", {})
+
+    ocp_version_to_convert = extract_ocp_version_from_bundle_metadata(ocp_annotation)
+
+    if ocp_version_to_convert:
+        kube_version_for_deprecation_test = k8s_to_ocp.get(ocp_version_to_convert)
+    else:
+        kube_version_for_deprecation_test = k8s_to_ocp.get("v4.15")
+
     cmd = [
         "operator-sdk",
         "bundle",
@@ -47,6 +88,7 @@ def run_operator_sdk_bundle_validate(
         bundle.root,
         "--select-optional",
         test_suite_selector,
+        f"--optional-values=k8s-version={kube_version_for_deprecation_test}",
     ]
     sdk_result = json.loads(
         subprocess.run(
