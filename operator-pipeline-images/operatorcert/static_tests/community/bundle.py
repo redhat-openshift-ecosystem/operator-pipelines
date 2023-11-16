@@ -77,6 +77,8 @@ def run_operator_sdk_bundle_validate(
     if ocp_version_to_convert:
         kube_version_for_deprecation_test = k8s_to_ocp.get(ocp_version_to_convert)
     else:
+        # if OCP version is not specified in metadata annotations,
+        # we are testing against the recently released kube version
         kube_version_for_deprecation_test = k8s_to_ocp.get("v4.15")
 
     cmd = [
