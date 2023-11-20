@@ -522,10 +522,16 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
+        - name: pull_request_url
+          value: "$(params.git_pr_url)"
         - name: operator_name
           value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: bundle_version
           value: "$(tasks.bundle-path-validation.results.bundle_version)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
         - name: test_suite
           value: "operatorcert.static_tests.isv"
       workspaces:
