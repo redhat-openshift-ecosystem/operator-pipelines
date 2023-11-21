@@ -19,7 +19,8 @@ from tests.utils import bundle_files, create_files, merge
 
 
 @pytest.mark.parametrize(
-    ["ocp_version", "expected"], [("v4.8-v4.12", "v4.12"), ("v4.8", "v4.8")]
+    ["ocp_version", "expected"],
+    [("v4.8-v4.12", "v4.12"), ("v4.8", "v4.8"), ("=v4.9", "v4.9")],
 )
 def test_extract_ocp_version_from_bundle_metadata(
     ocp_version: str, expected: str
@@ -27,7 +28,7 @@ def test_extract_ocp_version_from_bundle_metadata(
     assert extract_ocp_version_from_bundle_metadata(ocp_version) == expected
 
 
-@pytest.mark.parametrize("version", ["v4.8-v4.9", None])
+@pytest.mark.parametrize("version", ["v4.8-v4.9", "=v4.9", None])
 @pytest.mark.parametrize(
     "osdk_output, expected",
     [
