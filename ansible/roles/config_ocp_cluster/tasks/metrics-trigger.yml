@@ -1,0 +1,98 @@
+---
+- name: Create Metrics trigger resources
+  tags:
+    - metrics
+  block:
+    - name: Create metrics pipeline and task
+      kubernetes.core.k8s:
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        state: present
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition: "{{ lookup('file', '{{ item }}') }}"
+      with_items:
+        - ../templates/openshift/update-metrics.yml
+        - ../templates/openshift/metrics-pipeline.yml
+
+    - name: Create metrics TriggerBinding
+      kubernetes.core.k8s:
+        state: present
+        apply: true
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerBinding
+          metadata:
+            name: metrics-trigger-binding
+          spec:
+            params:
+              - name: pipelinerun_namespace
+                value: $(body.pipelineRun.metadata.namespace)
+              - name: pipelinerun
+                value: $(body.pipelineRun.metadata.name)
+              - name: metrics_endpoint
+                value: "{{ pipelines_metrics_endpoint }}"
+
+    - name: Create Metrics TriggerTemplate
+      kubernetes.core.k8s:
+        state: present
+        apply: true
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition:
+          apiVersion: triggers.tekton.dev/v1alpha1
+          kind: TriggerTemplate
+          metadata:
+            name: metrics-trigger-template
+          spec:
+            params:
+              - name: pipelinerun_namespace
+              - name: pipelinerun
+              - name: metrics_endpoint
+            resourcetemplates:
+              - apiVersion: tekton.dev/v1beta1
+                kind: PipelineRun
+                metadata:
+                  # Tekton may produce duplicate CloudEvents. Use a consistent Pipeline
+                  # name to make this trigger idempotent.
+                  name: "metrics-pipeline-$(tt.params.pipelinerun)"
+                spec:
+                  timeout: "5m"
+                  params:
+                    - name: metrics_endpoint
+                      value: $(tt.params.metrics_endpoint)
+                    - name: pipelinerun_namespace
+                      value: $(tt.params.pipelinerun_namespace)
+                    - name: pipelinerun
+                      value: $(tt.params.pipelinerun)
+                  pipelineRef:
+                    name: metrics-pipeline
+                  workspaces:
+                    - name: results
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi
+
+    - name: Create ClusterRoleBinding
+      kubernetes.core.k8s:
+        state: present
+        apply: true
+        namespace: "{{ pipelinerun_listener_namespace }}"
+        validate_certs: "{{ k8s_validate_certs }}"
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: metrics-listener-view-all-namespaces
+          subjects:
+            - kind: ServiceAccount
+              name: pipeline
+              namespace: "{{ pipelinerun_listener_namespace }}"
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: tekton-aggregate-view

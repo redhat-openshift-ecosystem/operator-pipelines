@@ -49,8 +49,6 @@ kerberos_keytab_isv_pending: ../../vaults/common/nonprod-operatorpipelines.keyta
 kerberos_keytab_community: ../../vaults/common/nonprod-operatorpipelines.keytab
 kerberos_keytab_community_pending: ../../vaults/common/nonprod-operatorpipelines.keytab
 
-pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-nonprod
-
 community_signing_pipeline_name: community-signing-pipeline
 community_signing_pipeline_private_key_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.key
 community_signing_pipeline_private_cert_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.pem

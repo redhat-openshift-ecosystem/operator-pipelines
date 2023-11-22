@@ -1,5 +1,7 @@
 ---
 - name: Customize TektonConfig
+  tags:
+    - always
   kubernetes.core.k8s:
     state: present
     validate_certs: "{{ k8s_validate_certs }}"
@@ -8,4 +10,23 @@
     - ../files/tektonconfig.yml
 
 - name: Include pipelinerun listener task
+  tags:
+    - gchat
+    - metrics
   ansible.builtin.include_tasks: tasks/pipelinerun-listener.yml
+
+- name: Include GChat secret vars
+  tags:
+    - gchat
+  ansible.builtin.include_vars:
+    file: ../../vaults/pipelinerun-listener/secret-vars.yml
+
+- name: Include GChat trigger
+  tags:
+    - gchat
+  ansible.builtin.include_tasks: tasks/gchat-trigger.yml
+
+- name: Include Metrics trigger
+  tags:
+    - metrics
+  ansible.builtin.include_tasks: tasks/metrics-trigger.yml

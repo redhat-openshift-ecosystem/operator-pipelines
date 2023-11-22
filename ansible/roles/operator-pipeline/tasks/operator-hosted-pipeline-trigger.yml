@@ -48,8 +48,6 @@
                 value: "{{ ci_min_version }}"
               - name: pipeline_image
                 value: "{{ operator_pipeline_image_pull_spec }}"
-              - name: metrics_endpoint
-                value: "{{ pipelines_metrics_endpoint }}"
               - name: image_namespace
                 value: "{{ operator_pipeline_pending_namespace }}"
               - name: hydra_sso_token_url
@@ -84,7 +82,6 @@
               - name: preflight_trigger_environment
               - name: ci_min_version
               - name: pipeline_image
-              - name: metrics_endpoint
               - name: image_namespace
               - name: hydra_sso_token_url
             resourcetemplates:
@@ -131,8 +128,6 @@
                       value: $(tt.params.git_commit)
                     - name: pipeline_image
                       value: $(tt.params.pipeline_image)
-                    - name: metrics_endpoint
-                      value: $(tt.params.metrics_endpoint)
                     - name: image_namespace
                       value: $(tt.params.image_namespace)
                     - name: hydra_sso_token_url

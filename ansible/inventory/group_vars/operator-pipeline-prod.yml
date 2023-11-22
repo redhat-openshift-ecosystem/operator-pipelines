@@ -24,8 +24,6 @@ operator_pipeline_github_bot_token: ../../vaults/prod/github-bot-token.txt
 operator_pipeline_preflight_decryption_key_private_local_path: ../../vaults/prod/preflight-decryption-key-priv.gpg
 operator_pipeline_preflight_decryption_key_public_local_path: ../../vaults/prod/preflight-decryption-key-pub
 
-pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-prod
-
 tekton_pruner_keep: 50
 
 # Settings for importing index imagestreams

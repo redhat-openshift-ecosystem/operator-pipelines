@@ -1,0 +1,44 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: metrics-pipeline
+spec:
+  params:
+    - name: ubi8_minimal_image
+      description: ubi8 minimal image
+      default: "registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe"
+    - name: tkn_image
+      description: Tekton CLI image
+      default: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:7fdeb7eae1727957ba7a7c0e812e5306ffbc594b7759ab058b262251c1ad6fd2
+    - name: metrics_endpoint
+      description: |
+        A metrics collector route.
+      default: "http://pipeline-metrics.pipeline-metrics-prod"
+    - name: pipelinerun
+      description: The name of the PipelineRun to summarize.
+    - name: pipelinerun_namespace
+      description: The namespace of the specified PipelineRun.
+
+  workspaces:
+    - name: results
+
+  tasks:
+    - name: update-metrics
+      taskRef:
+        name: update-metrics
+      params:
+        - name: ubi8_minimal_image
+          value: "$(params.ubi8_minimal_image)"
+        - name: tkn_image
+          value: "$(params.tkn_image)"
+        - name: pipelinerun_namespace
+          value: "$(params.pipelinerun_namespace)"
+        - name: pipelinerun
+          value: "$(params.pipelinerun)"
+        - name: metrics_url
+          value: "$(params.metrics_endpoint)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: metrics
