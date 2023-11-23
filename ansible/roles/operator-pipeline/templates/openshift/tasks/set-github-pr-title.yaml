@@ -1,0 +1,45 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: set-github-pr-title
+spec:
+  params:
+    - name: pipeline_image
+      description: The common pipeline image.
+
+    - name: pull_request_url
+      description: URL to Github pull request with a new bundle submission.
+
+    - name: operator_name
+      description: A name of the operator that is added in a PR
+
+    - name: bundle_version
+      description: A version of the operator bundle that is added in a PR
+
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+  steps:
+    - name: set-github-status
+      image: "$(params.pipeline_image)"
+      env:
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #! /usr/bin/env bash
+        set -ex
+
+        if [[ $(params.bundle_version) == "" ]]; then
+          echo "No bundles has been added"
+          exit 0
+        fi
+
+        gh pr edit --title "operator $(params.operator_name) ($(params.bundle_version))" "$(params.pull_request_url)"
