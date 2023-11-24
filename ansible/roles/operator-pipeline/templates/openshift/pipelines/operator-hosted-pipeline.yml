@@ -1201,6 +1201,8 @@ spec:
             ## Troubleshooting
 
             Please refer to the [troubleshooting guide](https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/troubleshooting.md).
+
+            Run \`/pipeline restart operator-hosted-pipeline\` in case of pipeline failure to restart a pipeline.
       workspaces:
         - name: output
           workspace: results
