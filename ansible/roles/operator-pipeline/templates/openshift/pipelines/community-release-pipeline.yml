@@ -474,6 +474,12 @@ spec:
           value: "$(context.pipelineRun.name)"
         - name: upload_pipeline_logs
           value: "true"
+        - name: comment_suffix
+          value: |
+
+            ## Troubleshooting
+
+            Run \`/pipeline restart community-release-pipeline\` in case of pipeline failure to restart a pipeline.
       workspaces:
         - name: output
           workspace: results
