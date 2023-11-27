@@ -97,7 +97,7 @@
             apply:
               tags:
                 - test-community-release-pipeline
-      ignore_errors: yes  # Enabling integration tests errors in ISV-4242
+
       always:
         - name: Cleanup test data
           tags:
