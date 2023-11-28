@@ -1,4 +1,5 @@
 """Utility functions for operator certification."""
+import argparse
 import json
 import logging
 import os
@@ -99,3 +100,14 @@ def add_session_retries(
     adapter = HTTPAdapter(max_retries=retries)
     session.mount("http://", adapter)
     session.mount("https://", adapter)
+
+
+class SplitArgs(argparse.Action):
+    """
+    Split comma separated list of arguments into a list
+    """
+
+    def __call__(
+        self, parser: Any, namespace: Any, values: Any, option_string: Any = None
+    ) -> None:
+        setattr(namespace, self.dest, values.split(","))
