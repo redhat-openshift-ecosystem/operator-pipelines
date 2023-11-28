@@ -15,6 +15,7 @@ from typing import Any, List
 from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
 from operator_repo.utils import lookup_dict
+import requests
 
 from .validations import (
     validate_capabilities,
@@ -31,16 +32,17 @@ from .validations import (
 # for now these are hardcoded pairs -> if new version of OCP:k8s is released,
 # this table should be updated
 K8S_TO_OCP = {
-    "v4.6": "1.19",
-    "v4.7": "1.20",
-    "v4.8": "1.21",
-    "v4.9": "1.22",
-    "v4.10": "1.23",
-    "v4.11": "1.24",
-    "v4.12": "1.25",
-    "v4.13": "1.26",
-    "v4.14": "1.27",
-    "v4.15": "1.28",
+    "4.6": "1.19",
+    "4.7": "1.20",
+    "4.8": "1.21",
+    "4.9": "1.22",
+    "4.10": "1.23",
+    "4.11": "1.24",
+    "4.12": "1.25",
+    "4.13": "1.26",
+    "4.14": "1.27",
+    "4.15": "1.28",
+    "4.16": "1.29",
 }
 
 
@@ -50,21 +52,29 @@ class GraphLoopException(Exception):
     """
 
 
-def extract_ocp_version_from_bundle_metadata(ocp_metadata_version: Any) -> Any:
+def process_ocp_version(ocp_metadata_version: Any) -> Any:
     """
-    Helper function to process the OCP version from bundle
-    metadata annotations yaml file. OCP version can be either range
-    of mim-max supported versions (v4.7-v4.9) or single version (v4.9)
+    Helper function to process the OCP version.
+    OCP version can be either range of mim-max supported versions
+    (v4.7-v4.9), range of up to max supported version (v4.10)
+    or exact single version (=v4.9)
     """
-    # in case of range of versions, we would extract and use
-    # the max supported version for the API deprecation tests
-    # because that will cover all past deprecations
-    if "-" in ocp_metadata_version:
-        ocp_version = ocp_metadata_version.split("-")[1]
-    elif "=" in ocp_metadata_version:
-        ocp_version = ocp_metadata_version.strip("=")
-    else:
-        ocp_version = ocp_metadata_version
+    # we are calling indices to extract the supported OCP version
+    # which is then used in operator-sdk bundle validate
+    # to run API deprecation test
+    indices_url = "https://catalog.redhat.com/api/containers/v1/operators/indices"
+    params = {
+        "filter": "organization==community-operators",
+        "sort_by": "ocp_version[desc]",
+        "include": "data.ocp_version",
+        "ocp_versions_range": ocp_metadata_version,
+    }
+    # timeout param set in order to not hang indefinitely
+    rsp = requests.get(indices_url, params=params, timeout=30)
+    get_indices = rsp.json().get("data")
+
+    ocp_version = get_indices[0].get("ocp_version") if get_indices else "4.16"
+
     return ocp_version
 
 
@@ -74,14 +84,9 @@ def run_operator_sdk_bundle_validate(
     """Run `operator-sdk bundle validate` using given test suite settings"""
     ocp_annotation = bundle.annotations.get("com.redhat.openshift.versions", {})
 
-    ocp_version_to_convert = extract_ocp_version_from_bundle_metadata(ocp_annotation)
+    ocp_version_to_convert = process_ocp_version(ocp_annotation)
 
-    if ocp_version_to_convert:
-        kube_version_for_deprecation_test = K8S_TO_OCP.get(ocp_version_to_convert)
-    else:
-        # if OCP version is not specified in metadata annotations,
-        # we are testing against the recently released kube version
-        kube_version_for_deprecation_test = K8S_TO_OCP.get("v4.15")
+    kube_version_for_deprecation_test = K8S_TO_OCP.get(ocp_version_to_convert)
 
     cmd = [
         "operator-sdk",

@@ -13,22 +13,20 @@ from operatorcert.static_tests.community.bundle import (
     check_required_fields,
     check_upgrade_graph_loop,
     run_operator_sdk_bundle_validate,
-    extract_ocp_version_from_bundle_metadata,
+    process_ocp_version,
 )
 from tests.utils import bundle_files, create_files, merge
 
 
 @pytest.mark.parametrize(
     ["ocp_version", "expected"],
-    [("v4.8-v4.12", "v4.12"), ("v4.8", "v4.8"), ("=v4.9", "v4.9")],
+    [("4.8-4.12", "4.12"), ("=v4.9", "4.9"), (None, "4.16")],
 )
-def test_extract_ocp_version_from_bundle_metadata(
-    ocp_version: str, expected: str
-) -> None:
-    assert extract_ocp_version_from_bundle_metadata(ocp_version) == expected
+def test_process_ocp_version(ocp_version: str, expected: str) -> None:
+    assert process_ocp_version(ocp_version) == expected
 
 
-@pytest.mark.parametrize("version", ["v4.8-v4.9", "=v4.9", None])
+@pytest.mark.parametrize("version", ["4.8-4.9", "4.9", None])
 @pytest.mark.parametrize(
     "osdk_output, expected",
     [
@@ -48,9 +46,7 @@ def test_extract_ocp_version_from_bundle_metadata(
         "No warnings or errors",
     ],
 )
-@patch(
-    "operatorcert.static_tests.community.bundle.extract_ocp_version_from_bundle_metadata"
-)
+@patch("operatorcert.static_tests.community.bundle.process_ocp_version")
 @patch("subprocess.run")
 def test_run_operator_sdk_bundle_validate(
     mock_run: MagicMock,
