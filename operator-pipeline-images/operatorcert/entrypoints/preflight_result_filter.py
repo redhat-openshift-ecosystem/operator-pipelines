@@ -2,9 +2,10 @@
 import argparse
 import json
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 from operatorcert.logger import setup_logger
+from operatorcert.utils import SplitArgs
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -26,13 +27,22 @@ def setup_argparser() -> Any:
         description="Parse and filter preflight results for community."
     )
     parser.add_argument("--test-results", help="Path to a preflight test-results.")
+    parser.add_argument(
+        "--skip-tests",
+        help="Ignore specific checks. Comma separated list of test names.",
+        default=[],
+        action=SplitArgs,
+    )
     parser.add_argument("--output-file", help="Place to write the filtered results.")
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     return parser
 
 
-def is_allowed_test(test: Any) -> bool:
+def is_allowed_test(
+    test: Any,
+    skip_tests: Optional[List[str]] = None,
+) -> bool:
     """
     Check if the test is allowed for community.
 
@@ -42,15 +52,20 @@ def is_allowed_test(test: Any) -> bool:
     Returns:
         bool: True if the test is allowed, False otherwise
     """
+    if skip_tests is None:
+        skip_tests = []
     test_name = test.get("name")
-    allowed = test_name in COMMUNITY_ALLOWED_TESTS
+    allowed = test_name in COMMUNITY_ALLOWED_TESTS and test_name not in skip_tests
     if not allowed:
         LOGGER.debug("Skipping test: %s", test_name)
     LOGGER.info("Test: %s, allowed: %s", test_name, allowed)
     return allowed
 
 
-def parse_and_evaluate_results(test_results: Any) -> Any:
+def parse_and_evaluate_results(
+    test_results: Any,
+    skip_tests: Optional[List[str]] = None,
+) -> Any:
     """
     Parse a preflight test-results and filter out tests that are not
     allowed for community.
@@ -66,7 +81,7 @@ def parse_and_evaluate_results(test_results: Any) -> Any:
     for category, tests in results.items():
         new_results[category] = []
         for test in tests:
-            if is_allowed_test(test):
+            if is_allowed_test(test, skip_tests=skip_tests):
                 new_results[category].append(test)
 
     overall_status = True
@@ -97,7 +112,7 @@ def main() -> None:
 
     with open(args.test_results, "r", encoding="utf-8") as test_results:
         test_results = json.load(test_results)
-    community_results = parse_and_evaluate_results(test_results)
+    community_results = parse_and_evaluate_results(test_results, args.skip_tests)
 
     if args.output_file:
         with open(args.output_file, "w", encoding="utf-8") as output_file:

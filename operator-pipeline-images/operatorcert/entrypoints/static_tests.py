@@ -7,19 +7,9 @@ from typing import Any, Dict, List, Optional
 from operator_repo import Repo
 from operator_repo.checks import Fail, run_suite
 from operatorcert.logger import setup_logger
+from operatorcert.utils import SplitArgs
 
 LOGGER = logging.getLogger("operator-cert")
-
-
-class SplitArgs(argparse.Action):
-    """
-    Split comma separated list of arguments into a list
-    """
-
-    def __call__(
-        self, parser: Any, namespace: Any, values: Any, option_string: Any = None
-    ) -> None:
-        setattr(namespace, self.dest, values.split(","))
 
 
 def setup_argparser() -> argparse.ArgumentParser:

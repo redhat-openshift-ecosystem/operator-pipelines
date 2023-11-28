@@ -62,11 +62,24 @@ spec:
         #! /usr/bin/env bash
         set -e -o pipefail
 
+        EXTRA_ARGS=""
+
+        # Get labels from the pull request
+        gh pr view "$(params.request_url)" --json labels > labels.json
+
+        # Following command filters out labels that start with prefix and merge them to single string separated by comma
+        SKIP_TESTS=`jq -r '.labels[] | select(.name | startswith("tests/skip")) | .name' labels.json | paste -sd "," |sed 's/tests\/skip\///g'`
+
+        if [[ $SKIP_TESTS != "" ]]; then
+          echo "Following tests are skipped: $SKIP_TESTS"
+          EXTRA_ARGS+=" --skip-tests $SKIP_TESTS"
+        fi
+
         RESULT_FILE_FILTERED=community-results.json
 
         preflight-result-filter \
           --test-results "$(params.preflight_result_file_path)" \
-          --output-file $RESULT_FILE_FILTERED \
+          --output-file $RESULT_FILE_FILTERED $EXTRA_ARGS \
           --verbose
 
 

@@ -24,6 +24,7 @@ def test_main(
     args = MagicMock()
     args.test_results = "some_file"
     args.output_file = "tmp/output.json"
+    args.skip_tests = ["foo"]
     mock_setup_argparser.return_value.parse_args.return_value = args
     mock_parse_and_evaluate_results.return_value = {"foo": "bar"}
     mock_open = mock.mock_open(read_data="{}")
@@ -31,7 +32,7 @@ def test_main(
     with mock.patch("builtins.open", mock_open):
         main()
 
-    mock_parse_and_evaluate_results.assert_called_once_with({})
+    mock_parse_and_evaluate_results.assert_called_once_with({}, ["foo"])
     mock_json_dump.assert_called_once_with({"foo": "bar"}, ANY, indent=2)
 
 
