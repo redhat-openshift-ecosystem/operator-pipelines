@@ -19,13 +19,13 @@ spec:
 
     - name: add_labels
       description: |
-        The actual comment to add or the filename containing comment to post.
+        List of labels that will be added to a pull request.
       type: string
       default: ""
 
     - name: remove_labels
       description: |
-        The actual comment to add or the filename containing comment to post.
+        List of labels that will be removed from a pull request.
       type: string
       default: ""
 
@@ -61,11 +61,11 @@ spec:
 
         EXTRA_ARGS=""
         if [[ ! -z "$(params.add_labels)" ]]; then
-          EXTRA_ARGS+=" --add-label $(params.add_labels)"
+          EXTRA_ARGS+=" --add-labels $(params.add_labels)"
         fi
 
         if [[ ! -z "$(params.remove_labels)" ]]; then
-          EXTRA_ARGS+=" --remove-label $(params.remove_labels)"
+          EXTRA_ARGS+=" --remove-labels $(params.remove_labels)"
         fi
 
         if [[ "$(params.remove-matching-namespace-labels)" == "true" ]]; then
