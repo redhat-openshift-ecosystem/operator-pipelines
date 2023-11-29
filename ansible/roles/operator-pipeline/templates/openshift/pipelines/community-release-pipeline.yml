@@ -86,6 +86,8 @@ spec:
           value: "$(params.github_token_secret_key)"
         - name: add_labels
           value: "$(context.pipeline.name)/started"
+        - name: remove_labels
+          value: "pipeline/trigger-release"
         - name: remove-matching-namespace-labels
           value: "true"
 
