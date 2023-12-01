@@ -32,8 +32,8 @@ spec:
 
         if [ ! -f "$CONFIG_PATH" ]; then
             echo "Config file $CONFIG_PATH does not exist."
-            # The config is not present - let's make an empty config
-            echo "---" > $CONFIG_PATH
+            echo -n "replaces" | tee $(results.upgrade-graph-mode.path)
+            exit 0
         fi
 
         cat $CONFIG_PATH
