@@ -53,6 +53,7 @@ jobs:
           tkn bundle push ${registry}/${repository}:${tag} \
             -f verify-whitelisted-index-image.yml \
             -f request-signature.yml \
+            -f request-signature-blob.yml \
             -f upload-signature.yml
           echo "pullspec=${registry}/${repository}:${tag}" >> $GITHUB_OUTPUT
 
