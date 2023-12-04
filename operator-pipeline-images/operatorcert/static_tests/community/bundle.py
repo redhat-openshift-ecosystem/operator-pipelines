@@ -6,6 +6,7 @@
     (either Fail or Warn) to describe the issues found in the given Bundle.
 """
 
+import logging
 import json
 import re
 import subprocess
@@ -27,6 +28,8 @@ from .validations import (
     validate_semver,
     validate_timestamp,
 )
+
+LOGGER = logging.getLogger("operator-cert")
 
 # convert table for OCP <-> k8s versions
 # for now these are hardcoded pairs -> if new version of OCP:k8s is released,
@@ -67,13 +70,21 @@ def process_ocp_version(ocp_metadata_version: Any) -> Any:
         "filter": "organization==community-operators",
         "sort_by": "ocp_version[desc]",
         "include": "data.ocp_version",
-        "ocp_versions_range": ocp_metadata_version,
+        "page_size": 1,
     }
-    # timeout param set in order to not hang indefinitely
-    rsp = requests.get(indices_url, params=params, timeout=30)
-    get_indices = rsp.json().get("data")
+    if ocp_metadata_version:
+        params["ocp_versions_range"] = ocp_metadata_version
 
-    ocp_version = get_indices[0].get("ocp_version") if get_indices else "4.16"
+    rsp = requests.get(indices_url, params=params, timeout=60)  # type: ignore[arg-type]
+
+    try:
+        rsp.raise_for_status()
+    except requests.HTTPError as exc:
+        LOGGER.error("GET request to fetch the indices failed with: %s", exc)
+        return None
+
+    get_indices = rsp.json().get("data")
+    ocp_version = get_indices[0].get("ocp_version")
 
     return ocp_version
 
@@ -82,7 +93,7 @@ def run_operator_sdk_bundle_validate(
     bundle: Bundle, test_suite_selector: str
 ) -> Iterator[CheckResult]:
     """Run `operator-sdk bundle validate` using given test suite settings"""
-    ocp_annotation = bundle.annotations.get("com.redhat.openshift.versions", {})
+    ocp_annotation = bundle.annotations.get("com.redhat.openshift.versions", None)
 
     ocp_version_to_convert = process_ocp_version(ocp_annotation)
 

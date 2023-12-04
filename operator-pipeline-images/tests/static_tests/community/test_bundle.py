@@ -17,6 +17,8 @@ from operatorcert.static_tests.community.bundle import (
 )
 from tests.utils import bundle_files, create_files, merge
 
+from requests import HTTPError
+
 
 @pytest.mark.parametrize(
     ["ocp_version", "expected"],
@@ -24,6 +26,17 @@ from tests.utils import bundle_files, create_files, merge
 )
 def test_process_ocp_version(ocp_version: str, expected: str) -> None:
     assert process_ocp_version(ocp_version) == expected
+
+
+@patch("operatorcert.static_tests.community.bundle.requests.get")
+def test_process_ocp_version_error(mock_get: MagicMock) -> None:
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = HTTPError(
+        "404, GET request to fetch the indices failed"
+    )
+    mock_get.return_value = mock_response
+    result = process_ocp_version("4.12")
+    assert result is None
 
 
 @pytest.mark.parametrize("version", ["4.8-4.9", "4.9", None])
