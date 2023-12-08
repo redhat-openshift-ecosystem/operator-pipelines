@@ -35,6 +35,7 @@ LOGGER = logging.getLogger("operator-cert")
 # for now these are hardcoded pairs -> if new version of OCP:k8s is released,
 # this table should be updated
 K8S_TO_OCP = {
+    "4.5": "1.18",
     "4.6": "1.19",
     "4.7": "1.20",
     "4.8": "1.21",
@@ -84,7 +85,7 @@ def process_ocp_version(ocp_metadata_version: Any) -> Any:
         return None
 
     get_indices = rsp.json().get("data")
-    ocp_version = get_indices[0].get("ocp_version")
+    ocp_version = get_indices[0].get("ocp_version") if get_indices else None
 
     return ocp_version
 
@@ -98,6 +99,13 @@ def run_operator_sdk_bundle_validate(
     ocp_version_to_convert = process_ocp_version(ocp_annotation)
 
     kube_version_for_deprecation_test = K8S_TO_OCP.get(ocp_version_to_convert)
+
+    if kube_version_for_deprecation_test is None:
+        LOGGER.info(
+            "There was no OCP version specified. API deprecation test for the testing "
+            "suite - %s - was run with 'None' value.",
+            test_suite_selector,
+        )
 
     cmd = [
         "operator-sdk",

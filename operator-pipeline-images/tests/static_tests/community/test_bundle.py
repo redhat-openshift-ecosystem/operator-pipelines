@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -21,11 +21,21 @@ from requests import HTTPError
 
 
 @pytest.mark.parametrize(
-    ["ocp_version", "expected"],
-    [("4.8-4.12", "4.12"), ("=v4.9", "4.9"), (None, "4.16")],
+    ["ocp", "expected"],
+    [
+        ({"data": [{"ocp_version": "4.13"}]}, "4.13"),
+        ({"data": []}, None),
+    ],
 )
-def test_process_ocp_version(ocp_version: str, expected: str) -> None:
-    assert process_ocp_version(ocp_version) == expected
+@patch("operatorcert.static_tests.community.bundle.requests")
+def test_process_ocp_version(
+    mock_get: MagicMock, ocp: Dict[str, List[Dict[str, str]]], expected: str
+) -> None:
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = ocp
+    mock_get.get.return_value = mock_response
+    assert process_ocp_version(ocp) == expected
 
 
 @patch("operatorcert.static_tests.community.bundle.requests.get")
