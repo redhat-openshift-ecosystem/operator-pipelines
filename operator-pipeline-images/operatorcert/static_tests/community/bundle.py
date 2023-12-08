@@ -6,6 +6,7 @@
     (either Fail or Warn) to describe the issues found in the given Bundle.
 """
 
+import logging
 import json
 import re
 import subprocess
@@ -15,6 +16,7 @@ from typing import Any, List
 from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
 from operator_repo.utils import lookup_dict
+import requests
 
 from .validations import (
     validate_capabilities,
@@ -27,6 +29,26 @@ from .validations import (
     validate_timestamp,
 )
 
+LOGGER = logging.getLogger("operator-cert")
+
+# convert table for OCP <-> k8s versions
+# for now these are hardcoded pairs -> if new version of OCP:k8s is released,
+# this table should be updated
+K8S_TO_OCP = {
+    "4.5": "1.18",
+    "4.6": "1.19",
+    "4.7": "1.20",
+    "4.8": "1.21",
+    "4.9": "1.22",
+    "4.10": "1.23",
+    "4.11": "1.24",
+    "4.12": "1.25",
+    "4.13": "1.26",
+    "4.14": "1.27",
+    "4.15": "1.28",
+    "4.16": "1.29",
+}
+
 
 class GraphLoopException(Exception):
     """
@@ -34,10 +56,57 @@ class GraphLoopException(Exception):
     """
 
 
+def process_ocp_version(ocp_metadata_version: Any) -> Any:
+    """
+    Helper function to process the OCP version.
+    OCP version can be either range of mim-max supported versions
+    (v4.7-v4.9), range of up to max supported version (v4.10)
+    or exact single version (=v4.9)
+    """
+    # we are calling indices to extract the supported OCP version
+    # which is then used in operator-sdk bundle validate
+    # to run API deprecation test
+    indices_url = "https://catalog.redhat.com/api/containers/v1/operators/indices"
+    params = {
+        "filter": "organization==community-operators",
+        "sort_by": "ocp_version[desc]",
+        "include": "data.ocp_version",
+        "page_size": 1,
+    }
+    if ocp_metadata_version:
+        params["ocp_versions_range"] = ocp_metadata_version
+
+    rsp = requests.get(indices_url, params=params, timeout=60)  # type: ignore[arg-type]
+
+    try:
+        rsp.raise_for_status()
+    except requests.HTTPError as exc:
+        LOGGER.error("GET request to fetch the indices failed with: %s", exc)
+        return None
+
+    get_indices = rsp.json().get("data")
+    ocp_version = get_indices[0].get("ocp_version") if get_indices else None
+
+    return ocp_version
+
+
 def run_operator_sdk_bundle_validate(
     bundle: Bundle, test_suite_selector: str
 ) -> Iterator[CheckResult]:
     """Run `operator-sdk bundle validate` using given test suite settings"""
+    ocp_annotation = bundle.annotations.get("com.redhat.openshift.versions", None)
+
+    ocp_version_to_convert = process_ocp_version(ocp_annotation)
+
+    kube_version_for_deprecation_test = K8S_TO_OCP.get(ocp_version_to_convert)
+
+    if kube_version_for_deprecation_test is None:
+        LOGGER.info(
+            "There was no OCP version specified. API deprecation test for the testing "
+            "suite - %s - was run with 'None' value.",
+            test_suite_selector,
+        )
+
     cmd = [
         "operator-sdk",
         "bundle",
@@ -47,6 +116,7 @@ def run_operator_sdk_bundle_validate(
         bundle.root,
         "--select-optional",
         test_suite_selector,
+        f"--optional-values=k8s-version={kube_version_for_deprecation_test}",
     ]
     sdk_result = json.loads(
         subprocess.run(
