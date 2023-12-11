@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Set
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,6 +14,7 @@ from operatorcert.static_tests.community.bundle import (
     check_upgrade_graph_loop,
     run_operator_sdk_bundle_validate,
     process_ocp_version,
+    check_api_version_constraints,
 )
 from tests.utils import bundle_files, create_files, merge
 
@@ -322,3 +323,104 @@ def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> Non
         == "Upgrade graph loop detected for bundle: [Bundle(hello/0.0.1), "
         "Bundle(hello/0.0.2), Bundle(hello/0.0.1)]"
     )
+
+
+@pytest.mark.parametrize(
+    "csv, annotations, expected",
+    [
+        pytest.param(
+            None, None, set(), id="No minKubeVersion, no com.redhat.openshift.versions"
+        ),
+        pytest.param(
+            None,
+            {"com.redhat.openshift.versions": "v4.11"},
+            set(),
+            id="No minKubeVersion, valid com.redhat.openshift.versions",
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "1.24.0"}},
+            {"com.redhat.openshift.versions": "=v4.11"},
+            set(),
+            id='Valid minKubeVersion, valid com.redhat.openshift.versions ("=")',
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "1.0.0"}},
+            {"com.redhat.openshift.versions": "=v3.1"},
+            {Fail("Unknown OCP version in com.redhat.openshift.versions: 3.1")},
+            id='Valid minKubeVersion, unknown com.redhat.openshift.versions ("=")',
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "foo"}},
+            {"com.redhat.openshift.versions": "v4.11"},
+            {Fail("Invalid minKubeVersion: foo is not valid SemVer string")},
+            id="Invalid minKubeVersion, valid com.redhat.openshift.versions",
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "1.24.0"}},
+            {"com.redhat.openshift.versions": "v4.11"},
+            set(),
+            id="Valid minKubeVersion, valid and consistent com.redhat.openshift.versions",
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "1.24.0"}},
+            {"com.redhat.openshift.versions": "v4.11-v4.13"},
+            set(),
+            id='Valid minKubeVersion, valid and consistent com.redhat.openshift.versions ("-")',
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "1.16.0"}},
+            {"com.redhat.openshift.versions": "v4.5,v4.6"},
+            set(),
+            id='Valid minKubeVersion, valid and consistent com.redhat.openshift.versions (",")',
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "1.16.0"}},
+            {"com.redhat.openshift.versions": "v4.5,v4.7"},
+            {
+                Warn(
+                    "Comma separated list of versions in com.redhat.openshift.versions is only "
+                    "supported for v4.5 and v4.6"
+                )
+            },
+            id='Valid minKubeVersion, unsupported version in com.redhat.openshift.versions (",")',
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "1.24.0"}},
+            None,
+            {
+                Fail(
+                    "minKubeVersion is set to 1.24.0 but com.redhat.openshift.versions is not set"
+                )
+            },
+            id="Valid minKubeVersion, no com.redhat.openshift.versions",
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "1.24.0"}},
+            {"com.redhat.openshift.versions": "v4.10"},
+            {Fail("OCP version(s) 4.10 conflict with minKubeVersion=1.24.0")},
+            id="Valid minKubeVersion, valid but inconsistent com.redhat.openshift.versions",
+        ),
+        pytest.param(
+            {"spec": {"minKubeVersion": "1.24.0"}},
+            {"com.redhat.openshift.versions": "foo"},
+            {
+                Fail(
+                    "Invalid com.redhat.openshift.versions: foo is not valid SemVer string"
+                )
+            },
+            id="Valid minKubeVersion, invalid com.redhat.openshift.versions",
+        ),
+    ],
+)
+def test_check_api_version_constraints(
+    csv: Optional[Dict[str, Any]],
+    annotations: Optional[Dict[str, Any]],
+    expected: Set[CheckResult],
+    tmp_path: Path,
+) -> None:
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1", annotations=annotations, csv=csv),
+    )
+    bundle = Repo(tmp_path).operator("hello").bundle("0.0.1")
+    assert set(check_api_version_constraints(bundle)) == expected
