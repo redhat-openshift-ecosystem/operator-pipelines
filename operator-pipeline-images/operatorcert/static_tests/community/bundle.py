@@ -17,6 +17,7 @@ from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
 from operator_repo.utils import lookup_dict
 import requests
+from semver import Version
 
 from .validations import (
     validate_capabilities,
@@ -34,7 +35,11 @@ LOGGER = logging.getLogger("operator-cert")
 # convert table for OCP <-> k8s versions
 # for now these are hardcoded pairs -> if new version of OCP:k8s is released,
 # this table should be updated
-K8S_TO_OCP = {
+OCP_TO_K8S = {
+    "4.1": "1.13",
+    "4.2": "1.14",
+    "4.3": "1.16",
+    "4.4": "1.17",
     "4.5": "1.18",
     "4.6": "1.19",
     "4.7": "1.20",
@@ -47,6 +52,22 @@ K8S_TO_OCP = {
     "4.14": "1.27",
     "4.15": "1.28",
     "4.16": "1.29",
+}
+
+
+def _parse_semver(version: str) -> Version:
+    return Version.parse(version.strip(), optional_minor_and_patch=True).replace(
+        prerelease=None, build=None
+    )
+
+
+def _parse_ocp_version(version: str) -> Version:
+    return _parse_semver(version.strip().removeprefix("v")).replace(patch=0)
+
+
+OCP_TO_K8S_SEMVER = {
+    _parse_ocp_version(ocp_ver): _parse_semver(k8s_ver)
+    for ocp_ver, k8s_ver in OCP_TO_K8S.items()
 }
 
 
@@ -98,7 +119,7 @@ def run_operator_sdk_bundle_validate(
 
     ocp_version_to_convert = process_ocp_version(ocp_annotation)
 
-    kube_version_for_deprecation_test = K8S_TO_OCP.get(ocp_version_to_convert)
+    kube_version_for_deprecation_test = OCP_TO_K8S.get(ocp_version_to_convert)
 
     if kube_version_for_deprecation_test is None:
         LOGGER.info(
@@ -285,3 +306,84 @@ def follow_graph(graph: Any, bundle: Bundle, visited: List[Bundle]) -> List[Bund
     for next_bundle in next_bundles:
         follow_graph(graph, next_bundle, visited)
     return visited
+
+
+def check_api_version_constraints(bundle: Bundle) -> Iterator[CheckResult]:
+    """Check that the ocp and k8s api version constraints are consistent"""
+    ocp_versions_str = bundle.annotations.get("com.redhat.openshift.versions")
+    k8s_version_min_str = bundle.csv.get("spec", {}).get("minKubeVersion")
+    if not k8s_version_min_str:
+        # minKubeVersion is not specified: no conflict
+        return
+    try:
+        k8s_version_min = _parse_semver(k8s_version_min_str)
+    except (ValueError, TypeError) as exc:
+        yield Fail(f"Invalid minKubeVersion: {exc}")
+        return
+    if ocp_versions_str:
+        selector = ocp_versions_str.strip()
+        try:
+            if "-" in selector:
+                # Version range, example: v4.10-v4.12
+                ver_a, ver_b = (
+                    _parse_ocp_version(ver) for ver in selector.split("-", 1)
+                )
+                ocp_versions = {
+                    ver for ver in OCP_TO_K8S_SEMVER if ver_a <= ver <= ver_b
+                }
+            elif "," in selector:
+                # Deprecated comma separated list of versions. Only supported versions
+                # for this syntax are 4.5 and 4.6 but we do not enforce that here
+                # because there are some community operators that currently use this
+                # with other ocp versions
+                versions = {_parse_ocp_version(ver) for ver in selector.split(",")}
+                min_version = min(versions)
+                if versions != {_parse_ocp_version(ver) for ver in ["v4.5", "v4.6"]}:
+                    yield Warn(
+                        "Comma separated list of versions in "
+                        "com.redhat.openshift.versions is only supported for v4.5 and "
+                        "v4.6"
+                    )
+                ocp_versions = {ver for ver in OCP_TO_K8S_SEMVER if ver >= min_version}
+            else:
+                # com.redhat.openshift.versions contains a single version
+                if selector.startswith("="):
+                    # Select a specific version
+                    version = _parse_ocp_version(selector.removeprefix("="))
+                    if version not in OCP_TO_K8S_SEMVER:
+                        yield Fail(
+                            "Unknown OCP version in "
+                            "com.redhat.openshift.versions: "
+                            f"{version.major}.{version.minor}"
+                        )
+                        return
+                    ocp_versions = {version}
+                else:
+                    # Any version >= the specified value
+                    ocp_versions = {
+                        ver
+                        for ver in OCP_TO_K8S_SEMVER
+                        if ver >= _parse_ocp_version(selector)
+                    }
+        except (ValueError, TypeError) as exc:
+            yield Fail(f"Invalid com.redhat.openshift.versions: {exc}")
+            return
+    else:
+        # If no selector is specified, the bundle can potentially run on any
+        # ocp version. If we reach this point, minKubeVersion was specified
+        yield Fail(
+            f"minKubeVersion is set to {k8s_version_min} but "
+            "com.redhat.openshift.versions is not set"
+        )
+        return
+    conflicting = {
+        ver for ver in ocp_versions if OCP_TO_K8S_SEMVER[ver] < k8s_version_min
+    }
+    if conflicting:
+        conflicting_str = ",".join(
+            f"{ver.major}.{ver.minor}" for ver in sorted(conflicting)
+        )
+        yield Fail(
+            f"OCP version(s) {conflicting_str} conflict with "
+            f"minKubeVersion={k8s_version_min}"
+        )
