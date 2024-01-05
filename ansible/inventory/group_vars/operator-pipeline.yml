@@ -3,6 +3,7 @@
 ansible_connection: local
 env: unset
 oc_namespace: "operator-pipeline-{{ env }}"
+oc_signing_namespace: "signing-pipeline-{{ env }}"
 service_account_name: operator-pipeline-admin
 branch: "{{ env }}"
 preflight_min_version: 0.0.0
@@ -48,20 +49,11 @@ kerberos_keytab_isv_pending: ../../vaults/common/nonprod-operatorpipelines-pendi
 kerberos_keytab_community: ../../vaults/common/nonprod-community-operatorpipelines.keytab
 kerberos_keytab_community_pending: ../../vaults/common/nonprod-community-operatorpipelines-pending.keytab
 
-community_signing_pipeline_name: community-signing-pipeline
-community_signing_pipeline_private_key_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.key
-community_signing_pipeline_private_cert_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.pem
-community_signing_umb_client_name: community-operator-signing-pipeline-nonprod
+index_img_signing_pipeline_private_key_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.key
+index_img_signing_pipeline_private_cert_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.pem
 
-community_signing_pipeline_route_name: "{{ community_signing_pipeline_name }}"
-community_signing_pipeline_url: "{{ community_signing_pipeline_name }}-tekton-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
 
 community_operator_hosted_pipeline_registry_auth_path: ../../vaults/{{ env }}/registry-auth/community-hosted-pipeline.json
 community_operator_pipeline_pending_namespace: "community-operator-pipeline-{{ env }}"
-
-nginx_basic_user_file_local_path: ../../vaults/common/htpasswd-nonprod
-nginx_proxy_service_url: "https://{{ community_signing_pipeline_url }}"
-nginx_proxy_url: "{{ community_signing_pipeline_name }}-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
-nginx_nameserver_ip: "dns-default.openshift-dns.svc.cluster.local"
 
 signing_pub_key_local_path: ../../vaults/{{ env }}/sig-key.pub

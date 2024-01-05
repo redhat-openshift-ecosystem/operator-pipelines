@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: community-signing-pipeline
+  name: index-img-signing-pipeline
 spec:
   params:
     - name: env
@@ -18,13 +18,11 @@ spec:
     - name: requester
       description: Name of the user that requested the signing, for auditing purposes
     - name: ssl_cert_secret_name
-      default: community-operator-signing-pipeline-certs
+      default: index-img-signing-pipeline-certs
     - name: ssl_cert_secret_key
-      default: community-operator-signing-pipeline.pem
+      default: index-img-signing-pipeline.pem
     - name: ssl_key_secret_key
-      default: community-operator-signing-pipeline.key
-    - name: umb_client_name
-      default: community-operator-signing-pipeline
+      default: index-img-signing-pipeline.key
     - name: signing_pub_secret_name
       description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
       default: signing-pub-key
@@ -82,7 +80,7 @@ spec:
         - name: umb_ssl_key_secret_key
           value: "$(params.ssl_key_secret_key)"
         - name: umb_client_name
-          value: "$(params.umb_client_name)"
+          value: "$(tasks.set-env.results.umb_client_name_signing)"
         - name: umb_url
           value: "$(tasks.set-env.results.umb_url)"
       workspaces:

@@ -58,6 +58,7 @@ jobs:
             -e "operator_bundle_version=0.1.${{ github.run_number }}-${{ github.run_attempt }}"
             -e "operator_pipeline_image_tag=${{ github.sha }}"
             -e "suffix=${{ steps.prepare.outputs.suffix }}"
+            --skip-tags=signing-pipeline
             -v
 
   integration-tests-community-operators:
@@ -106,4 +107,5 @@ jobs:
             -e "operator_bundle_version=0.1.${{ github.run_number }}-${{ github.run_attempt }}"
             -e "operator_pipeline_image_tag=${{ github.sha }}"
             -e "suffix=${{ steps.prepare.outputs.suffix }}"
+            --skip-tags=signing-pipeline
             -v
