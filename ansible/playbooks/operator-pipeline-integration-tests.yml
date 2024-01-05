@@ -54,14 +54,6 @@
               tags:
                 - deploy-operator-pipelines
 
-        - name: Deploy nginx proxy
-          tags:
-            - deploy-nginx-proxy
-          include_role:
-            name: nginx_proxy
-            apply:
-              tags:
-                - deploy-nginx-proxy
 
         - name: Run the Operator CI pipeline
           tags:

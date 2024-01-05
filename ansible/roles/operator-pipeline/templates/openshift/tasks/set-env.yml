@@ -29,6 +29,8 @@ spec:
       description: umb host to connect to for messaging, e.g. for signing
     - name: umb_client_name
       description: Client name to connect to umb, usually a service account name
+    - name: umb_client_name_signing
+      description: Client name for signing to connect to umb, usually a service account name
   steps:
     - name: set-env
       image: "$(params.ubi8_minimal_image)"
@@ -61,6 +63,7 @@ spec:
                 SIG_KEY_NAME="containerisvsign"
                 UMB_URL="umb.api.redhat.com"
                 UMB_CLIENT_NAME="operatorpipelines"
+                UMB_CLIENT_NAME_SIGNING="community-operator-signing-pipeline"
             ;;
             stage | integration-tests)
                 case $ACCESS_TYPE in
@@ -78,6 +81,7 @@ spec:
                 SIG_KEY_NAME="redhate2etesting"
                 UMB_URL="umb.stage.api.redhat.com"
                 UMB_CLIENT_NAME="nonprod-operatorpipelines"
+                UMB_CLIENT_NAME_SIGNING="community-operator-signing-pipeline-nonprod"
             ;;
             qa)
                 case $ACCESS_TYPE in
@@ -95,6 +99,7 @@ spec:
                 SIG_KEY_NAME="redhate2etesting"
                 UMB_URL="umb.stage.api.redhat.com"
                 UMB_CLIENT_NAME="nonprod-operatorpipelines"
+                UMB_CLIENT_NAME_SIGNING="community-operator-signing-pipeline-nonprod"
             ;;
             dev)
                 case $ACCESS_TYPE in
@@ -112,6 +117,7 @@ spec:
                 SIG_KEY_NAME="redhate2etesting"
                 UMB_URL="umb.stage.api.redhat.com"
                 UMB_CLIENT_NAME="nonprod-operatorpipelines"
+                UMB_CLIENT_NAME_SIGNING="community-operator-signing-pipeline-nonprod"
             ;;
             *)
                 echo "Unknown environment."
@@ -127,3 +133,4 @@ spec:
         echo -n $SIG_KEY_NAME | tee $(results.sig_key_name.path)
         echo -n $UMB_URL | tee $(results.umb_url.path)
         echo -n $UMB_CLIENT_NAME | tee $(results.umb_client_name.path)
+        echo -n $UMB_CLIENT_NAME_SIGNING | tee $(results.umb_client_name_signing.path)

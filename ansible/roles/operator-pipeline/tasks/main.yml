@@ -83,8 +83,10 @@
     - name: Import community release pipeline trigger
       ansible.builtin.import_tasks: tasks/community-release-pipeline-trigger.yml
 
-    - name: Import community signing task
-      ansible.builtin.import_tasks: tasks/community-signing.yml
+- name: Import index image signing task
+  ansible.builtin.import_tasks: tasks/index-img-signing.yml
+  tags:
+    - signing-pipeline
 
 - name: Import operator release webhooks
   ansible.builtin.import_tasks: tasks/operator-pipeline-webhooks.yml

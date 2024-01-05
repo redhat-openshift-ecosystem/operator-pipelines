@@ -1,0 +1,40 @@
+---
+
+- name: Configure signing namespace
+  tags:
+    - namespace
+  kubernetes.core.k8s:
+    state: "{{ namespace_state }}"
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ oc_signing_namespace }}"
+        annotations:
+          operator.tekton.dev/prune.keep: "{{ tekton_pruner_keep | int }}"
+
+- name: Include signing secrets
+  ansible.builtin.include_tasks: tasks/index-img-signing-secrets.yml
+
+- name: Deploy pipeline tasks
+  tags:
+    - tekton-task
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_signing_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/tasks/set-env.yml
+
+- name: Deploy signing pipeline
+  tags:
+    - tekton-pipeline
+    - signing
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_signing_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipelines/index-img-signing-pipeline.yml

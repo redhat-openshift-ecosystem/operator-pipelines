@@ -16,11 +16,6 @@ redhat_marketplace_index: registry.stage.redhat.io/redhat/redhat-marketplace-ind
 ci_pipeline_github_ssh_credentials_path: ../../vaults/{{ env }}/ci-pipeline-github-ssh-key
 ci_pipeline_kubeconfig_path: ../../vaults/{{ env }}/ci-pipeline-kubeconfig
 
-# Community signing vars
-community_signing_pipeline_url: "{{ community_signing_pipeline_name }}-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
-
-nginx_proxy_url: "{{ community_signing_pipeline_name }}-nginx-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
-
 # Webhook vars
 operator_pipeline_github_webhook_repos:
   - redhat-openshift-ecosystem/operator-pipelines-test
