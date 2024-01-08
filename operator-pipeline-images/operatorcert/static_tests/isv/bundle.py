@@ -27,7 +27,7 @@ def check_pruned_graph(bundle: Bundle) -> Iterator[CheckResult]:
     skip_range = (
         bundle_csv.get("metadata", {}).get("annotations", {}).get("olm.skipRange")
     )
-    print(skip_range, replaces)
+
     if skip_range and not replaces:
         channels = bundle.channels
         operator = bundle.operator

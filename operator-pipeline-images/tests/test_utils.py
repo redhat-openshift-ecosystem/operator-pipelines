@@ -1,13 +1,12 @@
+import os
 from pathlib import Path
 from unittest import mock
-from unittest.mock import call, MagicMock
+from unittest.mock import MagicMock, call, patch
 
 import pytest
-import os
-
 from operatorcert import utils
-from requests import Session
 from operatorcert.utils import store_results
+from requests import Session
 
 
 def test_find_file(tmp_path: Path) -> None:
@@ -83,3 +82,13 @@ def test_add_session_retries() -> None:
     assert session.adapters["https://"].max_retries.total == total
     assert session.adapters["https://"].max_retries.backoff_factor == backoff_factor
     assert session.adapters["https://"].max_retries.status_forcelist == status_forcelist
+
+
+@patch("operatorcert.utils.yaml.safe_load")
+def test_get_repo_config(mock_yaml_load: MagicMock) -> None:
+    mock_yaml_load.return_value = {"foo": "bar"}
+    mock_open = mock.mock_open()
+    with mock.patch("builtins.open", mock_open):
+        result = utils.get_repo_config("foo")
+        mock_yaml_load.assert_called_once_with(mock_open.return_value)
+        assert result == {"foo": "bar"}
