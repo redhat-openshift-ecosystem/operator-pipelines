@@ -1,0 +1,46 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: apply-test-waivers
+spec:
+  description: A task that controls test execution and required tests
+  params:
+    - name: pipeline_image
+      description: The common pipeline image.
+
+    - name: pull_request_url
+      description: URL to Github pull request with a new bundle submission.
+
+    - name: operator_name
+      description: A name of the operator that is added in a PR
+
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+  workspaces:
+    - name: base
+      description: Cloned repository at the base branch
+  steps:
+    - name: set-github-status
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.base.path)
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #! /usr/bin/env bash
+        set -ex
+
+        apply-test-waivers \
+          --pull-request-url $(params.pull_request_url) \
+          --repo-config-file config.yaml \
+          --operator-name $(params.operator_name) \
+          --verbose

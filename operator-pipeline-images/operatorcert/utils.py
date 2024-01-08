@@ -6,6 +6,7 @@ import os
 import pathlib
 from typing import Any, Dict, List, Optional, Tuple
 
+import yaml
 from requests import Session
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
@@ -100,6 +101,20 @@ def add_session_retries(
     adapter = HTTPAdapter(max_retries=retries)
     session.mount("http://", adapter)
     session.mount("https://", adapter)
+
+
+def get_repo_config(repo_config_file: str) -> Any:
+    """
+    Read repository configuration file.
+
+    Args:
+        repo_config_file (str): Path to repository configuration file
+
+    Returns:
+        Any: A dictionary with repository configuration
+    """
+    with open(repo_config_file, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
 
 class SplitArgs(argparse.Action):

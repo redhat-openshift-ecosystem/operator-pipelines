@@ -13,7 +13,7 @@ from github import Auth, Github
 from github.GithubException import GithubException
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-from operatorcert.entrypoints.github_labels import parse_github_issue_url
+from operatorcert.github import parse_github_issue_url
 from operatorcert.logger import setup_logger
 
 LOGGER = logging.getLogger("operator-cert")
