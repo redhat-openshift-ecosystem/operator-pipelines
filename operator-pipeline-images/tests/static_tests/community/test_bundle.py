@@ -123,12 +123,12 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
     [
         {},
         {
-            "metadata.annotations.capabilities": ("", "failure", "invalid"),
+            "metadata.annotations.capabilities": ("", "warning", "invalid"),
             "metadata.annotations.categories": ("", "warning", "invalid"),
-            "metadata.annotations.containerImage": ("", "failure", "invalid"),
+            "metadata.annotations.containerImage": ("", "warning", "invalid"),
             "metadata.annotations.createdAt": ("", "failure", "invalid"),
             "metadata.annotations.repository": ("", "warning", "invalid"),
-            "metadata.annotations.support": ("", "failure", "invalid"),
+            "metadata.annotations.support": ("", "warning", "invalid"),
             "metadata.annotations.alm-examples": ("", "failure", "invalid"),
             "metadata.annotations.description": ("", "warning", "invalid"),
             "spec.displayName": ("", "failure", "invalid"),
@@ -138,14 +138,14 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
             "spec.maintainers": ("", "failure", "invalid"),
             "spec.provider.name": ("", "failure", "invalid"),
             "spec.links": ("", "failure", "invalid"),
-            "spec.keywords": ("", "failure", "invalid"),
+            "spec.keywords": ("", "warning", "invalid"),
         },
         {
             "metadata.annotations.capabilities": ("Basic Install", "warning", "valid"),
             "metadata.annotations.categories": ("Storage,Security", "warning", "valid"),
             "metadata.annotations.containerImage": (
                 "example.com/foo/bar:tag",
-                "failure",
+                "warning",
                 "valid",
             ),
             "metadata.annotations.createdAt": (
@@ -160,7 +160,7 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
             ),
             "metadata.annotations.support": (
                 "Accusamus quidem quam enim dolor.",
-                "failure",
+                "warning",
                 "valid",
             ),
             "metadata.annotations.alm-examples": (
@@ -200,7 +200,7 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
                 "failure",
                 "valid",
             ),
-            "spec.keywords": (["foo", "bar"], "failure", "valid"),
+            "spec.keywords": (["foo", "bar"], "warning", "valid"),
         },
     ],
     indirect=False,

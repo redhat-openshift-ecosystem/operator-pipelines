@@ -171,16 +171,16 @@ def check_required_fields(bundle: Bundle) -> Iterator[CheckResult]:
     # docs/packaging-required-fields.md#required-fields-for-operatorhub
     required_fields = [
         # Field, validation, fatal
-        ("metadata.annotations.capabilities", validate_capabilities, True),
+        ("metadata.annotations.capabilities", validate_capabilities, False),
         ("metadata.annotations.categories", validate_categories, False),
         (
             "metadata.annotations.containerImage",
             re.compile(r"[^/]+/[^/]+/[^/:]+:.+"),
-            True,
+            False,
         ),
         ("metadata.annotations.createdAt", validate_timestamp, True),
         ("metadata.annotations.repository", re.compile(r"https?://.+"), False),
-        ("metadata.annotations.support", re.compile(r".{3,}", re.DOTALL), True),
+        ("metadata.annotations.support", re.compile(r".{3,}", re.DOTALL), False),
         ("metadata.annotations.alm-examples", re.compile(r".{30,}", re.DOTALL), True),
         ("metadata.annotations.description", re.compile(r".{10,}", re.DOTALL), False),
         ("spec.displayName", re.compile(r".{3,50}"), True),
@@ -190,7 +190,7 @@ def check_required_fields(bundle: Bundle) -> Iterator[CheckResult]:
         ("spec.maintainers", validate_maintainers, True),
         ("spec.provider.name", re.compile(r".{3,}"), True),
         ("spec.links", validate_links, True),
-        ("spec.keywords", validate_list_of_strings, True),
+        ("spec.keywords", validate_list_of_strings, False),
     ]
 
     csv = bundle.csv
