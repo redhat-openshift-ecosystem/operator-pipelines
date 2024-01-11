@@ -64,16 +64,23 @@ spec:
         REPO_MAINTAINERS=$(cat $(results.repo_maintainers.path))
         # requesting review from repo maintainers if there are no reviewers in ci.yaml or no ci.yaml file
         if [ -z "$CI_REVIEWERS" ]; then
-          gh pr edit $(params.pr_url) --add-reviewer `echo $REPO_MAINTAINERS | xargs | tr ' ' ','`
           echo "Reviewers are missing in ci.yaml file - requesting review from repository maintainers."
+          gh pr edit $(params.pr_url) --add-reviewer `echo $REPO_MAINTAINERS | xargs | tr ' ' ','`
         else
           # requesting review from PR author if it is included in the reviewers field
           if [ "$AUTHOR_IS_REVIEWER" = true ]; then
-            gh pr review $(params.pr_url) --approve
             echo "This pull request was automatically approved due to PR author is in the reviewers list."
+            gh pr review $(params.pr_url) --approve
           else
-            # request a review from the reviewers listed in ci.yml file if the author is not listed in ci.yaml
-            gh pr edit $(params.pr_url) --add-reviewer `echo $CI_REVIEWERS | xargs | tr ' ' ','`
-            echo "Author of PR is not listed as one of the reviewers. Requesting review from the reviewers listed in the ci.yaml file."
+            echo "Request a review from the reviewers listed in ci.yaml file if the author is not listed in ci.yaml"
+
+            echo -e "Author of the PR is not listed as one of the reviewers in ci.yaml.\nPlease review the PR and approve it with \`/lgtm\` comment.\n" > comment.md
+            echo -e $CI_REVIEWERS | sed 's/\([^ ]\+\)/@\1/g' >> comment.md
+            echo -e "\n" >> comment.md
+            echo -e "Consider adding author of the PR to the ci.yaml file if you want automated approval for a followup submissions." >> comment.md
+
+            cat comment.md
+
+            gh pr comment $(params.pr_url) -F comment.md
           fi
         fi
