@@ -254,28 +254,8 @@ spec:
           workspace: pipeline
           subPath: src
 
-    - name: annotations-validation
-      runAfter:
-        - get-organization
-      taskRef:
-        name: annotations-validation
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(params.bundle_path)"
-        - name: package_name
-          value: "$(tasks.bundle-path-validation.results.package_name)"
-        - name: organization
-          value: "$(tasks.get-organization.results.organization)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
-
     - name: dockerfile-creation
       runAfter:
-        - annotations-validation
         - yaml-lint
         - certification-project-check
       taskRef:
