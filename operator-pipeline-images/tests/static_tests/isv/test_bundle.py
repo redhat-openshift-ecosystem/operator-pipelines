@@ -3,10 +3,14 @@ from typing import Any, Dict, List
 
 import pytest
 from operator_repo import Repo
+from operator_repo.checks import Fail, Warn
+from operatorcert.static_tests.isv.bundle import (
+    PRUNED_GRAPH_ERROR,
+    check_marketplace_annotation,
+    check_operator_name,
+    check_pruned_graph,
+)
 from tests.utils import bundle_files, create_files
-from operator_repo.checks import Warn
-
-from operatorcert.static_tests.isv.bundle import check_pruned_graph, PRUNED_GRAPH_ERROR
 
 
 @pytest.mark.parametrize(
@@ -79,3 +83,109 @@ def test_check_pruned_graph(
     bundle = repo.operator("test-operator").bundle("0.0.2")
 
     assert set(check_pruned_graph(bundle)) == expected
+
+
+@pytest.mark.parametrize(
+    "organization,remote_workflow_annotation,support_workflow_annotation,expected",
+    [
+        pytest.param("certified-operators", "", "", set(), id="Non-marketplace"),
+        pytest.param(
+            "redhat-marketplace",
+            "https://marketplace.redhat.com/en-us/operators/package/pricing?utm_source="
+            "openshift_console",
+            "https://marketplace.redhat.com/en-us/operators/package/support?utm_source="
+            "openshift_console",
+            set(),
+            id="Correct annotations",
+        ),
+        pytest.param(
+            "redhat-marketplace",
+            "",
+            "https://marketplace.redhat.com/en-us/operators/package/support?utm_source="
+            "openshift_console",
+            {
+                Fail(
+                    "CSV marketplace.openshift.io/remote-workflow annotation is set "
+                    "to ''. Expected value is https://marketplace.redhat.com/en-us/"
+                    "operators/package/pricing?utm_source=openshift_console. "
+                    "To fix this issue define the annotation in "
+                    "'manifests/*.clusterserviceversion.yaml' file."
+                )
+            },
+            id="Missing remote workflow annotation",
+        ),
+        pytest.param(
+            "redhat-marketplace",
+            "https://marketplace.redhat.com/en-us/operators/package/pricing?utm_source="
+            "openshift_console",
+            "",
+            {
+                Fail(
+                    "CSV marketplace.openshift.io/support-workflow annotation is set "
+                    "to ''. Expected value is https://marketplace.redhat.com/en-us"
+                    "/operators/package/support?utm_source=openshift_console. "
+                    "To fix this issue define the annotation in "
+                    "'manifests/*.clusterserviceversion.yaml' file."
+                )
+            },
+            id="Missing support workflow annotation",
+        ),
+    ],
+)
+def test_check_marketplace_annotation(
+    organization: str,
+    remote_workflow_annotation: str,
+    support_workflow_annotation: Any,
+    expected: Any,
+    tmp_path: Path,
+) -> None:
+    annotations = {
+        "marketplace.openshift.io/remote-workflow": remote_workflow_annotation,
+        "marketplace.openshift.io/support-workflow": support_workflow_annotation,
+    }
+
+    create_files(
+        tmp_path,
+        bundle_files(
+            "package", "0.0.1", csv={"metadata": {"annotations": annotations}}
+        ),
+        {"config.yaml": {"organization": organization}},
+    )
+
+    repo = Repo(tmp_path)
+    bundle = repo.operator("package").bundle("0.0.1")
+
+    assert set(check_marketplace_annotation(bundle)) == expected
+
+
+@pytest.mark.parametrize(
+    "annotation_package,csv_package,expected",
+    [
+        pytest.param("foo", "foo", set(), id="Name matches"),
+        pytest.param(
+            "foo",
+            "bar",
+            {
+                Warn(
+                    "Bundle package annotation is set to 'foo'. Expected value "
+                    "is 'bar' based on the CSV name. To fix this issue define "
+                    "the annotation in 'metadata/annotations.yaml' file that "
+                    "matches the CSV name."
+                )
+            },
+            id="Name does not match",
+        ),
+    ],
+)
+def test_check_operator_name(
+    annotation_package: str, csv_package: str, expected: Any, tmp_path: Path
+) -> None:
+    annotations = {
+        "operators.operatorframework.io.bundle.package.v1": annotation_package,
+    }
+    create_files(tmp_path, bundle_files(csv_package, "0.0.1", annotations=annotations))
+
+    repo = Repo(tmp_path)
+    bundle = repo.operator(csv_package).bundle("0.0.1")
+
+    assert set(check_operator_name(bundle)) == expected
