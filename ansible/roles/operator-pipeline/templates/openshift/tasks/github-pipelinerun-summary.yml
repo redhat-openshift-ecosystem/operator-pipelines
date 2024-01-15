@@ -93,8 +93,8 @@ spec:
 
           PR_NAME="$(params.pipelinerun)"
           create-github-gist \
-            --input-file $PR_NAME/$(params.pipelinerun).log \
-            --output-file $PR_NAME/gits_output.json
+            --output-file "$PR_NAME/gits_output.json" \
+            "$PR_NAME/$(params.pipelinerun).log"
 
           echo "Logs have been successfully uploaded"
         fi

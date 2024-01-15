@@ -79,34 +79,26 @@ spec:
 
         preflight-result-filter \
           --test-results "$(params.preflight_result_file_path)" \
-          --output-file $RESULT_FILE_FILTERED $EXTRA_ARGS \
+          --output-file "$RESULT_FILE_FILTERED" $EXTRA_ARGS \
           --verbose
 
 
         echo "Posting GitHub comment to issue (or PR) $(params.request_url)"
 
-        FILES="$RESULT_FILE_FILTERED $(params.preflight_log_file_path)"
-
-        if [ -f "$(params.preflight_artifacts_output_dir)/preflight.stdout" ]; then
-            FILES+=" $(params.preflight_artifacts_output_dir)/preflight.stdout"
-        fi
-
-        if [ -f "$(params.preflight_artifacts_output_dir)/preflight.stderr" ]; then
-            FILES+=" $(params.preflight_artifacts_output_dir)/preflight.stderr"
-        fi
-
         create-github-gist \
           --pull-request-url "$(params.request_url)" \
-          --input-file $FILES \
-          --comment-prefix "Test artifacts: "
+          --comment-prefix "Test artifacts: " \
+          "$RESULT_FILE_FILTERED" \
+          "$(params.preflight_log_file_path)" \
+          "$(params.preflight_artifacts_output_dir)"
 
         # Did the tests pass?
         echo "Checking preflight test status"
-        CHECK_RESULTS=$(cat community-results.json | jq -r '.passed')
+        CHECK_RESULTS=$(jq -r '.passed' <"$RESULT_FILE_FILTERED")
         if [ $CHECK_RESULTS = "false" ]; then
           echo "Not all preflight tests passed."
-          cat community-results.json
-          echo "\n"
+          cat "$RESULT_FILE_FILTERED"
+          echo
 
           echo -n "failure" | tee $(results.test_result.path)
           exit 1
