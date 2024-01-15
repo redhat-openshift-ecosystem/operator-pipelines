@@ -91,10 +91,34 @@ spec:
         - name: remove-matching-namespace-labels
           value: "true"
 
+    # Set a pending GitHub status check first to provide the user with immediate feedback.
+    - name: set-github-status-pending
+      taskRef:
+        name: set-github-status
+      runAfter:
+        - set-github-started-label
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: description
+          value: "Pipeline for operator distribution has started."
+        - name: state
+          value: pending
+        - name: context
+          value: "operator/publish"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # set environment
     - name: set-env-community
       runAfter:
-        - set-github-started-label
+        - set-github-status-pending
       taskRef:
         name: set-env-community
         kind: Task
