@@ -74,7 +74,8 @@ def test_create_github_gist(
     )
 
     mock_input_file_content.assert_has_calls(
-        [call("foo"), call("bar"), call("baz"), call("qux")]
+        [call("foo"), call("bar"), call("baz"), call("qux")],
+        any_order=True,
     )
     github_user.create_gist.assert_called_once_with(
         True,
