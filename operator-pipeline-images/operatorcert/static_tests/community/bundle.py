@@ -175,9 +175,7 @@ def check_required_fields(bundle: Bundle) -> Iterator[CheckResult]:
         ("metadata.annotations.categories", validate_categories, False),
         (
             "metadata.annotations.containerImage",
-            re.compile(
-                r"^([\w.-]+(?:/[\w.-]+)/)?([\w.-]+(?:[._-][\w.-]+)/)?([\w.-]+):([\w.-]+)$"
-            ),
+            re.compile(r"([^/]+/){2,}[^/:]+:.+"),
             False,
         ),
         ("metadata.annotations.createdAt", validate_timestamp, True),
