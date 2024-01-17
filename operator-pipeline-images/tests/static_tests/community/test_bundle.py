@@ -144,7 +144,7 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
             "metadata.annotations.capabilities": ("Basic Install", "warning", "valid"),
             "metadata.annotations.categories": ("Storage,Security", "warning", "valid"),
             "metadata.annotations.containerImage": (
-                "example.com/foo/bar:tag",
+                "example.com/test/nested_namesapce/foo/bar:tag",
                 "warning",
                 "valid",
             ),
