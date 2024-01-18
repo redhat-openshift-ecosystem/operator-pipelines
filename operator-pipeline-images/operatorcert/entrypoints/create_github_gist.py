@@ -7,7 +7,8 @@ import json
 import logging
 import os
 import urllib
-from typing import Any, List
+from pathlib import Path
+from typing import Any, List, Iterator
 
 from github import Auth, Gist, Github, InputFileContent, IssueComment
 from operatorcert.logger import setup_logger
@@ -22,16 +23,17 @@ def setup_argparser() -> Any:
     Returns:
         Any: Initialized argument parser
     """
-    parser = argparse.ArgumentParser(description="Upload file to Github gists.")
+    parser = argparse.ArgumentParser(description="Upload files to GitHub gists.")
 
     parser.add_argument(
-        "--input-file",
-        help="The file that will be used to create github gist",
+        "input_path",
+        type=Path,
+        help="The file or directory that will be used to create github gist",
         nargs="+",
-        required=True,
     )
     parser.add_argument(
         "--output-file",
+        type=Path,
         help="The output json file with the gist URL",
     )
     parser.add_argument(
@@ -47,27 +49,43 @@ def setup_argparser() -> Any:
     return parser
 
 
-def create_github_gist(github_api: Github, input_files: List[str]) -> Gist.Gist:
+def files_in_dir(root_dir: Path) -> Iterator[Path]:
+    """Yield all regular files (not directories or special files) in a directory tree"""
+    for item in root_dir.iterdir():
+        if item.is_dir():
+            yield from files_in_dir(item)
+        elif item.is_file():
+            yield item
+
+
+def create_github_gist(github_api: Github, input_path: List[Path]) -> Gist.Gist:
     """
-    Create a Github gist from a file
+    Create a GitHub gist from a file
 
     Args:
         github_api (Github): Github API object
-        input_file (str): Path to the file that will be used to create the gist
+        input_path (Path): Path to the files or directories that will be used
+            to create the gist
 
     Returns:
-        Gist.Gist: Github gist object
+        Gist.Gist: GitHub gist object
     """
     github_auth_user = github_api.get_user()
 
     gist_content = {}
 
-    for input_file in input_files:
-        with open(input_file, "r", encoding="utf-8") as input_file_handler:
-            file_content = input_file_handler.read()
-            gist_content[os.path.basename(input_file)] = InputFileContent(file_content)
+    for input_item in input_path:
+        if input_item.is_dir():
+            for file_path in files_in_dir(input_item):
+                gist_content[str(file_path.relative_to(input_item))] = InputFileContent(
+                    file_path.read_text(encoding="utf-8")
+                )
+        else:
+            gist_content[input_item.name] = InputFileContent(
+                input_item.read_text(encoding="utf-8")
+            )
 
-    LOGGER.info("Creating gist from %s", input_files)
+    LOGGER.info("Creating gist from %s", input_path)
     gist = github_auth_user.create_gist(
         True,
         gist_content,
@@ -115,7 +133,7 @@ def main() -> None:
 
     github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN"))
     github = Github(auth=github_auth)
-    gist = create_github_gist(github, args.input_file)
+    gist = create_github_gist(github, args.input_path)
 
     if args.pull_request_url:
         # If pull request URL is available, we will add a comment to the PR
@@ -127,7 +145,7 @@ def main() -> None:
         share_github_gist(github, repository, pr_id, gist, args.comment_prefix)
 
     if args.output_file:
-        with open(args.output_file, "w", encoding="utf-8") as output_file_handler:
+        with args.output_file.open("w", encoding="utf-8") as output_file_handler:
             json.dump({"gist_url": gist.html_url}, output_file_handler)
 
 

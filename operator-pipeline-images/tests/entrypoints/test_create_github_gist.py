@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 from unittest import mock
 from unittest.mock import MagicMock, patch, call
@@ -8,6 +9,7 @@ from operatorcert.entrypoints.create_github_gist import (
     setup_argparser,
     share_github_gist,
 )
+from tests.utils import create_files
 
 
 @patch("operatorcert.entrypoints.create_github_gist.json.dump")
@@ -24,21 +26,22 @@ def test_main(
     mock_share_github_gist: MagicMock,
     mock_json_dump: MagicMock,
     monkeypatch: Any,
+    tmp_path: Path,
 ) -> None:
+    create_files(tmp_path, {"some_file": "foo"})
     args = MagicMock()
-    args.input_file = ["some_file"]
-    args.output_file = "tmp/output.json"
+    args.input_path = [tmp_path / "some_file"]
+    args.output_file = tmp_path / "output.json"
     args.pull_request_url = "https://github.com/foo/bar/pull/123"
     args.comment_prefix = "prefix:"
     mock_setup_argparser.return_value.parse_args.return_value = args
 
-    mock_open = mock.mock_open(read_data="foo")
-
     monkeypatch.setenv("GITHUB_TOKEN", "foo_api_token")
-    with mock.patch("builtins.open", mock_open):
-        main()
+    main()
 
-    mock_create_github_gist.assert_called_once_with(mock_github(), ["some_file"])
+    mock_create_github_gist.assert_called_once_with(
+        mock_github(), [tmp_path / "some_file"]
+    )
     mock_share_github_gist.assert_called_once_with(
         mock_github(), "foo/bar", 123, mock_create_github_gist.return_value, "prefix:"
     )
@@ -48,22 +51,39 @@ def test_main(
 
 
 @patch("operatorcert.entrypoints.create_github_gist.InputFileContent")
-def test_create_github_gist(mock_input_file_content: MagicMock) -> None:
-    mock_open = mock.mock_open(read_data="foo")
+def test_create_github_gist(
+    mock_input_file_content: MagicMock,
+    tmp_path: Path,
+) -> None:
+    create_files(
+        tmp_path,
+        {
+            "some_file": "foo",
+            "file2": "bar",
+            "subdir/nested/file3": "baz",
+            "subdir/nested/file4": "qux",
+        },
+    )
     mock_github = MagicMock()
 
     github_user = MagicMock()
     mock_github.get_user.return_value = github_user
     github_user.create_gist.return_value = MagicMock(html_url="some_url")
-    with mock.patch("builtins.open", mock_open):
-        resp = create_github_gist(mock_github, ["some_file", "file2"])
+    resp = create_github_gist(
+        mock_github, [tmp_path / "some_file", tmp_path / "file2", tmp_path / "subdir"]
+    )
 
-    mock_input_file_content.assert_has_calls([call("foo"), call("foo")])
+    mock_input_file_content.assert_has_calls(
+        [call("foo"), call("bar"), call("baz"), call("qux")],
+        any_order=True,
+    )
     github_user.create_gist.assert_called_once_with(
         True,
         {
             "some_file": mock_input_file_content.return_value,
             "file2": mock_input_file_content.return_value,
+            "nested/file3": mock_input_file_content.return_value,
+            "nested/file4": mock_input_file_content.return_value,
         },
     )
     assert resp == github_user.create_gist.return_value
