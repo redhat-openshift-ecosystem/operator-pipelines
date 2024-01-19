@@ -202,12 +202,138 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
             ),
             "spec.keywords": (["foo", "bar"], "warning", "valid"),
         },
+        {
+            "metadata.annotations.capabilities": ("Basic Install", "warning", "valid"),
+            "metadata.annotations.categories": ("Storage,Security", "warning", "valid"),
+            "metadata.annotations.containerImage": (
+                "example.com/foo/bar:tag",
+                "warning",
+                "valid",
+            ),
+            "metadata.annotations.createdAt": (
+                "2023-08-15T12:00:00Z",
+                "failure",
+                "valid",
+            ),
+            "metadata.annotations.repository": (
+                "https://example.com/foo/bar.git",
+                "warning",
+                "valid",
+            ),
+            "metadata.annotations.support": (
+                "Accusamus quidem quam enim dolor.",
+                "warning",
+                "valid",
+            ),
+            "metadata.annotations.alm-examples": (
+                "Accusamus quidem quam enim dolor.",
+                "failure",
+                "valid",
+            ),
+            "metadata.annotations.description": (
+                "Accusamus quidem quam enim dolor.",
+                "warning",
+                "valid",
+            ),
+            "spec.displayName": (
+                "Accusamus quidem quam enim dolor.",
+                "failure",
+                "valid",
+            ),
+            "spec.description": (
+                "Accusamus quidem quam enim dolor.",
+                "failure",
+                "valid",
+            ),
+            "spec.icon": (
+                [{"base64data": "Zm9v", "mediatype": "image/svg+xml"}],
+                "failure",
+                "valid",
+            ),
+            "spec.version": ("0.0.1", "failure", "valid"),
+            "spec.maintainers": (
+                [{"name": "John Doe", "email": "jdoe@example.com"}],
+                "failure",
+                "valid",
+            ),
+            "spec.provider.name": ({"name": "ACME Corp."}, "failure", "valid"),
+            "spec.links": (
+                [{"name": "example", "url": "https://example.com/"}],
+                "failure",
+                "valid",
+            ),
+            "spec.keywords": (["foo", "bar"], "warning", "valid"),
+        },
+        {
+            "metadata.annotations.capabilities": ("Basic Install", "warning", "valid"),
+            "metadata.annotations.categories": ("Storage,Security", "warning", "valid"),
+            "metadata.annotations.containerImage": (
+                "example.com/f~oo:tag",
+                "warning",
+                "valid",
+            ),
+            "metadata.annotations.createdAt": (
+                "2023-08-15T12:00:00Z",
+                "failure",
+                "valid",
+            ),
+            "metadata.annotations.repository": (
+                "https://example.com/foo/bar.git",
+                "warning",
+                "valid",
+            ),
+            "metadata.annotations.support": (
+                "Accusamus quidem quam enim dolor.",
+                "warning",
+                "valid",
+            ),
+            "metadata.annotations.alm-examples": (
+                "Accusamus quidem quam enim dolor.",
+                "failure",
+                "valid",
+            ),
+            "metadata.annotations.description": (
+                "Accusamus quidem quam enim dolor.",
+                "warning",
+                "valid",
+            ),
+            "spec.displayName": (
+                "Accusamus quidem quam enim dolor.",
+                "failure",
+                "valid",
+            ),
+            "spec.description": (
+                "Accusamus quidem quam enim dolor.",
+                "failure",
+                "valid",
+            ),
+            "spec.icon": (
+                [{"base64data": "Zm9v", "mediatype": "image/svg+xml"}],
+                "failure",
+                "valid",
+            ),
+            "spec.version": ("0.0.1", "failure", "valid"),
+            "spec.maintainers": (
+                [{"name": "John Doe", "email": "jdoe@example.com"}],
+                "failure",
+                "valid",
+            ),
+            "spec.provider.name": ({"name": "ACME Corp."}, "failure", "valid"),
+            "spec.links": (
+                [{"name": "example", "url": "https://example.com/"}],
+                "failure",
+                "valid",
+            ),
+            "spec.keywords": (["foo", "bar"], "warning", "valid"),
+        },
     ],
     indirect=False,
     ids=[
         "All missing",
         "All invalid",
         "All valid",
+        "Verify the nested image reference",
+        "valid namespace"
     ],
 )
 def test_required_fields(
