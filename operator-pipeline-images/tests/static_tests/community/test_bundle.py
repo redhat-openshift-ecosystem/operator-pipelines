@@ -144,131 +144,7 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
             "metadata.annotations.capabilities": ("Basic Install", "warning", "valid"),
             "metadata.annotations.categories": ("Storage,Security", "warning", "valid"),
             "metadata.annotations.containerImage": (
-                "example.com/test/nested_namesapce/foo/bar:tag",
-                "warning",
-                "valid",
-            ),
-            "metadata.annotations.createdAt": (
-                "2023-08-15T12:00:00Z",
-                "failure",
-                "valid",
-            ),
-            "metadata.annotations.repository": (
-                "https://example.com/foo/bar.git",
-                "warning",
-                "valid",
-            ),
-            "metadata.annotations.support": (
-                "Accusamus quidem quam enim dolor.",
-                "warning",
-                "valid",
-            ),
-            "metadata.annotations.alm-examples": (
-                "Accusamus quidem quam enim dolor.",
-                "failure",
-                "valid",
-            ),
-            "metadata.annotations.description": (
-                "Accusamus quidem quam enim dolor.",
-                "warning",
-                "valid",
-            ),
-            "spec.displayName": (
-                "Accusamus quidem quam enim dolor.",
-                "failure",
-                "valid",
-            ),
-            "spec.description": (
-                "Accusamus quidem quam enim dolor.",
-                "failure",
-                "valid",
-            ),
-            "spec.icon": (
-                [{"base64data": "Zm9v", "mediatype": "image/svg+xml"}],
-                "failure",
-                "valid",
-            ),
-            "spec.version": ("0.0.1", "failure", "valid"),
-            "spec.maintainers": (
-                [{"name": "John Doe", "email": "jdoe@example.com"}],
-                "failure",
-                "valid",
-            ),
-            "spec.provider.name": ({"name": "ACME Corp."}, "failure", "valid"),
-            "spec.links": (
-                [{"name": "example", "url": "https://example.com/"}],
-                "failure",
-                "valid",
-            ),
-            "spec.keywords": (["foo", "bar"], "warning", "valid"),
-        },
-        {
-            "metadata.annotations.capabilities": ("Basic Install", "warning", "valid"),
-            "metadata.annotations.categories": ("Storage,Security", "warning", "valid"),
-            "metadata.annotations.containerImage": (
                 "example.com/foo/bar:tag",
-                "warning",
-                "valid",
-            ),
-            "metadata.annotations.createdAt": (
-                "2023-08-15T12:00:00Z",
-                "failure",
-                "valid",
-            ),
-            "metadata.annotations.repository": (
-                "https://example.com/foo/bar.git",
-                "warning",
-                "valid",
-            ),
-            "metadata.annotations.support": (
-                "Accusamus quidem quam enim dolor.",
-                "warning",
-                "valid",
-            ),
-            "metadata.annotations.alm-examples": (
-                "Accusamus quidem quam enim dolor.",
-                "failure",
-                "valid",
-            ),
-            "metadata.annotations.description": (
-                "Accusamus quidem quam enim dolor.",
-                "warning",
-                "valid",
-            ),
-            "spec.displayName": (
-                "Accusamus quidem quam enim dolor.",
-                "failure",
-                "valid",
-            ),
-            "spec.description": (
-                "Accusamus quidem quam enim dolor.",
-                "failure",
-                "valid",
-            ),
-            "spec.icon": (
-                [{"base64data": "Zm9v", "mediatype": "image/svg+xml"}],
-                "failure",
-                "valid",
-            ),
-            "spec.version": ("0.0.1", "failure", "valid"),
-            "spec.maintainers": (
-                [{"name": "John Doe", "email": "jdoe@example.com"}],
-                "failure",
-                "valid",
-            ),
-            "spec.provider.name": ({"name": "ACME Corp."}, "failure", "valid"),
-            "spec.links": (
-                [{"name": "example", "url": "https://example.com/"}],
-                "failure",
-                "valid",
-            ),
-            "spec.keywords": (["foo", "bar"], "warning", "valid"),
-        },
-        {
-            "metadata.annotations.capabilities": ("Basic Install", "warning", "valid"),
-            "metadata.annotations.categories": ("Storage,Security", "warning", "valid"),
-            "metadata.annotations.containerImage": (
-                "example.com/f~oo:tag",
                 "warning",
                 "valid",
             ),
@@ -332,11 +208,92 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
         "All missing",
         "All invalid",
         "All valid",
-        "Verify the nested image reference",
-        "valid namespace",
     ],
 )
 def test_required_fields(
+    tmp_path: Path, fields: dict[str, tuple[Any, str, str]]
+) -> None:
+    csv_fields: Dict[str, Any] = {}
+    for path, (value, _, _) in fields.items():
+        merge(csv_fields, _make_nested_dict(path, value))
+    create_files(tmp_path, bundle_files("test-operator", "0.0.1", csv=csv_fields))
+    repo = Repo(tmp_path)
+    bundle = repo.operator("test-operator").bundle("0.0.1")
+
+    re_missing = re.compile(r"CSV does not define (.+)")
+    re_invalid = re.compile(r"CSV contains an invalid value for (.+)")
+
+    collected_results = {}
+
+    for result in check_required_fields(bundle):
+        match_missing = re_missing.match(result.reason)
+        if match_missing:
+            collected_results[match_missing.group(1)] = (result.kind, "missing")
+            continue
+        match_invalid = re_invalid.match(result.reason)
+        if match_invalid:
+            collected_results[match_invalid.group(1)] = (result.kind, "invalid")
+
+    expected_problems = {k for k, (_, __, t) in fields.items() if t != "valid"}
+    expected_successes = set(fields.keys()) - expected_problems
+    assert {k: v for k, v in collected_results.items() if k in expected_problems} == {
+        k: (s, t) for k, (_, s, t) in fields.items() if t != "valid"
+    }
+    assert all(
+        t == "missing" for k, (_, t) in collected_results.items() if k not in fields
+    )
+    assert expected_successes.intersection(collected_results.keys()) == set()
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {
+            "metadata.annotations.containerImage": (
+                "example/bar:tag",
+                "warning",
+                "valid",
+            ),
+        },
+        {
+            "metadata.annotations.containerImage": (
+                "example.com/test/nested_namesapce/foo/bar:tag",
+                "warning",
+                "valid",
+            ),
+        },
+        {
+            "metadata.annotations.containerImage": (
+                "example.com/foo/bar:tag",
+                "warning",
+                "valid",
+            ),
+        },
+        {
+            "metadata.annotations.containerImage": (
+                "example.com/f~oo:tag",
+                "warning",
+                "valid",
+            ),
+        },
+        {
+            "metadata.annotations.containerImage": (
+                "example.com/f~oo",
+                "warning",
+                "invalid",
+            ),
+        },
+    ],
+    indirect=False,
+    ids=[
+        "With one namespace",
+        "With nested namespaces",
+        "Verify the nested image reference",
+        "With special characters in namespace",
+        "invalid namespace",
+    ],
+)
+def test_metadata_container_image_validation(
     tmp_path: Path, fields: dict[str, tuple[Any, str, str]]
 ) -> None:
     csv_fields: Dict[str, Any] = {}
