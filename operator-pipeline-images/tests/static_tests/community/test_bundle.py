@@ -333,7 +333,7 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
         "All invalid",
         "All valid",
         "Verify the nested image reference",
-        "valid namespace"
+        "valid namespace",
     ],
 )
 def test_required_fields(
