@@ -85,7 +85,7 @@
               - name: image_namespace
               - name: hydra_sso_token_url
             resourcetemplates:
-              - apiVersion: tekton.dev/v1beta1
+              - apiVersion: tekton.dev/v1
                 kind: PipelineRun
                 metadata:
                   generateName: operator-hosted-pipeline-run

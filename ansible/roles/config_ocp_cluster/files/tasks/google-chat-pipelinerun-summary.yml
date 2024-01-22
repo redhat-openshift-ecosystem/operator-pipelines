@@ -1,5 +1,5 @@
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: google-chat-pipelinerun-summary
@@ -60,7 +60,7 @@ spec:
 
         echo "Building console URL"
         base_url=$(oc whoami --show-console)
-        path="/k8s/ns/$ns/tekton.dev~v1beta1~PipelineRun/$pr/"
+        path="/k8s/ns/$ns/tekton.dev~v1~PipelineRun/$pr/"
         echo "Console: $base_url$path" >> pipelinerun.txt
 
         echo "Getting TaskRun info"

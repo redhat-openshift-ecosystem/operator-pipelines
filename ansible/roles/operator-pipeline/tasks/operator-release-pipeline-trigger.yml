@@ -64,7 +64,7 @@
               - name: src_image_namespace
               - name: dest_image_namespace
             resourcetemplates:
-              - apiVersion: tekton.dev/v1beta1
+              - apiVersion: tekton.dev/v1
                 kind: PipelineRun
                 metadata:
                   generateName: operator-release-pipeline-run
