@@ -89,7 +89,8 @@
             metadata:
               generateName: index-signature-verification-pipeline-run-
             spec:
-              timeout: "30m"
+              timeouts:
+                pipeline: 30m
               pipelineRef:
                 name: index-signature-verification-pipeline
               workspaces:

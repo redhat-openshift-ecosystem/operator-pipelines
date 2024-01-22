@@ -57,7 +57,8 @@
                   # name to make this trigger idempotent.
                   name: "metrics-pipeline-$(tt.params.pipelinerun)"
                 spec:
-                  timeout: "5m"
+                  timeouts:
+                    pipeline: "5m"
                   params:
                     - name: metrics_endpoint
                       value: $(tt.params.metrics_endpoint)

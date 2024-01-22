@@ -81,7 +81,8 @@
                     git_pull_request_url: $(tt.params.git_pr_url)
                     git_pull_request_title: $(tt.params.git_pr_title)
                 spec:
-                  timeout: "2h"
+                  timeouts:
+                    pipeline: "2h"
                   pipelineRef:
                     name: community-hosted-pipeline
                   params:
