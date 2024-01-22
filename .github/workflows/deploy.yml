@@ -45,7 +45,7 @@ jobs:
           options: |
             --inventory inventory/operator-pipeline-dev
             --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
-            --skip-tags ci
+            --skip-tags ci,import-index-images
             --verbose
 
   deploy-qa:
@@ -72,7 +72,7 @@ jobs:
           options: |
             --inventory inventory/operator-pipeline-qa
             --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
-            --skip-tags ci
+            --skip-tags ci,import-index-images
             --verbose
 
   deploy-stage:
@@ -100,7 +100,7 @@ jobs:
           options: |
             --inventory inventory/operator-pipeline-stage
             --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
-            --skip-tags ci
+            --skip-tags ci,import-index-images
             --verbose
 
   deploy-prod:
@@ -127,7 +127,7 @@ jobs:
           options: |
             --inventory inventory/operator-pipeline-prod
             --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
-            --skip-tags ci
+            --skip-tags ci,import-index-images
             --verbose
 
   release:
