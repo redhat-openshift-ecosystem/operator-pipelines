@@ -1,6 +1,6 @@
 ---
 # Given a GitHub PR URL, return the corresponding PR number
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: get-pr-number

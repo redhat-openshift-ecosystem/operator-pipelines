@@ -8,7 +8,7 @@
         state: present
         namespace: "{{ oc_namespace }}"
         definition:
-          apiVersion: tekton.dev/v1beta1
+          apiVersion: tekton.dev/v1
           kind: PipelineRun
           metadata:
             name: "ci-pipeline-run-{{ suffix }}"

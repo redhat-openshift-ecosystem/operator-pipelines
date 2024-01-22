@@ -1,5 +1,5 @@
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: community-release-pipeline
@@ -328,8 +328,14 @@ spec:
       runAfter:
         - request-signature
       taskRef:
-        name: upload-signature
-        bundle: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
+        resolver: bundles
+        params:
+          - name: bundle
+            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
+          - name: name
+            value: upload-signature
+          - name: kind
+            value: Task
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"

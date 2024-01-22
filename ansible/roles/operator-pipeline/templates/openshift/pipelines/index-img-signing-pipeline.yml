@@ -1,5 +1,5 @@
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: index-img-signing-pipeline
@@ -29,14 +29,21 @@ spec:
     - name: signing_pub_secret_key
       description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
       default: sig-key.pub
+
   workspaces:
     - name: pipeline
+
   tasks:
     - name: verify-whitelisted-index-image
-      taskref:
-        name: verify-whitelisted-index-image
-        bundle: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
-        kind: Task
+      taskRef:
+        resolver: bundles
+        params:
+          - name: bundle
+            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
+          - name: name
+            value: verify-whitelisted-index-image
+          - name: kind
+            value: Task
       params:
         - name: reference
           value: $(params.reference)
@@ -55,9 +62,14 @@ spec:
 
     - name: request-signature
       taskRef:
-        name: request-signature
-        bundle: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
-        kind: Task
+        resolver: bundles
+        params:
+          - name: bundle
+            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
+          - name: name
+            value: request-signature
+          - name: kind
+            value: Task
       runAfter:
         - set-env
       params:
@@ -90,9 +102,14 @@ spec:
 
     - name: upload-signature
       taskRef:
-        name: upload-signature
-        bundle: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
-        kind: Task
+        resolver: bundles
+        params:
+          - name: bundle
+            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
+          - name: name
+            value: upload-signature
+          - name: kind
+            value: Task
       runAfter:
         - request-signature
       params:

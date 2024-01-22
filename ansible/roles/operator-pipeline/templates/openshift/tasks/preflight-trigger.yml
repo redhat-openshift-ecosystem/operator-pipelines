@@ -1,5 +1,5 @@
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: preflight-trigger
@@ -83,7 +83,7 @@ spec:
               key: $(params.github_token_secret_key)
       image: "$(params.preflight_trigger_image)"
       name: encrypt-and-encode-docker-config-json
-      resources: {}
+      computeResources: {}
       volumeMounts:
         - name: gpg-key-volume
           readOnly: true
@@ -122,7 +122,7 @@ spec:
       image: "$(params.preflight_trigger_image)"
       imagePullPolicy: Always
       name: create-openshift-ci-prowjob
-      resources: {}
+      computeResources: {}
       volumeMounts:
         - name: kubeconfig-volume
           readOnly: true
@@ -183,7 +183,7 @@ spec:
               key: $(params.github_token_secret_key)
       image: "$(params.preflight_trigger_image)"
       name: get-prowjob-artifacts-and-decrypt
-      resources: {}
+      computeResources: {}
       volumeMounts:
         - name: gpg-key-volume
           readOnly: true

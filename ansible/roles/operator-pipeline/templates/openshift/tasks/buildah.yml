@@ -1,5 +1,5 @@
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: buildah
@@ -55,7 +55,7 @@ spec:
   steps:
     - image: $(params.BUILDER_IMAGE)
       name: build
-      resources: {}
+      computeResources: {}
       script: |
         echo "Building $(params.IMAGE)"
         buildah --storage-driver=$(params.STORAGE_DRIVER) bud \

@@ -5,7 +5,7 @@
   block:
     - name: Find the run of {{ pipeline_name }}
       kubernetes.core.k8s_info:
-        api_version: tekton.dev/v1beta1
+        api_version: tekton.dev/v1
         kind: PipelineRun
         namespace: "{{ oc_namespace }}"
         label_selectors:
@@ -38,7 +38,7 @@
 
     - name: Verify successful run of {{ pipeline_name }}
       kubernetes.core.k8s_info:
-        api_version: tekton.dev/v1beta1
+        api_version: tekton.dev/v1
         kind: PipelineRun
         namespace: "{{ oc_namespace }}"
         name: "{{ pipeline_run.resources[0].metadata.name }}"
