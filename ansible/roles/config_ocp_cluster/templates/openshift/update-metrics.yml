@@ -17,7 +17,7 @@ spec:
       default: "registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe"
     - name: tkn_image
       description: Tekton CLI image
-      default: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:7fdeb7eae1727957ba7a7c0e812e5306ffbc594b7759ab058b262251c1ad6fd2
+      default: registry.redhat.io/openshift-pipelines/pipelines-cli-tkn-rhel8@sha256:a523d17e00f1f75c35073f7a7c0abcb2a8930c331ae5b3a0aed26dff1e6be5a3
     - name: metrics_url
       description: |
         A metrics collector route.
