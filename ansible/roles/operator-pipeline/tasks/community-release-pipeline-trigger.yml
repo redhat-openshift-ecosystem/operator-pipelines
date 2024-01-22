@@ -79,7 +79,8 @@
                     git_pull_request_url: $(tt.params.git_pr_url)
                     git_pull_request_title: $(tt.params.git_pr_title)
                 spec:
-                  timeout: "1h30m0s"
+                  timeouts:
+                    pipeline: "1h30m0s"
                   pipelineRef:
                     name: community-release-pipeline
                   params:
