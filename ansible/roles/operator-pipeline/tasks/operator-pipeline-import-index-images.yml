@@ -11,6 +11,7 @@
     # The 'or' condition is needed to support Ansible versions < 2.13
     validate_certs: "{{ lookup('env', 'K8S_AUTH_VERIFY_SSL', default='yes') or 'yes' }}"
     status_code: 201
+    timeout: 300
     body_format: json
     headers:
       Authorization: "Bearer {{ ocp_token }}"
@@ -45,6 +46,7 @@
     # The 'or' condition is needed to support Ansible versions < 2.13
     validate_certs: "{{ lookup('env', 'K8S_AUTH_VERIFY_SSL', default='yes') or 'yes' }}"
     status_code: 201
+    timeout: 300
     body_format: json
     headers:
       Authorization: "Bearer {{ ocp_token }}"
