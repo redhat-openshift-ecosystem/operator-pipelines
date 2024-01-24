@@ -183,7 +183,6 @@ tkn pipeline start operator-release-pipeline \
   --param git_commit=3ffff387caac0a5b475f44c4a54fb45eebb8dd8e \
   --param git_pr_title="operator kogito-operator (1.6.1-ok)" \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
-  --param is_latest=true \
   --param dest_image_namespace=redhat-isv-operators \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template-small.yml \

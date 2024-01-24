@@ -58,7 +58,6 @@
               - name: git_pr_title
               - name: git_pr_url
               - name: git_base_branch
-              - name: is_latest
               - name: env
               - name: pipeline_image
               - name: src_image_namespace
@@ -92,8 +91,6 @@
                       value: $(tt.params.git_pr_url)
                     - name: git_base_branch
                       value: $(tt.params.git_base_branch)
-                    - name: is_latest
-                      value: "true"
                     - name: env
                       value: $(tt.params.env)
                     - name: pipeline_image

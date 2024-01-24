@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: get-cert-project-related-data
+  name: get-pyxis-certification-data
 spec:
   params:
     - name: pipeline_image
@@ -35,6 +35,8 @@ spec:
       description: List of GitHub accounts with permissions allowing operator submission
     - name: project_status
       description: Status of the cert project - either archived or active
+    - name: vendor_label
+      description: A label of company that owns a certification
   workspaces:
     - name: source
     - name: results
@@ -89,9 +91,10 @@ spec:
 
         get_from_cp isv_pid '.container.isv_pid' | tee $(results.isv_pid.path)
         get_from_cp repository_name '.container.repository_name' | tee $(results.repo_name.path)
-        get_from_cp org_id '.org_id' | tee $(results.org_id.path)
         get_from_cp operator_distribution '.operator_distribution' | tee $(results.operator_distribution.path)
         get_from_cp project_status '.project_status' | tee $(results.project_status.path)
+
+        get_from_cp org_id '.org_id' | tee org_id.txt "$(results.org_id.path)"
 
         # Exception, where function cannot be applied-
         # github usernames have the newline symbol changed to space
@@ -100,3 +103,28 @@ spec:
             { echo " Error while retrieving github_usernames from the Certification Project- is the value missing?" \
             && exit 1; }
         echo -n $GITHUB_USERNAMES | tee $(results.github_usernames.path)
+
+    - name: get-vendor-related-data
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: PYXIS_CERT_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
+        - name: PYXIS_KEY_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe -o pipefail
+
+        ORG_ID=$(cat org_id.txt)
+
+        get-vendor-related-data \
+          --pyxis-url $(params.pyxis_url) \
+          --org-id $ORG_ID
+
+        # `xargs echo -n` removes the trailing newline
+        cat vendor | jq -r '.label' | xargs echo -n | tee $(results.vendor_label.path)

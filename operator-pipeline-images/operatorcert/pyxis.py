@@ -1,11 +1,12 @@
 """Pyxis API client"""
 import logging
 import os
+import time
+from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
 import requests
-
 from operatorcert.utils import add_session_retries
 
 LOGGER = logging.getLogger("operator-cert")
@@ -289,3 +290,99 @@ def get_repository_by_isv_pid(base_url: str, isv_pid: str) -> Any:
         raise
     json_resp = resp.json()
     return None if len(json_resp.get("data")) == 0 else json_resp["data"][0]
+
+
+def post_image_request(
+    base_url: str,
+    project_id: str,
+    image_id: str,
+    operation: str,
+) -> Any:
+    """
+    POST image request to Pyxis
+
+    Args:
+        base_url (str): base Pyxis URL,
+        project_id (str): Certification project _id
+        image_id (str): Container image _id
+        operation (str): Operation type
+
+    Returns:
+        Any: Image request response
+    """
+
+    payload = {
+        "operation": operation,
+        "image_id": image_id,
+    }
+
+    image_request_url = urljoin(
+        base_url, f"/v1/projects/certification/id/{project_id}/requests/images"
+    )
+
+    image_request = post(image_request_url, payload)
+
+    return image_request
+
+
+def now() -> datetime:
+    """
+    Return current time
+    """
+    return datetime.now()
+
+
+def wait_for_image_request(
+    base_url: str, image_request_id: str, timeout: float = 60 * 10, delay: float = 5
+) -> Any:
+    """
+    Wait for image request to finish and transition to one of the final states.
+    The request is tracked and status is printed every 5 seconds.
+
+    Args:
+        args (Any): CLI arguments
+        image_request_id (str): Image request _id
+        timeout (float): Timeout in seconds
+        delay (float): Delay between status checks in seconds
+
+    Returns:
+        Any: Image request final response
+    """
+    image_request_url = urljoin(
+        base_url, f"/v1/projects/certification/requests/images/id/{image_request_id}"
+    )
+    start_time = now()
+    while True:
+        resp = get(image_request_url)
+        try:
+            resp.raise_for_status()
+        except requests.HTTPError:
+            LOGGER.exception(
+                "Unable to get repo details %s - %s - %s",
+                image_request_url,
+                resp.status_code,
+                resp.text,
+            )
+            raise
+        image_request = resp.json()
+
+        status = image_request["status"]
+        LOGGER.info(
+            "Image request %s status: %s",
+            image_request_id,
+            status,
+        )
+        if status in ("failed", "completed", "aborted"):
+            LOGGER.info(
+                "Image request %s finished with status %s - %s",
+                image_request_id,
+                status,
+                image_request["status_message"],
+            )
+            return image_request
+        if now() - start_time > timedelta(seconds=timeout):
+            LOGGER.error(
+                "Timeout: Waiting for image request failed: %s.", image_request_id
+            )
+            return image_request
+        time.sleep(delay)

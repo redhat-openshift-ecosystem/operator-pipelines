@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -187,3 +188,64 @@ def test_get_repository_by_isv_pid_error(mock_session: MagicMock) -> None:
     )
     with pytest.raises(HTTPError):
         pyxis.get_repository_by_isv_pid("https://foo.com/v1", "123")
+
+
+@patch("operatorcert.pyxis.post")
+def test_post_image_request(mock_post: MagicMock) -> None:
+    result = pyxis.post_image_request("https://foo.com/", "123", "456", "publish")
+
+    expected_payload = {
+        "operation": "publish",
+        "image_id": "456",
+    }
+    mock_post.assert_called_once_with(
+        "https://foo.com/v1/projects/certification/id/123/requests/images",
+        expected_payload,
+    )
+    assert result == mock_post.return_value
+
+
+@patch("operatorcert.pyxis.time.sleep")
+@patch("operatorcert.pyxis.get")
+def test_wait_for_image_request(mock_get: MagicMock, mock_sleep: MagicMock) -> None:
+    mock_get.return_value.json.side_effect = [
+        {"status": "pending"},
+        {"status": "completed", "status_message": "Done"},
+    ]
+    result = pyxis.wait_for_image_request("https://foo.com/", "123")
+
+    assert result == {"status": "completed", "status_message": "Done"}
+    assert mock_get.call_count == 2
+    assert mock_sleep.call_count == 1
+
+
+@patch("operatorcert.pyxis.now")
+@patch("operatorcert.pyxis.time.sleep")
+@patch("operatorcert.pyxis.get")
+def test_wait_for_image_request_timeout(
+    mock_get: MagicMock, mock_sleep: MagicMock, mock_now: MagicMock
+) -> None:
+    mock_get.return_value.json.return_value = {"status": "pending", "_id": "123"}
+
+    # Difference between current time and start time is 10 second
+    mock_now.side_effect = [
+        datetime(2021, 1, 1, 0, 0, 0),
+        datetime(2021, 1, 1, 0, 0, 10),
+    ]
+    # Timeout is less than difference between current time and start time
+    result = pyxis.wait_for_image_request("https://foo.com/", "123", timeout=5)
+
+    assert result == {"status": "pending", "_id": "123"}
+    assert mock_get.call_count == 1
+    assert mock_sleep.call_count == 0
+
+
+@patch("operatorcert.pyxis.get")
+def test_wait_for_image_request_error(
+    mock_get: MagicMock,
+) -> None:
+    response = Response()
+    response.status_code = 400
+    mock_get.return_value.raise_for_status.side_effect = HTTPError(response=response)
+    with pytest.raises(HTTPError):
+        pyxis.wait_for_image_request("https://foo.com/v1", "123")

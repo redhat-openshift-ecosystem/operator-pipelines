@@ -1,0 +1,156 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: publish-pyxis-data
+spec:
+  description: Publish operator bundle data in Pyxis
+  params:
+    - name: pipeline_image
+      description: A docker image of operator-pipeline-images for the steps to run in.
+
+    - name: isv_pid
+      description: isv_pid of the certification project from Red Hat Connect
+
+    - name: internal_registry
+      description: Registry that contains bundle image
+
+    - name: internal_repository
+      description: |
+        Repository path, including namespace and repo name where bundle is stored
+
+    - name: container_digest
+      description: Image manifest digest
+
+    - name: bundle_version
+      description: Operator bundle version
+
+    - name: cert_project_id
+      description: Identifier of certification project from Red Hat Connect
+
+    - name: public_registry
+      description: External hostname of the registry
+
+    - name: public_repository
+      description: External repository name (namespace/name)
+
+    - name: docker_config_file_name
+      description: Path to the file containing the registry credentials in json format
+
+    - name: skopeo_image
+      description: Skopeo image
+      default: "registry.redhat.io/rhel9/skopeo:9.3-8"
+
+    - name: pyxis_ssl_secret_name
+      description: |
+        Kubernetes secret name that contains the Pyxis SSL files.
+        Valid only when internal Pyxis is used.
+
+    - name: pyxis_ssl_cert_secret_key
+      description: |
+        The key within the Kubernetes secret that contains the Pyxis SSL cert.
+        Valid only when internal Pyxis is used.
+
+    - name: pyxis_ssl_key_secret_key
+      description: |
+        The key within the Kubernetes secret that contains the Pyxis SSL key.
+        Valid only when internal Pyxis is used.
+
+    - name: pyxis_url
+      default: https://pyxis.engineering.redhat.com
+
+  workspaces:
+    - name: image-data
+      description: A storage for image metadata
+    - name: registry-credentials
+      description: Docker config for retrieving the bundle image
+  volumes:
+    - name: pyxis-ssl-volume
+      secret:
+        secretName: "$(params.pyxis_ssl_secret_name)"
+  steps:
+    - name: skopeo-inspect
+      image: "$(params.skopeo_image)"
+      script: |
+        set -xe
+
+        IMAGE_PULL_SPEC="$(params.internal_registry)/$(params.internal_repository)@$(params.container_digest)"
+
+        skopeo inspect \
+          --no-tags \
+          --authfile $(workspaces.registry-credentials.path)/.dockerconfigjson \
+          docker://$IMAGE_PULL_SPEC > $(workspaces.image-data.path)/skopeo-inspect.json
+
+    - name: set-cert-project-repository
+      image: "$(params.pipeline_image)"
+      env:
+        - name: PYXIS_CERT_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
+        - name: PYXIS_KEY_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        set-cert-project-repository \
+          --pyxis-url $(params.pyxis_url) \
+          --cert-project-id $(params.cert_project_id) \
+          --registry $(params.internal_registry) \
+          --repository $(params.internal_repository) \
+          --docker-config "$(workspaces.registry-credentials.path)/$(params.docker_config_file_name)" \
+          --verbose
+
+    - name: create-container-image
+      image: "$(params.pipeline_image)"
+      env:
+        - name: PYXIS_CERT_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
+        - name: PYXIS_KEY_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+        echo "Creating container image"
+
+        create-container-image \
+          --pyxis-url $(params.pyxis_url) \
+          --registry $(params.internal_registry) \
+          --repository $(params.internal_repository) \
+          --docker-image-digest $(params.container_digest) \
+          --isv-pid $(params.isv_pid) \
+          --skopeo-result $(workspaces.image-data.path)/skopeo-inspect.json \
+          --bundle-version $(params.bundle_version) \
+          --output-file $(workspaces.image-data.path)/pyxis-image.json \
+          --verbose
+
+    - name: publish-pyxis-image
+      image: "$(params.pipeline_image)"
+      env:
+        - name: PYXIS_CERT_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
+        - name: PYXIS_KEY_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+        echo "Publishing image and associated resources"
+
+        IMAGE_ID=$(jq -r '._id' $(workspaces.image-data.path)/pyxis-image.json)
+
+        publish-pyxis-image \
+          --pyxis-url $(params.pyxis_url) \
+          --image-id $IMAGE_ID \
+          --cert-project-id $(params.cert_project_id)
