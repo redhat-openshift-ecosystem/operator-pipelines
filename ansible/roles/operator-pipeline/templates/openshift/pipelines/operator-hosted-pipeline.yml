@@ -329,11 +329,11 @@ spec:
           subPath: src
 
     # Get cert project related data
-    - name: get-cert-project-related-data
+    - name: get-pyxis-certification-data
       runAfter:
         - certification-project-check
       taskRef:
-        name: get-cert-project-related-data
+        name: get-pyxis-certification-data
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -356,18 +356,18 @@ spec:
 
     - name: verify-project
       runAfter:
-        - get-cert-project-related-data
+        - get-pyxis-certification-data
       taskRef:
         name: verify-project
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: project_distribution
-          value: "$(tasks.get-cert-project-related-data.results.operator_distribution)"
+          value: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
         - name: organization
           value: "$(tasks.get-organization.results.organization)"
         - name: project_status
-          value: "$(tasks.get-cert-project-related-data.results.project_status)"
+          value: "$(tasks.get-pyxis-certification-data.results.project_status)"
 
     # Merge user's registry tokens with service account credentials
     # used elsewhere by this pipeline.
@@ -378,7 +378,7 @@ spec:
     # our credentials for that registry will be omitted.
     - name: merge-registry-credentials
       runAfter:
-        - get-cert-project-related-data
+        - get-pyxis-certification-data
       taskRef:
         name: merge-registry-credentials
       params:
@@ -401,7 +401,7 @@ spec:
     # Validate submission
     - name: submission-validation
       runAfter:
-        - get-cert-project-related-data
+        - get-pyxis-certification-data
       taskRef:
         name: submission-validation
       params:
@@ -416,7 +416,7 @@ spec:
         - name: git_username
           value: $(params.git_username)
         - name: github_usernames
-          value: "$(tasks.get-cert-project-related-data.results.github_usernames)"
+          value: "$(tasks.get-pyxis-certification-data.results.github_usernames)"
         - name: operator_name
           value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: github_token_secret_name
@@ -429,7 +429,7 @@ spec:
           subPath: src
 
     # Updates certification status to "In Progress", if not already "Published".
-    # See the get-cert-project-related-data task for how that's determined.
+    # See the get-pyxis-certification-data task for how that's determined.
     - name: update-cert-project-status
       runAfter:
         - submission-validation
@@ -439,7 +439,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: new_certification_status
-          value: "$(tasks.get-cert-project-related-data.results.new_certification_status)"
+          value: "$(tasks.get-pyxis-certification-data.results.new_certification_status)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: pyxis_url
@@ -451,7 +451,7 @@ spec:
         - name: pyxis_ssl_key_secret_key
           value: "$(params.pyxis_ssl_key_secret_key)"
         - name: current_certification_status
-          value: "$(tasks.get-cert-project-related-data.results.current_certification_status)"
+          value: "$(tasks.get-pyxis-certification-data.results.current_certification_status)"
 
     # reserve operator name
     - name: reserve-operator-name
@@ -463,7 +463,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: association
-          value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
+          value: "$(tasks.get-pyxis-certification-data.results.isv_pid)"
         - name: operator_name
           value: "$(tasks.validate-pr-title.results.operator_name)"
         - name: pyxis_url

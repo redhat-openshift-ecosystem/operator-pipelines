@@ -14,8 +14,6 @@ spec:
       description: reference to the destination bundle image registry
     - name: dest_image_tag
       description: reference to the destination bundle image tag
-    - name: is_latest
-      description: If explicitly set to "true", image will be tagged as "latest"
   workspaces:
     - name: src-registry-credentials
       description: Docker config for the source registry
@@ -39,14 +37,12 @@ spec:
           docker://$(params.src_image) \
           docker://"$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag)"
 
-        # optionally tag destination image as latest
-        if [ "$(params.is_latest)" = "true" ]; then
-          skopeo copy \
-            --src-authfile $SRC_AUTHFILE \
-            --dest-authfile $DEST_AUTHFILE \
-            docker://$(params.src_image) \
-            docker://"$(params.dest_image_registry_namespace_certproject):latest"
-        fi
+
+        skopeo copy \
+          --src-authfile $SRC_AUTHFILE \
+          --dest-authfile $DEST_AUTHFILE \
+          docker://$(params.src_image) \
+          docker://"$(params.dest_image_registry_namespace_certproject):latest"
 
         DIGEST=$(skopeo inspect --authfile $DEST_AUTHFILE docker://$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag) | jq -r .Digest)
         echo -n $DIGEST | tee $(results.container_digest.path)

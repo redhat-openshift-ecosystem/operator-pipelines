@@ -16,8 +16,6 @@ spec:
       description: title of the pull request with operator submission
     - name: git_pr_url
       description: URL to the pull request
-    - name: is_latest
-      description: If explicitly set to "true", resulting image will be tagged as "latest"
     - name: src_registry
       description: Source registry for the bundle image.
       default: quay.io
@@ -251,28 +249,12 @@ spec:
           workspace: repository
           subPath: src
 
-    # Get the bundle versions to build index
-    - name: get-supported-versions
-      runAfter:
-        - bundle-path-validation
-      taskRef:
-        name: get-supported-versions
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
     # Get additional data necessary for certification
-    - name: get-cert-project-related-data
+    - name: get-pyxis-certification-data
       runAfter:
         - get-organization
       taskRef:
-        name: get-cert-project-related-data
+        name: get-pyxis-certification-data
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -293,80 +275,53 @@ spec:
         - name: results
           workspace: results
 
-    - name: get-vendor-related-data
-      runAfter:
-        - get-cert-project-related-data
-      taskRef:
-        name: get-vendor-related-data
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: org_id
-          value: "$(tasks.get-cert-project-related-data.results.org_id)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
-        - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
-        - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
-
-    - name: inspect-image
-      runAfter:
-        - bundle-path-validation
-      taskRef:
-        name: inspect-image
-        kind: Task
-      params:
-        - name: image
-          value: &srcBundleImage "$(params.src_registry)/$(params.src_image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
-        - name: registry
-          value: $(params.src_registry)
-      workspaces:
-        - name: registry-credentials
-          workspace: registry-pull-credentials
-        - name: image-data
-          workspace: image-data
-
     - name: copy-bundle-image-to-released-registry
       runAfter:
-        - get-vendor-related-data
+        - get-pyxis-certification-data
       taskRef:
         name: copy-image
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: src_image
-          value: *srcBundleImage
-        - name: is_latest
-          value: "$(params.is_latest)"
+          value: "$(params.src_registry)/$(params.src_image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
         - name: dest_image_registry_namespace_certproject
           value: "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
         - name: dest_image_tag
           value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: connect_repo_path
-          value: "$(tasks.set-env.results.connect_registry)/$(tasks.get-vendor-related-data.results.vendor_label)/$(tasks.get-cert-project-related-data.results.repo_name)"
+          value: "$(tasks.set-env.results.connect_registry)/$(tasks.get-pyxis-certification-data.results.vendor_label)/$(tasks.get-pyxis-certification-data.results.repo_name)"
       workspaces:
         - name: src-registry-credentials
           workspace: registry-pull-credentials
         - name: dest-registry-credentials
           workspace: registry-push-credentials
 
-    - name: set-cert-project-repository
+    # Publish bundle metadata to Pyxis
+    - name: publish-pyxis-data
       runAfter:
         - copy-bundle-image-to-released-registry
       taskRef:
-        name: set-cert-project-repository
+        name: publish-pyxis-data
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
+        - name: internal_registry
+          value: "$(params.src_registry)"
+        - name: internal_repository
+          value: "$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
+        - name: isv_pid
+          value: "$(tasks.get-pyxis-certification-data.results.isv_pid)"
+        - name: container_digest
+          value: "$(tasks.copy-bundle-image-to-released-registry.results.container_digest)"
+        - name: bundle_version
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: registry
+        - name: public_registry
           value: "$(params.dest_registry)"
-        - name: repository
-          value: "$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
+        - name: public_repository
+          value: "$(tasks.get-pyxis-certification-data.results.vendor_label)/$(tasks.get-pyxis-certification-data.results.repo_name)"
         - name: docker_config_file_name
           value: ".dockerconfigjson"
         - name: pyxis_url
@@ -377,76 +332,36 @@ spec:
           value: "$(params.pyxis_ssl_cert_secret_key)"
         - name: pyxis_ssl_key_secret_key
           value: "$(params.pyxis_ssl_key_secret_key)"
-      workspaces:
-        - name: registry-credentials
-          workspace: registry-serve-credentials
 
-    # create container image
-    - name: create-container-image
-      runAfter:
-        - set-cert-project-repository
-        - inspect-image
-      taskRef:
-        name: create-container-image
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: connect_registry
-          value: "$(tasks.set-env.results.connect_registry)"
-        - name: isv_pid
-          value: "$(tasks.get-cert-project-related-data.results.isv_pid)"
-        - name: repository
-          value: "$(tasks.get-vendor-related-data.results.vendor_label)/$(tasks.get-cert-project-related-data.results.repo_name)"
-        - name: container_digest
-          value: "$(tasks.copy-bundle-image-to-released-registry.results.container_digest)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
-        - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
-        - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
-        - name: bundle_version
-          value: "$(tasks.bundle-path-validation.results.bundle_version)"
-        - name: is_latest
-          value: "$(params.is_latest)"
       workspaces:
         - name: image-data
           workspace: image-data
+        - name: registry-credentials
+          workspace: registry-serve-credentials
 
-    # Publish Vendor, Repository
-    - name: publish-resources
+    # Get the bundle versions to build index
+    - name: get-supported-versions
       runAfter:
-        - create-container-image
+        - publish-pyxis-data
       taskRef:
-        name: publish-resources
+        name: get-supported-versions
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: org_id
-          value: "$(tasks.get-cert-project-related-data.results.org_id)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
-        - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
-        - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
-        - name: connect_registry
-          value: "$(tasks.set-env.results.connect_registry)"
+        - name: bundle_path
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
 
     # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
     - name: acquire-lease
       retries: 8
       runAfter:
-        - publish-resources
         - get-supported-versions
       when: &whenNotUndistributed
-        - input: &operatorDistribution "$(tasks.get-cert-project-related-data.results.operator_distribution)"
+        - input: &operatorDistribution "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
           operator: notin
           values:
             - undistributed
@@ -661,33 +576,6 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: GITHUB_TOKEN_SECRET_KEY
           value: "$(params.github_token_secret_key)"
-
-    # Updates certification status to "Published"
-    - name: update-cert-project-status
-      taskRef:
-        name: update-cert-project-status
-      when:
-        - input: "$(tasks.status)"
-          operator: in
-          values: ["Succeeded", "Completed"]
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: pyxis_url
-          value: "$(tasks.set-env.results.pyxis_url)"
-        - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
-        - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
-        - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
-          # The project is always published if this is executing
-        - name: new_certification_status
-          value: "Published"
-        - name: current_certification_status
-          value: "$(tasks.get-cert-project-related-data.results.current_certification_status)"
 
     - name: set-github-passed-label
       when:
