@@ -366,6 +366,19 @@ def test_check_dangling_bundles(mock_config: MagicMock, tmp_path: Path) -> None:
         failures[0].reason == "Channel beta has dangling bundles: {Bundle(hello/0.0.2)}"
     )
 
+    # Malformed .spec.replaces
+    create_files(
+        tmp_path,
+        bundle_files("malformed", "0.0.1", csv={"spec": {"replaces": ""}}),
+    )
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("malformed")
+    bundle1 = operator.bundle("0.0.1")
+    failures = list(check_dangling_bundles(bundle1))
+    assert len(failures) == 1 and isinstance(failures[0], Fail)
+    assert "Bundle(malformed/0.0.1) has invalid 'replaces' field:" in failures[0].reason
+
 
 @patch("operator_repo.core.Operator.config")
 def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> None:
@@ -406,6 +419,19 @@ def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> Non
         == "Upgrade graph loop detected for bundle: [Bundle(hello/0.0.1), "
         "Bundle(hello/0.0.2), Bundle(hello/0.0.1)]"
     )
+
+    # Malformed .spec.replaces
+    create_files(
+        tmp_path,
+        bundle_files("malformed", "0.0.1", csv={"spec": {"replaces": ""}}),
+    )
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("malformed")
+    bundle = operator.bundle("0.0.1")
+    failures = list(check_upgrade_graph_loop(bundle))
+    assert len(failures) == 1 and isinstance(failures[0], Fail)
+    assert "Bundle(malformed/0.0.1) has invalid 'replaces' field:" in failures[0].reason
 
 
 @pytest.mark.parametrize(
