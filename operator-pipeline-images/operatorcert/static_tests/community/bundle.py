@@ -238,7 +238,7 @@ def check_dangling_bundles(bundle: Bundle) -> Iterator[CheckResult]:
         channel_head = operator.head(channel)
         try:
             graph = operator.update_graph(channel)
-        except NotImplementedError as exc:
+        except (NotImplementedError, ValueError) as exc:
             yield Fail(str(exc))
             return
         dangling_bundles = {
@@ -272,7 +272,7 @@ def check_upgrade_graph_loop(bundle: Bundle) -> Iterator[CheckResult]:
             channel_bundles = operator.channel_bundles(channel)
             try:
                 graph = operator.update_graph(channel)
-            except NotImplementedError as exc:
+            except (NotImplementedError, ValueError) as exc:
                 yield Fail(str(exc))
                 return
             follow_graph(graph, channel_bundles[0], visited)
