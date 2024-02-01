@@ -129,7 +129,6 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
             "metadata.annotations.createdAt": ("", "warning", "invalid"),
             "metadata.annotations.repository": ("", "warning", "invalid"),
             "metadata.annotations.support": ("", "warning", "invalid"),
-            "metadata.annotations.alm-examples": ("", "failure", "invalid"),
             "metadata.annotations.description": ("", "warning", "invalid"),
             "spec.displayName": ("", "failure", "invalid"),
             "spec.description": ("", "failure", "invalid"),
@@ -161,11 +160,6 @@ def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:
             "metadata.annotations.support": (
                 "Accusamus quidem quam enim dolor.",
                 "warning",
-                "valid",
-            ),
-            "metadata.annotations.alm-examples": (
-                "Accusamus quidem quam enim dolor.",
-                "failure",
                 "valid",
             ),
             "metadata.annotations.description": (

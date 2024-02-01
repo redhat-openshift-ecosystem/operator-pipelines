@@ -181,7 +181,6 @@ def check_required_fields(bundle: Bundle) -> Iterator[CheckResult]:
         ("metadata.annotations.createdAt", validate_timestamp, False),
         ("metadata.annotations.repository", re.compile(r"https?://.+"), False),
         ("metadata.annotations.support", re.compile(r".{3,}", re.DOTALL), False),
-        ("metadata.annotations.alm-examples", re.compile(r".{30,}", re.DOTALL), True),
         ("metadata.annotations.description", re.compile(r".{10,}", re.DOTALL), False),
         ("spec.displayName", re.compile(r".{3,50}"), True),
         ("spec.description", re.compile(r".{20,}", re.DOTALL), True),
