@@ -52,14 +52,18 @@ def check_marketplace_annotation(bundle: Bundle) -> Iterator[CheckResult]:
     if organization != "redhat-marketplace":
         return
 
+    annotation_package = bundle.annotations.get(
+        "operators.operatorframework.io.bundle.package.v1"
+    )
+
     csv_annotations = bundle.csv.get("metadata", {}).get("annotations", {})
     expected_remote_workflow = (
         "https://marketplace.redhat.com/en-us/operators/"
-        f"{bundle.csv_operator_name}/pricing?utm_source=openshift_console"
+        f"{annotation_package}/pricing?utm_source=openshift_console"
     )
     expected_support_workflow = (
         "https://marketplace.redhat.com/en-us/operators/"
-        f"{bundle.csv_operator_name}/support?utm_source=openshift_console"
+        f"{annotation_package}/support?utm_source=openshift_console"
     )
 
     remote_workflow = csv_annotations.get("marketplace.openshift.io/remote-workflow")
