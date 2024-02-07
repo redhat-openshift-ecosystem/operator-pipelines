@@ -386,3 +386,51 @@ def wait_for_image_request(
             )
             return image_request
         time.sleep(delay)
+
+
+def wait_for_container_grades(
+    base_url: str, image_identifier: str, timeout: float = 60 * 10, delay: float = 5
+) -> Any:
+    """
+    Wait for container freshness grades to become available for
+    the given image identifier.
+
+    Args:
+        base_url (str): Pyxis base URL
+        image_identifier (str): Container image identifier
+        timeout (float): Timeout in seconds
+        delay (float): Delay between status checks in seconds
+    """
+    container_grades_url = urljoin(base_url, f"/v1/images/id/{image_identifier}")
+    start_time = now()
+    while True:
+        resp = get(container_grades_url, params={"include": "freshness_grades,_id"})
+        try:
+            resp.raise_for_status()
+        except requests.HTTPError:
+            LOGGER.exception(
+                "Unable to get container image grades %s - %s - %s",
+                container_grades_url,
+                resp.status_code,
+                resp.text,
+            )
+            raise
+        container_image = resp.json()
+        if container_image.get("freshness_grades"):
+            LOGGER.info(
+                "Container grades for %s are completed: %s",
+                image_identifier,
+                container_image["freshness_grades"],
+            )
+            return container_image
+        LOGGER.info(
+            "Waiting for container grades for %s: %s",
+            image_identifier,
+            container_image.get("freshness_grades"),
+        )
+        if now() - start_time > timedelta(seconds=timeout):
+            LOGGER.error(
+                "Timeout: Waiting for container grades failed: %s.", image_identifier
+            )
+            return container_image
+        time.sleep(delay)

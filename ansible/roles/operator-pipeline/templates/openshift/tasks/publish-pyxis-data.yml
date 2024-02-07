@@ -152,5 +152,6 @@ spec:
 
         publish-pyxis-image \
           --pyxis-url $(params.pyxis_url) \
+          --wait-for-grades \
           --image-id $IMAGE_ID \
           --cert-project-id $(params.cert_project_id)
