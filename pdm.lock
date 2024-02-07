@@ -5,7 +5,7 @@
 groups = ["default", "operatorcert", "operatorcert-dev", "tox"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:b2796c18ff8b733041cf507792d50c3733550dc3961ed0d046f726861a2ba5a4"
+content_hash = "sha256:667c0503e497d9958c6ae8a6feeb19ddc2abe137c431b4c6d9a062be71a96266"
 
 [[package]]
 name = "argcomplete"
@@ -416,25 +416,25 @@ files = [
 
 [[package]]
 name = "gitpython"
-version = "3.1.37"
+version = "3.1.41"
 requires_python = ">=3.7"
 summary = "GitPython is a Python library used to interact with Git repositories"
 dependencies = [
     "gitdb<5,>=4.0.1",
 ]
 files = [
-    {file = "GitPython-3.1.37-py3-none-any.whl", hash = "sha256:5f4c4187de49616d710a77e98ddf17b4782060a1788df441846bddefbb89ab33"},
-    {file = "GitPython-3.1.37.tar.gz", hash = "sha256:f9b9ddc0761c125d5780eab2d64be4873fc6817c2899cbcb34b02344bdc7bc54"},
+    {file = "GitPython-3.1.41-py3-none-any.whl", hash = "sha256:c36b6634d069b3f719610175020a9aed919421c87552185b085e04fbbdb10b7c"},
+    {file = "GitPython-3.1.41.tar.gz", hash = "sha256:ed66e624884f76df22c8e16066d567aaa5a37d5b5fa19db2c6df6f7156db9048"},
 ]
 
 [[package]]
 name = "giturlparse"
-version = "0.10.0"
-requires_python = ">=3.6"
+version = "0.12.0"
+requires_python = ">=3.8"
 summary = "A Git URL parsing module (supports parsing and rewriting)"
 files = [
-    {file = "giturlparse-0.10.0-py2.py3-none-any.whl", hash = "sha256:04ba1a3a099c3093fa8d24a422913c6a9b2c2cd22bcffc939cf72e3e98f672d7"},
-    {file = "giturlparse-0.10.0.tar.gz", hash = "sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337"},
+    {file = "giturlparse-0.12.0-py2.py3-none-any.whl", hash = "sha256:412b74f2855f1da2fefa89fd8dde62df48476077a72fc19b62039554d27360eb"},
+    {file = "giturlparse-0.12.0.tar.gz", hash = "sha256:c0fff7c21acc435491b1779566e038757a205c1ffdcb47e4f81ea52ad8c3859a"},
 ]
 
 [[package]]
@@ -459,12 +459,12 @@ files = [
 
 [[package]]
 name = "humanize"
-version = "4.7.0"
+version = "4.9.0"
 requires_python = ">=3.8"
 summary = "Python humanize utilities"
 files = [
-    {file = "humanize-4.7.0-py3-none-any.whl", hash = "sha256:df7c429c2d27372b249d3f26eb53b07b166b661326e0325793e0a988082e3889"},
-    {file = "humanize-4.7.0.tar.gz", hash = "sha256:7ca0e43e870981fa684acb5b062deb307218193bca1a01f2b2676479df849b3a"},
+    {file = "humanize-4.9.0-py3-none-any.whl", hash = "sha256:ce284a76d5b1377fd8836733b983bfb0b76f1aa1c090de2566fcf008d7f6ab16"},
+    {file = "humanize-4.9.0.tar.gz", hash = "sha256:582a265c931c683a7e9b8ed9559089dea7edcf6cc95be39a3cbc2c5d5ac2bcfa"},
 ]
 
 [[package]]
@@ -658,7 +658,7 @@ files = [
 
 [[package]]
 name = "pygithub"
-version = "1.59.0"
+version = "1.59.1"
 requires_python = ">=3.7"
 summary = "Use the full Github API v3"
 dependencies = [
@@ -668,8 +668,8 @@ dependencies = [
     "requests>=2.14.0",
 ]
 files = [
-    {file = "PyGithub-1.59.0-py3-none-any.whl", hash = "sha256:126bdbae72087d8d038b113aab6b059b4553cb59348e3024bb1a1cae406ace9e"},
-    {file = "PyGithub-1.59.0.tar.gz", hash = "sha256:6e05ff49bac3caa7d1d6177a10c6e55a3e20c85b92424cc198571fd0cf786690"},
+    {file = "PyGithub-1.59.1-py3-none-any.whl", hash = "sha256:3d87a822e6c868142f0c2c4bf16cce4696b5a7a4d142a7bd160e1bdf75bc54a9"},
+    {file = "PyGithub-1.59.1.tar.gz", hash = "sha256:c44e3a121c15bf9d3a5cc98d94c9a047a5132a9b01d22264627f58ade9ddc217"},
 ]
 
 [[package]]
@@ -880,6 +880,7 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
+    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -998,12 +999,12 @@ files = [
 
 [[package]]
 name = "semver"
-version = "3.0.1"
+version = "3.0.2"
 requires_python = ">=3.7"
 summary = "Python helper for Semantic Versioning (https://semver.org)"
 files = [
-    {file = "semver-3.0.1-py3-none-any.whl", hash = "sha256:2a23844ba1647362c7490fe3995a86e097bb590d16f0f32dfc383008f19e4cdf"},
-    {file = "semver-3.0.1.tar.gz", hash = "sha256:9ec78c5447883c67b97f98c3b6212796708191d22e4ad30f4570f840171cbce1"},
+    {file = "semver-3.0.2-py3-none-any.whl", hash = "sha256:b1ea4686fe70b981f85359eda33199d60c53964284e0cfb4977d243e37cf4bf4"},
+    {file = "semver-3.0.2.tar.gz", hash = "sha256:6253adb39c70f6e51afed2fa7152bcd414c411286088fb4b9effb133885ab4cc"},
 ]
 
 [[package]]
@@ -1170,12 +1171,12 @@ files = [
 
 [[package]]
 name = "urllib3"
-version = "2.0.7"
-requires_python = ">=3.7"
+version = "2.2.0"
+requires_python = ">=3.8"
 summary = "HTTP library with thread-safe connection pooling, file post, and more."
 files = [
-    {file = "urllib3-2.0.7-py3-none-any.whl", hash = "sha256:fdb6d215c776278489906c2f8916e6e7d4f5a9b602ccbcfdf7f016fc8da0596e"},
-    {file = "urllib3-2.0.7.tar.gz", hash = "sha256:c97dfde1f7bd43a71c8d2a58e369e9b2bf692d1334ea9f9cae55add7d0dd0f84"},
+    {file = "urllib3-2.2.0-py3-none-any.whl", hash = "sha256:ce3711610ddce217e6d113a2732fafad960a03fd0318c91faa79481e35c11224"},
+    {file = "urllib3-2.2.0.tar.gz", hash = "sha256:051d961ad0c62a94e50ecf1af379c3aba230c66c710493493560c0c223c49f20"},
 ]
 
 [[package]]
@@ -1259,7 +1260,7 @@ files = [
 
 [[package]]
 name = "yq"
-version = "3.2.2"
+version = "3.2.3"
 requires_python = ">=3.6"
 summary = "Command-line YAML/XML processor - jq wrapper for YAML/XML documents"
 dependencies = [
@@ -1269,6 +1270,6 @@ dependencies = [
     "xmltodict>=0.11.0",
 ]
 files = [
-    {file = "yq-3.2.2-py3-none-any.whl", hash = "sha256:2f8252c8e12577bc73cfbcaf1945dd6510bdb61df8ceaefbe29ee6060ff49474"},
-    {file = "yq-3.2.2.tar.gz", hash = "sha256:8dbb7a0c937ddbfc3dd175e6478f40960c140d3e8b1f1a0315de76384d66650a"},
+    {file = "yq-3.2.3-py3-none-any.whl", hash = "sha256:b50c91894dad9894d1d36ea77d5722d5495cac9482d2351e55089360a90709ae"},
+    {file = "yq-3.2.3.tar.gz", hash = "sha256:29c8fe1d36b4f64163f4d01314c6ae217539870f610216dee6025dfb5eafafb1"},
 ]

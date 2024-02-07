@@ -115,7 +115,7 @@ def main() -> None:
         log_level = "DEBUG"
     setup_logger(level=log_level)
 
-    github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN"))
+    github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN") or "")
     github = Github(auth=github_auth)
     configure_test_suite(args, github)
 

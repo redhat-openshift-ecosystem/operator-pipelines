@@ -247,7 +247,7 @@ def test_wait_on_pr_labels_success(
     capsys: Any,
 ) -> None:
     mock_get_pr_labels.side_effect = pr_labels_sequence
-    assert wait_on_pr_labels(None, 1, wait_conditions, 5, 0.1)
+    assert wait_on_pr_labels(MagicMock(), 1, wait_conditions, 5, 0.1)
 
     captured_stdout, _ = capsys.readouterr()
     assert captured_stdout == str.join("\n", pr_labels_sequence[-1]) + "\n"
@@ -267,7 +267,7 @@ def test_wait_on_pr_labels_timeout(
     wait_conditions: list[WaitCondition],
 ) -> None:
     mock_get_pr_labels.return_value = pr_labels
-    assert not wait_on_pr_labels(None, 1, wait_conditions, 1, 0.1)
+    assert not wait_on_pr_labels(MagicMock(), 1, wait_conditions, 1, 0.1)
 
 
 @patch("operatorcert.entrypoints.github_wait_labels.sys.exit")

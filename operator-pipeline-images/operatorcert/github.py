@@ -8,7 +8,7 @@ import urllib.parse
 from typing import Any, Dict, List, Optional
 
 import requests
-from github import Github, Label, PullRequest
+from github import Github, Label, PaginatedList, PullRequest
 from operatorcert.utils import add_session_retries
 
 LOGGER = logging.getLogger("operator-cert")
@@ -172,7 +172,8 @@ def remove_labels_from_pull_request(
 
 
 def detect_namespace_labels(
-    current_labels: List[Label.Label], label_namespaces: List[str]
+    current_labels: PaginatedList.PaginatedList[Label.Label],
+    label_namespaces: List[str],
 ) -> List[str]:
     """
     Return a list of current labels that match the given namespaces.
