@@ -70,14 +70,12 @@ RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && pip3 install -
 # install dependencies in virtual environment
 COPY ./pdm.lock ./pyproject.toml ./README.md ./
 RUN pdm venv create 3.11 && pdm install --no-lock --no-editable \
-        --group operatorcert \
         --group operatorcert-dev
 
 ENV VIRTUAL_ENV=/home/user/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # set dir ownership
-RUN chgrp -R 0 /home/user /etc/passwd
-RUN chmod -R g=u /home/user /etc/passwd
+RUN chgrp -R 0 /home/user /etc/passwd && chmod -R g=u /home/user /etc/passwd
 
 USER "${USER_UID}"

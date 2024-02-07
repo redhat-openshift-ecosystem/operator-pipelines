@@ -131,7 +131,7 @@ def main() -> None:
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(level=log_level)
 
-    github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN"))
+    github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN") or "")
     github = Github(auth=github_auth)
     gist = create_github_gist(github, args.input_path)
 

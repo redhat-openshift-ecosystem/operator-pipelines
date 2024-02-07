@@ -35,6 +35,22 @@ authors = [
 requires-python = ">=3.10"
 readme = "README.md"
 license = { text = "GPLv3" }
+dependencies = [
+    "python-magic>=0.4.24",
+    "pyyaml>=5.4.1",
+    "requests>=2.31.0",
+    "yq>=2.12.2",
+    "giturlparse>=0.10.0",
+    "python-dateutil>=2.8.2",
+    "humanize>=3.12.0",
+    "stomp-py>=8.0.1",
+    "requests-kerberos>=0.14.0",
+    "PyGithub<2.0,>=1.59.0",
+    "GitPython>=3.1.37",
+    "semver>=3.0.1",
+    "operator-repo @ git+https://github.com/mporrato/operator-repo.git@v0.3.0",
+    "urllib3>=2.0.7",
+]
 
 [project.scripts]
 apply-test-waivers = "operatorcert.entrypoints.apply_test_waivers:main"
@@ -69,23 +85,6 @@ verify-pr-title = "operatorcert.entrypoints.verify_pr_title:main"
 verify-pr-uniqueness = "operatorcert.entrypoints.verify_pr_uniqueness:main"
 verify-pr-user = "operatorcert.entrypoints.verify_pr_user:main"
 
-[project.optional-dependencies]
-operatorcert = [
-    "python-magic>=0.4.24",
-    "pyyaml>=5.4.1",
-    "requests>=2.31.0",
-    "yq>=2.12.2",
-    "giturlparse>=0.10.0",
-    "python-dateutil>=2.8.2",
-    "humanize>=3.12.0",
-    "stomp-py>=8.0.1",
-    "requests-kerberos>=0.14.0",
-    "PyGithub>=1.59.0",
-    "GitPython>=3.1.37",
-    "semver>=3.0.1",
-    "operator-repo @ git+https://github.com/mporrato/operator-repo.git@v0.3.0",
-    "urllib3>=2.0.7",
-]
 
 [build-system]
 requires = ["pdm-pep517>=1.0"]
