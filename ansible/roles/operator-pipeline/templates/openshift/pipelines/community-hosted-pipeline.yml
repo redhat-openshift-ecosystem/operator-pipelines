@@ -130,7 +130,7 @@ spec:
       taskRef:
         name: set-github-status
       runAfter:
-        - set-github-started-label
+        - acquire-lease
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -152,6 +152,7 @@ spec:
     # set environment
     - name: set-env-community
       runAfter:
+        - set-github-started-label
         - set-github-status-pending
       taskRef:
         name: set-env-community
@@ -262,6 +263,7 @@ spec:
         kind: Task
       runAfter:
         - set-github-pr-title
+
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -302,6 +304,10 @@ spec:
         kind: Task
       runAfter:
         - read-config
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -323,6 +329,10 @@ spec:
         - apply-test-waivers
       taskRef:
         name: get-supported-versions
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -372,6 +382,10 @@ spec:
         kind: Task
       runAfter:
         - static-tests
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -395,6 +409,10 @@ spec:
         - static-tests-results
       taskRef:
         name: dockerfile-creation
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -414,6 +432,10 @@ spec:
       taskRef:
         name: buildah
         kind: Task
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)-$(params.git_commit)"
@@ -431,6 +453,10 @@ spec:
         - build-bundle
       taskRef:
         name: set-quay-repo-visibility
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -448,6 +474,10 @@ spec:
         - make-bundle-repo-public
       taskRef:
         name: add-bundle-to-index
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -481,6 +511,10 @@ spec:
         - add-bundle-to-index
       taskRef:
         name: set-quay-repo-visibility
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -499,6 +533,10 @@ spec:
       taskRef:
         kind: Task
         name: preflight-trigger
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: preflight_trigger_environment
           value: "$(params.preflight_trigger_environment)"
@@ -538,6 +576,10 @@ spec:
       taskRef:
         kind: Task
         name: evaluate-preflight-result
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"

@@ -28,6 +28,12 @@ spec:
       description: Path to the operator containing the new bundle
     - name: bundle_path
       description: Path to the new bundle
+    - name: affected_catalogs
+      description: Comma separated list of updated catalogs
+    - name: affected_catalog_operators
+      description: |
+        Comma separated list of operators added/updater/deleted inside
+        a catalogs directory structure
   workspaces:
     - name: pr
       description: Clone of the repo at the PR head
@@ -60,7 +66,7 @@ spec:
 
         jq -e '.extra_files|length==0' </tmp/changes.json \
             || fail "The PR affects non-operator files"
-        jq -e '.affected_operators|length==1' </tmp/changes.json \
+        jq -e '.affected_operators|length<=1' </tmp/changes.json \
             || fail "The PR affects more than one operator"
         jq -e '.modified_bundles|length==0' </tmp/changes.json \
             || fail "The PR modifies existing bundles"
@@ -72,9 +78,13 @@ spec:
         if jq -e '.added_bundles|length==1' </tmp/changes.json ; then
             operator_name="$(jq -r '.added_bundles[0] | split("/")[0]' </tmp/changes.json)"
             bundle_version="$(jq -r '.added_bundles[0] | split("/")[1]' </tmp/changes.json)"
-        else
+        elif jq -e '.affected_operators|length==1' </tmp/changes.json ; then
             # no bundle was added (i.e.: only ci.yaml was added/modified/deleted)
             operator_name="$(jq -r '.affected_operators[0]' </tmp/changes.json)"
+            bundle_version=""
+        else
+            # No operator has been modified
+            operator_name=""
             bundle_version=""
         fi
 
@@ -92,3 +102,9 @@ spec:
         else
             echo -n >"$(results.bundle_path.path)"
         fi
+
+        affected_catalogs="$(jq -r '.affected_catalogs | join(",")' </tmp/changes.json)"
+        echo -n $affected_catalogs > "$(results.affected_catalogs.path)"
+
+        affected_catalog_operators="$(jq -r '.affected_catalog_operators | join(",")' </tmp/changes.json)"
+        echo -n $affected_catalog_operators > "$(results.affected_catalog_operators.path)"

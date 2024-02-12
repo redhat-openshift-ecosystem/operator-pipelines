@@ -9,6 +9,7 @@ from git.repo import Repo as GitRepo
 import pytest
 from operatorcert.entrypoints import detect_changed_operators
 from operatorcert.entrypoints.detect_changed_operators import github_pr_affected_files
+from operator_repo import Repo
 
 
 @pytest.mark.parametrize(
@@ -42,6 +43,14 @@ from operatorcert.entrypoints.detect_changed_operators import github_pr_affected
                 "added_bundles": ["operator-e2e/0.0.100"],
                 "modified_bundles": [],
                 "deleted_bundles": [],
+                "affected_catalog_operators": [],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": [],
+                "added_catalogs": [],
+                "modified_catalogs": [],
+                "deleted_catalogs": [],
             },
         ),
         (
@@ -59,6 +68,14 @@ from operatorcert.entrypoints.detect_changed_operators import github_pr_affected
                 "added_bundles": ["operator-e2e/0.0.101"],
                 "modified_bundles": [],
                 "deleted_bundles": [],
+                "affected_catalog_operators": [],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": [],
+                "added_catalogs": [],
+                "modified_catalogs": [],
+                "deleted_catalogs": [],
             },
         ),
         (
@@ -80,6 +97,14 @@ from operatorcert.entrypoints.detect_changed_operators import github_pr_affected
                 "added_bundles": ["operator-e2e/0.0.101", "operator-clone-e2e/0.0.100"],
                 "modified_bundles": [],
                 "deleted_bundles": [],
+                "affected_catalog_operators": [],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": [],
+                "added_catalogs": [],
+                "modified_catalogs": [],
+                "deleted_catalogs": [],
             },
         ),
         (
@@ -105,6 +130,14 @@ from operatorcert.entrypoints.detect_changed_operators import github_pr_affected
                     "operator-clone-e2e/0.0.100",
                 ],
                 "deleted_bundles": [],
+                "affected_catalog_operators": [],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": [],
+                "added_catalogs": [],
+                "modified_catalogs": [],
+                "deleted_catalogs": [],
             },
         ),
         (
@@ -123,6 +156,14 @@ from operatorcert.entrypoints.detect_changed_operators import github_pr_affected
                 "added_bundles": [],
                 "modified_bundles": [],
                 "deleted_bundles": ["operator-e2e/0.0.101"],
+                "affected_catalog_operators": [],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": [],
+                "added_catalogs": [],
+                "modified_catalogs": [],
+                "deleted_catalogs": [],
             },
         ),
         (
@@ -140,6 +181,14 @@ from operatorcert.entrypoints.detect_changed_operators import github_pr_affected
                 "added_bundles": [],
                 "modified_bundles": [],
                 "deleted_bundles": [],
+                "affected_catalog_operators": [],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": [],
+                "added_catalogs": [],
+                "modified_catalogs": [],
+                "deleted_catalogs": [],
             },
         ),
         (
@@ -157,6 +206,134 @@ from operatorcert.entrypoints.detect_changed_operators import github_pr_affected
                 "added_bundles": [],
                 "modified_bundles": [],
                 "deleted_bundles": ["operator-clone-e2e/0.0.100"],
+                "affected_catalog_operators": [],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": [],
+                "added_catalogs": [],
+                "modified_catalogs": [],
+                "deleted_catalogs": [],
+            },
+        ),
+        (
+            "c8d3509f",
+            # Add v4.15/operator-1
+            "2e9eae2",
+            {
+                "extra_files": [],
+                "affected_operators": [],
+                "added_operators": [],
+                "modified_operators": [],
+                "deleted_operators": [],
+                "affected_bundles": [],
+                "added_bundles": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "affected_catalog_operators": ["v4.15/operator-1"],
+                "added_catalog_operators": ["v4.15/operator-1"],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": ["v4.15"],
+                "added_catalogs": ["v4.15"],
+                "modified_catalogs": [],
+                "deleted_catalogs": [],
+            },
+        ),
+        (
+            "4db21de1",
+            # Add v4.15/operator-2
+            "c8d3509f",
+            {
+                "extra_files": [],
+                "affected_operators": [],
+                "added_operators": [],
+                "modified_operators": [],
+                "deleted_operators": [],
+                "affected_bundles": [],
+                "added_bundles": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "affected_catalog_operators": ["v4.15/operator-2"],
+                "added_catalog_operators": ["v4.15/operator-2"],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": ["v4.15"],
+                "added_catalogs": [],
+                "modified_catalogs": ["v4.15"],
+                "deleted_catalogs": [],
+            },
+        ),
+        (
+            "ff7cdcd6",
+            # Modify v4.15/operator-1
+            "4db21de1",
+            {
+                "extra_files": [],
+                "affected_operators": [],
+                "added_operators": [],
+                "modified_operators": [],
+                "deleted_operators": [],
+                "affected_bundles": [],
+                "added_bundles": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "affected_catalog_operators": ["v4.15/operator-1"],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": ["v4.15/operator-1"],
+                "deleted_catalog_operators": [],
+                "affected_catalogs": ["v4.15"],
+                "added_catalogs": [],
+                "modified_catalogs": ["v4.15"],
+                "deleted_catalogs": [],
+            },
+        ),
+        (
+            "85009570",
+            # Delete v4.15/operator-2
+            "ff7cdcd6",
+            {
+                "extra_files": [],
+                "affected_operators": [],
+                "added_operators": [],
+                "modified_operators": [],
+                "deleted_operators": [],
+                "affected_bundles": [],
+                "added_bundles": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "affected_catalog_operators": ["v4.15/operator-2"],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": ["v4.15/operator-2"],
+                "affected_catalogs": ["v4.15"],
+                "added_catalogs": [],
+                "modified_catalogs": ["v4.15"],
+                "deleted_catalogs": [],
+            },
+        ),
+        (
+            "1ca2aa12",
+            # Delete v4.15 catalog
+            "85009570",
+            {
+                "extra_files": [],
+                "affected_operators": [],
+                "added_operators": [],
+                "modified_operators": [],
+                "deleted_operators": [],
+                "affected_bundles": [],
+                "added_bundles": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "affected_catalog_operators": ["v4.15/operator-1"],
+                "added_catalog_operators": [],
+                "modified_catalog_operators": [],
+                "deleted_catalog_operators": ["v4.15/operator-1"],
+                "affected_catalogs": ["v4.15"],
+                "added_catalogs": [],
+                "modified_catalogs": [],
+                "deleted_catalogs": ["v4.15"],
             },
         ),
     ],
@@ -169,10 +346,15 @@ from operatorcert.entrypoints.detect_changed_operators import github_pr_affected
         "Delete a bundle and remove extra files",
         "Add ci.yaml to an operator",
         "Delete an operator",
+        "Add new catalog with new operator",
+        "Add new operator to existing catalog",
+        "Modify operator in existing catalog",
+        "Delete operator in existing catalog",
+        "Delete catalog",
     ],
 )
 @patch("operatorcert.entrypoints.detect_changed_operators.github_pr_affected_files")
-def test_detect_changed_operators(
+def test_detect_changes(
     mock_affected_files: MagicMock,
     tmp_path: pathlib.Path,
     head_commit: str,
@@ -201,9 +383,9 @@ def test_detect_changed_operators(
     }
     mock_affected_files.return_value = affected_files
 
-    result = detect_changed_operators.detect_changed_operators(
-        after_dir,
-        before_dir,
+    result = detect_changed_operators.detect_changes(
+        Repo(after_dir),
+        Repo(before_dir),
         "https://example.com/foo/bar/pull/1",
     )
 
@@ -213,10 +395,15 @@ def test_detect_changed_operators(
         ), f"Invalid value for {key}: expected {expected[key]} but {result[key]} was returned"
 
 
-@patch("operatorcert.entrypoints.detect_changed_operators.detect_changed_operators")
+@patch("operatorcert.entrypoints.detect_changed_operators.OperatorRepo")
+@patch("operatorcert.entrypoints.detect_changed_operators.detect_changes")
 @patch("operatorcert.entrypoints.detect_changed_operators.setup_logger")
 def test_detect_changed_operators_main(
-    mock_logger: MagicMock, mock_detect: MagicMock, capsys: Any, tmpdir: Any
+    mock_logger: MagicMock,
+    mock_detect: MagicMock,
+    mock_repo: MagicMock,
+    capsys: Any,
+    tmpdir: Any,
 ) -> None:
     args = [
         "detect_changed_operators",
@@ -225,11 +412,14 @@ def test_detect_changed_operators_main(
         "--pr-url=https://example.com/foo/bar/pull/1",
     ]
     mock_detect.return_value = {"foo": ["bar"]}
+    repo_head = MagicMock()
+    repo_base = MagicMock()
+    mock_repo.side_effect = [repo_head, repo_base, repo_head, repo_base]
     with patch("sys.argv", args):
         detect_changed_operators.main()
     mock_detect.assert_called_once_with(
-        pathlib.Path("/tmp/repo"),
-        pathlib.Path("/tmp/base-repo"),
+        repo_head,
+        repo_base,
         "https://example.com/foo/bar/pull/1",
     )
     assert capsys.readouterr().out.strip() == '{"foo": ["bar"]}'
@@ -252,8 +442,8 @@ def test_detect_changed_operators_main(
     with patch("sys.argv", args):
         detect_changed_operators.main()
     mock_detect.assert_called_once_with(
-        pathlib.Path("/tmp/repo"),
-        pathlib.Path("/tmp/base-repo"),
+        repo_head,
+        repo_base,
         "https://example.com/foo/bar/pull/1",
     )
     assert out_file.read().strip() == '{"bar": ["baz"]}'
