@@ -331,7 +331,7 @@ spec:
     # Get cert project related data
     - name: get-pyxis-certification-data
       runAfter:
-        - certification-project-check
+        - get-organization
       taskRef:
         name: get-pyxis-certification-data
       params:
@@ -369,39 +369,10 @@ spec:
         - name: project_status
           value: "$(tasks.get-pyxis-certification-data.results.project_status)"
 
-    # Merge user's registry tokens with service account credentials
-    # used elsewhere by this pipeline.
-    #
-    # NOTE: The project credentials will always "win" if there is a
-    # matching registry entry in the registry-credentials workspace.
-    # For example, if the partner provides credentials to quay.io,
-    # our credentials for that registry will be omitted.
-    - name: merge-registry-credentials
-      runAfter:
-        - get-pyxis-certification-data
-      taskRef:
-        name: merge-registry-credentials
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: gpg_secret_name
-          value: "$(params.gpg_secret_name)"
-        - name: gpg_key_secret_key
-          value: "$(params.gpg_key_secret_key)"
-        - name: gpg_passphrase_secret_key
-          value: "$(params.gpg_passphrase_secret_key)"
-      workspaces:
-        - name: registry-credentials-all
-          workspace: registry-credentials-all
-        - name: registry-credentials
-          workspace: registry-credentials
-        - name: project-data
-          workspace: results
-
     # Validate submission
     - name: submission-validation
       runAfter:
-        - get-pyxis-certification-data
+        - verify-project
       taskRef:
         name: submission-validation
       params:
@@ -477,28 +448,35 @@ spec:
         - name: source
           value: "$(tasks.get-organization.results.organization)"
 
-
-    - name: get-supported-versions
+    - name: verify-changed-directories
       runAfter:
         - reserve-operator-name
       taskRef:
-        name: get-supported-versions
+        name: verify-changed-directories
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
+        - name: operator_name
+          value: "$(tasks.validate-pr-title.results.operator_name)"
+        - name: bundle_version
+          value: "$(tasks.validate-pr-title.results.bundle_version)"
+        - name: pr_head_label
+          value: $(params.pr_head_label)
+        - name: git_repo_url
+          value: $(params.git_repo_url)
+        - name: base_branch
+          value: $(params.git_base_branch)
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
 
     - name: static-tests
       taskRef:
         name: run-static-tests
         kind: Task
       runAfter:
-        - get-supported-versions
+        - verify-changed-directories
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -548,7 +526,7 @@ spec:
 
     - name: yaml-lint
       runAfter:
-        - reserve-operator-name
+        - verify-changed-directories
       taskRef:
         name: yaml-lint
       params:
@@ -563,7 +541,6 @@ spec:
 
     - name: digest-pinning
       runAfter:
-        - reserve-operator-name
         - merge-registry-credentials
       taskRef:
         name: digest-pinning
@@ -590,38 +567,42 @@ spec:
         - name: related_images_flag
           value: "$(tasks.digest-pinning.results.related_images_flag)"
 
-    - name: verify-changed-directories
+
+    # Merge user's registry tokens with service account credentials
+    # used elsewhere by this pipeline.
+    #
+    # NOTE: The project credentials will always "win" if there is a
+    # matching registry entry in the registry-credentials workspace.
+    # For example, if the partner provides credentials to quay.io,
+    # our credentials for that registry will be omitted.
+    - name: merge-registry-credentials
       runAfter:
-        - reserve-operator-name
+        - verify-changed-directories
       taskRef:
-        name: verify-changed-directories
+        name: merge-registry-credentials
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: operator_name
-          value: "$(tasks.validate-pr-title.results.operator_name)"
-        - name: bundle_version
-          value: "$(tasks.validate-pr-title.results.bundle_version)"
-        - name: pr_head_label
-          value: $(params.pr_head_label)
-        - name: git_repo_url
-          value: $(params.git_repo_url)
-        - name: base_branch
-          value: $(params.git_base_branch)
-        - name: github_token_secret_name
-          value: "$(params.github_token_secret_name)"
-        - name: github_token_secret_key
-          value: "$(params.github_token_secret_key)"
+        - name: gpg_secret_name
+          value: "$(params.gpg_secret_name)"
+        - name: gpg_key_secret_key
+          value: "$(params.gpg_key_secret_key)"
+        - name: gpg_passphrase_secret_key
+          value: "$(params.gpg_passphrase_secret_key)"
+      workspaces:
+        - name: registry-credentials-all
+          workspace: registry-credentials-all
+        - name: registry-credentials
+          workspace: registry-credentials
+        - name: project-data
+          workspace: results
 
     # Build images- bundle and index and push them to registry.
     # Those steps are also a part of the CI pipeline.
     - name: dockerfile-creation
       runAfter:
-        - get-supported-versions
         - yaml-lint
         - verify-pinned-digest
-        - verify-changed-directories
-        - verify-project
         - static-tests-results
       taskRef:
         name: dockerfile-creation
@@ -674,11 +655,25 @@ spec:
         - name: oauth_secret_key
           value: "$(params.quay_oauth_secret_key)"
 
+    - name: get-supported-versions
+      runAfter:
+        - make-bundle-repo-public
+      taskRef:
+        name: get-supported-versions
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(tasks.get-bundle-path.results.bundle_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
 
     # Build new temporary index using IIB
     - name: add-bundle-to-index
       runAfter:
-        - make-bundle-repo-public
+        - get-supported-versions
       taskRef:
         name: add-bundle-to-index
       params:
@@ -873,7 +868,7 @@ spec:
     # Verify the CI results
     - name: verify-ci-results
       runAfter:
-        - get-ci-results
+        - link-pull-request-with-open-status
       taskRef:
         name: verify-ci-results
       params:
@@ -917,7 +912,6 @@ spec:
     # Query Hydra API for status of the pre-certification checklist
     - name: query-publishing-checklist
       runAfter:
-        - link-pull-request-with-open-status
         - verify-ci-results
       taskRef:
         name: query-publishing-checklist
