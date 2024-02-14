@@ -237,10 +237,6 @@ spec:
         kind: Task
       runAfter:
         - detect-changes
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -250,6 +246,8 @@ spec:
           value: "$(tasks.detect-changes.results.added_operator)"
         - name: bundle_version
           value: "$(tasks.detect-changes.results.added_bundle)"
+        - name: affected_catalogs
+          value: "$(tasks.detect-changes.results.affected_catalogs)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
