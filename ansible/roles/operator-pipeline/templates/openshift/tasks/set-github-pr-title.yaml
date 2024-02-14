@@ -17,6 +17,9 @@ spec:
     - name: bundle_version
       description: A version of the operator bundle that is added in a PR
 
+    - name: affected_catalogs
+      description: Comma separated list of updated catalogs
+
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github
@@ -37,9 +40,26 @@ spec:
         #! /usr/bin/env bash
         set -ex
 
-        if [[ $(params.bundle_version) == "" ]]; then
-          echo "No bundles has been added"
+        TITLE=""
+
+        echo "Setting the PR title"
+        if [[ "$(params.bundle_version)" != "" ]] && [[ "$(params.affected_catalogs)" != "" ]]; then
+          # Update both operator and catalog
+          TITLE="operator $(params.operator_name) ($(params.bundle_version)) | [$(params.affected_catalogs)]"
+
+        elif [[ "$(params.bundle_version)" != "" ]]; then
+          # Update of operator bundle only
+          TITLE="operator $(params.operator_name) ($(params.bundle_version))"
+
+        elif [[ "$(params.affected_catalogs)" != "" ]]; then
+          # Update of catalogs only
+          TITLE="Catalog update [$(params.affected_catalogs)]"
+
+        else
+          echo "No bundles nor catalogs have been added/updated"
           exit 0
         fi
 
-        gh pr edit --title "operator $(params.operator_name) ($(params.bundle_version))" "$(params.pull_request_url)"
+        echo $TITLE
+
+        gh pr edit --title "$TITLE" "$(params.pull_request_url)"
