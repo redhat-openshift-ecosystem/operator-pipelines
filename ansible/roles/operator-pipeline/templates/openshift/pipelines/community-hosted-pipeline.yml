@@ -598,14 +598,18 @@ spec:
           subPath: preflight-trigger
           workspace: results
 
+  finally:
     # merge PR
     - name: merge-pr
       when:
         - input: "$(tasks.get-ci-reviewer.results.author_is_reviewer)"
           operator: in
           values: ["true"]
-      runAfter:
-        - evaluate-preflight-result
+        - input: "$(tasks.status)"
+          operator: in
+          values:
+            - Succeeded
+            - Completed
       taskRef:
         name: merge-pr
       params:
@@ -625,8 +629,6 @@ spec:
         - name: source
           workspace: repository
           subPath: src
-
-  finally:
 
     - name: set-github-passed-label
       when:

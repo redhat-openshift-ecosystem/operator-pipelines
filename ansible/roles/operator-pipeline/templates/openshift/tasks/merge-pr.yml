@@ -30,8 +30,10 @@ spec:
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
-        if [ "$force_merge" = "true" ]; then
-          echo true >$(results.bool_merge.path)
+        if [ "$(params.force_merge)" = "true" ]; then
+          echo true > $(results.bool_merge.path)
+        elif [[ "$(params.bundle_path)" == "" ]]; then
+          echo true > $(results.bool_merge.path)
         else
           PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
           CI_FILE_PATH="$PKG_PATH/ci.yaml"
