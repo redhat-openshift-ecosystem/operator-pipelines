@@ -58,7 +58,7 @@ spec:
         echo >>$MESSAGE_FILE
         echo '|Status|Check|Message|' >>$MESSAGE_FILE
         echo '|:----:|:----|:------|' >>$MESSAGE_FILE
-        jq -r '(.outputs//[])[]|"|\(.type)|\(.check)|\(.message)|"' \
+        jq -r '(.outputs//[])[]|"|\(.type)|\(.check)|\(.message|gsub("\n";" "))|"' \
           <$JSON_RESULTS_FILE >>$MESSAGE_FILE
         echo >>$MESSAGE_FILE
         # Replace status words with corresponding symbols
