@@ -81,7 +81,6 @@ update-cert-project-status = "operatorcert.entrypoints.update_cert_project_statu
 upload-artifacts = "operatorcert.entrypoints.upload_artifacts:main"
 upload-signature = "operatorcert.entrypoints.upload_signature:main"
 verify-changed-dirs = "operatorcert.entrypoints.verify_changed_dirs:main"
-verify-pr-title = "operatorcert.entrypoints.verify_pr_title:main"
 verify-pr-uniqueness = "operatorcert.entrypoints.verify_pr_uniqueness:main"
 verify-pr-user = "operatorcert.entrypoints.verify_pr_user:main"
 

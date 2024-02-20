@@ -20,6 +20,8 @@
               env: "{{ env }}"
           spec:
             params:
+              - name: git_commit_base
+                value: $(body.pull_request.base.sha)
               - name: git_pr_branch
                 value: $(body.pull_request.head.ref)
               - name: git_pr_title
@@ -69,6 +71,7 @@
           spec:
             params:
               - name: git_pr_branch
+              - name: git_commit_base
               - name: git_pr_title
               - name: git_pr_url
               - name: git_fork_url
@@ -103,6 +106,8 @@
                   pipelineRef:
                     name: operator-hosted-pipeline
                   params:
+                    - name: git_commit_base
+                      value: $(tt.params.git_commit_base)
                     - name: git_pr_branch
                       value: $(tt.params.git_pr_branch)
                     - name: git_pr_title

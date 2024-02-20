@@ -12,6 +12,7 @@ spec:
       default: "main"
     - name: git_commit
       description: Git repository HEAD commit
+    - name: git_commit_base
     - name: git_pr_title
       description: title of the pull request with operator submission
     - name: git_pr_url
@@ -162,6 +163,56 @@ spec:
           subPath: src
         - name: ssh-directory
           workspace: ssh-dir
+
+    # Clone the repository contents from the base branch
+    - name: clone-repository-base
+      taskRef:
+        name: git-clone
+        kind: Task
+      runAfter:
+        - set-env
+      params:
+        - name: url
+          value: "$(params.git_repo_url)"
+        - name: revision
+          value: "$(params.git_commit_base)"
+        - name: gitInitImage
+          value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
+      workspaces:
+        - name: output
+          workspace: repository
+          subPath: base
+        - name: ssh-directory
+          workspace: ssh-dir
+
+    # Parse operator bundle repository changes
+    - name: detect-changes
+      taskRef:
+        name: parse-repo-changes
+        kind: Task
+      runAfter:
+        - checkout
+        - clone-repository-base
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: head_commit
+          value: "$(params.git_commit)"
+        - name: base_commit
+          value: "$(params.git_commit_base)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+      workspaces:
+        - name: pr
+          workspace: repository
+          subPath: src
+        - name: base
+          workspace: repository
+          subPath: base
 
     # Get the bundle path
     - name: get-bundle-path
