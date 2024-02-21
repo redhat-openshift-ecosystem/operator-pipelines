@@ -1,0 +1,48 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: build-fragment-images
+spec:
+  params:
+    - name: pipeline_image
+
+    - name: affected_catalogs
+      description: Comma separated list of updated catalogs
+
+    - name: fragment_repository
+      description: A repository where fragments are pushed
+
+    - name: commit_sha
+      description: SHA of the commit to set the tag suffix.
+
+    - name: output_file
+      description: A path to a file where fragment image metadata will be stored.
+      default: "fragments.json"
+
+  workspaces:
+    - name: source
+    - name: credentials
+      optional: true
+      description: A workspace with credentials for registry push
+  steps:
+    - name: build-fragment-images
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        privileged: true
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        EXTRA_ARGS=""
+        if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
+          EXTRA_ARGS+=" --authfile $(workspaces.credentials.path)/.dockerconfigjson"
+        fi
+
+        build-fragment-images \
+          --catalog-names "$(params.affected_catalogs)" \
+          --repository-destination "$(params.fragment_repository)" \
+          --tag-suffix "fragment-$(params.commit_sha)" \
+          --output-file "$(params.output_file)" \
+          --verbose $EXTRA_ARGS

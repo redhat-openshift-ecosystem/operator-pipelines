@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pathlib import Path
 from unittest import mock
 from unittest.mock import MagicMock, call, patch
@@ -92,3 +93,11 @@ def test_get_repo_config(mock_yaml_load: MagicMock) -> None:
         result = utils.get_repo_config("foo")
         mock_yaml_load.assert_called_once_with(mock_open.return_value)
         assert result == {"foo": "bar"}
+
+
+def test_run_command() -> None:
+    result = utils.run_command(["echo", "foo"])
+    assert result.stdout.decode("utf-8") == "foo\n"
+
+    with pytest.raises(subprocess.CalledProcessError):
+        utils.run_command(["false"])

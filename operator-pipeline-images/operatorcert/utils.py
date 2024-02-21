@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import pathlib
+import subprocess
 from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
@@ -126,3 +127,34 @@ class SplitArgs(argparse.Action):
         self, parser: Any, namespace: Any, values: Any, option_string: Any = None
     ) -> None:
         setattr(namespace, self.dest, values.split(","))
+
+
+def run_command(
+    cmd: List[str], check: bool = True
+) -> subprocess.CompletedProcess[bytes]:
+    """
+    Run a shell command and return its output.
+
+    Args:
+        cmd (List[str]): Command to run
+
+    Returns:
+        CompletedProcess: Command output
+    """
+    LOGGER.debug("Running command: %s", cmd)
+    try:
+        output = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=check,
+        )
+    except subprocess.CalledProcessError as e:
+        LOGGER.error(
+            "Error running command: \nstdout: %s\nstderr: %s",
+            e.stdout,
+            e.stderr,
+        )
+        raise e
+    LOGGER.debug("Command output: %s", output.stdout.decode("utf-8"))
+    return output
