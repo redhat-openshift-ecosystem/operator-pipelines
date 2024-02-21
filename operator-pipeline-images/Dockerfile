@@ -38,6 +38,7 @@ RUN dnf update -y && \
     pinentry \
     pip \
     podman \
+    buildah \
     python3-devel \
     skopeo && \
     dnf clean all
@@ -54,11 +55,11 @@ RUN curl -LO https://github.com/operator-framework/operator-registry/releases/do
     chmod +x operator-sdk_linux_${ARCH} && \
     mv operator-sdk_linux_${ARCH} /usr/local/bin/operator-sdk
 
-RUN useradd -lms /bin/bash -u "${USER_UID}" user
 
+RUN useradd -lms /bin/bash -u "${USER_UID}" user
 RUN useradd -lu "${PODMAN_USER_UID}" podman; \
-    echo podman:10000:5000 > /etc/subuid; \
-    echo podman:10000:5000 > /etc/subgid;
+    echo podman:10000:5000 >> /etc/subuid; \
+    echo podman:10000:5000 >> /etc/subgid;
 
 
 WORKDIR /home/user

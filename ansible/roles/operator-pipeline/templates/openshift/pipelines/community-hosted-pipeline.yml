@@ -296,12 +296,40 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: build-fragment-images
+      taskRef:
+        name: build-fragment-images
+        kind: Task
+      runAfter:
+        # This is just a temporary location until we have a proper
+        # FCB branch based on config
+        - read-config
+      when:
+        - input: "$(tasks.detect-changes.results.affected_catalogs)"
+          operator: notin
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: affected_catalogs
+          value: "$(tasks.detect-changes.results.affected_catalogs)"
+        - name: fragment_repository
+          value: "$(params.registry)/$(params.image_namespace)/catalog"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+        - name: credentials
+          workspace: registry-credentials
+
     - name: apply-test-waivers
       taskRef:
         name: apply-test-waivers
         kind: Task
       runAfter:
-        - read-config
+        - build-fragment-images
       when: &bundleAdded
         - input: "$(tasks.detect-changes.results.added_bundle)"
           operator: notin

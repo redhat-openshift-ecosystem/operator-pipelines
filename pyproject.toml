@@ -54,6 +54,7 @@ dependencies = [
 
 [project.scripts]
 apply-test-waivers = "operatorcert.entrypoints.apply_test_waivers:main"
+build-fragment-images = "operatorcert.entrypoints.build_fragment_images:main"
 bundle-dockerfile = "operatorcert.entrypoints.bundle_dockerfile:main"
 create-container-image = "operatorcert.entrypoints.create_container_image:main"
 create-github-gist = "operatorcert.entrypoints.create_github_gist:main"
