@@ -214,41 +214,15 @@ spec:
           workspace: repository
           subPath: base
 
-    # Get the bundle path
-    - name: get-bundle-path
-      runAfter:
-        - checkout
-      taskRef:
-        name: get-bundle-path
-      params:
-        - name: git_pr_title
-          value: $(params.git_pr_title)
-
-    # Verify the bundle path exists
-    - name: bundle-path-validation
-      runAfter:
-        - get-bundle-path
-      taskRef:
-        name: bundle-path-validation
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
     # Compute a hash of the content so pipeline logs can be uploaded with it
     - name: content-hash
       runAfter:
-        - bundle-path-validation
+        - detect-changes
       taskRef:
         name: content-hash
       params:
         - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
         - name: pipeline_image
           value: "$(params.pipeline_image)"
       workspaces:
@@ -259,14 +233,14 @@ spec:
     # Get cert project id
     - name: certification-project-check
       runAfter:
-        - bundle-path-validation
+        - content-hash
       taskRef:
         name: certification-project-check
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -335,11 +309,11 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: src_image
-          value: "$(params.src_registry)/$(params.src_image_namespace)/$(tasks.bundle-path-validation.results.package_name):$(tasks.bundle-path-validation.results.bundle_version)"
+          value: "$(params.src_registry)/$(params.src_image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
         - name: dest_image_registry_namespace_certproject
           value: "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
         - name: dest_image_tag
-          value: "$(tasks.bundle-path-validation.results.bundle_version)"
+          value: "$(tasks.detect-changes.results.added_bundle)"
         - name: connect_repo_path
           value: "$(tasks.set-env.results.connect_registry)/$(tasks.get-pyxis-certification-data.results.vendor_label)/$(tasks.get-pyxis-certification-data.results.repo_name)"
       workspaces:
@@ -366,7 +340,7 @@ spec:
         - name: container_digest
           value: "$(tasks.copy-bundle-image-to-released-registry.results.container_digest)"
         - name: bundle_version
-          value: "$(tasks.bundle-path-validation.results.bundle_version)"
+          value: "$(tasks.detect-changes.results.added_bundle)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: public_registry
@@ -400,7 +374,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -587,11 +561,11 @@ spec:
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
         - name: bundle_version
-          value: "$(tasks.bundle-path-validation.results.bundle_version)"
+          value: "$(tasks.detect-changes.results.added_bundle)"
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: package_name
-          value: "$(tasks.bundle-path-validation.results.package_name)"
+          value: "$(tasks.detect-changes.results.added_operator)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pipeline_name

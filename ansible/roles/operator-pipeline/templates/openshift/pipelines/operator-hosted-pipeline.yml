@@ -283,42 +283,16 @@ spec:
           workspace: repository
           subPath: base
 
-    # Get the bundle path
-    - name: get-bundle-path
-      runAfter:
-        - detect-changes
-      taskRef:
-        name: get-bundle-path
-      params:
-        - name: git_pr_title
-          value: $(params.git_pr_title)
-
-    # Verify the bundle path exists
-    - name: bundle-path-validation
-      runAfter:
-        - get-bundle-path
-      taskRef:
-        name: bundle-path-validation
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
     - name: content-hash
       runAfter:
-        - bundle-path-validation
+        - detect-changes
       taskRef:
         name: content-hash
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -334,7 +308,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -523,9 +497,9 @@ spec:
         - name: pull_request_url
           value: "$(params.git_pr_url)"
         - name: operator_name
-          value: "$(tasks.bundle-path-validation.results.package_name)"
+          value: "$(tasks.detect-changes.results.added_operator)"
         - name: bundle_version
-          value: "$(tasks.bundle-path-validation.results.bundle_version)"
+          value: "$(tasks.detect-changes.results.added_bundle)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
@@ -573,7 +547,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: args
-          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(tasks.get-bundle-path.results.bundle_path)"]
+          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(tasks.detect-changes.results.bundle_path)"]
       workspaces:
         - name: shared-workspace
           workspace: repository
@@ -588,7 +562,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -650,7 +624,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -669,7 +643,7 @@ spec:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
         - name: CONTEXT
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -704,7 +678,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -985,7 +959,7 @@ spec:
         - name: git_pr_url
           value: $(params.git_pr_url)
         - name: bundle_path
-          value: "$(tasks.get-bundle-path.results.bundle_path)"
+          value: "$(tasks.detect-changes.results.bundle_path)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
