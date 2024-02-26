@@ -1,0 +1,387 @@
+"""Check permissions for a pull request and request a review if needed"""
+import argparse
+import json
+import logging
+from typing import Any
+
+from operator_repo import Operator
+from operator_repo import Repo as OperatorRepo
+from operatorcert import pyxis
+from operatorcert.logger import setup_logger
+from operatorcert.utils import run_command
+
+LOGGER = logging.getLogger("operator-cert")
+
+
+class NoPermissionError(Exception):
+    """Exception raised when user does not have permissions to submit a PR"""
+
+
+class MaintainersReviewNeeded(Exception):
+    """Exception raised when maintainer review is needed"""
+
+
+def setup_argparser() -> argparse.ArgumentParser:
+    """
+    Setup argument parser
+
+    Returns:
+        argparse.ArgumentParser: Argument parser
+    """
+    parser = argparse.ArgumentParser(description="Review a user permissions for PR.")
+    parser.add_argument(
+        "--repo-base-path",
+        default=".",
+        help="Path to the base git repository",
+    )
+    parser.add_argument(
+        "--repo-head-path",
+        default=".",
+        help="Path to the head git repository",
+    )
+    parser.add_argument(
+        "--changes-file",
+        help="A file with changes between the base and head repositories",
+    )
+    parser.add_argument(
+        "--pyxis-url",
+        default="https://pyxis.engineering.redhat.com",
+        help="Base URL for Pyxis container metadata API",
+    )
+    parser.add_argument("--pull-request-url", help="URL to the pull request")
+    parser.add_argument("--pr-owner", help="Owner of the pull request")
+    parser.add_argument(
+        "--output-file", help="Path to a json file where results will be stored"
+    )
+    parser.add_argument("--verbose", action="store_true", help="Verbose output")
+
+    return parser
+
+
+class OperatorReview:
+    """
+    A class represents a pull request review and permissions check
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        operator: Operator,
+        pr_owner: str,
+        base_repo: OperatorRepo,
+        head_repo: OperatorRepo,
+        pull_request_url: str,
+        pyxis_url: str,
+    ) -> None:
+        self.operator = operator
+        self.pr_owner = pr_owner
+        self.base_repo = base_repo
+        self.head_repo = head_repo
+        self.pull_request_url = pull_request_url
+        self.pyxis_url = pyxis_url
+
+    @property
+    def base_repo_config(self) -> dict[str, Any]:
+        """
+        A dictionary with the base repository configuration
+
+        Returns:
+            dict: A dictionary with the base repository configuration
+        """
+        return self.base_repo.config or {}
+
+    @property
+    def head_repo_operator_config(self) -> dict[str, Any]:
+        """
+        A dictionary with the head repository operator configuration
+
+        Returns:
+            dict: A dictionary with the head repository operator configuration
+        """
+        return self.operator.config or {}
+
+    @property
+    def base_repo_operator_config(self) -> dict[str, Any]:
+        """
+        A dictionary with the base repository operator configuration
+
+        Returns:
+            dict[str, Any]: A dictionary with the base repository operator
+            configuration
+        """
+        if not self.base_repo.has(self.operator.operator_name):
+            return {}  # pragma: no cover
+        base_repo_operator = self.base_repo.operator(self.operator.operator_name)
+        return base_repo_operator.config or {}
+
+    def is_partner(self) -> bool:
+        """
+        Check if the operator is a partner operator based on the
+        certification project id
+
+        Returns:
+            bool: A boolean value indicating if the operator is a partner operator
+        """
+        return bool(self.cert_project_id)
+
+    @property
+    def cert_project_id(self) -> str:
+        """
+        A certification project id from the operator config file
+
+        Returns:
+            str: A certification project id
+        """
+        return self.head_repo_operator_config.get("cert_project_id") or ""
+
+    @property
+    def reviewers(self) -> list[str]:
+        """
+        Operator reviewers from the operator config file
+
+        Returns:
+            list[str]: A list of github users who are reviewers for the operator
+        """
+        return self.base_repo_operator_config.get("reviewers", [])
+
+    @property
+    def maintainers(self) -> list[str]:
+        """
+        Repository maintainers from the root config file
+
+        Returns:
+            list[str]: A list of github users who are maintainers for the repo
+        """
+        return self.base_repo_config.get("maintainers", [])
+
+    def check_permissions(self) -> bool:
+        """
+        Check if the pull request owner has permissions to submit a PR for the operator
+
+        Returns:
+            bool: A boolean value indicating if the user has permissions to submit a PR
+        """
+        LOGGER.info("Checking permissions for operator %s", self.operator.operator_name)
+        if self.is_partner():
+            return self.check_permission_for_partner()
+        return self.check_permission_for_community()
+
+    def check_permission_for_partner(self) -> bool:
+        """
+        Check if the pull request owner has permissions to submit a PR for the for
+        partner operator.
+        A user has permissions to submit a PR if the user is listed in the certification
+        project in Pyxis.
+
+        Raises:
+            NoPermissionError: An exception raised when user does not have permissions
+            to submit a PR
+
+        Returns:
+            bool: A boolean value indicating if the user has permissions to submit a PR
+        """
+        project = pyxis.get_project(self.pyxis_url, self.cert_project_id)
+        if not project:
+            raise NoPermissionError(
+                f"Project {self.cert_project_id} does not exist and pipeline can't "
+                "verify permissions."
+            )
+        usernames = project.get("container", {}).get("github_usernames", [])
+        if self.pr_owner not in usernames:
+            raise NoPermissionError(
+                f"User {self.pr_owner} does not have permissions to submit a PR for "
+                f"project {self.cert_project_id}. Users with permissions: {usernames}. "
+                f"Add {self.pr_owner} to the list of operator owners in Red Hat Connect."
+            )
+        LOGGER.info(
+            "Pull request owner %s can submit PR for operator %s",
+            self.pr_owner,
+            self.operator.operator_name,
+        )
+        return True
+
+    def check_permission_for_community(self) -> bool:
+        """
+        Check if the pull request owner has permissions to submit a PR for the
+        operator in community repository.
+
+        The function checks a local reviewers from the operator config file and fallback
+        to global repo config.
+
+        Raises:
+            MaintainersReviewNeeded: An exception raised when maintainer review is needed
+
+        Returns:
+            bool: A boolean value indicating if the user has permissions to submit a PR
+        """
+        if not self.reviewers:
+            # If there are no reviewers in the operator config file or operator is new,
+            # we need to request a review from maintainers
+            raise MaintainersReviewNeeded(
+                f"{self.operator} does not have any reviewers in the base repository "
+                "or is brand new."
+            )
+        if self.pr_owner not in self.reviewers:
+            LOGGER.info(
+                "Pull request owner %s is not in the list of reviewers %s",
+                self.pr_owner,
+                self.reviewers,
+            )
+            self.request_review_from_owners()
+            return False
+        LOGGER.info(
+            "Pull request owner %s can submit PR for operator %s",
+            self.pr_owner,
+            self.operator.operator_name,
+        )
+        return True
+
+    def request_review_from_maintainers(self) -> None:
+        """
+        Request review from repository global maintainers.
+        The maintainers are tagged in the PR as reviewers.
+        """
+        LOGGER.info(
+            "Requesting a review from maintainers for the pull request: %s",
+            self.pull_request_url,
+        )
+        run_command(
+            [
+                "gh",
+                "pr",
+                "edit",
+                self.pull_request_url,
+                "--add-reviewer",
+                ",".join(self.maintainers),
+            ]
+        )
+
+    def request_review_from_owners(self) -> None:
+        """
+        Request review from the operator owners by adding a comment to the PR.
+        """
+        reviewers_with_at = ", ".join(map(lambda x: f"@{x}", self.reviewers))
+        comment_text = (
+            "Author of the PR is not listed as one of the reviewers in ci.yaml.\n"
+            "Please review the PR and approve it with \`/lgtm\` comment.\n"  # pylint: disable=anomalous-backslash-in-string
+            f"{reviewers_with_at} \n\n"
+            "Consider adding author of the PR to the ci.yaml file if you want automated "
+            "approval for a followup submissions."
+        )
+
+        run_command(
+            ["gh", "pr", "comment", self.pull_request_url, "--body", comment_text]
+        )
+
+
+def extract_operators_from_catalog(
+    head_repo: OperatorRepo, catalog_operators: list[str]
+) -> set[Operator]:
+    """
+    Map the affected catalog operators to the actual operators
+
+    Args:
+        head_repo (OperatorRepo): A head git repository
+        catalog_operators (list[str]): List of affected catalog operators
+
+    Returns:
+        set[Operator]: A set of operators
+    """
+    operators = set()
+    for catalog_operator in catalog_operators:
+        catalog, operator = catalog_operator.split("/")
+        # We need to get the operator from the catalog to get the actual operator
+        operator = head_repo.catalog(catalog).operator_catalog(operator).operator
+        operators.add(operator)
+    return operators
+
+
+def check_permissions(
+    base_repo: OperatorRepo,
+    head_repo: OperatorRepo,
+    args: Any,
+) -> bool:
+    """
+    Check permission for the pull request owner and request a review if
+    needed or fail if the user does not have permissions
+
+    Args:
+        base_repo (OperatorRepo): A base git repository
+        head_repo (OperatorRepo): A head git repository
+        args (Any): CLI arguments
+
+    Returns:
+        bool: A boolean value indicating if the user has permissions to submit a PR
+    """
+    LOGGER.info("Checking permissions for the pull request owner: %s", args.pr_owner)
+
+    with open(args.changes_file, "r", encoding="utf8") as f:
+        changes = json.load(f)
+
+    affected_operators = changes.get("affected_operators", [])
+    operators = {head_repo.operator(operator) for operator in affected_operators}
+
+    # In this step we need to map the affected catalog operators to the actual
+    # operators. This needs to be done because the permission and reviewers
+    # are stored in the operator config file
+    affected_catalog_operators = changes.get("affected_catalog_operators", [])
+    operators = operators.union(
+        extract_operators_from_catalog(head_repo, affected_catalog_operators)
+    )
+
+    is_approved = []
+    for operator in operators:
+        operator_review = OperatorReview(
+            operator,
+            args.pr_owner,
+            base_repo,
+            head_repo,
+            args.pull_request_url,
+            args.pyxis_url,
+        )
+        try:
+            result = operator_review.check_permissions()
+            is_approved.append(result)
+        except MaintainersReviewNeeded as exc:
+            LOGGER.info(
+                f"Operator %s requires a review from maintainers. {exc}",
+                operator.operator_name,
+            )
+            operator_review.request_review_from_maintainers()
+            is_approved.append(False)
+
+    return all(is_approved)
+
+
+def main() -> None:
+    """
+    Main function of the script
+    """
+    # Args
+    parser = setup_argparser()
+    args = parser.parse_args()
+
+    # Logging
+    log_level = "INFO"
+    if args.verbose:
+        log_level = "DEBUG"
+    setup_logger(level=log_level)
+
+    base_repo = OperatorRepo(args.repo_base_path)
+    head_repo = OperatorRepo(args.repo_head_path)
+
+    is_approved = check_permissions(base_repo, head_repo, args)
+
+    if is_approved:
+        run_command(["gh", "pr", "review", args.pull_request_url, "--approve"])
+
+    # Save the results to a file
+    output = {
+        "approved": is_approved,
+    }
+    if args.output_file:
+        with open(args.output_file, "w", encoding="utf8") as f:
+            json.dump(output, f)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()

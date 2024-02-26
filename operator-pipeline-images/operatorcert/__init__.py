@@ -44,29 +44,6 @@ def get_bundle_annotations(bundle_path: pathlib.Path) -> Dict[str, Any]:
         return content.get("annotations") or {}
 
 
-def get_csv_content(bundle_path: pathlib.Path, package: str) -> Any:
-    """
-    Gets all the content of the bundle CSV
-
-    Args:
-        bundle_path (Path): A path to the bundle version
-        package (str): Operator package name
-
-    Returns:
-        A dict of all the fields in the bundle CSV
-    """
-    paths = [
-        ("manifests", f"{package}.clusterserviceversion.yaml"),
-        ("manifests", f"{package}.clusterserviceversion.yml"),
-    ]
-    csv_path = find_file(bundle_path, paths)  # type: ignore
-    if not csv_path:
-        raise RuntimeError("Cluster service version (CSV) file not found")
-
-    with csv_path.open() as csv_file:
-        return yaml.safe_load(csv_file)
-
-
 def get_supported_indices(
     pyxis_url: str,
     ocp_versions_range: Any,
@@ -240,82 +217,6 @@ def get_repo_and_org_from_github_url(git_repo_url: str) -> Tuple[str, str]:
     return organization, repository
 
 
-def get_files_added_in_pr(
-    organization: str, repository: str, base_branch: str, pr_head_label: str
-) -> List[str]:
-    """
-    Get the list of files added in the PR.
-    Raise error if any existing files are changed
-    """
-    compare_changes_url = (
-        f"https://api.github.com/repos/{organization}/{repository}"
-        f"/compare/{base_branch}...{pr_head_label}"
-    )
-    comparison = github.get(compare_changes_url, auth_required=True)
-
-    added_files = []
-    modified_files = []
-    allowed_files = []
-
-    for file in comparison.get("files", []):
-        if file["status"] == "added":
-            added_files.append(file["filename"])
-        else:
-            # To prevent the modifications to previously merged bundles,
-            # we allow only changed with status "added"
-            modified_files.append(file)
-
-    allowed_files.extend(added_files)
-
-    if modified_files:
-        for modified_file in modified_files:
-            if not modified_file["filename"].endswith("ci.yaml"):
-                LOGGER.error(
-                    "Change not permitted: file: %s, status: %s",
-                    modified_file["filename"],
-                    modified_file["status"],
-                )
-                raise RuntimeError("There are changes done to previously merged files")
-            allowed_files.append(modified_file["filename"])
-
-    return allowed_files
-
-
-def verify_changed_files_location(
-    changed_files: List[str], operator_name: str, bundle_version: str
-) -> None:
-    """
-    Find the allowed locations in directory tree for changes
-    (basing on the operator name and version).
-    Test if all of the changes are in allowed locations.
-    """
-    parent_path = f"operators/{operator_name}"
-    path = parent_path + "/" + bundle_version
-    config_path = parent_path + "/ci.yaml"
-
-    LOGGER.info(
-        "Changes for operator %s in version %s"
-        " are expected to be in paths: \n"
-        " %s/* \n"
-        " %s",
-        operator_name,
-        bundle_version,
-        path,
-        config_path,
-    )
-
-    wrong_changes = False
-    for file_path in changed_files:
-        if file_path.startswith(path) or file_path == config_path:
-            LOGGER.info("Permitted change: %s ", file_path)
-        else:
-            LOGGER.error("Unpermitted change: %s", file_path)
-            wrong_changes = True
-
-    if wrong_changes:
-        raise RuntimeError("There are unpermitted file changes")
-
-
 def parse_pr_title(pr_title: str) -> Tuple[str, str]:
     """
     Test, if PR title complies to regex.
@@ -337,66 +238,6 @@ def parse_pr_title(pr_title: str) -> Tuple[str, str]:
     bundle_version = matching.group(2)
 
     return bundle_name, bundle_version
-
-
-def validate_user(git_username: str, contacts: List[str]) -> None:
-    """
-    Check if git username is in the allowed list of contacts
-
-    Args:
-        git_username (str): Git username
-        contacts (List[str]): List of allowed contacts
-
-    """
-    if git_username not in contacts:
-        raise ValueError(
-            f"User {git_username} doesn't have permissions to submit the bundle."
-        )
-    LOGGER.info("User %s has permission to submit the bundle.", git_username)
-
-
-def verify_pr_uniqueness(
-    available_repositories: List[str], base_pr_url: str, base_pr_bundle_name: str
-) -> None:
-    """
-    List the active Pull Requests in given GitHub repositories.
-    Find Pull Requests for the same Operator Bundle, and error if they exists.
-    """
-
-    base_url = "https://api.github.com/repos/"
-
-    regex = r"^operator ([a-zA-Z0-9-]+) [^\s]+$"
-    regex_pattern = re.compile(regex)
-
-    for repo in available_repositories:
-        # List the open PRs in the given repositories,
-        pull_requests = github.get(base_url + repo + "/pulls", auth_required=True)
-
-        # find duplicates
-        duplicate_prs = []
-        for pull_request in pull_requests:
-            pr_title = pull_request["title"]
-            pr_url = pull_request["html_url"]
-            if base_pr_url == pr_url:
-                # We found the base PR
-                continue
-            matching = regex_pattern.search(pr_title)
-            # there is a PR with name that doesn't conform to regex
-            if matching is None:
-                continue
-            bundle_name = matching.group(1)
-            if bundle_name == base_pr_bundle_name:
-                duplicate_prs.append(f"{pr_title}: {pr_url}")
-
-        # Log duplicates and exit with error
-        if duplicate_prs:
-            LOGGER.error(
-                "There is more than one pull request for the Operator Bundle %s",
-                base_pr_bundle_name,
-            )
-            for duplicate in duplicate_prs:
-                LOGGER.error("DUPLICATE: %s", duplicate)
-            raise RuntimeError("Multiple pull requests for one Operator Bundle")
 
 
 def download_test_results(args: Any) -> Any:

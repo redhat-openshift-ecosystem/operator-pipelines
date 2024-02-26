@@ -282,13 +282,52 @@ spec:
         - name: base
           workspace: repository
           subPath: base
+        - name: output
+          workspace: results
+          subPath: changes
+
+    - name: check-permissions
+      taskRef:
+        name: check-permissions
+        kind: Task
+      runAfter:
+        - detect-changes
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_username
+          value: "$(params.git_username)"
+        - name: pull_request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
+      workspaces:
+        - name: pr
+          workspace: repository
+          subPath: src
+        - name: base
+          workspace: repository
+          subPath: base
+        - name: output
+          workspace: results
+          subPath: changes
 
     - name: set-github-pr-title
       taskRef:
         name: set-github-pr-title
         kind: Task
       runAfter:
-        - detect-changes
+        - check-permissions
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -421,41 +460,11 @@ spec:
         - name: project_status
           value: "$(tasks.get-pyxis-certification-data.results.project_status)"
 
-    # Validate submission
-    - name: submission-validation
-      runAfter:
-        - verify-project
-      taskRef:
-        name: submission-validation
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: git_pr_url
-          value: $(params.git_pr_url)
-        - name: git_repo_url
-          value: $(params.git_repo_url)
-        - name: pyxis_url
-          value: $(tasks.set-env.results.pyxis_url)
-        - name: git_username
-          value: $(params.git_username)
-        - name: github_usernames
-          value: "$(tasks.get-pyxis-certification-data.results.github_usernames)"
-        - name: operator_name
-          value: "$(tasks.detect-changes.results.added_operator)"
-        - name: github_token_secret_name
-          value: "$(params.github_token_secret_name)"
-        - name: github_token_secret_key
-          value: "$(params.github_token_secret_key)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
     # Updates certification status to "In Progress", if not already "Published".
     # See the get-pyxis-certification-data task for how that's determined.
     - name: update-cert-project-status
       runAfter:
-        - submission-validation
+        - verify-project
       taskRef:
         name: update-cert-project-status
       params:
@@ -500,35 +509,12 @@ spec:
         - name: source
           value: "$(tasks.get-organization.results.organization)"
 
-    - name: verify-changed-directories
-      runAfter:
-        - reserve-operator-name
-      taskRef:
-        name: verify-changed-directories
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: operator_name
-          value: "$(tasks.detect-changes.results.added_operator)"
-        - name: bundle_version
-          value: "$(tasks.detect-changes.results.added_bundle)"
-        - name: pr_head_label
-          value: $(params.pr_head_label)
-        - name: git_repo_url
-          value: $(params.git_repo_url)
-        - name: base_branch
-          value: $(params.git_base_branch)
-        - name: github_token_secret_name
-          value: "$(params.github_token_secret_name)"
-        - name: github_token_secret_key
-          value: "$(params.github_token_secret_key)"
-
     - name: static-tests
       taskRef:
         name: run-static-tests
         kind: Task
       runAfter:
-        - verify-changed-directories
+        - reserve-operator-name
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -578,7 +564,7 @@ spec:
 
     - name: yaml-lint
       runAfter:
-        - verify-changed-directories
+        - reserve-operator-name
       taskRef:
         name: yaml-lint
       params:
@@ -629,7 +615,7 @@ spec:
     # our credentials for that registry will be omitted.
     - name: merge-registry-credentials
       runAfter:
-        - verify-changed-directories
+        - reserve-operator-name
       taskRef:
         name: merge-registry-credentials
       params:

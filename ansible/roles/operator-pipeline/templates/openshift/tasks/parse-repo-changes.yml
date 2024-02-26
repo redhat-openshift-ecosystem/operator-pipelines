@@ -39,9 +39,12 @@ spec:
       description: Clone of the repo at the PR head
     - name: base
       description: Clone of the repo at head of the base branch
+    - name: output
+      description: A workspace for task output
   steps:
     - name: parse-repo-changes
       image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.output.path)
       env:
         - name: GITHUB_TOKEN
           valueFrom:
@@ -56,23 +59,23 @@ spec:
           --repo-path="$(workspaces.pr.path)" \
           --base-repo-path="$(workspaces.base.path)" \
           --pr-url="$(params.request_url)" \
-          --output-file /tmp/changes.json \
+          --output-file changes.json \
           --verbose
 
-        operator_name="$(jq -r '.operator_name' </tmp/changes.json)"
+        operator_name="$(jq -r '.operator_name' < changes.json)"
         echo -n $operator_name > "$(results.added_operator.path)"
 
-        bundle_version="$(jq -r '.bundle_version' </tmp/changes.json)"
+        bundle_version="$(jq -r '.bundle_version' < changes.json)"
         echo -n $bundle_version > "$(results.added_bundle.path)"
 
-        operator_path="$(jq -r '.operator_path' </tmp/changes.json)"
+        operator_path="$(jq -r '.operator_path' < changes.json)"
         echo -n $operator_path > "$(results.operator_path.path)"
 
-        bundle_path="$(jq -r '.bundle_path' </tmp/changes.json)"
+        bundle_path="$(jq -r '.bundle_path' < changes.json)"
         echo -n $bundle_path > "$(results.bundle_path.path)"
 
-        affected_catalogs="$(jq -r '.affected_catalogs | join(",")' </tmp/changes.json)"
+        affected_catalogs="$(jq -r '.affected_catalogs | join(",")' < changes.json)"
         echo -n $affected_catalogs > "$(results.affected_catalogs.path)"
 
-        affected_catalog_operators="$(jq -r '.affected_catalog_operators | join(",")' </tmp/changes.json)"
+        affected_catalog_operators="$(jq -r '.affected_catalog_operators | join(",")' < changes.json)"
         echo -n $affected_catalog_operators > "$(results.affected_catalog_operators.path)"
