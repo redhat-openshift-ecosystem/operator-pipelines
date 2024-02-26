@@ -1,0 +1,90 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: check-permissions
+spec:
+  params:
+    - name: pipeline_image
+
+    - name: pull_request_url
+      description: Pull request URL
+
+    - name: git_username
+      description: An username of pull request author
+
+    - name: output_file
+      description: A path to a file where fragment image metadata will be stored.
+      default: "permission_review.json"
+
+    - name: changes_file
+      description: A json file containing changes introduced by the PR
+      default: changes.json
+
+    - name: github_token_secret_name
+      description: Name of the Kubernetes Secret that contains the GitHub token
+      default: github
+
+    - name: github_token_secret_key
+      description: Key within the Kubernetes Secret that contains the GitHub token
+      default: token
+
+    - name: pyxis_ssl_secret_name
+      description: Kubernetes secret name that contains the Pyxis SSL files. Valid only when internal Pyxis is used.
+
+    - name: pyxis_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert. Valid only when internal Pyxis is used.
+
+    - name: pyxis_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key. Valid only when internal Pyxis is used.
+
+    - name: pyxis_url
+      default: https://pyxis.engineering.redhat.com
+  workspaces:
+    - name: pr
+      description: Clone of the repo at the PR head
+    - name: base
+      description: Clone of the repo at head of the base branch
+    - name: output
+  volumes:
+    - name: pyxis-ssl-volume
+      secret:
+        secretName: "$(params.pyxis_ssl_secret_name)"
+        optional: true
+  results:
+    - name: approved
+      description: "An indication whether a changes introduced in the PR are authorized"
+  steps:
+    - name: build-fragment-images
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.output.path)
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+        - name: PYXIS_CERT_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
+        - name: PYXIS_KEY_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        check-permissions \
+          --repo-base-path "$(workspaces.base.path)" \
+          --repo-head-path "$(workspaces.pr.path)" \
+          --changes-file "$(params.changes_file)" \
+          --pr-owner "$(params.git_username)" \
+          --pull-request-url "$(params.pull_request_url)" \
+          --pyxis-url "$(params.pyxis_url)" \
+          --output-file "$(params.output_file)" \
+          --verbose
+
+        cat "$(params.output_file)" | jq
+        cat "$(params.output_file)" | jq -r ".approved" | tee "$(results.approved.path)"

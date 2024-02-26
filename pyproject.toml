@@ -48,7 +48,7 @@ dependencies = [
     "PyGithub<2.0,>=1.59.0",
     "GitPython>=3.1.37",
     "semver>=3.0.1",
-    "operator-repo @ git+https://github.com/mporrato/operator-repo.git@v0.4.0",
+    "operator-repo @ git+https://github.com/mporrato/operator-repo.git@v0.4.1",
     "urllib3>=2.0.7",
 ]
 
@@ -56,6 +56,7 @@ dependencies = [
 apply-test-waivers = "operatorcert.entrypoints.apply_test_waivers:main"
 build-fragment-images = "operatorcert.entrypoints.build_fragment_images:main"
 bundle-dockerfile = "operatorcert.entrypoints.bundle_dockerfile:main"
+check-permissions = "operatorcert.entrypoints.check_permissions:main"
 create-container-image = "operatorcert.entrypoints.create_container_image:main"
 create-github-gist = "operatorcert.entrypoints.create_github_gist:main"
 detect-changed-operators = "operatorcert.entrypoints.detect_changed_operators:main"
@@ -82,8 +83,6 @@ update-cert-project-status = "operatorcert.entrypoints.update_cert_project_statu
 upload-artifacts = "operatorcert.entrypoints.upload_artifacts:main"
 upload-signature = "operatorcert.entrypoints.upload_signature:main"
 verify-changed-dirs = "operatorcert.entrypoints.verify_changed_dirs:main"
-verify-pr-uniqueness = "operatorcert.entrypoints.verify_pr_uniqueness:main"
-verify-pr-user = "operatorcert.entrypoints.verify_pr_user:main"
 
 
 [build-system]

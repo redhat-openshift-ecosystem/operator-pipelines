@@ -73,6 +73,18 @@ spec:
       description: The key within the Kubernetes Secret that contains the gpg public key.
       default: public
 
+    - name: pyxis_ssl_secret_name
+      description: Kubernetes secret name that contains the Pyxis SSL files.
+      default: operator-pipeline-api-certs
+
+    - name: pyxis_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert.
+      default: operator-pipeline.pem
+
+    - name: pyxis_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key.
+      default: operator-pipeline.key
+
   workspaces:
     - name: repository
     - name: results
@@ -230,6 +242,9 @@ spec:
         - name: base
           workspace: repository
           subPath: base
+        - name: output
+          workspace: results
+          subPath: changes
 
     - name: set-github-pr-title
       taskRef:
@@ -254,38 +269,48 @@ spec:
           value: "$(params.github_token_secret_key)"
 
 
-    # parse ci.yaml file and look for the reviewer and or author of the PR
-    - name: get-ci-reviewer
+    - name: check-permissions
       taskRef:
-        name: get-ci-reviewer
+        name: check-permissions
         kind: Task
       runAfter:
         - set-github-pr-title
-
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: git_username
           value: "$(params.git_username)"
-        - name: pr_url
+        - name: pull_request_url
           value: "$(params.git_pr_url)"
-        - name: operator_name
-          value: "$(tasks.detect-changes.results.added_operator)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
+        - name: pyxis_url
+          value: "$(tasks.set-env-community.results.pyxis_url)"
+        - name: pyxis_ssl_secret_name
+          value: "$(params.pyxis_ssl_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.pyxis_ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.pyxis_ssl_key_secret_key)"
       workspaces:
+        - name: pr
+          workspace: repository
+          subPath: src
         - name: base
           workspace: repository
           subPath: base
+        - name: output
+          workspace: results
+          subPath: changes
 
     - name: read-config
       taskRef:
         name: read-config
         kind: Task
       runAfter:
-        - get-ci-reviewer
+        - check-permissions
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -619,7 +644,7 @@ spec:
     # merge PR
     - name: merge-pr
       when:
-        - input: "$(tasks.get-ci-reviewer.results.author_is_reviewer)"
+        - input: "$(tasks.check-permissions.results.approved)"
           operator: in
           values: ["true"]
         - input: "$(tasks.status)"

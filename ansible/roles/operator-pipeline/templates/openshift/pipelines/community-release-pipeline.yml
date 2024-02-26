@@ -195,6 +195,9 @@ spec:
         - name: base
           workspace: repository
           subPath: base
+        - name: output
+          workspace: results
+          subPath: changes
 
     - name: read-config
       taskRef:

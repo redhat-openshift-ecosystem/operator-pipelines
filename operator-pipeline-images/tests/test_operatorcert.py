@@ -47,17 +47,6 @@ def bundle(tmp_path: Path) -> Bundle:
     }
 
 
-def test_get_csv_content(bundle: Bundle) -> None:
-    bundle_root = bundle["root"]
-    content = operatorcert.get_csv_content(bundle_root, "foo-operator")
-    assert content.get("metadata", {}).get("annotations", {}) == {
-        "olm.properties": '[{"type": "olm.maxOpenShiftVersion", "value": "4.7"}]'
-    }
-    bundle["csv"].unlink()
-    with pytest.raises(RuntimeError):
-        operatorcert.get_csv_content(bundle_root, "foo-operator")
-
-
 def test_get_bundle_annotations(bundle: Bundle) -> None:
     bundle_root = bundle["root"]
     assert operatorcert.get_bundle_annotations(bundle_root) == {
@@ -194,101 +183,6 @@ def test_get_repo_and_org_from_github_url() -> None:
         )
 
 
-@patch("operatorcert.github.get")
-def test_get_files_added_in_pr(mock_get: MagicMock) -> None:
-    mock_get.return_value = {
-        "irrelevant_key": "abc",
-        "files": [
-            {"filename": "first", "status": "added"},
-            {"filename": "second", "status": "added"},
-        ],
-    }
-    files = operatorcert.get_files_added_in_pr(
-        "rh", "operator-repo", "main", "user:fixup"
-    )
-    mock_get.assert_called_with(
-        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup",
-        auth_required=True,
-    )
-    assert files == ["first", "second"]
-
-
-@patch("operatorcert.github.get")
-def test_get_files_added_in_pr_changed_files(mock_get: MagicMock) -> None:
-    mock_get.return_value = {
-        "irrelevant_key": "abc",
-        "files": [
-            {"filename": "first", "status": "deleted"},
-            {"filename": "second", "status": "changed"},
-        ],
-    }
-    with pytest.raises(RuntimeError):
-        operatorcert.get_files_added_in_pr("rh", "operator-repo", "main", "user:fixup")
-    mock_get.assert_called_with(
-        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup",
-        auth_required=True,
-    )
-
-
-@patch("operatorcert.github.get")
-def test_get_files_added_in_pr_changed_ci_yaml(mock_get: MagicMock) -> None:
-    mock_get.return_value = {
-        "irrelevant_key": "abc",
-        "files": [
-            {"filename": "ci.yaml", "status": "changed"},
-        ],
-    }
-    files = operatorcert.get_files_added_in_pr(
-        "rh", "operator-repo", "main", "user:fixup"
-    )
-
-    mock_get.assert_called_with(
-        "https://api.github.com/repos/rh/operator-repo/compare/main...user:fixup",
-        auth_required=True,
-    )
-
-    assert files == ["ci.yaml"]
-
-
-@pytest.mark.parametrize(
-    "wrong_change",
-    [
-        # no wrong change, happy path
-        "",
-        # wrong repository
-        "other-repository/operators/sample-operator/0.1.0/1.txt",
-        # wrong operator name
-        "sample-repository/operators/other-operator/0.1.0/1.txt",
-        # wrong version
-        "sample-repository/operators/sample-operator/0.1.1/1.txt",
-        # change other than ci.yaml in the operator directory level
-        "sample-repository/operators/sample-operator/1.txt",
-    ],
-)
-def test_verify_changed_files_location(wrong_change: str) -> None:
-    changed_files = [
-        "operators/sample-operator/0.1.0/1.txt",
-        "operators/sample-operator/0.1.0/directory/2.txt",
-        "operators/sample-operator/ci.yaml",
-    ]
-    operator_name = "sample-operator"
-    bundle_version = "0.1.0"
-
-    # sad paths
-    if wrong_change:
-        with pytest.raises(RuntimeError):
-            operatorcert.verify_changed_files_location(
-                changed_files + [wrong_change],
-                operator_name,
-                bundle_version,
-            )
-    # happy path
-    else:
-        operatorcert.verify_changed_files_location(
-            changed_files, operator_name, bundle_version
-        )
-
-
 @pytest.mark.parametrize(
     "pr_title, is_valid, name, version",
     [
@@ -310,69 +204,6 @@ def test_parse_pr_title(pr_title: str, is_valid: bool, name: str, version: str) 
     else:
         with pytest.raises(ValueError):
             operatorcert.parse_pr_title(pr_title)
-
-
-@patch("operatorcert.github.get")
-def test_verify_pr_uniqueness(mock_get: MagicMock) -> None:
-    base_pr_url = "https://github.com/user/repo/pulls/1"
-    pr_rsp = [
-        # At first call get return:
-        [
-            {"title": "operator first (1.2.3)", "html_url": base_pr_url},
-            {
-                "title": "operator second (1.2.3)",
-                "html_url": base_pr_url.replace("1", "2"),
-            },
-            {
-                "title": "operator third (1.2.3)",
-                "html_url": base_pr_url.replace("1", "3"),
-            },
-            {
-                "title": "title not conforming regex- should not throw error",
-                "html_url": base_pr_url.replace("1", "4"),
-            },
-        ],
-        # At second call return:
-        [
-            {
-                "title": "operator fourth (1.2.3)",
-                "html_url": base_pr_url.replace("1", "5"),
-            }
-        ],
-    ]
-
-    mock_get.side_effect = pr_rsp
-
-    available_repositories = ["org1/repo_a", "org2/repo_b"]
-    base_pr_bundle_name = "first"
-    operatorcert.verify_pr_uniqueness(
-        available_repositories, base_pr_url, base_pr_bundle_name
-    )
-
-    # For second call return PR title with the same operator name, but other version
-    pr_rsp[1].append(
-        {"title": "operator first (1.2.4)", "html_url": base_pr_url.replace("1", "5")}
-    )
-    mock_get.side_effect = pr_rsp
-
-    assert mock_get.call_args_list == [
-        call("https://api.github.com/repos/org1/repo_a/pulls", auth_required=True),
-        call("https://api.github.com/repos/org2/repo_b/pulls", auth_required=True),
-    ]
-
-    with pytest.raises(RuntimeError):
-        operatorcert.verify_pr_uniqueness(
-            available_repositories, base_pr_url, base_pr_bundle_name
-        )
-
-
-def test_validate_user() -> None:
-    contacts = ["some_user", "some_other_user"]
-
-    operatorcert.validate_user("some_user", contacts)
-
-    with pytest.raises(ValueError):
-        operatorcert.validate_user("one_without_permissions", contacts)
 
 
 @patch("operatorcert.pyxis.get")
