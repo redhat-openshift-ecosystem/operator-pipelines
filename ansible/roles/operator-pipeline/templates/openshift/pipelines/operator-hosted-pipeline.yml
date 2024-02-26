@@ -323,7 +323,7 @@ spec:
 
     - name: content-hash
       runAfter:
-        - detect-changes
+        - set-github-pr-title
       taskRef:
         name: content-hash
       params:
