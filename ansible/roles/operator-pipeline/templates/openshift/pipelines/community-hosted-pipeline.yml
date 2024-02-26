@@ -302,7 +302,7 @@ spec:
         kind: Task
       runAfter:
         - read-config
-      when:
+      when: &bundleAdded
         - input: "$(tasks.detect-changes.results.added_bundle)"
           operator: notin
           values: [""]
@@ -327,10 +327,7 @@ spec:
         - apply-test-waivers
       taskRef:
         name: get-supported-versions
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -347,10 +344,7 @@ spec:
         kind: Task
       runAfter:
         - get-supported-versions
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -380,10 +374,7 @@ spec:
         kind: Task
       runAfter:
         - static-tests
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -407,10 +398,7 @@ spec:
         - static-tests-results
       taskRef:
         name: dockerfile-creation
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -430,10 +418,7 @@ spec:
       taskRef:
         name: buildah
         kind: Task
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)-$(params.git_commit)"
@@ -446,15 +431,31 @@ spec:
         - name: credentials
           workspace: registry-credentials
 
-    - name: make-bundle-repo-public
+    # Add version tag to bundle image
+    - name: apply-version-tag
       runAfter:
         - build-bundle
       taskRef:
+        name: tag-image
+        kind: Task
+      when: *bundleAdded
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: image
+          value: *bundleImage
+        - name: tags
+          value: "$(tasks.detect-changes.results.added_bundle)"
+      workspaces:
+        - name: registry-credentials
+          workspace: registry-credentials
+
+    - name: make-bundle-repo-public
+      runAfter:
+        - apply-version-tag
+      taskRef:
         name: set-quay-repo-visibility
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -472,10 +473,7 @@ spec:
         - make-bundle-repo-public
       taskRef:
         name: add-bundle-to-index
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -509,10 +507,7 @@ spec:
         - add-bundle-to-index
       taskRef:
         name: set-quay-repo-visibility
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -531,10 +526,7 @@ spec:
       taskRef:
         kind: Task
         name: preflight-trigger
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: preflight_trigger_environment
           value: "$(params.preflight_trigger_environment)"
@@ -574,10 +566,7 @@ spec:
       taskRef:
         kind: Task
         name: evaluate-preflight-result
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"

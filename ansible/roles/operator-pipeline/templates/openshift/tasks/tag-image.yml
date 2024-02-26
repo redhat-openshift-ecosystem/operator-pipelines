@@ -1,0 +1,34 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: tag-image
+spec:
+  description: |
+    Apply one or more tags to an existing container image
+  params:
+    - name: pipeline_image
+    - name: image
+      description: reference to the image
+    - name: tags
+      description: comma separated list of tags
+  workspaces:
+    - name: registry-credentials
+      description: Docker config for the registry
+  steps:
+    - name: skopeo-copy
+      image: "$(params.pipeline_image)"
+      script: |
+        set -xe
+
+        REF="$(params.image)"
+        UNTAGGED_REF="${REF%%:*}"
+        IFS=, read -a TAGS <<<"$(params.tags)"
+        AUTHFILE="$(workspaces.registry-credentials.path)/.dockerconfigjson"
+
+        for tag in "${TAGS[@]}" ; do
+            skopeo copy \
+              --authfile "${AUTHFILE}" \
+              "docker://${REF}" \
+              "docker://${UNTAGGED_REF}:${tag}"
+        done

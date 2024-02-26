@@ -258,7 +258,7 @@ spec:
         - name: index_images
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: bundle_pullspec
-          value: "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)-$(params.git_head_sha)"
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
         - name: iib_url
           value: "$(tasks.set-env-community.results.iib_url)"
         - name: environment
