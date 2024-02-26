@@ -42,7 +42,7 @@ spec:
         cat $CONFIG_PATH
 
         # Parse the fbc enablement status
-        FBC_ENABLEMENT=`cat $CONFIG_PATH | yq -r '.fbc.Enabled // "false"'`
+        FBC_ENABLEMENT=`cat $CONFIG_PATH | yq -r '.fbc.enabled // false'`
 
         if [ "$FBC_ENABLEMENT" == "true" ]; then
             if [ "$(cat $CONFIG_PATH | yq -r '.updateGraph')" != "null" ]; then
