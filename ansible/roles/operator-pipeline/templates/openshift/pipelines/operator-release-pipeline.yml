@@ -214,6 +214,26 @@ spec:
           workspace: repository
           subPath: base
 
+    - name: read-config
+      taskRef:
+        name: read-config
+        kind: Task
+      runAfter:
+        - detect-changes
+      when: &bundleAdded
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: operator_path
+          value: "$(tasks.detect-changes.results.operator_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Compute a hash of the content so pipeline logs can be uploaded with it
     - name: content-hash
       runAfter:

@@ -32,19 +32,18 @@ files = [
 
 [[package]]
 name = "bandit"
-version = "1.7.5"
-requires_python = ">=3.7"
+version = "1.7.7"
+requires_python = ">=3.8"
 summary = "Security oriented static analyser for python code."
 dependencies = [
-    "GitPython>=1.0.1",
     "PyYAML>=5.3.1",
     "colorama>=0.3.9; platform_system == \"Windows\"",
     "rich",
     "stevedore>=1.20.0",
 ]
 files = [
-    {file = "bandit-1.7.5-py3-none-any.whl", hash = "sha256:75665181dc1e0096369112541a056c59d1c5f66f9bb74a8d686c3c362b83f549"},
-    {file = "bandit-1.7.5.tar.gz", hash = "sha256:bdfc739baa03b880c2d15d0431b31c658ffc348e907fe197e54e0389dd59e11e"},
+    {file = "bandit-1.7.7-py3-none-any.whl", hash = "sha256:17e60786a7ea3c9ec84569fd5aee09936d116cb0cb43151023258340dbffb7ed"},
+    {file = "bandit-1.7.7.tar.gz", hash = "sha256:527906bec6088cb499aae31bc962864b4e77569e9d529ee51df3a93b4b8ab28a"},
 ]
 
 [[package]]

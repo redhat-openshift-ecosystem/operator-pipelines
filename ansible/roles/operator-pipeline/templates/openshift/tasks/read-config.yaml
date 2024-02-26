@@ -17,6 +17,8 @@ spec:
   results:
     - name: upgrade-graph-mode
       description: "A graph update mode that defines how channel graphs are updated"
+    - name: fbc-enabled
+      description: "File Based Catalog enablement status"
 
   workspaces:
     - name: source
@@ -32,16 +34,30 @@ spec:
 
         if [ ! -f "$CONFIG_PATH" ]; then
             echo "Config file $CONFIG_PATH does not exist."
-            echo -n "replaces" | tee $(results.upgrade-graph-mode.path)
+            echo "replaces" | tee $(results.upgrade-graph-mode.path)
+            echo "false" | tee $(results.fbc-enabled.path)
             exit 0
         fi
 
         cat $CONFIG_PATH
 
-        # Parse the upgrade graph mode with default value "replaces"
-        UPGRADE_GRAPH_MODE=`cat $CONFIG_PATH | yq -r '.updateGraph // "replaces"'`
+        # Parse the fbc enablement status
+        FBC_ENABLEMENT=`cat $CONFIG_PATH | yq -r '.fbc.Enabled // "false"'`
 
-        # Remove the "-mode" suffix
-        UPGRADE_GRAPH_MODE=`echo $UPGRADE_GRAPH_MODE | sed 's/-mode$//'`
+        if [ "$FBC_ENABLEMENT" == "true" ]; then
+            if [ "$(cat $CONFIG_PATH | yq -r '.updateGraph')" != "null" ]; then
+                echo "FBC is enabled, updateGraph cannot be defined."
+                exit 1
+            else
+                UPGRADE_GRAPH_MODE=""
+            fi
+        else
+            # Parse the upgrade graph mode with default value "replaces"
+            UPGRADE_GRAPH_MODE=`cat $CONFIG_PATH | yq -r '.updateGraph // "replaces"'`
 
+            # Remove the "-mode" suffix
+            UPGRADE_GRAPH_MODE=`echo $UPGRADE_GRAPH_MODE | sed 's/-mode$//'`
+        fi
+
+        echo $FBC_ENABLEMENT | tee $(results.fbc-enabled.path)
         echo -n $UPGRADE_GRAPH_MODE | tee $(results.upgrade-graph-mode.path)
