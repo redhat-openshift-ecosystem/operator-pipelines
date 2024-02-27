@@ -1,4 +1,5 @@
 """Detect which operator bundles are affected by a PR"""
+
 import argparse
 import json
 import logging
@@ -6,7 +7,7 @@ import os
 import pathlib
 import re
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Any
 from operator_repo import Repo as OperatorRepo
 
 from github import Auth, Github
@@ -227,6 +228,80 @@ class AffectedCatalogCollection:
     def union(self) -> set[AffectedCatalog]:
         """All the affected operators"""
         return self.added | self.modified | self.deleted
+
+
+class ValidationError(Exception):
+    """
+    Exception raised when the result of the detect_changes function
+    violates any of the constraints
+    """
+
+
+def _validate_result(result: dict[str, list[str]]) -> None:
+    """
+    Validate the result of the detect_changes function.
+    Raises a ValidationError if the result violates
+    any of the constraints.
+
+    Args:
+        result: Dictionary with the detected changes
+    """
+    message = ""
+
+    if len(extra_files := result.get("extra_files", [])) > 0:
+        message += f"The PR affects non-operator files: {sorted(extra_files)} "
+    if len(affected_operators := result.get("affected_operators", [])) > 1:
+        message += (
+            f"The PR affects more than one operator: {sorted(affected_operators)} "
+        )
+    if len(modified_bundles := result.get("modified_bundles", [])) > 0:
+        message += f"The PR modifies existing bundles: {sorted(modified_bundles)} "
+    if len(deleted_bundles := result.get("deleted_bundles", [])) > 0:
+        message += f"The PR deletes existing bundles: {sorted(deleted_bundles)} "
+    if len(added_bundles := result.get("added_bundles", [])) > 1:
+        message += f"The PR affects more than one bundle: {sorted(added_bundles)} "
+
+    catalog_operators = sorted(
+        list(
+            {
+                operator.split("/")[1]
+                for operator in result.get("affected_catalog_operators", [])
+            }
+        )
+    )
+    if len(catalog_operators) > 1:
+        message += f"The PR affects more than one catalog operator: {catalog_operators}"
+
+    if message:
+        raise ValidationError(message)
+
+
+def _update_result(result: dict[str, Any]) -> dict[str, Any]:
+    """
+    Enrich the result of the detect_changes function
+    with additional fields
+
+    Args:
+        result: Dictionary with the detected changes
+    """
+    if len(added_bundles := result.get("added_bundles", [])) == 1:
+        operator_name, bundle_version = added_bundles[0].split("/")
+    elif len(affected_operators := result.get("affected_operators", [])) == 1:
+        # no bundle was added (i.e.: only ci.yaml was added/modified/deleted)
+        operator_name = affected_operators[0]
+        bundle_version = ""
+    else:
+        operator_name = ""
+        bundle_version = ""
+
+    result["operator_name"] = operator_name
+    result["bundle_version"] = bundle_version
+
+    result["operator_path"] = f"operators/{operator_name}" if operator_name else ""
+    result["bundle_path"] = (
+        f"operators/{operator_name}/{bundle_version}" if bundle_version else ""
+    )
+    return result
 
 
 def detect_changed_operators(
@@ -497,7 +572,10 @@ def detect_changes(
         **catalog_operators,
         "extra_files": list(non_operator_files),
     }
-    return result
+
+    _validate_result(result)
+
+    return _update_result(result)
 
 
 def main() -> None:

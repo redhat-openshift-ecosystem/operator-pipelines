@@ -8,13 +8,21 @@ from unittest.mock import MagicMock, patch
 from git.repo import Repo as GitRepo
 import pytest
 from operatorcert.entrypoints import detect_changed_operators
-from operatorcert.entrypoints.detect_changed_operators import github_pr_affected_files
+from operatorcert.entrypoints.detect_changed_operators import (
+    github_pr_affected_files,
+    ValidationError,
+)
 from operator_repo import Repo
 
 
 @pytest.mark.parametrize(
     # The tar file contains an operator repository with the following
     # commits (last to first):
+    # 1ca2aa1 Delete 4.15 catalog
+    # 8500957 Remove operator-2 from v4.15
+    # ff7cdcd Update operator-1 in 4.15 catalog
+    # 4db21de Add operator-2 to 4.15 catalog
+    # c8d3509 Add 4.15 catalog with operator-1
     # 2e9eae2 Remove operator-clone-e2e
     # a5501e2 Add ci.yaml to operator-clone-e2e
     # 2c06647 Remove extra files
@@ -26,7 +34,7 @@ from operator_repo import Repo
     # 32e0f85 Add operator-e2e/0.0.101
     # 6a75661 Add operator-e2e/0.0.100
     # db1a066 Empty repo
-    "head_commit, base_commit, expected",
+    "head_commit, base_commit, expected, exceptions",
     [
         (
             "6a75661",
@@ -51,7 +59,12 @@ from operator_repo import Repo
                 "added_catalogs": [],
                 "modified_catalogs": [],
                 "deleted_catalogs": [],
+                "operator_name": "operator-e2e",
+                "bundle_version": "0.0.100",
+                "operator_path": "operators/operator-e2e",
+                "bundle_path": "operators/operator-e2e/0.0.100",
             },
+            None,
         ),
         (
             "32e0f85",
@@ -76,7 +89,12 @@ from operator_repo import Repo
                 "added_catalogs": [],
                 "modified_catalogs": [],
                 "deleted_catalogs": [],
+                "operator_name": "operator-e2e",
+                "bundle_version": "0.0.101",
+                "operator_path": "operators/operator-e2e",
+                "bundle_path": "operators/operator-e2e/0.0.101",
             },
+            None,
         ),
         (
             "6626c9a",
@@ -84,28 +102,11 @@ from operator_repo import Repo
             # Add operator-e2e/0.0.101
             # Add operator-e2e/0.0.100
             "6a75661",
-            {
-                "extra_files": [],
-                "affected_operators": ["operator-e2e", "operator-clone-e2e"],
-                "added_operators": ["operator-clone-e2e"],
-                "modified_operators": ["operator-e2e"],
-                "deleted_operators": [],
-                "affected_bundles": [
-                    "operator-e2e/0.0.101",
-                    "operator-clone-e2e/0.0.100",
-                ],
-                "added_bundles": ["operator-e2e/0.0.101", "operator-clone-e2e/0.0.100"],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "deleted_catalogs": [],
-            },
+            None,
+            "The PR affects more than one operator: "
+            "['operator-clone-e2e', 'operator-e2e'] "
+            "The PR affects more than one bundle: "
+            "['operator-clone-e2e/0.0.100', 'operator-e2e/0.0.101'] ",
         ),
         (
             "2d55a2e",
@@ -114,31 +115,13 @@ from operator_repo import Repo
             # Modify operator-clone-e2e/0.0.100
             # Add operator-clone-e2e/0.0.100
             "6626c9a",
-            {
-                "extra_files": ["empty.txt", "operators/empty.txt"],
-                "affected_operators": ["operator-e2e", "operator-clone-e2e"],
-                "added_operators": [],
-                "modified_operators": ["operator-e2e", "operator-clone-e2e"],
-                "deleted_operators": [],
-                "affected_bundles": [
-                    "operator-e2e/0.0.101",
-                    "operator-clone-e2e/0.0.100",
-                ],
-                "added_bundles": [],
-                "modified_bundles": [
-                    "operator-e2e/0.0.101",
-                    "operator-clone-e2e/0.0.100",
-                ],
-                "deleted_bundles": [],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "deleted_catalogs": [],
-            },
+            None,
+            "The PR affects non-operator files: "
+            "['empty.txt', 'operators/empty.txt'] "
+            "The PR affects more than one operator: "
+            "['operator-clone-e2e', 'operator-e2e'] "
+            "The PR modifies existing bundles: "
+            "['operator-clone-e2e/0.0.100', 'operator-e2e/0.0.101'] ",
         ),
         (
             "2c06647",
@@ -146,25 +129,9 @@ from operator_repo import Repo
             # Remove operator-e2e/0.0.101
             # Add extra files
             "2d55a2e",
-            {
-                "extra_files": ["empty.txt", "operators/empty.txt"],
-                "affected_operators": ["operator-e2e"],
-                "added_operators": [],
-                "modified_operators": ["operator-e2e"],
-                "deleted_operators": [],
-                "affected_bundles": ["operator-e2e/0.0.101"],
-                "added_bundles": [],
-                "modified_bundles": [],
-                "deleted_bundles": ["operator-e2e/0.0.101"],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "deleted_catalogs": [],
-            },
+            None,
+            "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt'] "
+            "The PR deletes existing bundles: ['operator-e2e/0.0.101'] ",
         ),
         (
             "a5501e2",
@@ -189,32 +156,20 @@ from operator_repo import Repo
                 "added_catalogs": [],
                 "modified_catalogs": [],
                 "deleted_catalogs": [],
+                "operator_name": "operator-clone-e2e",
+                "bundle_version": "",
+                "operator_path": "operators/operator-clone-e2e",
+                "bundle_path": "",
             },
+            None,
         ),
         (
             "2e9eae2",
             # Remove operator-clone-e2e
             # Add ci.yaml to operator-clone-e2e
             "a5501e2",
-            {
-                "extra_files": [],
-                "affected_operators": ["operator-clone-e2e"],
-                "added_operators": [],
-                "modified_operators": [],
-                "deleted_operators": ["operator-clone-e2e"],
-                "affected_bundles": ["operator-clone-e2e/0.0.100"],
-                "added_bundles": [],
-                "modified_bundles": [],
-                "deleted_bundles": ["operator-clone-e2e/0.0.100"],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "deleted_catalogs": [],
-            },
+            None,
+            "The PR deletes existing bundles: ['operator-clone-e2e/0.0.100'] ",
         ),
         (
             "c8d3509f",
@@ -238,7 +193,12 @@ from operator_repo import Repo
                 "added_catalogs": ["v4.15"],
                 "modified_catalogs": [],
                 "deleted_catalogs": [],
+                "operator_name": "",
+                "bundle_version": "",
+                "operator_path": "",
+                "bundle_path": "",
             },
+            None,
         ),
         (
             "4db21de1",
@@ -262,7 +222,12 @@ from operator_repo import Repo
                 "added_catalogs": [],
                 "modified_catalogs": ["v4.15"],
                 "deleted_catalogs": [],
+                "operator_name": "",
+                "bundle_version": "",
+                "operator_path": "",
+                "bundle_path": "",
             },
+            None,
         ),
         (
             "ff7cdcd6",
@@ -286,7 +251,12 @@ from operator_repo import Repo
                 "added_catalogs": [],
                 "modified_catalogs": ["v4.15"],
                 "deleted_catalogs": [],
+                "operator_name": "",
+                "bundle_version": "",
+                "operator_path": "",
+                "bundle_path": "",
             },
+            None,
         ),
         (
             "85009570",
@@ -310,7 +280,12 @@ from operator_repo import Repo
                 "added_catalogs": [],
                 "modified_catalogs": ["v4.15"],
                 "deleted_catalogs": [],
+                "operator_name": "",
+                "bundle_version": "",
+                "operator_path": "",
+                "bundle_path": "",
             },
+            None,
         ),
         (
             "1ca2aa12",
@@ -334,7 +309,22 @@ from operator_repo import Repo
                 "added_catalogs": [],
                 "modified_catalogs": [],
                 "deleted_catalogs": ["v4.15"],
+                "operator_name": "",
+                "bundle_version": "",
+                "operator_path": "",
+                "bundle_path": "",
             },
+            None,
+        ),
+        (
+            "ff7cdcd",
+            # Modify v4.15/operator-1
+            # Add v4.15/operator-2
+            # Empty repo
+            "c8d3509",
+            None,
+            "The PR affects more than one catalog operator: "
+            "['operator-1', 'operator-2']",
         ),
     ],
     indirect=False,
@@ -351,6 +341,7 @@ from operator_repo import Repo
         "Modify operator in existing catalog",
         "Delete operator in existing catalog",
         "Delete catalog",
+        "Modify operator in existing catalog and add new operator",
     ],
 )
 @patch("operatorcert.entrypoints.detect_changed_operators.github_pr_affected_files")
@@ -360,6 +351,7 @@ def test_detect_changes(
     head_commit: str,
     base_commit: str,
     expected: Any,
+    exceptions: Any,
 ) -> None:
     data_dir = pathlib.Path(__file__).parent.parent.resolve() / "data"
     tar = tarfile.open(str(data_dir / "test-repo.tar"))
@@ -383,16 +375,25 @@ def test_detect_changes(
     }
     mock_affected_files.return_value = affected_files
 
-    result = detect_changed_operators.detect_changes(
-        Repo(after_dir),
-        Repo(before_dir),
-        "https://example.com/foo/bar/pull/1",
-    )
+    if exceptions:
+        with pytest.raises(ValidationError) as exc:
+            detect_changed_operators.detect_changes(
+                Repo(after_dir),
+                Repo(before_dir),
+                "https://example.com/foo/bar/pull/1",
+            )
+        assert str(exc.value) == exceptions
+    else:
+        result = detect_changed_operators.detect_changes(
+            Repo(after_dir),
+            Repo(before_dir),
+            "https://example.com/foo/bar/pull/1",
+        )
 
-    for key in set(result.keys()) | set(expected.keys()):
-        assert sorted(result[key]) == sorted(
-            expected[key]
-        ), f"Invalid value for {key}: expected {expected[key]} but {result[key]} was returned"
+        for key in set(result.keys()) | set(expected.keys()):
+            assert sorted(result[key]) == sorted(
+                expected[key]
+            ), f"Invalid value for {key}: expected {expected[key]} but {result[key]} was returned"
 
 
 @patch("operatorcert.entrypoints.detect_changed_operators.OperatorRepo")
