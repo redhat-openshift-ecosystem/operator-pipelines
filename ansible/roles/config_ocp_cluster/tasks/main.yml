@@ -11,20 +11,20 @@
 
 - name: Include pipelinerun listener task
   tags:
-    - gchat
+    - chat
     - metrics
   ansible.builtin.include_tasks: tasks/pipelinerun-listener.yml
 
-- name: Include GChat secret vars
+- name: Include Chat secret vars
   tags:
-    - gchat
+    - chat
   ansible.builtin.include_vars:
     file: ../../vaults/pipelinerun-listener/secret-vars.yml
 
-- name: Include GChat trigger
+- name: Include Chat trigger
   tags:
-    - gchat
-  ansible.builtin.include_tasks: tasks/gchat-trigger.yml
+    - chat
+  ansible.builtin.include_tasks: tasks/chat-trigger.yml
 
 - name: Include Metrics trigger
   tags:

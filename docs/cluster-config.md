@@ -3,7 +3,7 @@
 All OpenShift clusters should share a common configuration for our pipelines.
 There are cluster-wide resources which require modification, such as the
 TektonConfig. But there is also a custom EventListener which reports PipelineRun
-events to Google Chat and a pipeline that uploads the metrics of other pipelines
+events to Slack and a pipeline that uploads the metrics of other pipelines
 for monitoring purposes. This configuration must be applied manually for now.
 
 To apply these cluster-wide configurations, run the Ansible playbook. To only apply
@@ -20,5 +20,5 @@ ansible-playbook \
 ```
 
 If you want to deploy the metrics pipeline, add `--tags metrics` to the above command.
-To deploy the GChat Webhook, add `--tags gchat`. If you wish to deploy both, add
-`--tags metrics,gchat`.
+To deploy the Chat Webhook, add `--tags chat`. If you wish to deploy both, add
+`--tags metrics,chat`.

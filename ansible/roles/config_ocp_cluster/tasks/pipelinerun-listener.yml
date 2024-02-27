@@ -1,7 +1,7 @@
 ---
 - name: Create PipelineRun listener resources
   tags:
-    - gchat
+    - chat
     - metrics
   block:
     - name: Create Namespace

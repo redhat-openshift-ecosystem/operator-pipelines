@@ -2,10 +2,10 @@
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: google-chat-pipelinerun-summary
+  name: chat-pipelinerun-summary
 spec:
   description:
-    Send a PipelineRun summary message to a Google Chat space.
+    Send a PipelineRun summary message to Slack channel.
 
   volumes:
     - name: scratch
@@ -28,17 +28,14 @@ spec:
     - name: ose_cli_image
       description: OSE cli image
       default: registry.redhat.io/openshift4/ose-cli
-    - name: webhook_secret
+    - name: slack_webhook_secret
       description:
-        The name of the Kubernetes Secret that contains the Google Chat webhook.
-      default: google-chat
-    - name: webhook_secret_key
+        The name of the Kubernetes Secret that contains the Slack webhook.
+      default: slack
+    - name: slack_webhook_secret_key
       description:
-        The key within the Kubernetes Secret that contains the Google Chat webhook.
-      default: webhook
-    - name: thread_key
-      description: Optional thread key for the Google chat webhook
-      default: ""
+        The key within the Kubernetes Secret that contains the Slack webhook.
+      default: slack_webhook
 
   steps:
     - name: build-message
@@ -73,13 +70,13 @@ spec:
 
         cat pipelinerun.txt
 
-    - name: post-message
+    - name: post-message-slack
       env:
         - name: WEBHOOK_URL
           valueFrom:
             secretKeyRef:
-              name: $(params.webhook_secret)
-              key: $(params.webhook_secret_key)
+              name: $(params.slack_webhook_secret)
+              key: $(params.slack_webhook_secret_key)
       image: "$(params.jq_image)"
       script: |
         #! /usr/bin/env bash
@@ -87,7 +84,7 @@ spec:
 
         jq -n --rawfile summary pipelinerun.txt '{"text": $summary}' > payload.json
 
-        echo "Posting message to Google Chat"
+        echo "Posting message to Slack"
         curl -s -X POST -H "Content-Type: application/json" \
           --data @payload.json \
-          "$WEBHOOK_URL&threadKey=$(params.thread_key)"
+          "$WEBHOOK_URL"
