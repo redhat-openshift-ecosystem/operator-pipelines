@@ -310,7 +310,7 @@ spec:
         name: read-config
         kind: Task
       runAfter:
-        - detect-changes
+        - set-github-pr-title
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -322,10 +322,10 @@ spec:
           subPath: src
 
     - name: content-hash
-      runAfter:
-        - set-github-pr-title
       taskRef:
         name: content-hash
+      runAfter:
+        - read-config
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
