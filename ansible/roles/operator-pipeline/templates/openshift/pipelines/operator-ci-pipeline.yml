@@ -226,19 +226,6 @@ spec:
           workspace: pipeline
           subPath: src
 
-    - name: get-organization
-      runAfter:
-        - commit-pinned-digest
-      taskRef:
-        name: get-organization
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: src
-
     - name: content-hash
       runAfter:
         - commit-pinned-digest

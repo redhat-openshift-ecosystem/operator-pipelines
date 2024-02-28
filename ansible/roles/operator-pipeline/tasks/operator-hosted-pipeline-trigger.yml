@@ -22,10 +22,6 @@
             params:
               - name: git_commit_base
                 value: $(body.pull_request.base.sha)
-              - name: git_pr_branch
-                value: $(body.pull_request.head.ref)
-              - name: git_pr_title
-                value: $(body.pull_request.title)
               - name: git_pr_url
                 value: $(body.pull_request.html_url)
               - name: git_fork_url
@@ -36,10 +32,6 @@
                 value: $(body.pull_request.user.login)
               - name: git_commit
                 value: $(body.pull_request.head.sha)
-              - name: git_base_branch
-                value: $(body.pull_request.base.ref)
-              - name: pr_head_label
-                value: $(body.pull_request.head.label)
               - name: env
                 value: "{{ env }}"
               - name: preflight_min_version
@@ -70,16 +62,12 @@
               env: "{{ env }}"
           spec:
             params:
-              - name: git_pr_branch
               - name: git_commit_base
-              - name: git_pr_title
               - name: git_pr_url
               - name: git_fork_url
               - name: git_repo_url
               - name: git_username
               - name: git_commit
-              - name: git_base_branch
-              - name: pr_head_label
               - name: env
               - name: preflight_min_version
               - name: preflight_trigger_environment
@@ -99,7 +87,6 @@
                     git_commit: $(tt.params.git_commit)
                   annotations:
                     git_pull_request_url: $(tt.params.git_pr_url)
-                    git_pull_request_title: $(tt.params.git_pr_title)
                 spec:
                   timeouts:
                     pipeline: "2h"
@@ -108,10 +95,6 @@
                   params:
                     - name: git_commit_base
                       value: $(tt.params.git_commit_base)
-                    - name: git_pr_branch
-                      value: $(tt.params.git_pr_branch)
-                    - name: git_pr_title
-                      value: $(tt.params.git_pr_title)
                     - name: git_pr_url
                       value: $(tt.params.git_pr_url)
                     - name: git_fork_url
@@ -120,10 +103,6 @@
                       value: $(tt.params.git_repo_url)
                     - name: git_username
                       value: $(tt.params.git_username)
-                    - name: git_base_branch
-                      value: $(tt.params.git_base_branch)
-                    - name: pr_head_label
-                      value: $(tt.params.pr_head_label)
                     - name: env
                       value: $(tt.params.env)
                     - name: preflight_min_version

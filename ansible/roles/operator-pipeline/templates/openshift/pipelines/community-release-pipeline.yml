@@ -6,13 +6,9 @@ metadata:
 spec:
   params:
     - name: git_repo_url
-    - name: git_base_branch
-    - name: git_pr_title
     - name: git_pr_url
-    - name: git_username
     - name: git_commit
     - name: git_commit_base
-    - name: git_head_sha
     - name: env
     - name: pipeline_image
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
@@ -29,16 +25,16 @@ spec:
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: github_bot_token
 
-    - name: umb_ssl_secret_name
-      description: Kubernetes secret that contains SSL files
+    - name: pipeline_ssl_secret_name
+      description: Kubernetes secret name that contains the Pipeline SSL files.
       default: operator-pipeline-api-certs
 
-    - name: umb_ssl_cert_secret_key
-      description: Kubernetes secret that contains SSL cert
+    - name: pipeline_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pipeline SSL cert.
       default: operator-pipeline.pem
 
-    - name: umb_ssl_key_secret_key
-      description: Kubernetes secret that contains SSL key
+    - name: pipeline_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pipeline SSL key.
       default: operator-pipeline.key
 
     - name: kerberos_keytab_secret_name
@@ -316,11 +312,11 @@ spec:
         - name: umb_url
           value: "$(tasks.set-env-community.results.umb_url)"
         - name: umb_ssl_secret_name
-          value: "$(params.umb_ssl_secret_name)"
+          value: "$(params.pipeline_ssl_secret_name)"
         - name: umb_ssl_cert_secret_key
-          value: "$(params.umb_ssl_cert_secret_key)"
+          value: "$(params.pipeline_ssl_cert_secret_key)"
         - name: umb_ssl_key_secret_key
-          value: "$(params.umb_ssl_key_secret_key)"
+          value: "$(params.pipeline_ssl_key_secret_key)"
       workspaces:
         - name: source
           workspace: repository
@@ -345,11 +341,11 @@ spec:
         - name: signature_data_file
           value: "$(tasks.request-signature.results.signature_data_file)"
         - name: pyxis_ssl_secret_name
-          value: "$(params.umb_ssl_secret_name)"
+          value: "$(params.pipeline_ssl_secret_name)"
         - name: pyxis_ssl_cert_secret_key
-          value: "$(params.umb_ssl_cert_secret_key)"
+          value: "$(params.pipeline_ssl_cert_secret_key)"
         - name: pyxis_ssl_key_secret_key
-          value: "$(params.umb_ssl_key_secret_key)"
+          value: "$(params.pipeline_ssl_key_secret_key)"
         - name: pyxis_url
           value: "$(tasks.set-env-community.results.pyxis_url)"
         - name: signing_pub_secret_name

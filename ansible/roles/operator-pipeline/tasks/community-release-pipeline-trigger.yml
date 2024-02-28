@@ -20,8 +20,6 @@
             params:
               - name: git_repo_url
                 value: $(body.pull_request.base.repo.clone_url)
-              - name: git_base_branch
-                value: $(body.pull_request.base.ref)
               - name: git_pr_url
                 value: $(body.pull_request.html_url)
               - name: git_username
@@ -55,9 +53,7 @@
           spec:
             params:
               - name: git_repo_url
-              - name: git_base_branch
               - name: git_pr_url
-              - name: git_pr_title
               - name: git_username
               - name: git_commit
               - name: git_commit_base
@@ -77,7 +73,6 @@
                     git_commit: $(tt.params.git_commit)
                   annotations:
                     git_pull_request_url: $(tt.params.git_pr_url)
-                    git_pull_request_title: $(tt.params.git_pr_title)
                 spec:
                   timeouts:
                     pipeline: "1h30m0s"
@@ -86,12 +81,8 @@
                   params:
                     - name: git_repo_url
                       value: $(tt.params.git_repo_url)
-                    - name: git_base_branch
-                      value: $(tt.params.git_base_branch)
                     - name: git_pr_url
                       value: $(tt.params.git_pr_url)
-                    - name: git_pr_title
-                      value: $(tt.params.git_pr_title)
                     - name: git_username
                       value: $(tt.params.git_username)
                     - name: git_commit
