@@ -249,17 +249,17 @@ def _validate_result(result: dict[str, list[str]]) -> None:
     message = ""
 
     if len(extra_files := result.get("extra_files", [])) > 0:
-        message += f"The PR affects non-operator files: {sorted(extra_files)} "
+        message += f"The PR affects non-operator files: {sorted(extra_files)}\n"
     if len(affected_operators := result.get("affected_operators", [])) > 1:
         message += (
-            f"The PR affects more than one operator: {sorted(affected_operators)} "
+            f"The PR affects more than one operator: {sorted(affected_operators)}\n"
         )
     if len(modified_bundles := result.get("modified_bundles", [])) > 0:
-        message += f"The PR modifies existing bundles: {sorted(modified_bundles)} "
+        message += f"The PR modifies existing bundles: {sorted(modified_bundles)}\n"
     if len(deleted_bundles := result.get("deleted_bundles", [])) > 0:
-        message += f"The PR deletes existing bundles: {sorted(deleted_bundles)} "
+        message += f"The PR deletes existing bundles: {sorted(deleted_bundles)}\n"
     if len(added_bundles := result.get("added_bundles", [])) > 1:
-        message += f"The PR affects more than one bundle: {sorted(added_bundles)} "
+        message += f"The PR affects more than one bundle: {sorted(added_bundles)}\n"
 
     catalog_operators = sorted(
         list(
@@ -573,9 +573,7 @@ def detect_changes(
         "extra_files": list(non_operator_files),
     }
 
-    _validate_result(result)
-
-    return _update_result(result)
+    return result
 
 
 def main() -> None:
@@ -597,6 +595,12 @@ def main() -> None:
     base_repo = OperatorRepo(args.base_repo_path)
 
     result = detect_changes(head_repo, base_repo, args.pr_url)
+
+    # raise exception if the result is invalid
+    _validate_result(result)
+
+    # calculate additional result fields
+    result = _update_result(result)
 
     if args.output_file:
         with args.output_file.open(mode="w", encoding="utf-8") as output_file:
