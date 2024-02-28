@@ -237,7 +237,7 @@ spec:
     # Compute a hash of the content so pipeline logs can be uploaded with it
     - name: content-hash
       runAfter:
-        - detect-changes
+        - read-config
       taskRef:
         name: content-hash
       params:
