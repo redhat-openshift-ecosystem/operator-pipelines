@@ -7,23 +7,19 @@ spec:
   params:
     - name: git_repo_url
       description: ssh address of GitHub repository
-    - name: git_base_branch
-      description: Name of the base branch in the pull request. e.g. "main"
       default: "main"
     - name: git_commit
       description: Git repository HEAD commit
     - name: git_commit_base
-    - name: git_pr_title
-      description: title of the pull request with operator submission
     - name: git_pr_url
       description: URL to the pull request
-    - name: src_registry
+    - name: registry
       description: Source registry for the bundle image.
       default: quay.io
     - name: dest_registry
       description: Destination registry for the bundle image.
       default: quay.io
-    - name: src_image_namespace
+    - name: image_namespace
       description: The namespace/organization where the bundle image from the Hosted pipeline is stored.
       default: $(context.pipelineRun.namespace)
     - name: dest_image_namespace
@@ -41,25 +37,17 @@ spec:
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: github_bot_token
-    - name: pyxis_ssl_secret_name
-      description: Kubernetes secret name that contains the Pyxis SSL files.
+    - name: pipeline_ssl_secret_name
+      description: Kubernetes secret name that contains the Pipeline SSL files.
       default: operator-pipeline-api-certs
-    - name: pyxis_ssl_cert_secret_key
-      description: The key within the Kubernetes secret that contains the Pyxis SSL cert.
+
+    - name: pipeline_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pipeline SSL cert.
       default: operator-pipeline.pem
-    - name: pyxis_ssl_key_secret_key
-      description: The key within the Kubernetes secret that contains the Pyxis SSL key.
+
+    - name: pipeline_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pipeline SSL key.
       default: operator-pipeline.key
-    - name: ocp_registry_kubeconfig_secret_name
-      description: >-
-        The name of the Kubernetes Secret that contains the kubeconfig for service account
-        allowing connection with cluster that contains the ocp registries.
-      default: ocp-registry-kubeconfig
-    - name: ocp_registry_kubeconfig_secret_key
-      description: >-
-        The key within the Kubernetes Secret that contains the kubeconfig for service
-        account allowing connection with cluster that contains the ocp registries.
-      default: kubeconfig
     - name: kerberos_keytab_secret_name
       description: >-
         The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
@@ -154,7 +142,7 @@ spec:
         - name: url
           value: $(params.git_repo_url)
         - name: revision
-          value: $(params.git_base_branch)
+          value: $(params.git_commit)
         - name: gitInitImage
           value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:bc551c776fb3d0fcc6cfd6d8dc9f0030de012cb9516fac42b1da75e6771001d9
       workspaces:
@@ -284,23 +272,10 @@ spec:
         - name: pull_request_url
           value: "$(params.git_pr_url)"
 
-    - name: get-organization
-      runAfter:
-        - certification-project-check
-      taskRef:
-        name: get-organization
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
     # Get additional data necessary for certification
     - name: get-pyxis-certification-data
       runAfter:
-        - get-organization
+        - certification-project-check
       taskRef:
         name: get-pyxis-certification-data
       params:
@@ -311,11 +286,11 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
+          value: "$(params.pipeline_ssl_secret_name)"
         - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
+          value: "$(params.pipeline_ssl_cert_secret_key)"
         - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
+          value: "$(params.pipeline_ssl_key_secret_key)"
       workspaces:
         - name: source
           workspace: repository
@@ -332,7 +307,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: src_image
-          value: "$(params.src_registry)/$(params.src_image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
         - name: dest_image_registry_namespace_certproject
           value: "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
         - name: dest_image_tag
@@ -355,7 +330,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: internal_registry
-          value: "$(params.src_registry)"
+          value: "$(params.registry)"
         - name: internal_repository
           value: "$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
         - name: isv_pid
@@ -375,11 +350,11 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
+          value: "$(params.pipeline_ssl_secret_name)"
         - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
+          value: "$(params.pipeline_ssl_cert_secret_key)"
         - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
+          value: "$(params.pipeline_ssl_key_secret_key)"
 
       workspaces:
         - name: image-data
@@ -490,11 +465,11 @@ spec:
         - name: sig_key_name
           value: "$(tasks.set-env.results.sig_key_name)"
         - name: umb_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
+          value: "$(params.pipeline_ssl_secret_name)"
         - name: umb_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
+          value: "$(params.pipeline_ssl_cert_secret_key)"
         - name: umb_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
+          value: "$(params.pipeline_ssl_key_secret_key)"
         - name: umb_client_name
           value: "$(tasks.set-env.results.umb_client_name)"
         - name: umb_url
@@ -523,11 +498,11 @@ spec:
         - name: signature_data_file
           value: "$(tasks.request-signature.results.signature_data_file)"
         - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
+          value: "$(params.pipeline_ssl_secret_name)"
         - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
+          value: "$(params.pipeline_ssl_cert_secret_key)"
         - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
+          value: "$(params.pipeline_ssl_key_secret_key)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
         - name: signing_pub_secret_name
@@ -596,11 +571,11 @@ spec:
         - name: pipelinerun_name
           value: "$(context.pipelineRun.name)"
         - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
+          value: "$(params.pipeline_ssl_secret_name)"
         - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
+          value: "$(params.pipeline_ssl_cert_secret_key)"
         - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
+          value: "$(params.pipeline_ssl_key_secret_key)"
       workspaces:
         - name: source
           workspace: repository

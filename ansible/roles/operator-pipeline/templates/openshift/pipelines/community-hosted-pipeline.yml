@@ -6,10 +6,8 @@ metadata:
 spec:
   params:
     - name: git_repo_url
-    - name: git_pr_branch
     - name: git_fork_url
     - name: git_pr_url
-    - name: git_pr_title
     - name: git_username
     - name: git_commit
     - name: git_commit_base
@@ -73,16 +71,16 @@ spec:
       description: The key within the Kubernetes Secret that contains the gpg public key.
       default: public
 
-    - name: pyxis_ssl_secret_name
-      description: Kubernetes secret name that contains the Pyxis SSL files.
+    - name: pipeline_ssl_secret_name
+      description: Kubernetes secret name that contains the Pipeline SSL files.
       default: operator-pipeline-api-certs
 
-    - name: pyxis_ssl_cert_secret_key
-      description: The key within the Kubernetes secret that contains the Pyxis SSL cert.
+    - name: pipeline_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pipeline SSL cert.
       default: operator-pipeline.pem
 
-    - name: pyxis_ssl_key_secret_key
-      description: The key within the Kubernetes secret that contains the Pyxis SSL key.
+    - name: pipeline_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pipeline SSL key.
       default: operator-pipeline.key
 
   workspaces:
@@ -289,11 +287,11 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env-community.results.pyxis_url)"
         - name: pyxis_ssl_secret_name
-          value: "$(params.pyxis_ssl_secret_name)"
+          value: "$(params.pipeline_ssl_secret_name)"
         - name: pyxis_ssl_cert_secret_key
-          value: "$(params.pyxis_ssl_cert_secret_key)"
+          value: "$(params.pipeline_ssl_cert_secret_key)"
         - name: pyxis_ssl_key_secret_key
-          value: "$(params.pyxis_ssl_key_secret_key)"
+          value: "$(params.pipeline_ssl_key_secret_key)"
       workspaces:
         - name: pr
           workspace: repository

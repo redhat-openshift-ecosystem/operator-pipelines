@@ -139,14 +139,12 @@ The hosted pipeline can be triggered using the tkn CLI like so:
 tkn pipeline start operator-hosted-pipeline \
   --use-param-defaults \
   --param git_pr_branch=test-PR-ok \
-  --param git_pr_title="operator kogito-operator (1.6.1-ok)" \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
   --param git_fork_url=https://github.com/MarcinGinszt/operator-pipelines-test.git \
   --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_username=foo@redhat.com \
   --param git_commit=0aeff5f71e4fc2d4990474780b56d9312554da5a \
   --param git_base_branch=main \
-  --param pr_head_label=MarcinGinszt:test-PR-ok \
   --param env=prod \
   --param preflight_min_version=0.0.0 \
   --param ci_min_version=0.0.0 \
@@ -181,7 +179,6 @@ tkn pipeline start operator-release-pipeline \
   --use-param-defaults \
   --param git_repo_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test.git \
   --param git_commit=3ffff387caac0a5b475f44c4a54fb45eebb8dd8e \
-  --param git_pr_title="operator kogito-operator (1.6.1-ok)" \
   --param git_pr_url=https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/pull/31 \
   --param dest_image_namespace=redhat-isv-operators \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template.yml \

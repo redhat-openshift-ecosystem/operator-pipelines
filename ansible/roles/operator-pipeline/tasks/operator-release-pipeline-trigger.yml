@@ -26,17 +26,13 @@
                 value: $(body.pull_request.merge_commit_sha)
               - name: git_commit_base
                 value: $(body.pull_request.base.sha)
-              - name: git_pr_title
-                value: $(body.pull_request.title)
               - name: git_pr_url
                 value: $(body.pull_request.html_url)
-              - name: git_base_branch
-                value: $(body.pull_request.base.ref)
               - name: env
                 value: "{{ env }}"
               - name: pipeline_image
                 value: "{{ operator_pipeline_image_pull_spec }}"
-              - name: src_image_namespace
+              - name: image_namespace
                 value: "{{ operator_pipeline_pending_namespace }}"
               - name: dest_image_namespace
                 value: "{{ operator_pipeline_release_namespace }}"
@@ -58,12 +54,10 @@
               - name: git_repo_url
               - name: git_commit
               - name: git_commit_base
-              - name: git_pr_title
               - name: git_pr_url
-              - name: git_base_branch
               - name: env
               - name: pipeline_image
-              - name: src_image_namespace
+              - name: image_namespace
               - name: dest_image_namespace
             resourcetemplates:
               - apiVersion: tekton.dev/v1
@@ -77,7 +71,6 @@
                     git_commit: $(tt.params.git_commit)
                   annotations:
                     git_pull_request_url: $(tt.params.git_pr_url)
-                    git_pull_request_title: $(tt.params.git_pr_title)
                 spec:
                   timeouts:
                     pipeline: "4h15m0s"
@@ -90,18 +83,14 @@
                       value: $(tt.params.git_commit)
                     - name: git_commit_base
                       value: $(tt.params.git_commit_base)
-                    - name: git_pr_title
-                      value: $(tt.params.git_pr_title)
                     - name: git_pr_url
                       value: $(tt.params.git_pr_url)
-                    - name: git_base_branch
-                      value: $(tt.params.git_base_branch)
                     - name: env
                       value: $(tt.params.env)
                     - name: pipeline_image
                       value: $(tt.params.pipeline_image)
-                    - name: src_image_namespace
-                      value: $(tt.params.src_image_namespace)
+                    - name: image_namespace
+                      value: $(tt.params.image_namespace)
                     - name: dest_image_namespace
                       value: $(tt.params.dest_image_namespace)
                   workspaces:
