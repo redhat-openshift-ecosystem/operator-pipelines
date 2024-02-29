@@ -59,49 +59,17 @@ spec:
           --output-file /tmp/changes.json \
           --verbose
 
-        function fail() {
-            echo "ERROR: $*"
-            exit 1
-        }
+        operator_name="$(jq -r '.operator_name' </tmp/changes.json)"
+        echo -n $operator_name > "$(results.added_operator.path)"
 
-        jq -e '.extra_files|length==0' </tmp/changes.json \
-            || fail "The PR affects non-operator files"
-        jq -e '.affected_operators|length<=1' </tmp/changes.json \
-            || fail "The PR affects more than one operator"
-        jq -e '.modified_bundles|length==0' </tmp/changes.json \
-            || fail "The PR modifies existing bundles"
-        jq -e '.deleted_bundles|length==0' </tmp/changes.json \
-            || fail "The PR deletes existing bundles"
-        jq -e '.added_bundles|length<=1' </tmp/changes.json \
-            || fail "The PR affects more than one bundle"
+        bundle_version="$(jq -r '.bundle_version' </tmp/changes.json)"
+        echo -n $bundle_version > "$(results.added_bundle.path)"
 
-        if jq -e '.added_bundles|length==1' </tmp/changes.json ; then
-            operator_name="$(jq -r '.added_bundles[0] | split("/")[0]' </tmp/changes.json)"
-            bundle_version="$(jq -r '.added_bundles[0] | split("/")[1]' </tmp/changes.json)"
-        elif jq -e '.affected_operators|length==1' </tmp/changes.json ; then
-            # no bundle was added (i.e.: only ci.yaml was added/modified/deleted)
-            operator_name="$(jq -r '.affected_operators[0]' </tmp/changes.json)"
-            bundle_version=""
-        else
-            # No operator has been modified
-            operator_name=""
-            bundle_version=""
-        fi
+        operator_path="$(jq -r '.operator_path' </tmp/changes.json)"
+        echo -n $operator_path > "$(results.operator_path.path)"
 
-        echo -n "$operator_name" >$(results.added_operator.path)
-        echo -n "$bundle_version" >$(results.added_bundle.path)
-
-        if [ -n "${operator_name}" ] ; then
-            echo -n "operators/${operator_name}" >"$(results.operator_path.path)"
-        else
-            echo -n >"$(results.operator_path.path)"
-        fi
-
-        if [ -n "${bundle_version}" ] ; then
-            echo -n "operators/${operator_name}/${bundle_version}" >"$(results.bundle_path.path)"
-        else
-            echo -n >"$(results.bundle_path.path)"
-        fi
+        bundle_path="$(jq -r '.bundle_path' </tmp/changes.json)"
+        echo -n $bundle_path > "$(results.bundle_path.path)"
 
         affected_catalogs="$(jq -r '.affected_catalogs | join(",")' </tmp/changes.json)"
         echo -n $affected_catalogs > "$(results.affected_catalogs.path)"

@@ -8,13 +8,21 @@ from unittest.mock import MagicMock, patch
 from git.repo import Repo as GitRepo
 import pytest
 from operatorcert.entrypoints import detect_changed_operators
-from operatorcert.entrypoints.detect_changed_operators import github_pr_affected_files
+from operatorcert.entrypoints.detect_changed_operators import (
+    github_pr_affected_files,
+    ValidationError,
+)
 from operator_repo import Repo
 
 
 @pytest.mark.parametrize(
     # The tar file contains an operator repository with the following
     # commits (last to first):
+    # 1ca2aa1 Delete 4.15 catalog
+    # 8500957 Remove operator-2 from v4.15
+    # ff7cdcd Update operator-1 in 4.15 catalog
+    # 4db21de Add operator-2 to 4.15 catalog
+    # c8d3509 Add 4.15 catalog with operator-1
     # 2e9eae2 Remove operator-clone-e2e
     # a5501e2 Add ci.yaml to operator-clone-e2e
     # 2c06647 Remove extra files
@@ -336,6 +344,32 @@ from operator_repo import Repo
                 "deleted_catalogs": ["v4.15"],
             },
         ),
+        (
+            "ff7cdcd",
+            # Modify v4.15/operator-1
+            # Add v4.15/operator-2
+            # Empty repo
+            "c8d3509",
+            {
+                "affected_operators": [],
+                "added_operators": [],
+                "modified_operators": [],
+                "deleted_operators": [],
+                "affected_bundles": [],
+                "added_bundles": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "affected_catalogs": ["v4.15"],
+                "added_catalogs": [],
+                "modified_catalogs": ["v4.15"],
+                "deleted_catalogs": [],
+                "affected_catalog_operators": ["v4.15/operator-1", "v4.15/operator-2"],
+                "added_catalog_operators": ["v4.15/operator-2"],
+                "modified_catalog_operators": ["v4.15/operator-1"],
+                "deleted_catalog_operators": [],
+                "extra_files": [],
+            },
+        ),
     ],
     indirect=False,
     ids=[
@@ -351,6 +385,7 @@ from operator_repo import Repo
         "Modify operator in existing catalog",
         "Delete operator in existing catalog",
         "Delete catalog",
+        "Modify operator in existing catalog and add new operator",
     ],
 )
 @patch("operatorcert.entrypoints.detect_changed_operators.github_pr_affected_files")
@@ -395,6 +430,7 @@ def test_detect_changes(
         ), f"Invalid value for {key}: expected {expected[key]} but {result[key]} was returned"
 
 
+@patch("operatorcert.entrypoints.detect_changed_operators._update_result")
 @patch("operatorcert.entrypoints.detect_changed_operators.OperatorRepo")
 @patch("operatorcert.entrypoints.detect_changed_operators.detect_changes")
 @patch("operatorcert.entrypoints.detect_changed_operators.setup_logger")
@@ -402,6 +438,7 @@ def test_detect_changed_operators_main(
     mock_logger: MagicMock,
     mock_detect: MagicMock,
     mock_repo: MagicMock,
+    mock_update: MagicMock,
     capsys: Any,
     tmpdir: Any,
 ) -> None:
@@ -411,7 +448,9 @@ def test_detect_changed_operators_main(
         "--base-repo-path=/tmp/base-repo",
         "--pr-url=https://example.com/foo/bar/pull/1",
     ]
-    mock_detect.return_value = {"foo": ["bar"]}
+    return_value = {"foo": ["bar"]}
+    mock_detect.return_value = return_value
+    mock_update.return_value = return_value
     repo_head = MagicMock()
     repo_base = MagicMock()
     mock_repo.side_effect = [repo_head, repo_base, repo_head, repo_base]
@@ -427,6 +466,7 @@ def test_detect_changed_operators_main(
 
     mock_logger.reset_mock()
     mock_detect.reset_mock()
+    mock_update.reset_mock()
 
     out_file = tmpdir / "out.json"
     out_file_name = str(out_file)
@@ -438,7 +478,9 @@ def test_detect_changed_operators_main(
         f"--output-file={out_file_name}",
         "--verbose",
     ]
-    mock_detect.return_value = {"bar": ["baz"]}
+    return_value = {"bar": ["baz"]}
+    mock_detect.return_value = return_value
+    mock_update.return_value = return_value
     with patch("sys.argv", args):
         detect_changed_operators.main()
     mock_detect.assert_called_once_with(
@@ -519,3 +561,102 @@ def test_github_pr_affected_files_invalid_url(
 ) -> None:
     with pytest.raises(ValueError):
         github_pr_affected_files("http://example.com/invalid/url")
+
+
+@pytest.mark.parametrize(
+    "result, valid, message",
+    [
+        pytest.param(
+            {
+                "extra_files": ["empty.txt", "operators/empty.txt"],
+                "affected_operators": ["operator-e2e", "operator-clone-e2e"],
+                "modified_bundles": ["operator-e2e/0.0.101"],
+                "deleted_bundles": ["operator-clone-e2e/0.0.100"],
+                "added_bundles": ["operator-e2e/0.0.101", "operator-clone-e2e/0.0.100"],
+                "affected_catalog_operators": ["v4.15/operator-1", "v4.15/operator-2"],
+            },
+            False,
+            "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt']\n"
+            "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']\n"
+            "The PR modifies existing bundles: ['operator-e2e/0.0.101']\n"
+            "The PR deletes existing bundles: ['operator-clone-e2e/0.0.100']\n"
+            "The PR affects more than one bundle: ['operator-clone-e2e/0.0.100', 'operator-e2e/0.0.101']\n"
+            "The PR affects more than one catalog operator: ['operator-1', 'operator-2']",
+            id="Invalid changes detected",
+        ),
+        pytest.param(
+            {
+                "extra_files": [],
+                "affected_operators": ["operator-e2e"],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "added_bundles": ["operator-e2e/0.0.101"],
+                "affected_catalog_operators": ["v4.15/operator-1", "v4.16/operator-1"],
+            },
+            True,
+            None,
+            id="Valid result",
+        ),
+    ],
+)
+def test__validate_result(result: dict[str, Any], valid: bool, message: str) -> None:
+    if valid:
+        detect_changed_operators._validate_result(result)
+    else:
+        with pytest.raises(ValidationError) as exc:
+            detect_changed_operators._validate_result(result)
+        assert str(exc.value) == message
+
+
+@pytest.mark.parametrize(
+    "result, expected",
+    [
+        pytest.param(
+            {
+                "added_bundles": ["operator-e2e/0.0.101"],
+                "affected_operators": ["operator-e2e"],
+            },
+            {
+                "added_bundles": ["operator-e2e/0.0.101"],
+                "affected_operators": ["operator-e2e"],
+                "operator_name": "operator-e2e",
+                "bundle_version": "0.0.101",
+                "operator_path": "operators/operator-e2e",
+                "bundle_path": "operators/operator-e2e/0.0.101",
+            },
+            id="Bundle is added",
+        ),
+        pytest.param(
+            {
+                "added_bundles": [],
+                "affected_operators": ["operator-e2e"],
+            },
+            {
+                "added_bundles": [],
+                "affected_operators": ["operator-e2e"],
+                "operator_name": "operator-e2e",
+                "bundle_version": "",
+                "operator_path": "operators/operator-e2e",
+                "bundle_path": "",
+            },
+            id="Operator is updated",
+        ),
+        pytest.param(
+            {
+                "added_bundles": [],
+                "affected_operators": [],
+            },
+            {
+                "added_bundles": [],
+                "affected_operators": [],
+                "operator_name": "",
+                "bundle_version": "",
+                "operator_path": "",
+                "bundle_path": "",
+            },
+            id="No bundle added or operator affected",
+        ),
+    ],
+)
+def test__update_result(result: dict[str, Any], expected: dict[str, Any]) -> None:
+    assert detect_changed_operators._update_result(result) == expected
