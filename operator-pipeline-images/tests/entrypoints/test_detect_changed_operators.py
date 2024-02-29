@@ -423,7 +423,7 @@ def test_detect_changes(
         Repo(before_dir),
         "https://example.com/foo/bar/pull/1",
     )
-    print(result)
+
     for key in set(result.keys()) | set(expected.keys()):
         assert sorted(result[key]) == sorted(
             expected[key]
