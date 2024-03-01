@@ -87,4 +87,4 @@ spec:
           --verbose
 
         cat "$(params.output_file)" | jq
-        cat "$(params.output_file)" | jq -r ".approved" | tee "$(results.approved.path)"
+        cat "$(params.output_file)" | jq -r ".approved" | tr -d '\r\n' | tee "$(results.approved.path)"
