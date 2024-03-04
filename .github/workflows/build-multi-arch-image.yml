@@ -24,7 +24,7 @@ jobs:
       matrix:
         architecture: [amd64, ppc64le, s390x, arm64]
         platform: [linux]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: add checkout action...
         uses: actions/checkout@v4
@@ -54,7 +54,7 @@ jobs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
   build-multiarch:
     needs: build-multiarch-images
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Create and add to manifest
         run: |
