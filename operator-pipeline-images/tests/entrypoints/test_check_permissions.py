@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, call, patch
 
 import operatorcert.entrypoints.check_permissions as check_permissions
 import pytest
-from tests.utils import create_files, bundle_files
 from operator_repo import Repo as OperatorRepo
+from tests.utils import bundle_files, create_files
 
 
 @pytest.fixture
@@ -27,7 +27,12 @@ def review_partner(tmp_path: Path) -> check_permissions.OperatorReview:
     head_repo = OperatorRepo(tmp_path)
     operator = head_repo.operator("test-operator")
     return check_permissions.OperatorReview(
-        operator, "owner", base_repo, head_repo, "pr_url", "pyxis_url"
+        operator,
+        "owner",
+        base_repo,
+        head_repo,
+        "https://github.com/my-org/repo-123/pulls/1",
+        "pyxis_url",
     )
 
 
@@ -51,7 +56,12 @@ def review_community(tmp_path: Path) -> check_permissions.OperatorReview:
     head_repo = OperatorRepo(tmp_path)
     operator = head_repo.operator("test-operator")
     return check_permissions.OperatorReview(
-        operator, "owner", base_repo, head_repo, "pr_url", "pyxis_url"
+        operator,
+        "owner",
+        base_repo,
+        head_repo,
+        "https://github.com/my-org/repo-123/pulls/1",
+        "pyxis_url",
     )
 
 
@@ -88,6 +98,30 @@ def test_OperatorReview_maintainers(
     assert review_community.maintainers == ["maintainer1", "maintainer2"]
 
 
+def test_OperatorReview_github_repo_org(
+    review_community: check_permissions.OperatorReview,
+) -> None:
+    assert review_community.github_repo_org == "my-org"
+
+
+@pytest.mark.parametrize(
+    "is_org_member, is_partner, permission_partner, permission_community, permission_partner_called, permission_community_called, expected_result",
+    [
+        pytest.param(True, False, False, False, False, False, True, id="org member"),
+        pytest.param(
+            False, True, True, False, True, False, True, id="partner - approved"
+        ),
+        pytest.param(
+            False, True, False, False, True, False, False, id="partner - denied"
+        ),
+        pytest.param(
+            False, False, False, True, False, True, True, id="community - approved"
+        ),
+        pytest.param(
+            False, False, False, False, False, True, False, id="community - denied"
+        ),
+    ],
+)
 @patch(
     "operatorcert.entrypoints.check_permissions.OperatorReview.check_permission_for_community"
 )
@@ -95,23 +129,56 @@ def test_OperatorReview_maintainers(
     "operatorcert.entrypoints.check_permissions.OperatorReview.check_permission_for_partner"
 )
 @patch("operatorcert.entrypoints.check_permissions.OperatorReview.is_partner")
+@patch("operatorcert.entrypoints.check_permissions.OperatorReview.is_org_member")
 def test_OperatorReview_check_permissions(
+    mock_is_org_member: MagicMock,
     mock_is_partner: MagicMock,
     mock_check_permission_for_partner: MagicMock,
     mock_check_permission_for_community: MagicMock,
     review_community: check_permissions.OperatorReview,
+    is_org_member: bool,
+    is_partner: bool,
+    permission_partner: bool,
+    permission_community: bool,
+    permission_partner_called: bool,
+    permission_community_called: bool,
+    expected_result: bool,
 ) -> None:
-    mock_is_partner.return_value = False
-    review_community.check_permissions()
-    mock_check_permission_for_community.assert_called_once()
-    mock_check_permission_for_partner.assert_not_called()
+    mock_is_org_member.return_value = is_org_member
+    mock_is_partner.return_value = is_partner
+    mock_check_permission_for_partner.return_value = permission_partner
+    mock_check_permission_for_community.return_value = permission_community
+    assert review_community.check_permissions() == expected_result
 
-    mock_check_permission_for_community.reset_mock()
-    mock_check_permission_for_partner.reset_mock()
-    mock_is_partner.return_value = True
-    review_community.check_permissions()
-    mock_check_permission_for_community.assert_not_called()
-    mock_check_permission_for_partner.assert_called_once()
+    if permission_partner_called:
+        mock_check_permission_for_partner.assert_called_once()
+    else:
+        mock_check_permission_for_partner.assert_not_called()
+
+    if permission_community_called:
+        mock_check_permission_for_community.assert_called_once()
+    else:
+        mock_check_permission_for_community.assert_not_called()
+
+
+@patch("operatorcert.entrypoints.check_permissions.Github")
+@patch("operatorcert.entrypoints.check_permissions.Auth.Token")
+def test_OperatorReview_is_org_member(
+    mock_token: MagicMock,
+    mock_github: MagicMock,
+    review_community: check_permissions.OperatorReview,
+) -> None:
+    # User is a member of the organization
+    mock_organization = MagicMock()
+    members = [MagicMock(login="user123"), MagicMock(login="owner")]
+    mock_organization.get_members.return_value = members
+    mock_github.return_value.get_organization.return_value = mock_organization
+    assert review_community.is_org_member() == True
+
+    # User is not a member of the organization
+    members = [MagicMock(login="user123")]
+    mock_organization.get_members.return_value = members
+    assert review_community.is_org_member() == False
 
 
 @patch("operatorcert.entrypoints.check_permissions.pyxis.get_project")
