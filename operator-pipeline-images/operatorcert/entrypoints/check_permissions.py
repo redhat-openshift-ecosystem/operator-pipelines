@@ -2,8 +2,11 @@
 import argparse
 import json
 import logging
+import os
+import urllib
 from typing import Any
 
+from github import Auth, Github
 from operator_repo import Operator
 from operator_repo import Repo as OperatorRepo
 from operatorcert import pyxis
@@ -153,6 +156,16 @@ class OperatorReview:
         """
         return self.base_repo_config.get("maintainers", [])
 
+    @property
+    def github_repo_org(self) -> str:
+        """
+        A github repository organization parsed from the pull request url
+
+        Returns:
+            str: Github organization
+        """
+        return urllib.parse.urlparse(self.pull_request_url).path.split("/")[1]
+
     def check_permissions(self) -> bool:
         """
         Check if the pull request owner has permissions to submit a PR for the operator
@@ -161,9 +174,41 @@ class OperatorReview:
             bool: A boolean value indicating if the user has permissions to submit a PR
         """
         LOGGER.info("Checking permissions for operator %s", self.operator.operator_name)
+        if self.is_org_member():
+            # Members of the organization have permissions to submit a PR
+            return True
         if self.is_partner():
             return self.check_permission_for_partner()
         return self.check_permission_for_community()
+
+    def is_org_member(self) -> bool:
+        """
+        Check if the pull request owner is a member of the organization
+
+        Returns:
+            bool: A boolean value indicating if the user is a member of the organization
+        """
+        LOGGER.info(
+            "Checking if the pull request owner is a member of the organization"
+        )
+        github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN") or "")
+        github = Github(auth=github_auth)
+        members = github.get_organization(self.github_repo_org).get_members()
+
+        for member in members:
+            if self.pr_owner in member.login:
+                LOGGER.info(
+                    "Pull request owner '%s' is a member of the organization '%s'",
+                    self.pr_owner,
+                    self.github_repo_org,
+                )
+                return True
+        LOGGER.info(
+            "Pull request owner '%s' is not a member of the organization '%s'",
+            self.pr_owner,
+            self.github_repo_org,
+        )
+        return False
 
     def check_permission_for_partner(self) -> bool:
         """
