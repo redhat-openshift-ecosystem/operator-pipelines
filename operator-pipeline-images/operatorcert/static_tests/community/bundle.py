@@ -303,7 +303,8 @@ def follow_graph(graph: Any, bundle: Bundle, visited: List[Bundle]) -> List[Bund
     visited.append(bundle)
     next_bundles = graph[bundle]
     for next_bundle in next_bundles:
-        follow_graph(graph, next_bundle, visited)
+        visited_copy = visited.copy()
+        follow_graph(graph, next_bundle, visited_copy)
     return visited
 
 
