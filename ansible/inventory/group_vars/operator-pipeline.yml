@@ -6,9 +6,7 @@ oc_namespace: "operator-pipeline-{{ env }}"
 oc_signing_namespace: "signing-pipeline-{{ env }}"
 service_account_name: operator-pipeline-admin
 branch: "{{ env }}"
-preflight_min_version: 0.0.0
 preflight_trigger_environment: preprod
-ci_min_version: 0.0.0
 
 operator_pipeline_image_repo: quay.io/redhat-isv/operator-pipelines-images
 operator_pipeline_image_tag: latest

@@ -23,13 +23,9 @@ spec:
       description: Which environment to run in. Can be one of [dev, qa, stage, prod]
       default: "prod"
 
-    - name: preflight_min_version
-
     - name: preflight_trigger_environment
       description: Which openshift-ci step-registry steps and ProwJob templates to use. Can be one of [preprod, prod]
       default: "prod"
-
-    - name: ci_min_version
 
     - name: registry
       description: Must be some variety of quay registry.
@@ -776,7 +772,6 @@ spec:
       workspaces:
         - name: results
           workspace: results
-          subPath: results
 
     - name: preflight-trigger
       runAfter:
@@ -807,8 +802,8 @@ spec:
           value: "$(params.prow_kubeconfig_secret_name)"
         - name: prow_kubeconfig_secret_key
           value: "$(params.prow_kubeconfig_secret_key)"
-        - name: skip
-          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
+        - name: test_result_path
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
@@ -816,9 +811,8 @@ spec:
       workspaces:
         - name: credentials
           workspace: registry-credentials-all
-        - name: output
-          subPath: preflight-trigger
-          workspace: repository
+        - name: results
+          workspace: results
 
     - name: upload-artifacts
       runAfter:
@@ -855,13 +849,44 @@ spec:
         - name: pyxis_ssl_key_secret_key
           value: "$(params.pipeline_ssl_key_secret_key)"
       workspaces:
+        - name: results
+          workspace: results
+
+    - name: evaluate-preflight-result
+      runAfter:
+        - upload-artifacts
+      taskRef:
+        kind: Task
+        name: evaluate-preflight-result
+      when: &bundleAdded
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: request_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: preflight_result_file_path
+          value: "$(tasks.preflight-trigger.results.result_output_file)"
+        - name: preflight_log_file_path
+          value: "$(tasks.preflight-trigger.results.log_output_file)"
+        - name: preflight_artifacts_output_dir
+          value: "$(tasks.preflight-trigger.results.artifacts_output_dir)"
+      workspaces:
+        - name: results
+          workspace: results
         - name: source
           workspace: repository
-          subPath: preflight-trigger
+          subPath: src
 
     - name: get-ci-results
       runAfter:
-        - upload-artifacts
+        - evaluate-preflight-result
       taskRef:
         name: get-ci-results
       params:
@@ -894,26 +919,6 @@ spec:
           workspace: results
           subPath: results
 
-    # Verify the CI results
-    - name: verify-ci-results
-      runAfter:
-        - link-pull-request-with-open-status
-      taskRef:
-        name: verify-ci-results
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: preflight_results
-          value: "$(tasks.get-ci-results.results.preflight_results)"
-        - name: preflight_min_version
-          value: $(params.preflight_min_version)
-        - name: ci_min_version
-          value: $(params.ci_min_version)
-      workspaces:
-        - name: results
-          workspace: results
-          subPath: results
-
     # link pull request details to test results
     - name: link-pull-request-with-open-status
       runAfter:
@@ -941,7 +946,7 @@ spec:
     # Query Hydra API for status of the pre-certification checklist
     - name: query-publishing-checklist
       runAfter:
-        - verify-ci-results
+        - link-pull-request-with-open-status
       taskRef:
         name: query-publishing-checklist
       params:

@@ -146,8 +146,6 @@ tkn pipeline start operator-hosted-pipeline \
   --param git_commit=0aeff5f71e4fc2d4990474780b56d9312554da5a \
   --param git_base_branch=main \
   --param env=prod \
-  --param preflight_min_version=0.0.0 \
-  --param ci_min_version=0.0.0 \
   --workspace name=repository,volumeClaimTemplateFile=templates/workspace-template-small.yml \
   --workspace name=results,volumeClaimTemplateFile=templates/workspace-template.yml \
   --workspace name=registry-credentials-all,volumeClaimTemplateFile=templates/workspace-template-small.yml \

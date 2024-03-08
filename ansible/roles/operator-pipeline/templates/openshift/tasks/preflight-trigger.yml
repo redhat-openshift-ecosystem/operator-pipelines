@@ -52,10 +52,9 @@ spec:
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github
 
-    - name: skip
-      description: "Set to 'true' to skip"
-      default: 'false'
-      type: string
+    - name: test_result_path
+      description: "A path to existing test results. This indicates if we can skip a preflight test."
+      default: "none"
   results:
     - description: ''
       name: log_output_file
@@ -91,7 +90,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [ "$(params.skip)" == "true" ]; then
+          if [ "$(params.test_result_path)" != "none" ]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
@@ -110,7 +109,7 @@ spec:
               --file "$(workspaces.credentials.path)/project_dockerconfigjson.gpg" \
               --output-path "$(workspaces.credentials.path)/project_dockerconfigjson.gpg.b64"
           fi
-      workingDir: $(workspaces.output.path)
+      workingDir: $(workspaces.results.path)
     - env:
         - name: KUBECONFIG
           value: /etc/kubeconfig-volume/$(params.prow_kubeconfig_secret_key)
@@ -130,7 +129,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [ "$(params.skip)" == "true" ]; then
+          if [ "$(params.test_result_path)" != "none" ]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
@@ -170,8 +169,8 @@ spec:
               --asset-type "$(params.asset_type)" \
               --output-path prowjob-base-url
           fi
-      workingDir: $(workspaces.output.path)
       timeout: "1h15m0s"
+      workingDir: $(workspaces.results.path)
     - env:
         - name: PIPELINE_GPG_DECRYPTION_PRIVATE_KEY
           value: /etc/gpg-key/$(params.gpg_decryption_private_key_secret_key)
@@ -192,10 +191,10 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [ "$(params.skip)" == "true" ]; then
+          if [ "$(params.test_result_path)" != "none" ]; then
               echo "Preflight testing has been skipped"
               echo -n "none" > "$(results.log_output_file.path)"
-              echo -n "none" > "$(results.result_output_file.path)"
+              echo -n "$(params.test_result_path)" > "$(results.result_output_file.path)"
               echo -n "none" > "$(results.artifacts_output_dir.path)"
               exit 0
           fi
@@ -225,10 +224,10 @@ spec:
           mv preflight.stdout artifacts/
           mv preflight.stderr artifacts/
 
-          echo -n preflight.log | tee "$(results.log_output_file.path)"
-          echo -n results.json | tee "$(results.result_output_file.path)"
-          echo -n artifacts | tee "$(results.artifacts_output_dir.path)"
-      workingDir: $(workspaces.output.path)
+          echo -n "$(workspaces.results.path)/preflight.log" | tee "$(results.log_output_file.path)"
+          echo -n "$(workspaces.results.path)/results.json" | tee "$(results.result_output_file.path)"
+          echo -n "$(workspaces.results.path)/artifacts" | tee "$(results.artifacts_output_dir.path)"
+      workingDir: $(workspaces.results.path)
   workspaces:
-    - name: output
+    - name: results
     - name: credentials

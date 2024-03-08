@@ -607,8 +607,7 @@ spec:
       workspaces:
         - name: credentials
           workspace: registry-credentials
-        - name: output
-          subPath: preflight-trigger
+        - name: results
           workspace: results
 
     - name: evaluate-preflight-result
@@ -634,9 +633,12 @@ spec:
         - name: preflight_artifacts_output_dir
           value: "$(tasks.preflight-trigger.results.artifacts_output_dir)"
       workspaces:
-        - name: input
+        - name: results
           subPath: preflight-trigger
           workspace: results
+        - name: source
+          workspace: repository
+          subPath: src
 
   finally:
     # merge PR

@@ -70,7 +70,13 @@ def test_create_github_gist(
     mock_github.get_user.return_value = github_user
     github_user.create_gist.return_value = MagicMock(html_url="some_url")
     resp = create_github_gist(
-        mock_github, [tmp_path / "some_file", tmp_path / "file2", tmp_path / "subdir"]
+        mock_github,
+        [
+            tmp_path / "some_file",
+            tmp_path / "file2",
+            tmp_path / "subdir",
+            tmp_path / "not_existing_file",
+        ],
     )
 
     mock_input_file_content.assert_has_calls(
