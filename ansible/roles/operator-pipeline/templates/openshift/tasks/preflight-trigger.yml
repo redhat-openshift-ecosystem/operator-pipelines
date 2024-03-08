@@ -171,6 +171,7 @@ spec:
               --output-path prowjob-base-url
           fi
       workingDir: $(workspaces.output.path)
+      timeout: "1h15m0s"
     - env:
         - name: PIPELINE_GPG_DECRYPTION_PRIVATE_KEY
           value: /etc/gpg-key/$(params.gpg_decryption_private_key_secret_key)
