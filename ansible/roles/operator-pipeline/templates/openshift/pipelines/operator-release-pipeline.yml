@@ -714,6 +714,8 @@ spec:
           value: "$(params.github_token_secret_key)"
         - name: pipelinerun
           value: "$(context.pipelineRun.name)"
+        - name: upload_pipeline_logs
+          value: "true"
         - name: comment_suffix
           value: |
 
