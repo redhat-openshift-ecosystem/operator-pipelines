@@ -43,7 +43,7 @@ spec:
     - name: result_spa_url
       description: URL to the Connect SPA test results page
   workspaces:
-    - name: source
+    - name: results
   volumes:
     - name: pyxis-ssl-volume
       secret:
@@ -52,7 +52,7 @@ spec:
   steps:
     - name: upload-test-logs
       image: "$(params.pipeline_image)"
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.results.path)
       env:
         - name: PYXIS_CERT_PATH
           value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
@@ -98,7 +98,7 @@ spec:
 
     - name: upload-test-results
       image: "$(params.pipeline_image)"
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.results.path)
       env:
         - name: PYXIS_CERT_PATH
           value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
@@ -152,7 +152,7 @@ spec:
 
     - name: upload-test-artifacts
       image: "$(params.pipeline_image)"
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.results.path)
       env:
         - name: PYXIS_CERT_PATH
           value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)

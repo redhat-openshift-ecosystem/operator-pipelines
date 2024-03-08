@@ -8,8 +8,10 @@ spec:
     This task evaluates results generated from preflight and filters out
     tests that are not relevant to community.
   workspaces:
-    - name: input
+    - name: results
       description: A workspace for a preflight artifacts
+    - name: source
+      description: A repository with operators source
 
   params:
 
@@ -50,7 +52,7 @@ spec:
 
   steps:
     - name: evaluate-results
-      workingDir: $(workspaces.input.path)
+      workingDir: $(workspaces.results.path)
       image: "$(params.pipeline_image)"
       env:
         - name: GITHUB_TOKEN
@@ -75,11 +77,12 @@ spec:
           EXTRA_ARGS+=" --skip-tests $SKIP_TESTS"
         fi
 
-        RESULT_FILE_FILTERED=community-results.json
+        RESULT_FILE_FILTERED=preflight-results.json
 
         preflight-result-filter \
           --test-results "$(params.preflight_result_file_path)" \
           --output-file "$RESULT_FILE_FILTERED" $EXTRA_ARGS \
+          --repo-path "$(workspaces.source.path)" \
           --verbose
 
 

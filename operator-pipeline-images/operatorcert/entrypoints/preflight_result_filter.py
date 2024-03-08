@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from operatorcert.logger import setup_logger
 from operatorcert.utils import SplitArgs
+from operator_repo import Repo as OperatorRepo
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -27,6 +28,7 @@ def setup_argparser() -> Any:
         description="Parse and filter preflight results for community."
     )
     parser.add_argument("--test-results", help="Path to a preflight test-results.")
+    parser.add_argument("--repo-path", help="Path to a git repository with bundles.")
     parser.add_argument(
         "--skip-tests",
         help="Ignore specific checks. Comma separated list of test names.",
@@ -41,6 +43,7 @@ def setup_argparser() -> Any:
 
 def is_allowed_test(
     test: Any,
+    organization: str,
     skip_tests: Optional[List[str]] = None,
 ) -> bool:
     """
@@ -55,7 +58,10 @@ def is_allowed_test(
     if skip_tests is None:
         skip_tests = []
     test_name = test.get("name")
-    allowed = test_name in COMMUNITY_ALLOWED_TESTS and test_name not in skip_tests
+    allowed = test_name not in skip_tests
+    if organization == "community-operators":
+        # for community-operators, only allow tests in COMMUNITY_ALLOWED_TESTS
+        allowed = test_name in COMMUNITY_ALLOWED_TESTS and allowed
     if not allowed:
         LOGGER.debug("Skipping test: %s", test_name)
     LOGGER.info("Test: %s, allowed: %s", test_name, allowed)
@@ -64,6 +70,7 @@ def is_allowed_test(
 
 def parse_and_evaluate_results(
     test_results: Any,
+    organization: str,
     skip_tests: Optional[List[str]] = None,
 ) -> Any:
     """
@@ -81,7 +88,7 @@ def parse_and_evaluate_results(
     for category, tests in results.items():
         new_results[category] = []
         for test in tests:
-            if is_allowed_test(test, skip_tests=skip_tests):
+            if is_allowed_test(test, organization, skip_tests=skip_tests):
                 new_results[category].append(test)
 
     overall_status = True
@@ -112,7 +119,12 @@ def main() -> None:
 
     with open(args.test_results, "r", encoding="utf-8") as test_results:
         test_results = json.load(test_results)
-    community_results = parse_and_evaluate_results(test_results, args.skip_tests)
+
+    repo = OperatorRepo(args.repo_path)
+    organization = repo.config.get("organization")
+    community_results = parse_and_evaluate_results(
+        test_results, organization, args.skip_tests
+    )
 
     if args.output_file:
         with open(args.output_file, "w", encoding="utf-8") as output_file:

@@ -400,7 +400,7 @@ spec:
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
       workspaces:
-        - name: source
+        - name: results
           workspace: pipeline
           subPath: preflight
 

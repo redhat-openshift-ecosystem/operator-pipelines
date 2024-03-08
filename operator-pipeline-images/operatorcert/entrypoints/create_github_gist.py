@@ -80,12 +80,14 @@ def create_github_gist(github_api: Github, input_path: List[Path]) -> Gist.Gist:
                 gist_content[str(file_path.relative_to(input_item))] = InputFileContent(
                     file_path.read_text(encoding="utf-8")
                 )
-        else:
+        elif input_item.is_file():
             gist_content[input_item.name] = InputFileContent(
                 input_item.read_text(encoding="utf-8")
             )
+        else:
+            LOGGER.warning("Skipping %s, not a file or directory", input_item)
 
-    LOGGER.info("Creating gist from %s", input_path)
+    LOGGER.info("Creating gist from %s", gist_content.keys())
     gist = github_auth_user.create_gist(
         True,
         gist_content,
