@@ -1207,15 +1207,12 @@ spec:
           value: "$(context.pipelineRun.name)"
         - name: upload_pipeline_logs
           value: "true"
-        - name: comment_suffix
-          value: |
-
-            ## Troubleshooting
-
-            Please refer to the [troubleshooting guide](https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/troubleshooting.md).
-
-            Run \`/pipeline restart operator-hosted-pipeline\` in case of pipeline failure to restart a pipeline.
+        - name: pipeline_name
+          value: "$(context.pipeline.name)"
       workspaces:
+        - name: base
+          workspace: repository
+          subPath: base
         - name: output
           workspace: results
           subPath: summary

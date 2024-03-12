@@ -7,6 +7,7 @@ spec:
   description: >-
     This task adds a PipelineRun summary comment to a GitHub pull request.
   workspaces:
+    - name: base
     - name: output
       description: Scratch space and storage for the comment
 
@@ -37,6 +38,9 @@ spec:
     - name: pipelinerun
       description: The name of the PipelineRun to summarize.
 
+    - name: pipeline_name
+      description: The name of the Pipeline.
+
     - name: pipeline_image
       description: The common pipeline image.
 
@@ -45,10 +49,6 @@ spec:
       description: |
         A flag that determines whether pipeline logs should be uploaded to Github gists
       type: string
-
-    - name: comment_suffix
-      description: A comment to append to the end of the summary
-      default: ""
 
   steps:
     - name: gather-info
@@ -102,6 +102,9 @@ spec:
     - name: build-comment
       workingDir: $(workspaces.output.path)
       image: "$(params.pipeline_image)"
+      env:
+        - name: WORKSPACE_BASE_PATH
+          value: $(workspaces.base.path)
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -117,9 +120,18 @@ spec:
           echo "Pipeline logs: $GIST_URL" >> $PR_NAME/comment.md
         fi
 
-        if [ ! -z "$(params.comment_suffix)" ]; then
-          echo "$(params.comment_suffix)" >> $PR_NAME/comment.md
+        CONFIG_PATH="$WORKSPACE_BASE_PATH/config.yaml"
+        ORGANIZATION=`cat $CONFIG_PATH | yq -r '.organization'`
+
+        if [[ "$ORGANIZATION" == "community-operators" ]]
+        then
+          DOC_LINK="https://redhat-openshift-ecosystem.github.io/community-operators-prod/"
+        else
+          DOC_LINK="https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/troubleshooting.md"
         fi
+
+        echo -e "\n## Troubleshooting\n\nPlease refer to the [troubleshooting guide]($DOC_LINK)." >> $PR_NAME/comment.md
+        echo -e "\nRun \`/pipeline restart $(params.pipeline_name)\` in case of pipeline failure to restart a pipeline." >> $PR_NAME/comment.md
 
     - name: post-comment
       workingDir: $(workspaces.output.path)
