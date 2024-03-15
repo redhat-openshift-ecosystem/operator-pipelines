@@ -27,8 +27,8 @@ spec:
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github
 
-    - name: test_suite
-      description: A path to a test suite that is executed
+    - name: test_suites
+      description: A comma separate list of paths to a test suite that is executed
 
   results:
     - name: messages_count
@@ -76,7 +76,7 @@ spec:
         static-tests --verbose \
           --output-file "$JSON_RESULTS_FILE" \
           --repo-path "$(workspaces.source.path)" \
-          --suite "$(params.test_suite)" $EXTRA_ARGS \
+          --suites "$(params.test_suites)" $EXTRA_ARGS \
           "$(params.operator_name)" "$(params.bundle_version)"
 
         jq . <$JSON_RESULTS_FILE

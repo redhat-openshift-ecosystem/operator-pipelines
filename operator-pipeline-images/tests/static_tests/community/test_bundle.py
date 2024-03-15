@@ -11,7 +11,6 @@ from operatorcert.static_tests.community.bundle import (
     check_osdk_bundle_validate_operator_framework,
     check_osdk_bundle_validate_operatorhub,
     check_required_fields,
-    check_upgrade_graph_loop,
     run_operator_sdk_bundle_validate,
     process_ocp_version,
     check_api_version_constraints,
@@ -370,60 +369,6 @@ def test_check_dangling_bundles(mock_config: MagicMock, tmp_path: Path) -> None:
     operator = repo.operator("malformed")
     bundle1 = operator.bundle("0.0.1")
     failures = list(check_dangling_bundles(bundle1))
-    assert len(failures) == 1 and isinstance(failures[0], Fail)
-    assert "Bundle(malformed/0.0.1) has invalid 'replaces' field:" in failures[0].reason
-
-
-@patch("operator_repo.core.Operator.config")
-def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> None:
-    mock_config.get.return_value = "replaces-mode"
-    create_files(
-        tmp_path,
-        bundle_files("hello", "0.0.1"),
-        bundle_files("hello", "0.0.2", csv={"spec": {"replaces": "hello.v0.0.1"}}),
-    )
-
-    repo = Repo(tmp_path)
-    operator = repo.operator("hello")
-    bundle = operator.bundle("0.0.1")
-    is_loop = list(check_upgrade_graph_loop(bundle))
-    assert is_loop == []
-
-    mock_config.get.return_value = "unknown-mode"
-    is_loop = list(check_upgrade_graph_loop(bundle))
-    assert is_loop == [
-        Fail("Operator(hello): unsupported updateGraph value: unknown-mode")
-    ]
-
-    mock_config.get.return_value = "replaces-mode"
-    # Both bundles replace each other
-    create_files(
-        tmp_path,
-        bundle_files("hello", "0.0.1", csv={"spec": {"replaces": "hello.v0.0.2"}}),
-        bundle_files("hello", "0.0.2", csv={"spec": {"replaces": "hello.v0.0.1"}}),
-    )
-
-    repo = Repo(tmp_path)
-    operator = repo.operator("hello")
-    bundle = operator.bundle("0.0.1")
-    is_loop = list(check_upgrade_graph_loop(bundle))
-    assert len(is_loop) == 1 and isinstance(is_loop[0], Fail)
-    assert (
-        is_loop[0].reason
-        == "Upgrade graph loop detected for bundle: [Bundle(hello/0.0.1), "
-        "Bundle(hello/0.0.2), Bundle(hello/0.0.1)]"
-    )
-
-    # Malformed .spec.replaces
-    create_files(
-        tmp_path,
-        bundle_files("malformed", "0.0.1", csv={"spec": {"replaces": ""}}),
-    )
-
-    repo = Repo(tmp_path)
-    operator = repo.operator("malformed")
-    bundle = operator.bundle("0.0.1")
-    failures = list(check_upgrade_graph_loop(bundle))
     assert len(failures) == 1 and isinstance(failures[0], Fail)
     assert "Bundle(malformed/0.0.1) has invalid 'replaces' field:" in failures[0].reason
 

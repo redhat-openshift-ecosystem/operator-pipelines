@@ -131,6 +131,10 @@ spec:
       description: The key within the Kubernetes Secret that contains the gpg passphrase.
       default: operator-pipeline-gpg.passphrase
 
+    - name: static_test_suites
+      description: A comma separate list of paths to a test suite that is executed
+      default: operatorcert.static_tests.isv,operatorcert.static_tests.common
+
   workspaces:
     - name: repository
     - name: results
@@ -515,8 +519,8 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
-        - name: test_suite
-          value: "operatorcert.static_tests.isv"
+        - name: test_suites
+          value: "$(params.static_test_suites)"
       workspaces:
         - name: source
           workspace: repository

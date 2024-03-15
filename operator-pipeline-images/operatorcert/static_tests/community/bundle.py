@@ -6,17 +6,17 @@
     (either Fail or Warn) to describe the issues found in the given Bundle.
 """
 
-import logging
 import json
+import logging
 import re
 import subprocess
 from collections.abc import Iterator
-from typing import Any, List
+from typing import Any
 
+import requests
 from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
 from operator_repo.utils import lookup_dict
-import requests
 from semver import Version
 
 from .validations import (
@@ -69,12 +69,6 @@ OCP_TO_K8S_SEMVER = {
     _parse_ocp_version(ocp_ver): _parse_semver(k8s_ver)
     for ocp_ver, k8s_ver in OCP_TO_K8S.items()
 }
-
-
-class GraphLoopException(Exception):
-    """
-    Exception raised when a loop is detected in the update graph
-    """
 
 
 def process_ocp_version(ocp_metadata_version: Any) -> Any:
@@ -245,67 +239,6 @@ def check_dangling_bundles(bundle: Bundle) -> Iterator[CheckResult]:
         }
         if dangling_bundles:
             yield Fail(f"Channel {channel} has dangling bundles: {dangling_bundles}")
-
-
-def check_upgrade_graph_loop(bundle: Bundle) -> Iterator[CheckResult]:
-    """
-    Detect loops in the upgrade graph
-
-    Example:
-
-    Channel beta: A -> B -> C -> B
-
-    Args:
-        bundle (Bundle): Operator bundle
-
-    Yields:
-        Iterator[CheckResult]: Failure if a loop is detected
-    """
-    all_channels: set[str] = set(bundle.channels)
-    if bundle.default_channel is not None:
-        all_channels.add(bundle.default_channel)
-    operator = bundle.operator
-    for channel in sorted(all_channels):
-        visited: List[Bundle] = []
-        try:
-            channel_bundles = operator.channel_bundles(channel)
-            try:
-                graph = operator.update_graph(channel)
-            except (NotImplementedError, ValueError) as exc:
-                yield Fail(str(exc))
-                return
-            follow_graph(graph, channel_bundles[0], visited)
-        except GraphLoopException as exc:
-            yield Fail(str(exc))
-
-
-def follow_graph(graph: Any, bundle: Bundle, visited: List[Bundle]) -> List[Bundle]:
-    """
-    Follow operator upgrade graph and raise exception if loop is detected
-
-    Args:
-        graph (Any): Operator update graph
-        bundle (Bundle): Current bundle that started the graph traversal
-        visited (List[Bundle]): List of bundles visited so far
-
-    Raises:
-        GraphLoopException: Graph loop detected
-
-    Returns:
-        List[Bundle]: List of bundles visited so far
-    """
-    if bundle in visited:
-        visited.append(bundle)
-        raise GraphLoopException(f"Upgrade graph loop detected for bundle: {visited}")
-    if bundle not in graph:
-        return visited
-
-    visited.append(bundle)
-    next_bundles = graph[bundle]
-    for next_bundle in next_bundles:
-        visited_copy = visited.copy()
-        follow_graph(graph, next_bundle, visited_copy)
-    return visited
 
 
 def check_api_version_constraints(bundle: Bundle) -> Iterator[CheckResult]:

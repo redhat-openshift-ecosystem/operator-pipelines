@@ -42,6 +42,8 @@
                 value: "{{ operator_pipeline_pending_namespace }}"
               - name: hydra_sso_token_url
                 value: "{{ operator_pipeline_hydra_sso_token_url }}"
+              - name: static_test_suites
+                value: operatorcert.static_tests.isv,operatorcert.static_tests.common
 
     - name: Create Hosted pipeline Trigger Template
       kubernetes.core.k8s:
@@ -69,6 +71,7 @@
               - name: pipeline_image
               - name: image_namespace
               - name: hydra_sso_token_url
+              - name: static_test_suites
             resourcetemplates:
               - apiVersion: tekton.dev/v1
                 kind: PipelineRun
@@ -107,6 +110,8 @@
                       value: $(tt.params.image_namespace)
                     - name: hydra_sso_token_url
                       value: $(tt.params.hydra_sso_token_url)
+                    - name: static_test_suites
+                      value: $(tt.params.static_test_suites)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
