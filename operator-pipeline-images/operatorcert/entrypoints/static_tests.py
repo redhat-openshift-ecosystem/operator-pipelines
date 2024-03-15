@@ -31,9 +31,13 @@ def setup_argparser() -> argparse.ArgumentParser:
         "--output-file", help="Path to a json file where results will be stored"
     )
     parser.add_argument(
-        "--suite",
-        help="Name of the test suite to run",
-        default="operatorcert.static_tests.community",
+        "--suites",
+        help="A comma separated list of names of the test suites to run",
+        action=SplitArgs,
+        default=[
+            "operatorcert.static_tests.community",
+            "operatorcert.static_tests.common",
+        ],
     )
     parser.add_argument(
         "--skip-tests",
@@ -52,7 +56,7 @@ def check_bundle(
     repo_path: str,
     operator_name: str,
     bundle_version: str,
-    suite_name: str,
+    suite_names: List[str],
     skip_tests: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
@@ -77,16 +81,18 @@ def check_bundle(
     outputs = []
     passed = True
 
-    for result in run_suite([bundle, operator], suite_name, skip_tests=skip_tests):
-        if isinstance(result, Fail):
-            passed = False
-        item = {
-            "type": "error" if isinstance(result, Fail) else "warning",
-            "message": result.reason,
-        }
-        if result.check:
-            item["check"] = result.check
-        outputs.append(item)
+    for suite_name in suite_names:
+        for result in run_suite([bundle, operator], suite_name, skip_tests=skip_tests):
+            if isinstance(result, Fail):
+                passed = False
+            item = {
+                "type": "error" if isinstance(result, Fail) else "warning",
+                "message": result.reason,
+                "test_suite": suite_name,
+            }
+            if result.check:
+                item["check"] = result.check
+            outputs.append(item)
 
     return {"passed": passed, "outputs": outputs}
 
@@ -107,7 +113,7 @@ def main() -> None:
 
     # Logic
     result = check_bundle(
-        args.repo_path, args.operator, args.bundle, args.suite, args.skip_tests
+        args.repo_path, args.operator, args.bundle, args.suites, args.skip_tests
     )
 
     if args.output_file:

@@ -19,14 +19,23 @@ from tests.utils import bundle_files, create_files
             [Warn("foo")],
             {
                 "passed": True,
-                "outputs": [{"type": "warning", "message": "foo"}],
+                "outputs": [
+                    {"type": "warning", "message": "foo", "test_suite": "dummy_suite"}
+                ],
             },
         ),
         (
             [Fail("bar", check="baz")],
             {
                 "passed": False,
-                "outputs": [{"type": "error", "message": "bar", "check": "baz"}],
+                "outputs": [
+                    {
+                        "type": "error",
+                        "message": "bar",
+                        "check": "baz",
+                        "test_suite": "dummy_suite",
+                    }
+                ],
             },
         ),
         (
@@ -34,8 +43,8 @@ from tests.utils import bundle_files, create_files
             {
                 "passed": False,
                 "outputs": [
-                    {"type": "warning", "message": "foo"},
-                    {"type": "error", "message": "bar"},
+                    {"type": "warning", "message": "foo", "test_suite": "dummy_suite"},
+                    {"type": "error", "message": "bar", "test_suite": "dummy_suite"},
                 ],
             },
         ),
@@ -60,7 +69,7 @@ def test_check_bundle(
 
     mock_run_suite.return_value = iter(check_results)
     result = static_tests.check_bundle(
-        str(repo.root), operator_name, bundle_version, "dummy_suite"
+        str(repo.root), operator_name, bundle_version, ["dummy_suite"]
     )
     assert result == expected
 
@@ -80,7 +89,11 @@ def test_static_tests_main(
     with patch("sys.argv", args):
         static_tests.main()
     mock_check_bundle.assert_called_once_with(
-        "/tmp/repo", "test-operator", "0.0.1", "operatorcert.static_tests.community", []
+        "/tmp/repo",
+        "test-operator",
+        "0.0.1",
+        ["operatorcert.static_tests.community", "operatorcert.static_tests.common"],
+        [],
     )
     assert capsys.readouterr().out.strip() == '{"foo": ["bar"]}'
     mock_logger.assert_called_once_with(level="INFO")
@@ -96,7 +109,7 @@ def test_static_tests_main(
         "--skip-tests=check_123,check_456",
         "other-test-operator",
         "0.0.2",
-        "--suite=other_suite",
+        "--suites=other_suite",
         f"--output-file={out_file_name}",
         "--verbose",
     ]
@@ -107,7 +120,7 @@ def test_static_tests_main(
         "/tmp/other_repo",
         "other-test-operator",
         "0.0.2",
-        "other_suite",
+        ["other_suite"],
         ["check_123", "check_456"],
     )
     assert out_file.read().strip() == '{"bar": ["baz"]}'

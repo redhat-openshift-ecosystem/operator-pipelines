@@ -36,6 +36,8 @@
                 value: "{{ operator_pipeline_image_pull_spec }}"
               - name: image_namespace
                 value: "{{ community_operator_pipeline_pending_namespace }}"
+              - name: static_test_suites
+                value: operatorcert.static_tests.community,operatorcert.static_tests.common
 
     - name: Create Community hosted pipeline Trigger template
       kubernetes.core.k8s:
@@ -61,6 +63,7 @@
               - name: env
               - name: pipeline_image
               - name: image_namespace
+              - name: static_test_suites
             resourcetemplates:
               - apiVersion: tekton.dev/v1
                 kind: PipelineRun
@@ -97,6 +100,8 @@
                       value: $(tt.params.pipeline_image)
                     - name: image_namespace
                       value: $(tt.params.image_namespace)
+                    - name: static_test_suites
+                      value: $(tt.params.static_test_suites)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
