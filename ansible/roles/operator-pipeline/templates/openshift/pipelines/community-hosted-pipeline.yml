@@ -788,15 +788,14 @@ spec:
           value: "$(params.github_token_secret_key)"
         - name: pipelinerun
           value: "$(context.pipelineRun.name)"
+        - name: pipeline_name
+          value: "$(context.pipeline.name)"
         - name: upload_pipeline_logs
           value: "true"
-        - name: comment_suffix
-          value: |
-
-            ## Troubleshooting
-
-            Run \`/pipeline restart community-hosted-pipeline\` in case of pipeline failure to restart a pipeline.
       workspaces:
+        - name: base
+          workspace: repository
+          subPath: base
         - name: output
           workspace: results
           subPath: summary
