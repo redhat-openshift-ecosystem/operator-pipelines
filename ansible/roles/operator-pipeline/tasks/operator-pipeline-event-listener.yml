@@ -34,6 +34,9 @@
                       - name: "addChangedFiles"
                         value:
                           enabled: true
+                          personalAccessToken:
+                            secretName: github-bot-token
+                            secretKey: github_bot_token
                   - ref:
                       name: cel
                     params:
@@ -84,6 +87,9 @@
                       - name: "addChangedFiles"
                         value:
                           enabled: true
+                          personalAccessToken:
+                            secretName: github-bot-token
+                            secretKey: github_bot_token
                   - ref:
                       name: cel
                     params:
