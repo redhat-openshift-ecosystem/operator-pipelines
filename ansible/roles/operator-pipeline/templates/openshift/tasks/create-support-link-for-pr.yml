@@ -4,6 +4,9 @@ kind: Task
 metadata:
   name: create-support-link-for-pr
 spec:
+  workspaces:
+    - name: output
+      description: Workspace for the support comment
   params:
     - name: pipeline_image
     - name: type
@@ -19,24 +22,63 @@ spec:
       default: "Operator Bundle Image"
     - name: connect_url
       description: Connect SPA URL based on selected environment
+
     - name: pull_request_url
-  results:
-    - name: comment
+      description: |
+        URL pointing to the pull request. Used also as a request URL argument for posting a comment to the PR.
+
+    - name: github_host_url
+      description: |
+        The GitHub host, adjust this if you run a GitHub enterprise.
+      default: "https://api.github.com"
+
+    - name: github_token_secret_name
+      description: |
+        The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
+
+    - name: github_token_secret_key
+      description: |
+        The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+
   steps:
-    - name: create-support-link-for-pr
+    - name: build-comment-with-support-link
       image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.output.path)
       script: |
         #! /usr/bin/env bash
         set -e
 
         CONNECT_URL=$(params.connect_url)
+        MESSAGE_FILE="$(workspaces.output.path)/support-link.md"
 
         # url-encode parameters
         LINK_TYPE=$(printf %s "$(params.type)" | jq -sRr @uri)
         LINK_SOURCE=$(printf %s "$(params.source)" | jq -sRr @uri)
         CERT_PROJECT_ID=$(printf %s "$(params.cert_project_id)" | jq -sRr @uri)
         CERT_PROJECT_TYPE=$(printf %s "$(params.cert_project_type)" | jq -sRr @uri)
-        PULL_REUQEST_URL=$(printf %s "$(params.pull_request_url)" | jq -sRr @uri)
+        PULL_REQUEST_URL=$(printf %s "$(params.pull_request_url)" | jq -sRr @uri)
 
-        echo "Follow this link if you wish to open a support case:"
-        echo "$CONNECT_URL/support/technology-partner/#/case/new?type=$LINK_TYPE&source=$LINK_SOURCE&cert_project_id=$CERT_PROJECT_ID&cert_project_type=$CERT_PROJECT_TYPE&pull_request_url=$PULL_REUQEST_URL" | tee $(results.comment.path)
+        echo "There were some errors while publishing your Operator Bundle. You can use [this support case]($CONNECT_URL/support/technology-partner/#/case/new?type=$LINK_TYPE&source=$LINK_SOURCE&cert_project_id=$CERT_PROJECT_ID&cert_project_type=$CERT_PROJECT_TYPE&pull_request_url=$PULL_REQUEST_URL) to contact the Red Hat certification team for review." > $MESSAGE_FILE
+
+    - name: post-comment-with-support-link
+      workingDir: $(workspaces.output.path)
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+
+      image: "$(params.pipeline_image)"
+      script: |
+        #! /usr/bin/env bash
+        set -xe -o pipefail
+
+        echo "Posting GitHub comment to PR: $(params.pull_request_url)"
+
+        github-add-comment \
+          --github-host-url "$(params.github_host_url)" \
+          --request-url "$(params.pull_request_url)" \
+          --comment-file "$(workspaces.output.path)/support-link.md"
