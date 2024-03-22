@@ -8,6 +8,9 @@ spec:
     - name: pipeline_image
     - name: bundle_path
       description: path indicating the location of the certified bundle within the repository
+    - name: cert_project_required
+      description: A flag determines whether a cert project ID needs to be present
+      default: "true"
   results:
     - name: certification_project_id
       description: Identifier of certification project from Red Hat Connect
@@ -19,6 +22,7 @@ spec:
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
+        set -xe
         echo "Checking availability of cert project identifier"
 
         PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
@@ -28,8 +32,14 @@ spec:
         CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id | select (.!=null)')
 
         if [ -z $CERT_PROJECT_ID ]; then
-          echo "Certification project ID is missing in ci.yaml file (cert_project_id)"
-          exit 1
+          if [ "$(params.cert_project_required)" == "true" ]; then
+            echo "Certification project ID is missing in ci.yaml file (cert_project_id)"
+            exit 1
+          else
+            echo "Cert project ID is not required."
+            echo -n "" | tee $(results.certification_project_id.path)
+            exit 0
+          fi
         fi
 
         echo -n $CERT_PROJECT_ID | tee $(results.certification_project_id.path)

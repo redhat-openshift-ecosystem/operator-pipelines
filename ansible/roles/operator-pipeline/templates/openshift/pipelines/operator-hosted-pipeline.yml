@@ -135,6 +135,12 @@ spec:
       description: A comma separate list of paths to a test suite that is executed
       default: operatorcert.static_tests.isv,operatorcert.static_tests.common
 
+    - name: cert_project_required
+      description: >-
+        A flag determines whether a cert project identifier is required
+        for the pipeline. The flag distinguish between ISV and community operators.
+      default: "true"
+
   workspaces:
     - name: repository
     - name: results
@@ -377,6 +383,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.detect-changes.results.bundle_path)"
+        - name: cert_project_required
+          value: "$(params.cert_project_required)"
       workspaces:
         - name: source
           workspace: repository
@@ -426,6 +434,10 @@ spec:
         - get-pyxis-certification-data
       taskRef:
         name: verify-project
+      when: &certProjectExists
+        - input: "$(tasks.certification-project-check.results.certification_project_id)"
+          operator: "notin"
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -443,6 +455,7 @@ spec:
         - verify-project
       taskRef:
         name: update-cert-project-status
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -467,6 +480,7 @@ spec:
         - update-cert-project-status
       taskRef:
         name: reserve-operator-name
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -563,6 +577,9 @@ spec:
           value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.detect-changes.results.bundle_path)"
+        # Pin digest only for ISV projects
+        - name: enabled
+          value: "$(params.cert_project_required)"
       workspaces:
         - name: source
           workspace: repository
@@ -594,6 +611,7 @@ spec:
         - reserve-operator-name
       taskRef:
         name: merge-registry-credentials
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -808,6 +826,7 @@ spec:
         - preflight-trigger
       taskRef:
         name: upload-artifacts
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -878,6 +897,7 @@ spec:
         - evaluate-preflight-result
       taskRef:
         name: get-ci-results
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -914,6 +934,7 @@ spec:
         - get-ci-results
       taskRef:
         name: link-pull-request
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -938,6 +959,7 @@ spec:
         - link-pull-request-with-open-status
       taskRef:
         name: query-publishing-checklist
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1014,6 +1036,7 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1047,6 +1070,9 @@ spec:
     # with the support link pointing to the affected PR
     - name: post-support-link-for-pr
       when:
+        - input: "$(tasks.certification-project-check.results.certification_project_id)"
+          operator: "notin"
+          values: [""]
         - input: $(tasks.status)
           operator: notin
           values: ["Succeeded", "Completed"]
@@ -1074,6 +1100,7 @@ spec:
     - name: github-add-connect-url-comment
       taskRef:
         name: github-add-comment
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
