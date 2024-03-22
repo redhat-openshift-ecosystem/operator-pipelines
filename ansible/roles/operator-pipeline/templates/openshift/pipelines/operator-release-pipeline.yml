@@ -257,21 +257,6 @@ spec:
           workspace: repository
           subPath: src
 
-    - name: create-support-link-for-pr
-      runAfter:
-        - certification-project-check
-      taskRef:
-        name: create-support-link-for-pr
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: connect_url
-          value: $(tasks.set-env.results.connect_url)
-        - name: cert_project_id
-          value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: pull_request_url
-          value: "$(params.git_pr_url)"
-
     # Get additional data necessary for certification
     - name: get-pyxis-certification-data
       runAfter:
@@ -580,25 +565,32 @@ spec:
         - name: source
           workspace: repository
 
-    # In the event of a failure, comment with the support link on the github PR
-    - name: github-add-support-comment
+    # In the event of a pipeline failure, this task will post a comment
+    # with the support link pointing to the affected PR
+    - name: post-support-link-for-pr
       when:
         - input: $(tasks.status)
           operator: notin
           values: ["Succeeded", "Completed"]
       taskRef:
-        name: github-add-comment
+        name: create-support-link-for-pr
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: REQUEST_URL
+        - name: connect_url
+          value: $(tasks.set-env.results.connect_url)
+        - name: cert_project_id
+          value: "$(tasks.certification-project-check.results.certification_project_id)"
+        - name: pull_request_url
           value: "$(params.git_pr_url)"
-        - name: COMMENT
-          value: "There were errors while publishing your Operator bundle. You can use [this support case]($(tasks.create-support-link-for-pr.results.comment)) to contact the Red Hat certification team for review."
-        - name: GITHUB_TOKEN_SECRET_NAME
+        - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
-        - name: GITHUB_TOKEN_SECRET_KEY
+        - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: summary
 
     - name: set-github-passed-label
       when:
