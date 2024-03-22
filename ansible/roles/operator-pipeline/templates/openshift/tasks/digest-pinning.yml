@@ -27,6 +27,11 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        if [ "$(params.enabled)" != "true" ]; then
+          echo "Digest pinning is not enabled"
+          exit 0
+        fi
+
         if [[ "$(workspaces.registry-credentials.bound)" == "true" ]]; then
           # Setup registry credentials for pinning tools. Combine the default credentials
           # with those found in the workspace to maintain access to the internal
