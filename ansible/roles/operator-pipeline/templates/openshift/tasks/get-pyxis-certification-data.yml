@@ -61,6 +61,21 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe -o pipefail
+        if [ "$(params.cert_project_id)" == "" ]; then
+
+          # The project is not present - return a default empty values
+          echo -n | tee \
+              "$(results.new_certification_status.path)" \
+              "$(results.isv_pid.path)" \
+              "$(results.repo_name.path)" \
+              "$(results.operator_distribution.path)" \
+              "$(results.org_id.path)" \
+              "$(results.contacts.path)" \
+              "$(results.current_certification_status.path)" \
+              "$(results.github_usernames.path)" \
+              "$(results.project_status.path)"
+          exit 0
+        fi
 
         get-cert-project-related-data \
           --pyxis-url $(params.pyxis_url) \
@@ -119,6 +134,10 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe -o pipefail
+        if [ "$(params.cert_project_id)" == "" ]; then
+          echo -n "" | tee "$(results.vendor_label.path)"
+          exit 0
+        fi
 
         ORG_ID=$(cat org_id.txt)
 
