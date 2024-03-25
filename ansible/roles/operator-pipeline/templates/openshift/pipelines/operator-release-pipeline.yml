@@ -380,6 +380,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: lease-name
           value: *operatorDistribution
+        - name: lease-owner
+          value: "$(context.pipelineRun.name)"
 
     # call IIB to add the bundle to index
     - name: add-bundle-to-index
@@ -521,14 +523,14 @@ spec:
   finally:
 
     # Release the acquired resource
-    - name: release-lease
+    - name: release-leases
       taskRef:
-        name: release-lease
+        name: release-leases
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: lease-name
-          value: *operatorDistribution
+        - name: lease-owner
+          value: "$(context.pipelineRun.name)"
 
     # Upload the logs of this pipeline.
     # Dependencies on other task results should be minimized. If any

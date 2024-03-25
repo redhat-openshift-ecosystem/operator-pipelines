@@ -1,0 +1,18 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: release-leases
+spec:
+  description: |
+    Releases all leases owned by the given owner
+  params:
+    - name: pipeline_image
+    - name: lease-owner
+      type: string
+      description: Unique identifier of the owner of the leases
+  steps:
+    - name: delete-lease
+      image: "$(params.pipeline_image)"
+      script: |
+        oc delete lease -l owner-id="$(params.lease-owner)" --ignore-not-found=true

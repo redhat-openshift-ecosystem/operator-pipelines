@@ -244,6 +244,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: lease-name
           value: "community-pipeline"
+        - name: lease-owner
+          value: "$(context.pipelineRun.name)"
 
     # call IIB to add the bundle to index
     - name: add-bundle-to-index
@@ -378,15 +380,15 @@ spec:
 
   finally:
     # Release the acquired resource
-    - name: release-lease
+    - name: release-leases
       taskRef:
-        name: release-lease
+        name: release-leases
       when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: lease-name
-          value: "community-pipeline"
+        - name: lease-owner
+          value: "$(context.pipelineRun.name)"
 
     - name: set-github-passed-label
       when:
