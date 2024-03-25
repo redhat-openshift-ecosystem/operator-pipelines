@@ -18,12 +18,12 @@
               env: "{{ env }}"
           spec:
             params:
-              - name: git_repo_url
-                value: $(body.pull_request.base.repo.clone_url)
-              - name: git_fork_url
-                value: $(body.pull_request.head.repo.clone_url)
               - name: git_pr_url
                 value: $(body.pull_request.html_url)
+              - name: git_fork_url
+                value: $(body.pull_request.head.repo.clone_url)
+              - name: git_repo_url
+                value: $(body.pull_request.base.repo.clone_url)
               - name: git_username
                 value: $(body.pull_request.user.login)
               - name: git_commit
@@ -32,12 +32,22 @@
                 value: $(body.pull_request.base.sha)
               - name: env
                 value: "{{ env }}"
-              - name: pipeline_image
-                value: "{{ operator_pipeline_image_pull_spec }}"
+              - name: preflight_trigger_environment
+                value: "{{ preflight_trigger_environment }}"
               - name: image_namespace
                 value: "{{ community_operator_pipeline_pending_namespace }}"
+              - name: pipeline_image
+                value: "{{ operator_pipeline_image_pull_spec }}"
+              - name: quay_oauth_secret_name
+                value: "community-quay-oauth-token"
+              - name: kerberos_keytab_secret_key
+                value: "krb5-community-pending.keytab"
+              - name: hydra_sso_token_url
+                value: "{{ operator_pipeline_hydra_sso_token_url }}"
               - name: static_test_suites
                 value: operatorcert.static_tests.community,operatorcert.static_tests.common
+              - name: cert_project_required
+                value: "false"
 
     - name: Create Community hosted pipeline Trigger template
       kubernetes.core.k8s:
@@ -54,21 +64,26 @@
               env: "{{ env }}"
           spec:
             params:
-              - name: git_repo_url
-              - name: git_fork_url
               - name: git_pr_url
+              - name: git_fork_url
+              - name: git_repo_url
               - name: git_username
               - name: git_commit
               - name: git_commit_base
               - name: env
-              - name: pipeline_image
+              - name: preflight_trigger_environment
               - name: image_namespace
+              - name: pipeline_image
+              - name: quay_oauth_secret_name
+              - name: kerberos_keytab_secret_key
+              - name: hydra_sso_token_url
               - name: static_test_suites
+              - name: cert_project_required
             resourcetemplates:
               - apiVersion: tekton.dev/v1
                 kind: PipelineRun
                 metadata:
-                  generateName: community-hosted-pipeline-run
+                  generateName: operator-hosted-pipeline-run
                   labels:
                     app: operator-pipeline
                     suffix: "{{ suffix }}"
@@ -80,14 +95,14 @@
                   timeouts:
                     pipeline: "2h"
                   pipelineRef:
-                    name: community-hosted-pipeline
+                    name: operator-hosted-pipeline
                   params:
-                    - name: git_repo_url
-                      value: $(tt.params.git_repo_url)
-                    - name: git_fork_url
-                      value: $(tt.params.git_fork_url)
                     - name: git_pr_url
                       value: $(tt.params.git_pr_url)
+                    - name: git_fork_url
+                      value: $(tt.params.git_fork_url)
+                    - name: git_repo_url
+                      value: $(tt.params.git_repo_url)
                     - name: git_username
                       value: $(tt.params.git_username)
                     - name: git_commit
@@ -96,12 +111,22 @@
                       value: $(tt.params.git_commit_base)
                     - name: env
                       value: $(tt.params.env)
-                    - name: pipeline_image
-                      value: $(tt.params.pipeline_image)
+                    - name: preflight_trigger_environment
+                      value: $(tt.params.preflight_trigger_environment)
                     - name: image_namespace
                       value: $(tt.params.image_namespace)
+                    - name: pipeline_image
+                      value: $(tt.params.pipeline_image)
+                    - name: quay_oauth_secret_name
+                      value: $(tt.params.quay_oauth_secret_name)
+                    - name: kerberos_keytab_secret_key
+                      value: $(tt.params.kerberos_keytab_secret_key)
+                    - name: hydra_sso_token_url
+                      value: $(tt.params.hydra_sso_token_url)
                     - name: static_test_suites
                       value: $(tt.params.static_test_suites)
+                    - name: cert_project_required
+                      value: $(tt.params.cert_project_required)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
@@ -112,6 +137,14 @@
                             requests:
                               storage: 5Gi
                     - name: results
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi
+                    - name: registry-credentials-all
                       volumeClaimTemplate:
                         spec:
                           accessModes:
