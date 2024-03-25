@@ -36,6 +36,10 @@
                 value: "{{ operator_pipeline_image_pull_spec }}"
               - name: image_namespace
                 value: "{{ community_operator_pipeline_pending_namespace }}"
+              - name: dest_image_namespace
+                value: "{{ operator_pipeline_release_namespace }}"
+              - name: cert_project_required
+                value: "false"
 
     - name: Create Community release pipeline Trigger Template
       kubernetes.core.k8s:
@@ -61,11 +65,12 @@
               - name: env
               - name: pipeline_image
               - name: image_namespace
+              - name: dest_image_namespace
             resourcetemplates:
               - apiVersion: tekton.dev/v1
                 kind: PipelineRun
                 metadata:
-                  generateName: community-release-pipeline-run
+                  generateName: operator-release-pipeline-run
                   labels:
                     app: operator-pipeline
                     suffix: "{{ suffix }}"
@@ -75,9 +80,9 @@
                     git_pull_request_url: $(tt.params.git_pr_url)
                 spec:
                   timeouts:
-                    pipeline: "1h30m0s"
+                    pipeline: "4h15m0s"
                   pipelineRef:
-                    name: community-release-pipeline
+                    name: operator-release-pipeline
                   params:
                     - name: git_repo_url
                       value: $(tt.params.git_repo_url)
@@ -97,6 +102,14 @@
                       value: $(tt.params.pipeline_image)
                     - name: image_namespace
                       value: $(tt.params.image_namespace)
+                    - name: dest_image_namespace
+                      value: $(tt.params.dest_image_namespace)
+                    - name: cert_project_required
+                      value: $(tt.params.cert_project_required)
+                    - name: kerberos_keytab_secret_name
+                      value: kerberos-keytab
+                    - name: kerberos_keytab_secret_key
+                      value: krb5-community.keytab
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
@@ -117,3 +130,12 @@
                     - name: registry-credentials
                       secret:
                         secretName: community-hosted-pipeline-registry-auth-secret
+                    - name: registry-pull-credentials
+                      secret:
+                        secretName: release-pipeline-registry-auth-pull-secret
+                    - name: registry-push-credentials
+                      secret:
+                        secretName: release-pipeline-registry-auth-push-secret
+                    - name: registry-serve-credentials
+                      secret:
+                        secretName: release-pipeline-registry-auth-serve-secret
