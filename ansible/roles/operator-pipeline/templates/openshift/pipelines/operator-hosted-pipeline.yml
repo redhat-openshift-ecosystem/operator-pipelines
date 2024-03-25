@@ -166,7 +166,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: lease-name
-          value: &leaseName "community-hosted-pipeline-pr-$(tasks.get-pr-number.results.git_pr_number)"
+          value: &leaseName "operator-hosted-pipeline-pr-$(tasks.get-pr-number.results.git_pr_number)"
 
     # Set a initial PR label with indication that pipeline has started
     - name: set-github-started-label
