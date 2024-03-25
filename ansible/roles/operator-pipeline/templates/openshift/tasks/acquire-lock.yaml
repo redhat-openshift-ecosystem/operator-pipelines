@@ -9,6 +9,9 @@ spec:
     - name: lease-name
       type: string
       description: The name of the resource which will be acquired.
+    - name: lease-owner
+      type: string
+      description: Unique identifier of the owner acquiring the lease.
     - name: timeout
       type: string
       default: 90m
@@ -61,8 +64,6 @@ spec:
                 fi
               fi
             done
-            leaseOwner=$(oc get lease $LEASE_NAME -o jsonpath='{.spec.holderIdentity}')
-            echo "The owner of the lease is ${leaseOwner}"
             echo "Acquired lease $LEASE_NAME"
         }
         create_lease_yaml() {
@@ -72,6 +73,8 @@ spec:
           echo "kind: Lease" >> e2e-lease.yaml
           echo "metadata:" >> e2e-lease.yaml
           echo "  name: $(params.lease-name)" >> e2e-lease.yaml
+          echo "  labels:" >> e2e-lease.yaml
+          echo "    owner-id: $(params.lease-owner)" >> e2e-lease.yaml
           echo "spec:" >> e2e-lease.yaml
           echo "  acquireTime: ${microTime}" >> e2e-lease.yaml
           echo "  leaseDurationSeconds: ${TOTAL_DURATION_IN_SECONDS}" >> e2e-lease.yaml
