@@ -305,10 +305,14 @@ spec:
           value: "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
         - name: dest_image_tag
           value: "$(tasks.detect-changes.results.added_bundle)"
-        - name: connect_repo_path
-          value: "$(tasks.set-env.results.connect_registry)/$(tasks.get-pyxis-certification-data.results.vendor_label)/$(tasks.get-pyxis-certification-data.results.repo_name)"
-        - name: cert_project_required
-          value: "$(params.cert_project_required)"
+        # - name: connect_repo_path
+        #   value: "$(tasks.set-env.results.connect_registry)/$(tasks.get-pyxis-certification-data.results.vendor_label)/$(tasks.get-pyxis-certification-data.results.repo_name)"
+        - name: connect_registry
+          value: "$(tasks.set-env.results.connect_registry)"
+        - name: vendor_label
+          value: "$(tasks.get-pyxis-certification-data.results.vendor_label)"
+        - name: repo_name
+          value: "$(tasks.get-pyxis-certification-data.results.repo_name)"
       workspaces:
         - name: src-registry-credentials
           workspace: registry-pull-credentials
