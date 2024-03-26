@@ -14,6 +14,8 @@ spec:
       description: reference to the destination bundle image registry
     - name: dest_image_tag
       description: reference to the destination bundle image tag
+    - name: cert_project_required
+      description: A flag distinguish between ISV and community operators
   workspaces:
     - name: src-registry-credentials
       description: Docker config for the source registry
@@ -27,6 +29,13 @@ spec:
       image: "$(params.pipeline_image)"
       script: |
         set -xe
+
+        if [ "$(params.cert_project_required)" == "true" ]; then
+          echo "Image pullspec for community bundle is the source image itself."
+          echo -n >"$(results.container_digest.path)
+          echo -n "$(params.src_image)" > $(results.image_pullspec.path)
+          exit 0
+        fi
 
         SRC_AUTHFILE=$(workspaces.src-registry-credentials.path)/.dockerconfigjson
         DEST_AUTHFILE=$(workspaces.dest-registry-credentials.path)/.dockerconfigjson
