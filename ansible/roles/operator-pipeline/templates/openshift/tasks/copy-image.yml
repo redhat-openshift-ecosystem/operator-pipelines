@@ -6,14 +6,18 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-    - name: connect_repo_path
-      description: Combined path of the repo on the Connect registry
     - name: src_image
       description: reference to the source bundle image
     - name: dest_image_registry_namespace_certproject
       description: reference to the destination bundle image registry
     - name: dest_image_tag
       description: reference to the destination bundle image tag
+    - name: connect_registry
+      description: Connect container registry proxy based on selected environment
+    - name: vendor_label
+      description: A label of company that owns a certification
+    - name: repo_name
+      description: Repository name assigned to certification project from Red Hat Connect
   workspaces:
     - name: src-registry-credentials
       description: Docker config for the source registry
@@ -28,8 +32,16 @@ spec:
       script: |
         set -xe
 
+        if [[ "$(params.vendor_label)" == "" ]]; then
+          echo "Image pullspec for community bundle is the source image itself."
+          echo -n >"$(results.container_digest.path)
+          echo -n "$(params.src_image)" > $(results.image_pullspec.path)
+          exit 0
+        fi
+
         SRC_AUTHFILE=$(workspaces.src-registry-credentials.path)/.dockerconfigjson
         DEST_AUTHFILE=$(workspaces.dest-registry-credentials.path)/.dockerconfigjson
+        CONNECT_REPO_PATH="$(params.connect_registry)/$(params.vendor_label)/$(params.repo_name)"
 
         skopeo copy \
           --src-authfile $SRC_AUTHFILE \
@@ -46,4 +58,4 @@ spec:
 
         DIGEST=$(skopeo inspect --authfile $DEST_AUTHFILE docker://$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag) | jq -r .Digest)
         echo -n $DIGEST | tee $(results.container_digest.path)
-        echo -n "$(params.connect_repo_path)@${DIGEST}" > $(results.image_pullspec.path)
+        echo -n "$CONNECT_REPO_PATH@${DIGEST}" > $(results.image_pullspec.path)
