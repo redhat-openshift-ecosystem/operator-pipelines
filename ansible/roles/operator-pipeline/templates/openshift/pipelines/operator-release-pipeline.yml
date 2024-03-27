@@ -62,6 +62,12 @@ spec:
     - name: signing_pub_secret_key
       description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
       default: sig-key.pub
+    - name: cert_project_required
+      description: >-
+        A flag determines whether a cert project identifier is required
+        for the pipeline. The flag distinguish between ISV and community operators.
+      default: "true"
+
   workspaces:
     - name: repository
     - name: results
@@ -252,6 +258,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.detect-changes.results.bundle_path)"
+        - name: cert_project_required
+          value: "$(params.cert_project_required)"
       workspaces:
         - name: source
           workspace: repository
@@ -297,8 +305,12 @@ spec:
           value: "$(params.dest_registry)/$(params.dest_image_namespace)/$(tasks.certification-project-check.results.certification_project_id)"
         - name: dest_image_tag
           value: "$(tasks.detect-changes.results.added_bundle)"
-        - name: connect_repo_path
-          value: "$(tasks.set-env.results.connect_registry)/$(tasks.get-pyxis-certification-data.results.vendor_label)/$(tasks.get-pyxis-certification-data.results.repo_name)"
+        - name: connect_registry
+          value: "$(tasks.set-env.results.connect_registry)"
+        - name: vendor_label
+          value: "$(tasks.get-pyxis-certification-data.results.vendor_label)"
+        - name: repo_name
+          value: "$(tasks.get-pyxis-certification-data.results.repo_name)"
       workspaces:
         - name: src-registry-credentials
           workspace: registry-pull-credentials
@@ -311,6 +323,10 @@ spec:
         - copy-bundle-image-to-released-registry
       taskRef:
         name: publish-pyxis-data
+      when: &certProjectExists
+        - input: "$(tasks.certification-project-check.results.certification_project_id)"
+          operator: "notin"
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -538,6 +554,7 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
