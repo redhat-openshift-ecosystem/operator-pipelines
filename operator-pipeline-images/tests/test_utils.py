@@ -1,13 +1,14 @@
 import os
 import subprocess
 from pathlib import Path
+from typing import Dict, List
 from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
 import pytest
 from operatorcert import utils
 from operatorcert.utils import store_results
-from requests import Session
+from requests import HTTPError, Session
 
 
 def test_find_file(tmp_path: Path) -> None:
@@ -101,3 +102,38 @@ def test_run_command() -> None:
 
     with pytest.raises(subprocess.CalledProcessError):
         utils.run_command(["false"])
+
+
+@pytest.mark.parametrize(
+    ["ocp", "expected"],
+    [
+        (
+            {"data": [{"ocp_version": "4.13"}, {"ocp_version": "4.14"}]},
+            ["4.13", "4.14"],
+        ),
+        ({"data": []}, []),
+    ],
+)
+@patch("operatorcert.utils.requests")
+def test_get_ocp_supported_versions(
+    mock_get: MagicMock, ocp: Dict[str, List[Dict[str, str]]], expected: str
+) -> None:
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = ocp
+    mock_get.get.return_value = mock_response
+    assert utils.get_ocp_supported_versions("org", "v4.14") == expected
+
+    mock_get.get.assert_called_once()
+
+
+@patch("operatorcert.utils.requests.get")
+def test_get_ocp_supported_versions_error(mock_get: MagicMock) -> None:
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = HTTPError(
+        "404, GET request to fetch the indices failed"
+    )
+    mock_get.return_value = mock_response
+    result = utils.get_ocp_supported_versions("org", "4.12")
+    assert result is None
+    mock_get.assert_called_once()

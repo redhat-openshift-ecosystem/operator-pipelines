@@ -11,13 +11,12 @@ import logging
 import re
 import subprocess
 from collections.abc import Iterator
-from typing import Any
 
-import requests
 from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
 from operator_repo.utils import lookup_dict
 from semver import Version
+from operatorcert import utils
 
 from .validations import (
     validate_capabilities,
@@ -71,49 +70,18 @@ OCP_TO_K8S_SEMVER = {
 }
 
 
-def process_ocp_version(ocp_metadata_version: Any) -> Any:
-    """
-    Helper function to process the OCP version.
-    OCP version can be either range of mim-max supported versions
-    (v4.7-v4.9), range of up to max supported version (v4.10)
-    or exact single version (=v4.9)
-    """
-    # we are calling indices to extract the supported OCP version
-    # which is then used in operator-sdk bundle validate
-    # to run API deprecation test
-    indices_url = "https://catalog.redhat.com/api/containers/v1/operators/indices"
-    params = {
-        "filter": "organization==community-operators",
-        "sort_by": "ocp_version[desc]",
-        "include": "data.ocp_version",
-        "page_size": 1,
-    }
-    if ocp_metadata_version:
-        params["ocp_versions_range"] = ocp_metadata_version
-
-    rsp = requests.get(indices_url, params=params, timeout=60)  # type: ignore[arg-type]
-
-    try:
-        rsp.raise_for_status()
-    except requests.HTTPError as exc:
-        LOGGER.error("GET request to fetch the indices failed with: %s", exc)
-        return None
-
-    get_indices = rsp.json().get("data")
-    ocp_version = get_indices[0].get("ocp_version") if get_indices else None
-
-    return ocp_version
-
-
 def run_operator_sdk_bundle_validate(
     bundle: Bundle, test_suite_selector: str
 ) -> Iterator[CheckResult]:
     """Run `operator-sdk bundle validate` using given test suite settings"""
     ocp_annotation = bundle.annotations.get("com.redhat.openshift.versions", None)
 
-    ocp_version_to_convert = process_ocp_version(ocp_annotation)
+    ocp_versions = utils.get_ocp_supported_versions(
+        "community-operators", ocp_annotation
+    )
+    ocp_latest_version = ocp_versions[0] if ocp_versions else None
 
-    kube_version_for_deprecation_test = OCP_TO_K8S.get(ocp_version_to_convert)
+    kube_version_for_deprecation_test = OCP_TO_K8S.get(ocp_latest_version)
 
     if kube_version_for_deprecation_test is None:
         LOGGER.info(

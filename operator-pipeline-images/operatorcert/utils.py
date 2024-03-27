@@ -7,6 +7,7 @@ import pathlib
 import subprocess
 from typing import Any, Dict, List, Optional, Tuple
 
+import requests
 import yaml
 from requests import Session
 from requests.adapters import HTTPAdapter
@@ -158,3 +159,35 @@ def run_command(
         raise e
     LOGGER.debug("Command output: %s", output.stdout.decode("utf-8"))
     return output
+
+
+def get_ocp_supported_versions(organization: str, ocp_metadata_version: Any) -> Any:
+    """
+    This function translates ocp version range to the supported OCP versions
+    using Pyxis indices API.
+
+    Args:
+        organization (str): Organization of the index (e.g. "certified-operators")
+        ocp_metadata_version (Any): OCP version annotation in the CSV
+
+    Returns:
+        Any: List of supported OCP versions for the given range and organization
+    """
+    indices_url = "https://catalog.redhat.com/api/containers/v1/operators/indices"
+    params = {
+        "filter": f"organization=={organization}",
+        "sort_by": "ocp_version[desc]",
+        "include": "data.ocp_version",
+    }
+    if ocp_metadata_version:
+        params["ocp_versions_range"] = ocp_metadata_version
+
+    rsp = requests.get(indices_url, params=params, timeout=60)
+    try:
+        rsp.raise_for_status()
+    except requests.HTTPError as exc:
+        LOGGER.error("GET request to fetch the indices failed with: %s", exc)
+        return None
+
+    indices = rsp.json().get("data")
+    return [index.get("ocp_version") for index in indices]
