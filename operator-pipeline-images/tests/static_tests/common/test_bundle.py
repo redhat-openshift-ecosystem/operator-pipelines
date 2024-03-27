@@ -6,6 +6,7 @@ from operator_repo.checks import Fail, Warn
 from operatorcert.static_tests.common.bundle import (
     check_operator_name,
     check_upgrade_graph_loop,
+    check_replaces_availability,
 )
 from requests import HTTPError
 from tests.utils import bundle_files, create_files, merge
@@ -98,3 +99,98 @@ def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> Non
     failures = list(check_upgrade_graph_loop(bundle))
     assert len(failures) == 1 and isinstance(failures[0], Fail)
     assert "Bundle(malformed/0.0.1) has invalid 'replaces' field:" in failures[0].reason
+
+
+def test_check_replaces_availability_no_replaces(
+    tmp_path: Path,
+) -> None:
+    bundle_annotation = {
+        "com.redhat.openshift.versions": "v4.10",
+    }
+    replaces_bundle_annotation = {
+        "com.redhat.openshift.versions": "v4.11",
+    }
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1", annotations=replaces_bundle_annotation),
+        bundle_files(
+            "hello",
+            "0.0.2",
+            annotations=bundle_annotation,
+        ),
+    )
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle = operator.bundle("0.0.2")
+    errors = list(check_replaces_availability(bundle))
+
+    assert set(errors) == set()
+
+
+@pytest.mark.parametrize(
+    "bundle_version_annotation,replaces_version_annotation,ocp_range,expected",
+    [
+        pytest.param(None, None, [], set(), id="No annotations"),
+        pytest.param("v4.10", "v4.10", [], set(), id="Same annotations"),
+        pytest.param(
+            "v4.15",
+            "v4.15,v4.16",
+            [["v4.15", "v4.16"], ["v4.15", "v4.16"]],
+            set(),
+            id="Different annotation, versions match",
+        ),
+        pytest.param(
+            "v4.15",
+            "v4.16",
+            [["v4.15", "v4.16"], ["v4.16"]],
+            {
+                Fail(
+                    "Replaces bundle Bundle(hello/0.0.1) ['v4.16'] does not support "
+                    "the same OCP versions as bundle Bundle(hello/0.0.2) ['v4.15', 'v4.16']. "
+                    "In order to fix this issue, align the OCP version range to match the "
+                    "range of the replaced bundle. "
+                    "This can be done by setting the `com.redhat.openshift.versions` annotation "
+                    "in the `metadata/annotations.yaml` file.\n"
+                    "`Bundle(hello/0.0.2)` - `v4.15`\n"
+                    "`Bundle(hello/0.0.1)` - `v4.16`"
+                )
+            },
+            id="Different annotation, different version",
+        ),
+    ],
+)
+@patch("operatorcert.static_tests.common.bundle.utils.get_ocp_supported_versions")
+def test_check_replaces_availability(
+    mock_get_ocp_supported_versions: MagicMock,
+    bundle_version_annotation: str,
+    replaces_version_annotation: str,
+    ocp_range: Any,
+    expected: Any,
+    tmp_path: Path,
+) -> None:
+    bundle_annotation = {
+        "com.redhat.openshift.versions": bundle_version_annotation,
+    }
+    replaces_bundle_annotation = {
+        "com.redhat.openshift.versions": replaces_version_annotation,
+    }
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1", annotations=replaces_bundle_annotation),
+        bundle_files(
+            "hello",
+            "0.0.2",
+            annotations=bundle_annotation,
+            csv={"spec": {"replaces": "hello.v0.0.1"}},
+        ),
+    )
+
+    mock_get_ocp_supported_versions.side_effect = ocp_range
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle = operator.bundle("0.0.2")
+    errors = list(check_replaces_availability(bundle))
+
+    assert set(errors) == expected

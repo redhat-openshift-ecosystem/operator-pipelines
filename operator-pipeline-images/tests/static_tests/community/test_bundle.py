@@ -12,44 +12,12 @@ from operatorcert.static_tests.community.bundle import (
     check_osdk_bundle_validate_operatorhub,
     check_required_fields,
     run_operator_sdk_bundle_validate,
-    process_ocp_version,
     check_api_version_constraints,
 )
 from tests.utils import bundle_files, create_files, merge
 
-from requests import HTTPError
 
-
-@pytest.mark.parametrize(
-    ["ocp", "expected"],
-    [
-        ({"data": [{"ocp_version": "4.13"}]}, "4.13"),
-        ({"data": []}, None),
-    ],
-)
-@patch("operatorcert.static_tests.community.bundle.requests")
-def test_process_ocp_version(
-    mock_get: MagicMock, ocp: Dict[str, List[Dict[str, str]]], expected: str
-) -> None:
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = ocp
-    mock_get.get.return_value = mock_response
-    assert process_ocp_version(ocp) == expected
-
-
-@patch("operatorcert.static_tests.community.bundle.requests.get")
-def test_process_ocp_version_error(mock_get: MagicMock) -> None:
-    mock_response = MagicMock()
-    mock_response.raise_for_status.side_effect = HTTPError(
-        "404, GET request to fetch the indices failed"
-    )
-    mock_get.return_value = mock_response
-    result = process_ocp_version("4.12")
-    assert result is None
-
-
-@pytest.mark.parametrize("version", ["4.8-4.9", "4.9", None])
+@pytest.mark.parametrize("version", ["4.8-4.9", ["4.9", "4.8"], None])
 @pytest.mark.parametrize(
     "osdk_output, expected",
     [
@@ -69,7 +37,7 @@ def test_process_ocp_version_error(mock_get: MagicMock) -> None:
         "No warnings or errors",
     ],
 )
-@patch("operatorcert.static_tests.community.bundle.process_ocp_version")
+@patch("operatorcert.static_tests.community.bundle.utils.get_ocp_supported_versions")
 @patch("subprocess.run")
 def test_run_operator_sdk_bundle_validate(
     mock_run: MagicMock,
