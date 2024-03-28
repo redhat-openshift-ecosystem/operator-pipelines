@@ -998,6 +998,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: git_pr_url
           value: $(params.git_pr_url)
+        - name: git_head_commit
+          value: $(params.git_commit)
         - name: bundle_path
           value: "$(tasks.detect-changes.results.bundle_path)"
         - name: github_token_secret_name
