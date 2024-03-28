@@ -24,7 +24,7 @@ def setup_argparser() -> Any:  # pragma: no cover
     )
     parser.add_argument(
         "--hydra-url",
-        default="https://connect.redhat.com/hydra/prm",
+        default="https://connect.redhat.com/pfs/cs",
         help="URL to the Hydra API",
     )
     parser.add_argument(
@@ -47,18 +47,27 @@ def check_single_hydra_checklist(checklist: Dict[str, Any]) -> bool:
         bool: A flag that determines if a all checks in the checklist passed
     """
 
-    checklist_items = checklist["checklistItems"]
+    checklist_items = checklist.get("checklistItems", [])
     completed = True
     for item in checklist_items:
-        completed = completed and item["completed"]
-        if not item["completed"]:
-            LOGGER.error(
-                "FAILED: Checklist item not completed: %s - %s",
-                item["title"],
-                item["reasons"],
-            )
-        else:
+        item_completed = item.get("status") == "COMPLETED"
+        item_optional = item.get("optional", False)
+        completed = completed and (item_completed or item_optional)
+        if item_completed:
             LOGGER.info("PASSED: Checklist item completed: %s", item["title"])
+        else:
+            if item_optional:
+                LOGGER.warning(
+                    "SKIPPED: Optional checklist item not completed: %s - %s",
+                    item["title"],
+                    item.get("reasons"),
+                )
+            else:
+                LOGGER.error(
+                    "FAILED: Checklist item not completed: %s - %s",
+                    item["title"],
+                    item.get("reasons"),
+                )
     return completed
 
 
@@ -77,13 +86,13 @@ def check_hydra_checklist_status(
 
     """
     # query hydra checklist API
-    # Not using urljoin because for some reason it will eat up the prm at the end if
+    # Not using urljoin because for some reason it will eat up the "cs" at the end if
     # url doesn't end with a /
-    hydra_checklist_url = f"{hydra_url}/v2/projects/{cert_project_id}/checklist/status"
+    hydra_checklist_url = f"{hydra_url}/projects/id/{cert_project_id}/checklist/status"
 
     LOGGER.info("Examining pre-certification checklist from Hydra...")
     hydra_resp = hydra.get(hydra_checklist_url)
-    if hydra_resp["completed"]:
+    if hydra_resp.get("status") == "COMPLETED":
         LOGGER.info(
             "Pre-certification checklist is completed for cert project with id %s.",
             cert_project_id,
@@ -93,7 +102,7 @@ def check_hydra_checklist_status(
     LOGGER.debug("Checklist overall status is incomplete. Checking individual items...")
 
     # if checklist is not complete, go through each item and log which ones are missing
-    checklists = hydra_resp.get("checklists", [])
+    checklists = hydra_resp.get("items", [])
 
     completed = True
     for checklist in checklists:
