@@ -40,6 +40,10 @@
                 value: "{{ operator_pipeline_release_namespace }}"
               - name: cert_project_required
                 value: "false"
+              - name: kerberos_keytab_secret_name
+                value: kerberos-keytab
+              - name: kerberos_keytab_secret_key
+                value: krb5-community.keytab
 
     - name: Create Community release pipeline Trigger Template
       kubernetes.core.k8s:
@@ -107,9 +111,9 @@
                     - name: cert_project_required
                       value: $(tt.params.cert_project_required)
                     - name: kerberos_keytab_secret_name
-                      value: kerberos-keytab
+                      value: $(tt.params.kerberos_keytab_secret_name)
                     - name: kerberos_keytab_secret_key
-                      value: krb5-community.keytab
+                      value: $(tt.params.kerberos_keytab_secret_key)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
