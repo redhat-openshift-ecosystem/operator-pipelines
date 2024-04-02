@@ -43,7 +43,7 @@ spec:
         #! /usr/bin/env bash
         set -ex
 
-        HYDRA_URL=$(params.connect_url)/hydra/prm
+        HYDRA_URL=$(params.connect_url)/pfs/cs
 
         hydra-checklist \
           --cert-project-id "$(params.cert_project_id)" \
