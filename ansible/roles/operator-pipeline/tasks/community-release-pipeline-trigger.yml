@@ -131,7 +131,7 @@
                           resources:
                             requests:
                               storage: 100Mi
-                    - name: registry-credentials
+                    - name: community-registry-credentials
                       secret:
                         secretName: community-hosted-pipeline-registry-auth-secret
                     - name: registry-pull-credentials
