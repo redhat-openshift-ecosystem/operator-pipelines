@@ -77,6 +77,8 @@ spec:
     - name: registry-push-credentials
     - name: registry-serve-credentials
     - name: image-data
+    - name: community-registry-credentials
+      optional: true
 
   tasks:
 
@@ -424,6 +426,9 @@ spec:
       workspaces:
         - name: results
           workspace: results
+        - name: credentials
+          workspace: community-registry-credentials
+          optional: true
 
     # use manifest list digests from IIB output and get the manifest digests from registry
     - name: get-manifest-digests
