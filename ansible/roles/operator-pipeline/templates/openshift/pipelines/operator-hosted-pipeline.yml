@@ -819,6 +819,11 @@ spec:
           value: "$(params.prow_kubeconfig_secret_key)"
         - name: test_result_path
           value: "$(tasks.get-ci-results-attempt.results.preflight_results)"
+        # Skip preflight trigger in case there was a previous SUCCESSFUL test
+        # The test could be executed in CI or hosted pipeline but it needs
+        # to be successful. Previous failed test don't skip this task.
+        - name: skip
+          value: "$(tasks.get-ci-results-attempt.results.preflight_results_exists)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key

@@ -55,6 +55,11 @@ spec:
     - name: test_result_path
       description: "A path to existing test results. This indicates if we can skip a preflight test."
       default: "none"
+
+    - name: skip
+      description: "Set to 'true' to skip"
+      default: 'false'
+      type: string
   results:
     - description: ''
       name: log_output_file
@@ -90,7 +95,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [ "$(params.test_result_path)" != "none" ]; then
+          if [ "$(params.skip)" == "true" ]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
@@ -129,7 +134,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [ "$(params.test_result_path)" != "none" ]; then
+          if [ "$(params.skip)" == "true" ]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
@@ -191,7 +196,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [ "$(params.test_result_path)" != "none" ]; then
+          if [ "$(params.skip)" == "true" ]; then
               echo "Preflight testing has been skipped"
               echo -n "none" > "$(results.log_output_file.path)"
               echo -n "$(params.test_result_path)" > "$(results.result_output_file.path)"
