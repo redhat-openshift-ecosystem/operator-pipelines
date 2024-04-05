@@ -59,6 +59,10 @@ spec:
       description: Must be some variety of quay registry.
       default: quay.io
 
+    - name: quay_push_final_index_secret
+      description: Name of a secret containing a credentials for catalog push to a final destination
+      default: community-push-final-index-quay-credentials
+
   workspaces:
     - name: repository
     - name: results
@@ -271,8 +275,6 @@ spec:
         - name: upgrade-graph-mode
           value: "$(tasks.read-config.results.upgrade-graph-mode)"
       workspaces:
-        - name: credentials
-          workspace: registry-credentials
         - name: results
           workspace: results
 
@@ -374,9 +376,9 @@ spec:
         - name: environment
           value: "$(params.env)"
         - name: quay_push_final_index_secret
-          value: community-push-final-index-quay-credentials
-        - name: operator_distribution_method
-          value: community
+          value: "$(params.quay_push_final_index_secret)"
+        - name: organization
+          value: community-operators
 
   finally:
     # Release the acquired resource
@@ -452,7 +454,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Operator bundle has been successfully distributed"
+          value: "Operator bundle has been successfully distributed."
         - name: state
           value: success
         - name: context
@@ -480,7 +482,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Failed to distribute the operator bundle"
+          value: "Failed to distribute the operator bundle."
         - name: state
           value: failure
         - name: context
