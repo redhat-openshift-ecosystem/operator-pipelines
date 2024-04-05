@@ -14,8 +14,8 @@ spec:
     - name: environment
       description: |
         Which environment the pipeline is running in. Can be one of [dev, qa, stage, prod]
-    - name: operator_distribution_method
-      description: Operator distribution method. Can be one of [connect, marketplace, community]
+    - name: organization
+      description: Operator organization. Can be one of [certified-operators, redhat-marketplace, community-operators]
     - name: quay_push_final_index_secret
       description: |
         Name of the Quay credentials secret:
@@ -37,8 +37,8 @@ spec:
             secretKeyRef:
               name: "$(params.quay_push_final_index_secret)"
               key: password
-        - name: DIST_METHOD
-          value: "$(params.operator_distribution_method)"
+        - name: ORGANIZATION
+          value: "$(params.organization)"
       script: |
         #! /usr/bin/env bash
         # DO NOT USE `set -x`, to avoid revealing the quay token in logs!
@@ -47,35 +47,35 @@ spec:
         # select the correct index
         case "$(params.environment)" in
             prod)
-                case $DIST_METHOD in
-                    connect)
+                case $ORGANIZATION in
+                    certified-operators)
                       FROM_INDEX="quay.io/redhat/redhat----certified-operator-index"
                     ;;
-                    marketplace)
+                    redhat-marketplace)
                       FROM_INDEX="quay.io/redhat/redhat----redhat-marketplace-index"
                     ;;
-                    community)
+                    community-operators)
                       FROM_INDEX="quay.io/redhat/redhat----community-operator-index"
                     ;;
                     *)
-                      echo "Unknown value for operator_distribution_method: $DIST_METHOD"
+                      echo "Unknown value for organization: $ORGANIZATION"
                       exit 1
                     ;;
                 esac
             ;;
             stage | integration-tests)
-                case $DIST_METHOD in
-                    connect)
+                case $ORGANIZATION in
+                    certified-operators)
                       FROM_INDEX="quay.io/redhat-pending/redhat----certified-operator-index"
                     ;;
-                    marketplace)
+                    redhat-marketplace)
                       FROM_INDEX="quay.io/redhat-pending/redhat----redhat-marketplace-index"
                     ;;
-                    community)
+                    community-operators)
                       FROM_INDEX="quay.io/redhat-pending/redhat----community-operator-index"
                     ;;
                     *)
-                      echo "Unknown value for operator_distribution_method: $DIST_METHOD"
+                      echo "Unknown value for organization: $ORGANIZATION"
                       exit 1
                     ;;
                 esac
