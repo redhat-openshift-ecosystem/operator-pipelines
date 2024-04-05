@@ -68,6 +68,10 @@ spec:
         for the pipeline. The flag distinguish between ISV and community operators.
       default: "true"
 
+    - name: quay_push_final_index_secret
+      description: Name of a secret containing a credentials for catalog push to a final destination
+      default: iib-quay-credentials
+
   workspaces:
     - name: repository
     - name: results
@@ -116,7 +120,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Publishing the Operator bundle."
+          value: "Pipeline for operator distribution has started."
         - name: state
           value: pending
         - name: context
@@ -140,7 +144,7 @@ spec:
           value: "internal"
 
     # Git clone
-    - name: checkout
+    - name: clone-repository
       runAfter:
         - set-env
       taskRef:
@@ -187,7 +191,7 @@ spec:
         name: parse-repo-changes
         kind: Task
       runAfter:
-        - checkout
+        - clone-repository
         - clone-repository-base
       params:
         - name: pipeline_image
@@ -267,10 +271,23 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: get-organization
+      runAfter:
+        - certification-project-check
+      taskRef:
+        name: get-organization
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     # Get additional data necessary for certification
     - name: get-pyxis-certification-data
       runAfter:
-        - certification-project-check
+        - get-organization
       taskRef:
         name: get-pyxis-certification-data
       params:
@@ -397,7 +414,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: lease-name
-          value: *operatorDistribution
+          value: "$(tasks.get-organization.organization)"
         - name: lease-owner
           value: "$(context.pipelineRun.name)"
 
@@ -423,6 +440,8 @@ spec:
           value: "$(params.kerberos_keytab_secret_name)"
         - name: kerberos_keytab_secret_key
           value: "$(params.kerberos_keytab_secret_key)"
+        - name: upgrade-graph-mode
+          value: "$(tasks.read-config.results.upgrade-graph-mode)"
       workspaces:
         - name: results
           workspace: results
@@ -467,7 +486,7 @@ spec:
         - name: reference
           value: "$(tasks.get-manifest-digests.results.docker_references)"
         - name: requester
-          value: "amisstea"
+          value: "araszka"
         - name: sig_key_id
           value: "$(tasks.set-env.results.sig_key_id)"
         - name: sig_key_name
@@ -537,8 +556,10 @@ spec:
           value: "$(tasks.add-bundle-to-index.results.index_image_paths)"
         - name: environment
           value: "$(params.env)"
-        - name: operator_distribution_method
-          value: *operatorDistribution
+        - name: organization
+          value: "$(tasks.get-organization.organization)"
+        - name: quay_push_final_index_secret
+          value: "$(params.quay_push_final_index_secret)"
 
 
   finally:
@@ -677,7 +698,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Successfully published the Operator bundle."
+          value: "Operator bundle has been successfully distributed."
         - name: state
           value: success
         - name: context
@@ -705,7 +726,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: description
-          value: "Failed to publish the Operator bundle."
+          value: "Failed to distribute the operator bundle."
         - name: state
           value: failure
         - name: context

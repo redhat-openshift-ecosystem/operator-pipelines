@@ -78,7 +78,7 @@
           tags:
             - test-community-hosted-pipeline
           vars:
-            pipeline_name: community-hosted-pipeline
+            pipeline_name: operator-hosted-pipeline
           include_role:
             name: integration_tests
             tasks_from: check_pipeline_run
@@ -90,7 +90,7 @@
           tags:
             - test-community-release-pipeline
           vars:
-            pipeline_name: community-release-pipeline
+            pipeline_name: operator-release-pipeline
           include_role:
             name: integration_tests
             tasks_from: check_pipeline_run
