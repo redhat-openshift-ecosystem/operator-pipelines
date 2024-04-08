@@ -68,7 +68,6 @@ spec:
     - name: results
     - name: ssh-dir
       optional: true
-    - name: registry-credentials
   tasks:
 
     # Set a initial PR label with indication that pipeline has started

@@ -40,10 +40,10 @@
                 value: "{{ operator_pipeline_release_namespace }}"
               - name: cert_project_required
                 value: "false"
-              - name: kerberos_keytab_secret_name
-                value: kerberos-keytab
               - name: kerberos_keytab_secret_key
                 value: krb5-community.keytab
+              - name: quay_push_final_index_secret
+                value: community-push-final-index-quay-credentials
 
     - name: Create Community release pipeline Trigger Template
       kubernetes.core.k8s:
@@ -69,7 +69,10 @@
               - name: env
               - name: pipeline_image
               - name: image_namespace
+              - name: cert_project_required
               - name: dest_image_namespace
+              - name: kerberos_keytab_secret_key
+              - name: quay_push_final_index_secret
             resourcetemplates:
               - apiVersion: tekton.dev/v1
                 kind: PipelineRun
@@ -110,10 +113,10 @@
                       value: $(tt.params.dest_image_namespace)
                     - name: cert_project_required
                       value: $(tt.params.cert_project_required)
-                    - name: kerberos_keytab_secret_name
-                      value: $(tt.params.kerberos_keytab_secret_name)
                     - name: kerberos_keytab_secret_key
                       value: $(tt.params.kerberos_keytab_secret_key)
+                    - name: quay_push_final_index_secret
+                      value: $(tt.params.quay_push_final_index_secret)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
@@ -131,9 +134,14 @@
                           resources:
                             requests:
                               storage: 100Mi
-                    - name: community-registry-credentials
-                      secret:
-                        secretName: community-hosted-pipeline-registry-auth-secret
+                    - name: image-data
+                      volumeClaimTemplate:
+                        spec:
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: 100Mi
                     - name: registry-pull-credentials
                       secret:
                         secretName: release-pipeline-registry-auth-pull-secret
