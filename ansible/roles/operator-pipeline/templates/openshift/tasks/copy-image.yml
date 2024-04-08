@@ -34,8 +34,8 @@ spec:
 
         if [[ "$(params.vendor_label)" == "" ]]; then
           echo "Image pullspec for community bundle is the source image itself."
-          echo -n >"$(results.container_digest.path)
-          echo -n "$(params.src_image)" > $(results.image_pullspec.path)
+          echo -n > "$(results.container_digest.path)"
+          echo -n "$(params.src_image)" > "$(results.image_pullspec.path)"
           exit 0
         fi
 

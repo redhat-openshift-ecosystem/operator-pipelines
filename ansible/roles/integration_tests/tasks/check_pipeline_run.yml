@@ -17,6 +17,11 @@
       delay: 5
       failed_when: pipeline_run.resources | length == 0
 
+    - name: Pipelinerun
+      ansible.builtin.debug:
+        var: pipeline_run.resources[0].metadata.name
+
+
     - name: "Follow the run logs of {{ pipeline_name }}"
       ansible.builtin.shell: |
         ./tkn pipeline logs \
