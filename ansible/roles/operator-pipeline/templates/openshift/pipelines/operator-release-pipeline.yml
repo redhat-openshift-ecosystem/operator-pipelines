@@ -7,7 +7,6 @@ spec:
   params:
     - name: git_repo_url
       description: ssh address of GitHub repository
-      default: "main"
     - name: git_commit
       description: Git repository HEAD commit
     - name: git_commit_base
@@ -81,8 +80,6 @@ spec:
     - name: registry-push-credentials
     - name: registry-serve-credentials
     - name: image-data
-    - name: community-registry-credentials
-      optional: true
 
   tasks:
 
@@ -414,7 +411,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: lease-name
-          value: "$(tasks.get-organization.organization)"
+          value: "$(tasks.get-organization.results.organization)"
         - name: lease-owner
           value: "$(context.pipelineRun.name)"
 
@@ -445,9 +442,6 @@ spec:
       workspaces:
         - name: results
           workspace: results
-        - name: credentials
-          workspace: community-registry-credentials
-          optional: true
 
     # use manifest list digests from IIB output and get the manifest digests from registry
     - name: get-manifest-digests
@@ -557,7 +551,7 @@ spec:
         - name: environment
           value: "$(params.env)"
         - name: organization
-          value: "$(tasks.get-organization.organization)"
+          value: "$(tasks.get-organization.results.organization)"
         - name: quay_push_final_index_secret
           value: "$(params.quay_push_final_index_secret)"
 

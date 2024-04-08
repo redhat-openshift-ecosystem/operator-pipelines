@@ -36,6 +36,10 @@
                 value: "{{ operator_pipeline_pending_namespace }}"
               - name: dest_image_namespace
                 value: "{{ operator_pipeline_release_namespace }}"
+              - name: kerberos_keytab_secret_key
+                value: krb5-isv.keytab
+              - name: quay_push_final_index_secret
+                value: iib-quay-credentials
     - name: Create Release pipeline Trigger Template
       kubernetes.core.k8s:
         state: present
@@ -59,6 +63,8 @@
               - name: pipeline_image
               - name: image_namespace
               - name: dest_image_namespace
+              - name: kerberos_keytab_secret_key
+              - name: quay_push_final_index_secret
             resourcetemplates:
               - apiVersion: tekton.dev/v1
                 kind: PipelineRun
@@ -93,6 +99,10 @@
                       value: $(tt.params.image_namespace)
                     - name: dest_image_namespace
                       value: $(tt.params.dest_image_namespace)
+                    - name: kerberos_keytab_secret_key
+                      value: $(tt.params.kerberos_keytab_secret_key)
+                    - name: quay_push_final_index_secret
+                      value: $(tt.params.quay_push_final_index_secret)
                   workspaces:
                     - name: repository
                       volumeClaimTemplate:
