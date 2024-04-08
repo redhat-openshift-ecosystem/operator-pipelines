@@ -197,6 +197,29 @@ This image can be overridden by passing the following to any `tkn pipeline start
 --param pipeline_image=<image-pull-spec>
 ```
 
+## Testing
+The repository comes with a default configuration for integration tests. In order to
+execute tests locally a user needs an access to OCP cluster with `operator-pipelines`
+pre-installed.
+
+The tests are orchestrated using Ansible and contain a several steps:
+ - Configuration of OCP cluster
+ - Preparation of test data (new version of operator bundle)
+ - Execution of operator pipelines
+ - Evaluation of pipelines statuses
+
+To run test locally running the `Makefile` is recommended.
+
+```bash
+# Set a version of a new operator based on the latest successful test run in
+# Github action
+export OPERATOR_VERSION_RELEASE="402-1"
+
+make build-and-test-isv
+
+# or
+make build-and-test-community
+```
 ## Additional Documentation
 
 - [OpenShift cluster configuration](docs/cluster-config.md)
