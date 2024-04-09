@@ -4,13 +4,15 @@ kind: Task
 metadata:
   name: merge-pr
 spec:
+  description: Merge a GitHub pull request
   params:
     - name: pipeline_image
-    - name: ubi8_minimal_image
-      description: ubi8 minimal image
-      default: "registry.access.redhat.com/ubi8-minimal@sha256:54ef2173bba7384dc7609e8affbae1c36f8a3ec137cacc0866116d65dd4b9afe"
     - name: git_pr_url
+      description: URL of the GitHub pull request.
+    - name: git_head_commit
+      description: SHA of the head of the branch to be merged.
     - name: bundle_path
+      description: Path to the operator bundle affected by the pull request.
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github
@@ -31,83 +33,63 @@ spec:
       workingDir: $(workspaces.source.path)
       script: |
         if [ "$(params.force_merge)" = "true" ]; then
-          echo true > $(results.bool_merge.path)
+          echo -n true > "$(results.bool_merge.path)"
         elif [[ "$(params.bundle_path)" == "" ]]; then
-          echo true > $(results.bool_merge.path)
+          echo -n true > "$(results.bool_merge.path)"
         else
-          PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
+          PKG_PATH=$(dirname $(realpath "$(params.bundle_path)"))
           CI_FILE_PATH="$PKG_PATH/ci.yaml"
-          BOOL_MERGE=$(cat $CI_FILE_PATH | yq -r '.merge')
+          BOOL_MERGE=$(yq -r '.merge' < "$CI_FILE_PATH")
 
-          echo -n "$BOOL_MERGE" | tee $(results.bool_merge.path)
+          echo -n "$BOOL_MERGE" > "$(results.bool_merge.path)"
         fi
 
     - name: review-pull-request
-      image: "$(params.ubi8_minimal_image)"
+      image: "$(params.pipeline_image)"
       env:
-        - name: GITHUB_BOT_TOKEN
+        - name: GITHUB_TOKEN
           valueFrom:
             secretKeyRef:
               name: $(params.github_token_secret_name)
               key: $(params.github_token_secret_key)
       script: |
         #! /usr/bin/env bash
+        set -ex
 
-        # DO NOT USE `set -x`, to avoid revealing the github bot token in logs!
-        set -e
-
-        # get the PR number and the repository name from the original PR url-
-        # it will be used for the api.github url
-        PR_NUMBER=$(basename "$(params.git_pr_url)")
-        REPO_NAME=$(echo "$(params.git_pr_url)" | sed -e "s|^https://github.com/||" -e "s|/pull/.*$||")
-
-        API_URL=https://api.github.com/repos/${REPO_NAME}/pulls/${PR_NUMBER}/reviews
-        echo $API_URL
-
-        # curl to GitHub API
-        curl --fail -X POST \
-          -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: bearer ${GITHUB_BOT_TOKEN}" \
-          -d '{"body": "Operator bundle PR has been approved!", "event": "APPROVE"}' \
-          $API_URL
+        gh pr review "$(params.git_pr_url)" --approve \
+            --body "Operator bundle PR has been approved!"
 
         echo "Merge request has been approved!"
 
     - name: merge-pull-request
-      image: "$(params.ubi8_minimal_image)"
+      image: "$(params.pipeline_image)"
       env:
-        - name: GITHUB_BOT_TOKEN
+        - name: GITHUB_TOKEN
           valueFrom:
             secretKeyRef:
               name: $(params.github_token_secret_name)
               key: $(params.github_token_secret_key)
       script: |
         #! /usr/bin/env bash
+        set -x +e
 
-        # DO NOT USE `set -x`, to avoid revealing the github bot token in logs!
-        set -e
-
-        BOOL_MERGE=$(cat $(results.bool_merge.path))
+        BOOL_MERGE=$(cat "$(results.bool_merge.path)")
 
         if [ "$BOOL_MERGE" = "false" ]; then
           echo "merge explicitly set to false- not merging the Pull Request"
-          echo -n "false" | tee $(results.pr_merged.path)
+          echo -n "false" > "$(results.pr_merged.path)"
           exit 0
         fi
 
-        # get the PR number and the repository name from the original PR url-
-        # it will be used for the api.github url
-        PR_NUMBER=$(basename "$(params.git_pr_url)")
-        REPO_NAME=$(echo "$(params.git_pr_url)" | sed -e "s|^https://github.com/||" -e "s|/pull/.*$||")
+        # Squash and merge only if the head commit sha has not changed since
+        # the start of the pipeline run
+        gh pr merge "$(params.git_pr_url)" --squash --auto \
+            --match-head-commit "$(params.git_head_commit)"
 
-        API_URL=https://api.github.com/repos/${REPO_NAME}/pulls/${PR_NUMBER}/merge
-        echo $API_URL
-
-        # curl to GitHub API
-        curl --fail -X PUT \
-          -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: bearer ${GITHUB_BOT_TOKEN}" \
-          $API_URL
-
-        echo "Merge request has been merged!"
-        echo -n "true" | tee $(results.pr_merged.path)
+        if [[ $? -eq 0 ]] ; then
+            echo "PR has been merged!"
+            echo -n "true" > "$(results.pr_merged.path)"
+        else
+            echo "Cannot merge PR"
+            echo -n "false" > "$(results.pr_merged.path)"
+        fi
