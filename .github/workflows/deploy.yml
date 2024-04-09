@@ -133,6 +133,7 @@ jobs:
   release:
     name: Github release
     runs-on: ubuntu-latest
+    permissions: write-all
     needs:
       - deploy-prod
     steps:
