@@ -1,0 +1,10 @@
+---
+- name: Configure Namespace
+  vars:
+    namespace_state: absent
+  ansible.builtin.import_tasks: tasks/ocp_namespace.yml
+
+- name: Import operator release webhooks
+  vars:
+    github_webhook_state: absent
+  ansible.builtin.import_tasks: tasks/operator-pipeline-webhooks.yml

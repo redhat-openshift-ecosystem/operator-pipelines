@@ -1,87 +1,75 @@
 ---
 - name: Configure Namespace
+  ansible.builtin.import_tasks: tasks/ocp_namespace.yml
   tags:
     - namespace
+
+- name: Import pipeline secrets
+  ansible.builtin.import_tasks: tasks/pipeline-secrets.yml
+
+- name: Import index image stream
+  ansible.builtin.import_tasks: tasks/operator-pipeline-import-index-images.yml
+
+- name: Add custom pipeline SCC and link it with pipeline SA
+  tags:
+    - pipeline-scc
   kubernetes.core.k8s:
-    state: "{{ namespace_state }}"
-    definition:
-      kind: Namespace
-      apiVersion: v1
-      metadata:
-        name: "{{ oc_namespace }}"
-        annotations:
-          operator.tekton.dev/prune.keep: "{{ tekton_pruner_keep | int }}"
+    state: present
+    apply: true
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/openshift-pipelines-custom-scc.yml
+    - ../templates/openshift/openshift-pipeline-sa-scc-role.yml
+    - ../templates/openshift/openshift-pipeline-sa-scc-role-bindings.yml
 
-- name: Deploy namespace resources
-  when: namespace_state == 'present'
-  block:
+- name: Deploy pipeline tasks
+  tags:
+    - tekton-task
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_fileglob:
+    - ../templates/openshift/tasks/*
 
-    - name: Import pipeline secrets
-      ansible.builtin.import_tasks: tasks/pipeline-secrets.yml
-    - name: Import index image stream
-      ansible.builtin.import_tasks: tasks/operator-pipeline-import-index-images.yml
+- name: Deploy hosted and release pipelines
+  tags:
+    - tekton-pipeline
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
+    - ../templates/openshift/pipelines/operator-release-pipeline.yml
+    - ../templates/openshift/pipelines/community-release-pipeline.yml
+    - ../templates/openshift/pipelines/community-hosted-pipeline.yml
 
-    - name: Add custom pipeline SCC and link it with pipeline SA
-      tags:
-        - pipeline-scc
-      kubernetes.core.k8s:
-        state: present
-        apply: true
-        definition: "{{ lookup('template', '{{ item }}') }}"
-      with_items:
-        - ../templates/openshift/openshift-pipelines-custom-scc.yml
-        - ../templates/openshift/openshift-pipeline-sa-scc-role.yml
-        - ../templates/openshift/openshift-pipeline-sa-scc-role-bindings.yml
+- name: Deploy CI pipeline
+  tags:
+    - ci
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipelines/operator-ci-pipeline.yml
 
-    - name: Deploy pipeline tasks
-      tags:
-        - tekton-task
-      kubernetes.core.k8s:
-        state: present
-        apply: true
-        namespace: "{{ oc_namespace }}"
-        definition: "{{ lookup('template', '{{ item }}') }}"
-      with_fileglob:
-        - ../templates/openshift/tasks/*
-
-
-    - name: Deploy hosted and release pipelines
-      tags:
-        - tekton-pipeline
-      kubernetes.core.k8s:
-        state: present
-        apply: true
-        namespace: "{{ oc_namespace }}"
-        definition: "{{ lookup('template', '{{ item }}') }}"
-      with_items:
-        - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
-        - ../templates/openshift/pipelines/operator-release-pipeline.yml
-        - ../templates/openshift/pipelines/community-release-pipeline.yml
-        - ../templates/openshift/pipelines/community-hosted-pipeline.yml
-
-    - name: Deploy CI pipeline
-      tags:
-        - ci
-      kubernetes.core.k8s:
-        state: present
-        apply: true
-        namespace: "{{ oc_namespace }}"
-        definition: "{{ lookup('template', '{{ item }}') }}"
-      with_items:
-        - ../templates/openshift/pipelines/operator-ci-pipeline.yml
-
-    - name: Import operator pipeline event listener
-      ansible.builtin.import_tasks: tasks/operator-pipeline-event-listener.yml
-    - name: Import community pipeline event listener
-      ansible.builtin.import_tasks: tasks/community-pipeline-event-listener.yml
-    - name: Import operator-hosted pipeline trigger
-      ansible.builtin.import_tasks: tasks/operator-hosted-pipeline-trigger.yml
-    - name: Import operator release pipeline trigger
-      ansible.builtin.import_tasks: tasks/operator-release-pipeline-trigger.yml
-    - name: Import community hosted pipeline trigger
-      ansible.builtin.import_tasks: tasks/community-hosted-pipeline-trigger.yml
-    - name: Import community release pipeline trigger
-      ansible.builtin.import_tasks: tasks/community-release-pipeline-trigger.yml
+- name: Import operator pipeline event listener
+  ansible.builtin.import_tasks: tasks/operator-pipeline-event-listener.yml
+- name: Import community pipeline event listener
+  ansible.builtin.import_tasks: tasks/community-pipeline-event-listener.yml
+- name: Import operator-hosted pipeline trigger
+  ansible.builtin.import_tasks: tasks/operator-hosted-pipeline-trigger.yml
+- name: Import operator release pipeline trigger
+  ansible.builtin.import_tasks: tasks/operator-release-pipeline-trigger.yml
+- name: Import community hosted pipeline trigger
+  ansible.builtin.import_tasks: tasks/community-hosted-pipeline-trigger.yml
+- name: Import community release pipeline trigger
+  ansible.builtin.import_tasks: tasks/community-release-pipeline-trigger.yml
 
 - name: Import index image signing task
   ansible.builtin.import_tasks: tasks/index-img-signing.yml

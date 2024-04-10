@@ -66,6 +66,11 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        if [ "$(params.test_result_id)" == "" ]; then
+          echo "Test result is not available - skipping"
+          exit 0
+        fi
+
         echo "Setting pull request details"
 
         link-pull-request \
