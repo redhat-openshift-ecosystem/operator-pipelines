@@ -64,6 +64,15 @@ spec:
           exit 0
         fi
 
+        if [ "$(params.cert_project_id)" == "" ]; then
+          echo "Project is empty - skipping"
+
+          echo -n > "$(results.test_result_id.path)"
+          echo -n > "$(results.preflight_results.path)"
+
+          exit 0
+        fi
+
         # Send request to Pyxis to get the test results.
         # If they exists, store them in the workspace
 

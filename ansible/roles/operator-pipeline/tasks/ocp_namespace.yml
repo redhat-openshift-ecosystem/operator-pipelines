@@ -1,0 +1,13 @@
+---
+- name: Configure Namespace
+  tags:
+    - namespace
+  kubernetes.core.k8s:
+    state: "{{ namespace_state }}"
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ oc_namespace }}"
+        annotations:
+          operator.tekton.dev/prune.keep: "{{ tekton_pruner_keep | int }}"
