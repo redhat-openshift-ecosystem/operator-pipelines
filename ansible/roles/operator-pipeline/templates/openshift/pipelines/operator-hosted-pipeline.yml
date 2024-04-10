@@ -979,7 +979,6 @@ spec:
         - evaluate-preflight-result
       taskRef:
         name: get-ci-results
-      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1016,7 +1015,6 @@ spec:
         - get-ci-results
       taskRef:
         name: link-pull-request
-      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"

@@ -117,10 +117,8 @@
             - clean-deployment
           include_role:
             name: operator-pipeline
+            tasks_from: cleanup
             apply:
               tags:
                 - clean
                 - clean-deployment
-          vars:
-            namespace_state: absent
-            github_webhook_state: absent
