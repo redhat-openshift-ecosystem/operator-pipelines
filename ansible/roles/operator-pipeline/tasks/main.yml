@@ -44,8 +44,6 @@
   with_items:
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
     - ../templates/openshift/pipelines/operator-release-pipeline.yml
-    - ../templates/openshift/pipelines/community-release-pipeline.yml
-    - ../templates/openshift/pipelines/community-hosted-pipeline.yml
 
 - name: Deploy CI pipeline
   tags:
