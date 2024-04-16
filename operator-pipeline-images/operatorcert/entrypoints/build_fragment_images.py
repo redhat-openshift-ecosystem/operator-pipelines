@@ -1,4 +1,5 @@
 """Create a fragment image dockerfile and build fragment image."""
+
 import argparse
 import json
 import logging

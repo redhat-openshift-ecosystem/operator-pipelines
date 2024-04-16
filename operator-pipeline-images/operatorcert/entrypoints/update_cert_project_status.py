@@ -1,6 +1,7 @@
 """
 Script for updating the cert project status
 """
+
 import argparse
 import logging
 from datetime import datetime, timezone

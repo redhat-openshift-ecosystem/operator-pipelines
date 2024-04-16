@@ -1,4 +1,5 @@
 """A common test suite for operator bundles"""
+
 from collections.abc import Iterator
 from typing import Any, List
 

@@ -1,4 +1,5 @@
 """A simple UMB client for the operator-certification pipeline."""
+
 import logging
 import os
 import ssl

@@ -1,4 +1,5 @@
 """Link pull request to test results"""
+
 import argparse
 import logging
 from typing import Any

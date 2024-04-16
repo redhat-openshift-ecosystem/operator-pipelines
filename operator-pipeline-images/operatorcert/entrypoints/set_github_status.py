@@ -1,4 +1,5 @@
 """Set github status for a commit"""
+
 import argparse
 import logging
 from typing import Any

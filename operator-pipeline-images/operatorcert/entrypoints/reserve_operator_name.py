@@ -1,4 +1,5 @@
 """Reserve operator name for given combination of association and operator name"""
+
 import argparse
 import logging
 import sys

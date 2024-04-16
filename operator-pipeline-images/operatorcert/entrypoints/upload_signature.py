@@ -1,4 +1,5 @@
 """Upload signature to Pyxis"""
+
 import argparse
 import json
 import logging

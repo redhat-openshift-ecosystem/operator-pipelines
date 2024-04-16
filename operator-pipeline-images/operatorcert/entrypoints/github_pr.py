@@ -1,6 +1,7 @@
 """
 Script for opening GitHub pull request
 """
+
 import argparse
 import logging
 from typing import Any

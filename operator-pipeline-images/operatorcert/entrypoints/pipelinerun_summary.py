@@ -1,4 +1,5 @@
 """Generate a markdown summary for a Tekton PipelineRun."""
+
 import argparse
 import logging
 from typing import Any
