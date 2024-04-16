@@ -1,6 +1,7 @@
 """
 IIB module for building a index images for a bundle
 """
+
 import argparse
 import logging
 import os

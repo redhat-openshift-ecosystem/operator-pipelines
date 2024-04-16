@@ -1,4 +1,5 @@
 """Get vendor related data from Pyxis"""
+
 import argparse
 import logging
 from urllib.parse import urljoin

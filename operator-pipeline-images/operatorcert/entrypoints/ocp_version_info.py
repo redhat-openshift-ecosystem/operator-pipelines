@@ -1,4 +1,5 @@
 """OpenShift version info entrypoint."""
+
 import argparse
 import json
 import logging

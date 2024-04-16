@@ -1,4 +1,5 @@
 """Static test for operator bundle."""
+
 import argparse
 import json
 import logging

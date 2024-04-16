@@ -1,4 +1,5 @@
 """Utility functions for operator certification."""
+
 import argparse
 import json
 import logging

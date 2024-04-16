@@ -1,6 +1,7 @@
 """
 Script for editing a labels in a pull request.
 """
+
 import argparse
 import logging
 import os

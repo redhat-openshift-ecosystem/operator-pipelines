@@ -1,6 +1,7 @@
 """
 Main module for the operator certification tool
 """
+
 import json
 import logging
 import pathlib

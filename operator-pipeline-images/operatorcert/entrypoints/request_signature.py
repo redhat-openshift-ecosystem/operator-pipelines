@@ -1,4 +1,5 @@
 """Sign a container image using RADAS."""
+
 import argparse
 import base64
 import json

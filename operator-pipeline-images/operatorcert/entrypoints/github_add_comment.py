@@ -3,6 +3,7 @@ Script for adding a comment to a pull request or an issue.
 It can take either a filename or a comment as input and can
 post the comment back to GitHub accordingly.
 """
+
 import argparse
 import logging
 import sys

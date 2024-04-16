@@ -1,6 +1,7 @@
 """
 Script for setting the cert project status
 """
+
 import argparse
 import logging
 from typing import Any

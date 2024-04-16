@@ -1,4 +1,5 @@
 """Get the Certification Project related data"""
+
 import argparse
 import logging
 from urllib.parse import urljoin

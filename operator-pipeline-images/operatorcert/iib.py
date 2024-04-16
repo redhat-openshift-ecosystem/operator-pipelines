@@ -1,4 +1,5 @@
 """II Builder API client"""
+
 import logging
 from typing import Any, Dict
 from urllib.parse import urljoin

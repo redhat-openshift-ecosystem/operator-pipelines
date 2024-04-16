@@ -1,4 +1,5 @@
 """Download the test results and logs from the CI pipeline."""
+
 import argparse
 
 from operatorcert import download_test_results

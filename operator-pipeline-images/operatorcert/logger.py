@@ -1,6 +1,7 @@
 """
 Logging configuration for operator-cert.
 """
+
 import logging
 import sys
 from typing import Any

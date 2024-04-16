@@ -1,6 +1,7 @@
 """
 CLI utility to wait on pull request labels conditionally.
 """
+
 import argparse as ap
 import logging
 import os

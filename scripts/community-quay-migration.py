@@ -1,4 +1,5 @@
 """A script to migrate repositories from one Quay namespace to another"""
+
 import argparse
 import json
 import logging

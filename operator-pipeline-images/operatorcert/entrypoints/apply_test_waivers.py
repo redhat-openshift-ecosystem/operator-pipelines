@@ -1,4 +1,5 @@
 """Configure test suite for given operator by adding/removing labels"""
+
 import argparse
 import logging
 import os
