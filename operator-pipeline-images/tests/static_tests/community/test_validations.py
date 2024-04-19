@@ -127,6 +127,8 @@ def test_validate_list_of_dicts(
         ([{"base64data": "", "mediatype": "image/png"}], False),
         ([{"base64data": "foobar", "mediatype": "image/png"}], False),
         ([{"base64data": "Zm9v", "mediatype": "text/plain"}], False),
+        ([{"base64data": "Zm^v", "mediatype": "image/png"}], False),
+        ([{"base64data": " Zm\n9v\n", "mediatype": "image/png"}], True),
     ],
     indirect=False,
     ids=[
@@ -135,6 +137,8 @@ def test_validate_list_of_dicts(
         "Empty base64data",
         "Invalid base64data",
         "Invalid mediatype",
+        "Invalid characters in base64data",
+        "Whitespace in base64data",
     ],
 )
 def test_validate_icon(value: Any, expected: bool) -> None:

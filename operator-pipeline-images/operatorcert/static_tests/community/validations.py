@@ -5,6 +5,7 @@
 import binascii
 import datetime
 from base64 import b64decode
+import string
 from typing import Any
 
 from dateutil.parser import isoparse
@@ -109,11 +110,13 @@ def validate_icon(value: Any) -> bool:
     if len(value) < 1:
         return False
     for icon in value:
-        # base64data must contain valid base64 data
-        if len(icon["base64data"]) < 4:
+        # remove all whitespace from the base64 payload
+        data = icon["base64data"].translate({ord(c): None for c in string.whitespace})
+        # check that the content is valid base64 encoded data
+        if len(data) < 4:
             return False
         try:
-            _ = b64decode(icon["base64data"], validate=True)
+            _ = b64decode(data, validate=True)
         except binascii.Error:
             return False
         # mediatype must be a supported image format
