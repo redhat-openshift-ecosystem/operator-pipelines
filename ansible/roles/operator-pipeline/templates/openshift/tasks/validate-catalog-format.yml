@@ -1,0 +1,37 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: validate-catalog-format
+spec:
+  params:
+    - name: pipeline_image
+
+    - name: affected_catalogs
+      description: Comma separated list of updated catalogs.
+
+    - name: operator_path
+      description: Path to the operator.
+
+  workspaces:
+    - name: source
+  steps:
+    - name: validate-catalog-format
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        MAKEFILE_PATH="$(params.operator_path)/Makefile"
+
+        if [ ! -f "$MAKEFILE_PATH" ]; then
+            echo "Makefile $MAKEFILE_PATH does not exist for given operator."
+            exit 1
+        fi
+
+        validate-catalog-format \
+          --repo-path "$(workspaces.source.path)" \
+          --catalog-names "$(params.affected_catalogs)" \
+          --makefile-path $MAKEFILE_PATH \
+          --verbose
