@@ -12,7 +12,7 @@ def test_run_makefile(mock_run_command: MagicMock) -> None:
     validate_catalog_format.run_makefile("path/to/operator/Makefile")
 
     mock_run_command.assert_called_once_with(
-        ["make", "-f", "path/to/operator/Makefile"]
+        ["make", "catalog", "-f", "path/to/operator/Makefile"]
     )
 
 

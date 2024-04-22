@@ -48,6 +48,7 @@ def run_makefile(makefile_path: str) -> None:
     """Run makefile"""
     cmd = [
         "make",
+        "catalog",
         "-f",
         makefile_path,
     ]
