@@ -132,7 +132,7 @@ class SplitArgs(argparse.Action):
 
 
 def run_command(
-    cmd: List[str], check: bool = True
+    cmd: List[str], check: bool = True, cwd: Optional[str] = None
 ) -> subprocess.CompletedProcess[bytes]:
     """
     Run a shell command and return its output.
@@ -150,6 +150,7 @@ def run_command(
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=check,
+            cwd=cwd,
         )
     except subprocess.CalledProcessError as e:
         LOGGER.error(
