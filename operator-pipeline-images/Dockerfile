@@ -64,7 +64,7 @@ RUN useradd -lu "${PODMAN_USER_UID}" podman; \
 
 WORKDIR /home/user
 
-COPY ./operator-pipeline-images ./
+COPY ./operator-pipeline-images ./operator-pipeline-images
 
 # install PDM
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && pip3 install --no-cache-dir pdm
