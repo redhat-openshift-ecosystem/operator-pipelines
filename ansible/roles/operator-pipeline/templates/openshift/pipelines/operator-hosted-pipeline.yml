@@ -383,6 +383,30 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: validate-catalog-format
+      taskRef:
+        name: validate-catalog-format
+        kind: Task
+      runAfter:
+        # This is just a temporary location until we have a proper
+        # FCB branch based on config
+        - read-config
+      when:
+        - input: "$(tasks.detect-changes.results.affected_catalogs)"
+          operator: notin
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: affected_catalogs
+          value: "$(tasks.detect-changes.results.affected_catalogs)"
+        - name: operator_path
+          value: "$(tasks.detect-changes.results.operator_path)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
     - name: build-fragment-images
       taskRef:
         name: build-fragment-images
@@ -390,7 +414,7 @@ spec:
       runAfter:
         # This is just a temporary location until we have a proper
         # FCB branch based on config
-        - read-config
+        - validate-catalog-format
       when:
         - input: "$(tasks.detect-changes.results.affected_catalogs)"
           operator: notin

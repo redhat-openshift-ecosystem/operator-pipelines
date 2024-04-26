@@ -1,0 +1,29 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: validate-catalog-format
+spec:
+  params:
+    - name: pipeline_image
+
+    - name: affected_catalogs
+      description: Comma separated list of updated catalogs.
+
+    - name: operator_path
+      description: Path to the operator.
+
+  workspaces:
+    - name: source
+  steps:
+    - name: validate-catalog-format
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        validate-catalog-format \
+          --repo-path "$(workspaces.source.path)" \
+          --catalog-names "$(params.affected_catalogs)" \
+          --verbose

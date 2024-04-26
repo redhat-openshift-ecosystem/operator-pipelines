@@ -82,6 +82,7 @@ static-tests = "operatorcert.entrypoints.static_tests:main"
 update-cert-project-status = "operatorcert.entrypoints.update_cert_project_status:main"
 upload-artifacts = "operatorcert.entrypoints.upload_artifacts:main"
 upload-signature = "operatorcert.entrypoints.upload_signature:main"
+validate-catalog-format = "operatorcert.entrypoints.validate_catalog_format:main"
 verify-changed-dirs = "operatorcert.entrypoints.verify_changed_dirs:main"
 
 
