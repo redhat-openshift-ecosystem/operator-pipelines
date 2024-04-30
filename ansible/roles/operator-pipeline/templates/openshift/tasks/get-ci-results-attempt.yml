@@ -75,6 +75,7 @@ spec:
           value: test_results.json
       script: |
         #! /usr/bin/env bash
+        set -xe
 
         if [ -f $RESULTS_FILE ]; then
           echo "Results exist"

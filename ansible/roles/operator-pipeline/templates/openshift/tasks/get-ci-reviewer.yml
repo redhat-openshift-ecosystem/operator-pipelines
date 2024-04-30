@@ -35,6 +35,7 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -e
+
         # storing repo maintainers from config.yaml file
         MAINTAINERS="config.yaml"
         yq -r '(.maintainers//[])[]' $MAINTAINERS >$(results.repo_maintainers.path)
@@ -59,6 +60,7 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -e
+
         AUTHOR_IS_REVIEWER=$(cat $(results.author_is_reviewer.path))
         CI_REVIEWERS=$(cat $(results.list_reviewers.path))
         REPO_MAINTAINERS=$(cat $(results.repo_maintainers.path))

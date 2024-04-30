@@ -57,6 +57,8 @@ spec:
       name: build
       computeResources: {}
       script: |
+        set -xe
+
         echo "Building $(params.IMAGE)"
         buildah --storage-driver=$(params.STORAGE_DRIVER) bud \
           $(params.BUILD_EXTRA_ARGS) --format=$(params.FORMAT) \
