@@ -32,6 +32,7 @@ spec:
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
+        set -xe
         if [ "$(params.force_merge)" = "true" ]; then
           echo -n true > "$(results.bool_merge.path)"
         elif [[ "$(params.bundle_path)" == "" ]]; then

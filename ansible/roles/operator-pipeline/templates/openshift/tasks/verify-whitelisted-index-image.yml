@@ -14,6 +14,8 @@ spec:
       image: "$(params.ubi8_minimal_image)"
       script: |
         #! /usr/bin/env bash
+        set -xe
+
         for REFERENCE in $(tr ',' ' ' <<< '$(params.reference)'); do
           INDEX_IMAGE="$(cut -d':' -f1 <<< $REFERENCE)"
           echo $INDEX_IMAGE

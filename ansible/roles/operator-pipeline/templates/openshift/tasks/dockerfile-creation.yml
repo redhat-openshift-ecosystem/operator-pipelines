@@ -17,6 +17,8 @@ spec:
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
+        set -xe
+
         DOCKERFILE_PATH=Dockerfile
 
         bundle-dockerfile \

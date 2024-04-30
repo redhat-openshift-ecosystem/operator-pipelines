@@ -20,6 +20,8 @@ spec:
     - name: create-lease
       image: "$(params.pipeline_image)"
       script: |
+        set -xe
+
         calculate_duration_in_seconds() {
             if [ "${1: -1}" == "m" ]; then
                 TOTAL_DURATION_IN_SECONDS=$((${1:: -1} * 60))

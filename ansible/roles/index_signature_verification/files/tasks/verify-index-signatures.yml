@@ -99,8 +99,8 @@ spec:
           value: vfs
       script: |
         #!/usr/bin/env bash
-
         set +x -e -o pipefail
+
         cp /etc/containers/policy.json /tmp/
         podman image trust set --policypath=/tmp/policy.json -f /mnt/keys/pub.gpg registry.redhat.io
         for pull_spec in $(cat image-digests.txt); do
