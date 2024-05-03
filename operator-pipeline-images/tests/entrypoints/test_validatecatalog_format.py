@@ -8,7 +8,6 @@ import operatorcert.entrypoints.validate_catalog_format as validate_catalog_form
 
 @patch("operatorcert.entrypoints.validate_catalog_format.run_command")
 def test_validate_catalog_format(mock_run_command: MagicMock) -> None:
-
     validate_catalog_format.validate_catalog_format("path/to/catalogs", "catalog1")
 
     mock_run_command.assert_called_once_with(
