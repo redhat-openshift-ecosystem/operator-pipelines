@@ -376,18 +376,12 @@ def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
     delimiter = ".v" if ".v" in replaces else "."
     replaces_version = replaces.split(delimiter, 1)[1]
 
-    # unpacking generator into a list of bundles
-    get_all_bundles = list(bundle.operator.all_bundles())
+    ver_to_dir = {
+        x.csv_operator_version: x.operator_version
+        for x in bundle.operator.all_bundles()
+    }
+    replaces_bundle = bundle.operator.bundle(ver_to_dir[replaces_version])
 
-    get_bundle_versions = [b.operator_version for b in get_all_bundles]
-    # workaround to check previous (replaced) bundles with and w/o version prefix
-    get_replaced_bundle = (
-        replaces_version
-        if replaces_version in get_bundle_versions
-        else "v" + replaces_version
-    )
-
-    replaces_bundle = bundle.operator.bundle(get_replaced_bundle)
     ocp_versions_str = bundle.annotations.get("com.redhat.openshift.versions")
     replaces_ocp_version_str = replaces_bundle.annotations.get(
         "com.redhat.openshift.versions"
