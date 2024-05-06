@@ -1,0 +1,1145 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.21">
+    
+    
+      
+        <title>Developer Guide - Red Hat OpenShift Operators</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.66ac8b77.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#developer-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Red Hat OpenShift Operators" class="md-header__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Red Hat OpenShift Operators
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Developer Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/redhat-openshift-ecosystem/operator-pipelines" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    operator-pipelines
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../users/" class="md-tabs__link">
+        
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../users/pipelines_overview/" class="md-tabs__link">
+          
+  
+  Operator pipelines
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../users/static_checks/" class="md-tabs__link">
+          
+  
+  Tests
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../users/contributing-prerequisites/" class="md-tabs__link">
+          
+  
+  Operators
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../pipeline-admin-guide/" class="md-tabs__link">
+          
+  
+  Admin
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Red Hat OpenShift Operators" class="md-nav__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Red Hat OpenShift Operators
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/redhat-openshift-ecosystem/operator-pipelines" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    operator-pipelines
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Operator pipelines
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Operator pipelines
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/pipelines_overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/isv_pipelines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ISV operators
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/contributing-via-pr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing via PR
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/operator-ci-yaml/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Operator CI yaml
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tests
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Tests
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/static_checks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Static checks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/dynamic_checks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dynamic checks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Operators
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Operators
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/contributing-prerequisites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Before submitting your Operator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/contributing-where-to/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Where to place operator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/best-practices/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Best practices
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/fbc_onboarding/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    File base catalog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/packaging-required-criteria-ocp/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    OKD/OpenShift Catalogs criteria and options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Admin
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Admin
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pipeline-admin-guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Admin guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="developer-guide">Developer Guide</h1>
+<h2 id="workflow">Workflow</h2>
+<ol>
+<li><a href="#setup">Run through the setup</a> at least once.</li>
+<li><a href="#making-changes-to-the-pipeline-image">Make changes to the pipeline image</a>,
+   if desired.</li>
+<li><a href="#making-changes-to-the-pipelines">Make changes to the Tekton pipelines and/or tasks</a>,
+   if desired.</li>
+<li><a href="../README.md#usage">Test all impacted pipelines</a>.</li>
+<li><a href="../README.md#using-a-custom-pipeline-image">Override the pipeline image as necessary</a>.</li>
+<li>Submit a pull request with your changes.</li>
+</ol>
+<h2 id="setup">Setup</h2>
+<ol>
+<li><a href="#git-leaks-detection">Git leaks detection</a></li>
+<li><a href="#prepare-a-development-environment">Prepare a development environment</a></li>
+<li><a href="#prepare-a-certification-project">Prepare a certification project</a></li>
+<li><a href="#prepare-an-operator-bundle">Prepare an Operator bundle</a></li>
+<li><a href="#prepare-your-ciyaml">Prepare your <code>ci.yaml</code></a></li>
+<li><a href="#create-a-bundle-pull-request">Create a bundle pull request</a> (optional)</li>
+<li>Required for testing hosted or release pipelines</li>
+<li><a href="#create-an-api-key">Create an API key</a> (optional)</li>
+<li>Required for testing submission with the CI pipeline</li>
+<li><a href="../ci-cd/">Prepare the CI to run from your fork</a> (optional)</li>
+<li>Required to run integration testing on forks of this repo.</li>
+</ol>
+<h3 id="git-leaks-detection">Git leaks detection</h3>
+<p>Since the repository contains secret information in form of encrypted
+Ansible Vault there is high chance that developer may push a commit with
+decrypted secrets by mistake. To avoid this problem we recommend
+to use <code>Gitleaks</code> tool that prevent you from commit secret code into git history.</p>
+<p>The repository is already pre-configured but each developer has to make final
+config changes in his/her environment.</p>
+<p>Follow the <a href="https://github.com/gitleaks/gitleaks#pre-commit">documentation</a> to
+configure Gitleaks on your computer.</p>
+<h3 id="prepare-a-development-environment">Prepare a Development Environment</h3>
+<p>You may use any OpenShift 4.7+ cluster (including <a href="#using-codeready-containers">CodeReady Containers</a>).</p>
+<p>The hosted and release pipelines require a considerable amount of dependencies which
+are tedious to <a href="../pipeline-env-setup/">configure manually</a>. Luckily these
+steps have been automated and can be executed by anyone with access to the Ansible
+vault password.</p>
+<p>Before running this you should ensure you're logged into the correct OpenShift
+cluster using <code>oc</code>. If already logged into the OpenShift console, an <code>oc</code> login
+command can be obtained by clicking on your username in upper right corner, and
+selecting <code>copy login command</code>.</p>
+<pre><code class="language-bash">ansible-playbook -v \
+  -i &quot;ansible/inventory/operator-pipeline-$ENV&quot; \
+  -e &quot;oc_namespace=$NAMESPACE&quot; \
+  -e &quot;ocp_token=`oc whoami -t`&quot; \
+  --vault-password-file $VAULT_PASSWORD_PATH \
+  ansible/playbooks/deploy.yml
+</code></pre>
+<p>:warning: Conflicts may occur if the project already contains some resources.
+They may need to be removed first.</p>
+<p>Cleanup can be performed by specifying the <code>absent</code> state for some of the resources.</p>
+<pre><code class="language-bash">ansible-playbook -v \
+  -i &quot;ansible/inventory/operator-pipeline-$ENV&quot; \
+  -e &quot;oc_namespace=$NAMESPACE&quot; \
+  -e &quot;ocp_token=`oc whoami -t`&quot; \
+  -e &quot;namespace_state=absent&quot; \
+  -e &quot;github_webhook_state=absent&quot; \
+  --vault-password-file $VAULT_PASSWORD_PATH \
+  ansible/playbooks/deploy.yml
+</code></pre>
+<h4 id="integration-tests">Integration tests</h4>
+<p>See <a href="../ci-cd/#integration-tests">integration tests section in ci-cd.md</a></p>
+<h4 id="install-tkn">Install tkn</h4>
+<p>You should install the <a href="https://docs.openshift.com/container-platform/4.7/cli_reference/tkn_cli/installing-tkn.html">tkn</a>
+CLI which corresponds to the version of the cluster you're utilizing.</p>
+<h4 id="using-codeready-containers">Using CodeReady Containers</h4>
+<p>It's possible to deploy and test the pipelines from a CodeReady Containers (CRC)
+cluster for development/testing, purposes.</p>
+<ol>
+<li>
+<p>Install <a href="https://code-ready.github.io/crc/#installation_gsg">CodeReady Containers</a></p>
+</li>
+<li>
+<p>Install <a href="https://docs.openshift.com/container-platform/4.7/cicd/pipelines/installing-pipelines.html">OpenShift Pipelines</a></p>
+</li>
+<li>
+<p>Login to your cluster with <code>oc</code> CLI.</p>
+<p>You can run <code>crc console --credentials</code> to get the admin login command.</p>
+</li>
+<li>
+<p>Create a test project in your cluster</p>
+<p><code>bash
+oc new-project playground</code></p>
+</li>
+<li>
+<p>Grant the <code>privileged</code> SCC to the default <code>pipeline</code> service account.</p>
+<p>The <code>buildah</code> task requires the <code>privileged</code> security context constraint
+in order to call <code>newuidmap</code>/<code>newgidmap</code>. This is only necessary because
+<code>runAsUser:0</code> is defined in <code>templates/crc-pod-template.yml</code>.</p>
+<p><code>bash
+oc adm policy add-scc-to-user privileged -z pipeline</code></p>
+</li>
+</ol>
+<h5 id="running-a-pipeline-with-crc">Running a Pipeline with CRC</h5>
+<p>It may be necessary to pass the following <code>tkn</code> CLI arg to avoid
+permission issues with the default CRC PersistentVolumes.</p>
+<pre><code class="language-bash">--pod-template templates/crc-pod-template.yml
+</code></pre>
+<h4 id="prepare-a-certification-project">Prepare a Certification Project</h4>
+<p>A certification project is required for executing all pipelines.
+In order to avoid collisions with other developers, it's best to
+create a new one in the corresponding Pyxis environment.</p>
+<p>The pipelines depend on the following certification project fields:</p>
+<pre><code class="language-jsonc">{
+  &quot;project_status&quot;: &quot;active&quot;,
+  &quot;type&quot;: &quot;Containers&quot;,
+
+  // Arbitrary name for the project - can be almost anything
+  &quot;name&quot;: &quot;&lt;insert-project-name&gt;&quot;,
+
+  /*
+   Either &quot;connect&quot;, &quot;marketplace&quot; or &quot;undistributed&quot;.
+   This maps to the `organization` field in the bundle submission repo's config.yaml.
+     connect -&gt; certified-operators
+     marketplace -&gt; redhat-marketplace
+     undistributed -&gt; certified-operators (certified against, but not distributed to)
+  */
+  &quot;operator_distribution&quot;: &quot;&lt;insert-distribution&gt;&quot;,
+
+  // Must correspond to a containerVendor record with the same org_id value.
+  &quot;org_id&quot;: &lt;insert-org-id&gt;,
+
+  &quot;container&quot;: {
+    &quot;type&quot;: &quot;operator bundle image&quot;,
+
+    &quot;build_catagories&quot;:&quot;Operator bundle&quot;,
+
+    // Required but always &quot;rhcc&quot;
+    &quot;distribution_method&quot;: &quot;rhcc&quot;,
+
+    // Always set to true to satisfy the publishing checklist
+    &quot;distribution_approval&quot;: true,
+
+    // Must match the github user(s) which opened the test pull requests
+    &quot;github_usernames&quot;: [&quot;&lt;insert-github-username&gt;&quot;],
+
+    // Must be unique for the vendor
+    &quot;repository_name&quot;: &quot;&lt;insert-repo-name&gt;&quot;
+  }
+}
+</code></pre>
+<h4 id="prepare-an-operator-bundle">Prepare an Operator Bundle</h4>
+<p>You can use a utility script to copy an existing bundle. By default it will copy
+a bundle that should avoid common failure conditions such as digest pinning.
+View all the customization options by passing <code>-h</code> to this command.</p>
+<pre><code class="language-bash">./scripts/copy-bundle.sh
+</code></pre>
+<p>You may wish to tweak the generated output to influence the behavior of the pipelines.
+For example, Red Hat Marketplace Operator bundles may require additional annotations.
+The pipeline should provide sufficient error messages to indicate what is missing.
+If such errors are unclear, that is likely a bug which should be fixed.</p>
+<h4 id="prepare-your-ciyaml">Prepare Your ci.yaml</h4>
+<p>At the root of your operator package directory (note: <strong>not</strong> the bundle
+version directory) there needs to be a <code>ci.yaml</code> file. For development
+purposes, it should follow this format in most cases.</p>
+<pre><code class="language-yaml">---
+# Copy this value from the _id field of the certification project in Pyxis.
+cert_project_id: &lt;pyxis-cert-project-id&gt;
+# Set this to true to allow the hosted pipeline to merge pull requests.
+merge: false
+</code></pre>
+<h4 id="create-a-bundle-pull-request">Create a Bundle Pull Request</h4>
+<p>It's recommended to open bundle pull requests against the
+<a href="https://github.com/redhat-openshift-ecosystem/operator-pipelines-test">operator-pipelines-test</a>
+repo. The pipeline GitHub bot account has permissions to manage it.</p>
+<blockquote>
+<p><strong>Note:</strong> This repository is only configured for testing certified operators,
+NOT Red Hat Marketplace operators (see
+<a href="https://github.com/redhat-openshift-ecosystem/operator-pipelines-test/blob/main/config.yaml"><code>config.yaml</code></a>).</p>
+</blockquote>
+<pre><code class="language-bash"># Checkout the pipelines test repo
+git clone https://github.com/redhat-openshift-ecosystem/operator-pipelines-test
+cd operator-pipelines-test
+
+# Create a new branch
+git checkout -b &lt;insert-branch-name&gt;
+
+# Copy your package directory
+cp -R &lt;package-dir&gt;/ operators/
+
+# Commit changes
+git add -A
+
+# Use this commit pattern so it defaults to the pull request title.
+# This is critical to the success of the pipelines.
+git commit -m &quot;operator &lt;operator-package-name&gt; (&lt;bundle-version&gt;)&quot;
+
+# Push your branch. Open the pull request using the output.
+git push origin &lt;insert-branch-name&gt;
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> You may need to merge the pull request to use it for testing
+the release pipeline.</p>
+</blockquote>
+<h4 id="create-an-api-key">Create an API Key</h4>
+<p><a href="https://url.corp.redhat.com/86973d1">File a ticket</a> with Pyxis admins
+to assist with this request. It must correspond to the <code>org_id</code>
+for the certification project under test.</p>
+<h2 id="making-changes-to-the-pipelines">Making Changes to the Pipelines</h2>
+<h3 id="guiding-principles">Guiding Principles</h3>
+<ul>
+<li>Avoid including credentials within Task scripts.</li>
+<li>Avoid the use of <code>set -x</code> in shell scripts which <em>could</em> expose credentials
+    to the console.</li>
+<li>Don't use workspaces for passing secrets. Use <code>secretKeyRef</code> and <code>volumeMount</code>
+  with secret and key names instead.</li>
+<li>Reason: It adds unnecessary complexity to <code>tkn</code> commands.</li>
+<li>Use images from trusted registries/namespaces.</li>
+<li>registry.redhat.io</li>
+<li>registry.access.redhat.com</li>
+<li>quay.io/redhat-isv</li>
+<li>quay.io/opdev</li>
+<li>Use image pull specs with digests instead of tags wherever possible.</li>
+<li>Tasks must implement their own skipping behavior, if needed.</li>
+<li>Reason: If a task is not executed, any dependent tasks will not be
+    executed either.</li>
+<li>Don't use ClusterTasks or upstream tasks. All tasks are defined in this repo.</li>
+<li>Document all params, especially pipeline params.</li>
+<li>Output human readable logs.</li>
+<li>Use reasonable defaults for params wherever possible.</li>
+</ul>
+<h3 id="applying-pipeline-changes">Applying Pipeline Changes</h3>
+<p>You can use the following command to apply all local changes to your OCP project.
+It will add all the Tekton resources used across all the pipelines.</p>
+<pre><code class="language-bash">oc apply -R -f ansible/roles/operator-pipeline/templates/openshift
+</code></pre>
+<h2 id="making-changes-to-the-pipeline-image">Making Changes to the Pipeline Image</h2>
+<h3 id="dependency">Dependency</h3>
+<p>Operator pipelines project is configured to automatically manage Python
+dependencies using <a href="https://pdm.fming.dev/latest/">PDM</a> tool. The pdm automates definition, installation,
+upgrades and the whole lifecycle of dependency in a project. All dependencies
+are stored in <code>pyproject.toml</code> file in a groups that corresponds to individual
+applications within the Operator pipelines project.</p>
+<p>Adding, removing and updating of dependency needs to be always done
+using <code>pdm</code> cli.</p>
+<pre><code class="language-bash">pdm add -G operator-pipelines gunicorn==20.1.0
+</code></pre>
+<p>After a dependency is installed it is added to pdm.lock file. The lock file
+is always part of git repository.</p>
+<p>If you want to install specific group set of dependencies use following command:</p>
+<pre><code class="language-bash">pdm install -G operator-pipelines
+</code></pre>
+<p>Dependencies are stored into virtual environment (.venv) which is automatically
+created after <code>pdm install</code>. If .venv wasn't created, configure pdm to
+automatically create it during installation with <code>pdm config python.use_venv true</code>.</p>
+<h3 id="run-unit-tests-code-style-checkers-etc">Run Unit Tests, Code Style Checkers, etc.</h3>
+<p>Before running the tests locally, the environment needs to be prepared.
+Choose the preparation process according to your Linux version.</p>
+<h4 id="preparation-on-rpm-based-linux">Preparation on RPM-based Linux</h4>
+<pre><code class="language-bash">sudo dnf -y install hadolint
+python3 -m pip install pdm
+pdm venv create 3.11
+pdm install
+source .venv/bin/activate
+python3 -m pip install ansible-lint
+</code></pre>
+<h4 id="preparation-on-other-linux-systems">Preparation on other Linux systems</h4>
+<p>Before starting, make sure you have installed the <a href="https://brew.sh/">Brew</a> package manager.</p>
+<pre><code class="language-bash">brew install hadolint
+python3 -m pip install pdm
+pdm venv create 3.11
+pdm install
+source .venv/bin/activate
+python3 -m pip install ansible-lint
+</code></pre>
+<h4 id="run-the-local-tests">Run the local tests</h4>
+<p>To run unit tests and code style checkers:</p>
+<pre><code class="language-bash">tox
+</code></pre>
+<h3 id="local-development">Local development</h3>
+<p>Setup python virtual environment using pdm.</p>
+<pre><code class="language-shell">pdm venv create 3.11
+pdm install
+source .venv/bin/activate
+</code></pre>
+<h3 id="build-push">Build &amp; Push</h3>
+<ol>
+<li>
+<p>Ensure you have <a href="https://github.com/containers/buildah/blob/main/install.md">buildah</a>
+   installed</p>
+</li>
+<li>
+<p>Build the image</p>
+<p><code>bash
+buildah bud</code></p>
+</li>
+<li>
+<p>Push the image to a remote registry, eg. Quay.io.</p>
+<p><code>bash
+buildah push &lt;image-digest-from-build-step&gt; &lt;remote-repository&gt;</code></p>
+<p>This step may require login, eg.</p>
+<p><code>bash
+buildah login quay.io</code></p>
+</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a7c05c9e.min.js"></script>
+      
+    
+  </body>
+</html>
