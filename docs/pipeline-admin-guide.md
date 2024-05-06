@@ -4,20 +4,20 @@ This document aims to provide information needed for maintenance and troubleshoo
 
 ## Operator repositories
 - Certified operators
-  - prod: https://github.com/redhat-openshift-ecosystem/certified-operators
-  - nonprod: https://github.com/redhat-openshift-ecosystem/certified-operators-preprod
+    - prod: https://github.com/redhat-openshift-ecosystem/certified-operators
+    - nonprod: https://github.com/redhat-openshift-ecosystem/certified-operators-preprod
 - Marketplace operators
-  - prod: https://github.com/redhat-openshift-ecosystem/redhat-marketplace-operators
-  - nonprod: https://github.com/redhat-openshift-ecosystem/redhat-marketplace-operators-preprod
+    - prod: https://github.com/redhat-openshift-ecosystem/redhat-marketplace-operators
+    - nonprod: https://github.com/redhat-openshift-ecosystem/redhat-marketplace-operators-preprod
 - Community OCP operators
-  - prod: https://github.com/redhat-openshift-ecosystem/community-operators-prod
-  - nonprod: https://github.com/redhat-openshift-ecosystem/community-operators-pipeline-preprod/
+    - prod: https://github.com/redhat-openshift-ecosystem/community-operators-prod
+    - nonprod: https://github.com/redhat-openshift-ecosystem/community-operators-pipeline-preprod/
 
 Pre-production repositories are used for all pre-prod environments (stage, dev, qa). Each environment has a dedicated git branch. By selecting a target branch you can select an environment where the operator will be tested.
 
 ## OCP environments
-https://console-openshift-console.apps.pipelines-prod.ijdb.p1.openshiftapps.com/pipelines/ns/operator-pipeline-prod
-https://console-openshift-console.apps.pipelines-stage.0ce8.p1.openshiftapps.com/pipelines/ns/operator-pipeline-stage
+- https://console-openshift-console.apps.pipelines-prod.ijdb.p1.openshiftapps.com/pipelines/ns/operator-pipeline-prod
+- https://console-openshift-console.apps.pipelines-stage.0ce8.p1.openshiftapps.com/pipelines/ns/operator-pipeline-stage
 
 ## Pipelines
 
@@ -29,8 +29,8 @@ Testing and certification of OpenShift operators from ISV and Community sources 
 - **ISV Release pipeline** - The release pipeline distributes ISV operator to all index images supported by the operator bundle and make sure the new operator is visible on Red Hat Ecosystem catalog.
 
 ### Community pipelines
-- **Community Hosted pipeline** - Similarly as the ISV hosted pipeline, the community hosted pipeline verifies if a new operator bundle follows all pre-defined rules and passes all the community tests. The pipeline verifies that operator can be installed on a OCP cluster. A Preflight tools is used to execute a dynamic test suite
-- **Community Release pipeline** - The release pipeline distributes a community operators into OCP catalog.
+- **Hosted pipeline** - Similarly as the ISV hosted pipeline, the community hosted pipeline verifies if a new operator bundle follows all pre-defined rules and passes all the community tests. The pipeline verifies that operator can be installed on a OCP cluster. A Preflight tools is used to execute a dynamic test suite
+- **Release pipeline** - The release pipeline distributes a community operators into OCP catalog.
 
 ## Troubleshooting
 
@@ -62,8 +62,6 @@ Based on which pipeline fails one of these command can be used to re-trigger it 
 
 - `/pipeline restart operator-hosted-pipeline`
 - `/pipeline restart operator-release-pipeline`
-- `/pipeline restart community-hosted-pipeline`
-- `/pipeline restart community-release-pipeline`
 
 ![re-trigger](img/re-trigger.png "Example of the re-trigger command.")
 

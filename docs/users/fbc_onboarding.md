@@ -1,5 +1,7 @@
 # File Based Catalog onboarding
 
+> **Note**: The FBC support is going to be released at the end of Q2 2024. Until that and until official announcement the steps below are not yet supported.
+
 Operators in certified, marketplace, or community repositories are defined in a declarative way.
 This means a user provides all necessary information in advance about the operator bundle and how it
 should be released in a catalog and OPM automation injects a bundle into the correct place
