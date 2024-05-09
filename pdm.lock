@@ -5,7 +5,7 @@
 groups = ["default", "operatorcert-dev", "tox"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:0b5c869f80a07709ed8dbf171d539528022ef3d4d4cb3be684189cef814b7276"
+content_hash = "sha256:111f9ab5e128d9168b8d5e68eedf3db69afff75f00fcaa3e6deb55f9af71a5ba"
 
 [[package]]
 name = "argcomplete"
@@ -596,11 +596,11 @@ files = [
 
 [[package]]
 name = "operator-repo"
-version = "0.4.2"
+version = "0.4.3"
 requires_python = ">=3.9"
 git = "https://github.com/mporrato/operator-repo.git"
-ref = "v0.4.2"
-revision = "cffa3b58107d92b73d7fda0853dfcf727144d999"
+ref = "relax-update-graph-checks"
+revision = "550c49cde9b0acfcdf55fa5c99683840f04b1a76"
 summary = "Library and utilities to handle repositories of kubernetes operators"
 dependencies = [
     "pyyaml>=6.0.1",

@@ -10,33 +10,193 @@ from typing import Any
 
 
 @pytest.mark.parametrize(
-    "annotation_package,csv_package,expected",
+    "files, bundle_to_check, expected_results",
     [
-        pytest.param("foo", "foo", set(), id="Name matches"),
         pytest.param(
-            "foo",
-            "bar",
+            [
+                bundle_files("hello", "0.0.1"),
+            ],
+            ("hello", "0.0.1"),
+            set(),
+            id="Names ok",
+        ),
+        pytest.param(
+            [
+                bundle_files(
+                    "hello",
+                    "0.0.1",
+                    annotations={
+                        "operators.operatorframework.io.bundle.package.v1": "foo"
+                    },
+                ),
+            ],
+            ("hello", "0.0.1"),
             {
-                Warn(
-                    "Bundle package annotation is set to 'foo'. Expected value "
-                    "is 'bar' based on the CSV name. To fix this issue define "
-                    "the annotation in 'metadata/annotations.yaml' file that "
-                    "matches the CSV name."
-                )
+                (
+                    Fail,
+                    "Operator name from annotations.yaml (foo) does not match"
+                    " the operator's directory name (hello)",
+                ),
+                (
+                    Fail,
+                    "Operator name from annotations.yaml (foo) does not match"
+                    " the name defined in the CSV (hello)",
+                ),
             },
-            id="Name does not match",
+            id="Wrong annotations.yaml name",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                {
+                    "operators/hello/0.0.1/metadata/annotations.yaml": {
+                        "annotations": {}
+                    }
+                },
+            ],
+            ("hello", "0.0.1"),
+            {
+                (Fail, "Bundle does not define the operator name in annotations.yaml"),
+            },
+            id="Empty annotations.yaml",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                bundle_files(
+                    "hello",
+                    "0.0.2",
+                    annotations={
+                        "operators.operatorframework.io.bundle.package.v1": "foo"
+                    },
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.3",
+                    annotations={
+                        "operators.operatorframework.io.bundle.package.v1": "foo"
+                    },
+                ),
+            ],
+            ("hello", "0.0.3"),
+            {
+                (
+                    Warn,
+                    "Operator name from annotations.yaml (foo) does not match"
+                    " the operator's directory name (hello)",
+                ),
+                (
+                    Warn,
+                    "Operator name from annotations.yaml (foo) does not match"
+                    " the name defined in the CSV (hello)",
+                ),
+                (
+                    Warn,
+                    "Operator name from annotations.yaml is not consistent"
+                    " across bundles: ['foo', 'hello']",
+                ),
+            },
+            id="Wrong annotations.yaml name, inconsistent bundles",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                bundle_files(
+                    "hello",
+                    "0.0.2",
+                    csv={"metadata": {"name": "foo.v0.0.2"}},
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.3",
+                    csv={"metadata": {"name": "foo.v0.0.3"}},
+                ),
+            ],
+            ("hello", "0.0.3"),
+            {
+                (
+                    Warn,
+                    "Operator name from annotations.yaml (hello) does not match"
+                    " the name defined in the CSV (foo)",
+                ),
+                (
+                    Warn,
+                    "Operator name from the CSV is not consistent across bundles: ['foo', 'hello']",
+                ),
+            },
+            id="Wrong CSV name, inconsistent bundles",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                bundle_files("hello", "0.0.2"),
+                bundle_files(
+                    "hello",
+                    "0.0.3",
+                    annotations={
+                        "operators.operatorframework.io.bundle.package.v1": "foo"
+                    },
+                ),
+            ],
+            ("hello", "0.0.3"),
+            {
+                (
+                    Fail,
+                    "Operator name from annotations.yaml (foo) does not match"
+                    " the operator's directory name (hello)",
+                ),
+                (
+                    Fail,
+                    "Operator name from annotations.yaml (foo) does not match"
+                    " the name defined in the CSV (hello)",
+                ),
+                (
+                    Fail,
+                    "Operator name from annotations.yaml (foo) does not match"
+                    " the name defined in other bundles (hello)",
+                ),
+            },
+            id="Wrong annotations.yaml name, consistent bundles",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                bundle_files("hello", "0.0.2"),
+                bundle_files(
+                    "hello",
+                    "0.0.3",
+                    csv={"metadata": {"name": "foo.v0.0.3"}},
+                ),
+            ],
+            ("hello", "0.0.3"),
+            {
+                (
+                    Fail,
+                    "Operator name from annotations.yaml (hello) does not match"
+                    " the name defined in the CSV (foo)",
+                ),
+                (
+                    Fail,
+                    "Operator name from the CSV (foo) does not match the name"
+                    " defined in other bundles (hello)",
+                ),
+            },
+            id="Wrong CSV name, consistent bundles",
         ),
     ],
+    indirect=False,
 )
-def test_check_operator_name(
-    annotation_package: str, csv_package: str, expected: Any, tmp_path: Path
+def test_operator_name(
+    tmp_path: Path,
+    files: list[dict[str, Any]],
+    bundle_to_check: tuple[str, str],
+    expected_results: set[tuple[type, str]],
 ) -> None:
-    annotations = {
-        "operators.operatorframework.io.bundle.package.v1": annotation_package,
-    }
-    create_files(tmp_path, bundle_files(csv_package, "0.0.1", annotations=annotations))
-
+    create_files(tmp_path, *files)
     repo = Repo(tmp_path)
-    bundle = repo.operator(csv_package).bundle("0.0.1")
-
-    assert set(check_operator_name(bundle)) == expected
+    operator_name, bundle_version = bundle_to_check
+    operator = repo.operator(operator_name)
+    bundle = operator.bundle(bundle_version)
+    assert {
+        (x.__class__, x.reason) for x in check_operator_name(bundle)
+    } == expected_results
