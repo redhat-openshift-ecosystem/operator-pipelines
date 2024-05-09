@@ -375,7 +375,13 @@ def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
         return
     delimiter = ".v" if ".v" in replaces else "."
     replaces_version = replaces.split(delimiter, 1)[1]
-    replaces_bundle = bundle.operator.bundle(replaces_version)
+
+    ver_to_dir = {
+        x.csv_operator_version: x.operator_version
+        for x in bundle.operator.all_bundles()
+    }
+    replaces_bundle = bundle.operator.bundle(ver_to_dir[replaces_version])
+
     ocp_versions_str = bundle.annotations.get("com.redhat.openshift.versions")
     replaces_ocp_version_str = replaces_bundle.annotations.get(
         "com.redhat.openshift.versions"
