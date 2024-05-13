@@ -3,23 +3,78 @@
 from collections.abc import Iterator
 
 from operator_repo import Bundle
-from operator_repo.checks import CheckResult, Warn
+from operator_repo.checks import CheckResult, Fail, Warn
+
+
+def _check_consistency(
+    my_name: str, all_names: set[str], other_names: set[str], result_description: str
+) -> Iterator[CheckResult]:
+    """Helper function for check_operator_name"""
+    if len(other_names) == 1:
+        # Operator names are consistent across other bundles
+        common_name = other_names.pop()
+        if common_name != my_name:
+            # The new bundle has a different operator name
+            msg = (
+                f"Operator name {result_description} ({my_name})"
+                f" does not match the name defined in other"
+                f" bundles ({common_name})"
+            )
+            yield Fail(msg)
+    else:
+        # Other bundles have inconsistent operator names: let's just issue a warning
+        msg = (
+            f"Operator name {result_description} is not consistent across bundles:"
+            f" {sorted(all_names)}"
+        )
+        yield Warn(msg)
 
 
 def check_operator_name(bundle: Bundle) -> Iterator[CheckResult]:
-    """
-    Ensure that the operator name matches the CSV name
-
-    Args:
-        bundle (Bundle): Tested operator bundle
-    """
-    annotation_package = bundle.annotations.get(
-        "operators.operatorframework.io.bundle.package.v1"
-    )
-    if annotation_package != bundle.csv_operator_name:
-        yield Warn(
-            f"Bundle package annotation is set to '{annotation_package}'. "
-            f"Expected value is '{bundle.csv_operator_name}' based on the CSV name. "
-            "To fix this issue define the annotation in "
-            "'metadata/annotations.yaml' file that matches the CSV name."
+    """Check if the operator names used in CSV, metadata and filesystem are consistent
+    in the bundle and across other operator's bundles"""
+    if not bundle.metadata_operator_name:
+        yield Fail("Bundle does not define the operator name in annotations.yaml")
+        return
+    all_bundles = set(bundle.operator.all_bundles())
+    all_metadata_operator_names = {x.metadata_operator_name for x in all_bundles}
+    all_csv_operator_names = {x.csv_operator_name for x in all_bundles}
+    other_bundles = all_bundles - {bundle}
+    other_metadata_operator_names = {x.metadata_operator_name for x in other_bundles}
+    other_csv_operator_names = {x.csv_operator_name for x in other_bundles}
+    # Count how many unique names are in use in the CSV and annotations.yaml across
+    # all other bundles. Naming is consistent if the count is zero (when the bundle
+    # under test is the only bundle for its operator) or one
+    consistent_metadata_names = len(other_metadata_operator_names) < 2
+    consistent_csv_names = len(other_csv_operator_names) < 2
+    if other_bundles:
+        yield from _check_consistency(
+            bundle.metadata_operator_name,
+            all_metadata_operator_names,
+            other_metadata_operator_names,
+            "from annotations.yaml",
         )
+        yield from _check_consistency(
+            bundle.csv_operator_name,
+            all_csv_operator_names,
+            other_csv_operator_names,
+            "from the CSV",
+        )
+    if bundle.metadata_operator_name != bundle.csv_operator_name:
+        msg = (
+            f"Operator name from annotations.yaml ({bundle.metadata_operator_name})"
+            f" does not match the name defined in the CSV ({bundle.csv_operator_name})"
+        )
+        if consistent_metadata_names and consistent_csv_names:
+            yield Fail(msg)
+        else:
+            yield Warn(msg)
+    if bundle.metadata_operator_name != bundle.operator_name:
+        msg = (
+            f"Operator name from annotations.yaml ({bundle.metadata_operator_name})"
+            f" does not match the operator's directory name ({bundle.operator_name})"
+        )
+        if consistent_metadata_names:
+            yield Fail(msg)
+        else:
+            yield Warn(msg)
