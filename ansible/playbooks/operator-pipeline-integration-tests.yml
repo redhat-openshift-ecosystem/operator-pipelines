@@ -13,6 +13,7 @@
     src_operator_git_branch: e2e-test-operator
     src_operator_bundle_version: 0.0.8
     operator_package_name: test-e2e-operator
+    organization: certified-operators
   environment:
     K8S_AUTH_API_KEY: '{{ ocp_token }}'
     K8S_AUTH_HOST: '{{ ocp_host }}'
@@ -100,6 +101,14 @@
             apply:
               tags:
                 - test-release-pipeline
+
+        - name: Verify the Bundle was released to image indices
+          vars:
+            registry_access_token: "{{ stage_operator_pipelines_test_service_account_access_token }}"
+            ocp_versions_range: "v4.10"
+          include_role:
+            name: integration_tests
+            tasks_from: check_bundle_existence_in_index_image
 
       always:
         - name: Cleanup test data

@@ -1,0 +1,75 @@
+---
+- name: Verify that bundle was released to index image
+  vars:
+    bundle_name: "{{ operator_package_name }}.v{{ operator_bundle_version }}"
+    tmp_folder: /tmp/check_bundle
+  block:
+
+    - name: Verify that bundle was released to index image
+
+      block:
+        - name: Create directory for image data
+          ansible.builtin.file:
+            path: "{{ tmp_folder }}"
+            state: directory
+            mode: 0777
+
+        - name: Create directory for registry credentials
+          ansible.builtin.file:
+            path: "{{ tmp_folder }}/registry_certs/"
+            state: directory
+            mode: 0777
+
+        - name: Save credentials to file
+          no_log: true
+          ansible.builtin.copy:
+            dest: "{{ tmp_folder }}/registry_certs/config.json"
+            mode: 0777
+            content: |
+              {
+                  "auths": {
+                    "registry.stage.redhat.io": {
+                      "auth": "{{ registry_access_token }}"
+                    }
+                  }
+                }
+
+        - name: Fetch index image list from Pyxis
+          ansible.builtin.shell:
+            cmd: "set -o pipefail && curl -X 'GET' 'https://catalog.redhat.com/api/containers/v1/operators/indices?filter=organization=={{ organization }}&page=0&page_size=100&include=data.path&ocp_versions_range={{ ocp_versions_range }}' -H 'accept: application/json' | jq -r '.data[].path' > {{ tmp_folder }}/image_versions.txt"  # noqa: yaml[line-length]
+            creates: "{{ tmp_folder }}/image_versions.txt"
+          args:
+            executable: /bin/bash
+
+        - name: Fetch details about all image bundles  # noqa no-changed-when
+          ansible.builtin.shell:
+            cmd: |
+              set -o pipefail &&
+              export PATH="{{ temp_tools_dir.path }}:$PATH"
+              while read image_url; do
+                version=$(echo "$image_url" | sed 's/^.*:v//' )
+                # Add stage to registry address
+                address="registry.stage."$(echo "$image_url" | sed 's/^registry.//' )
+                opm render $address > "{{ tmp_folder }}/info_$version.json"
+              done < "{{ tmp_folder }}/image_versions.txt"
+          environment:
+            DOCKER_CONFIG: "{{ tmp_folder }}/registry_certs/"
+          args:
+            executable: /bin/bash
+
+        - name: Check that correct operator bundle is present in all images  # noqa no-changed-when
+          ansible.builtin.shell:
+            cmd: |
+              for info_file in {{ tmp_folder }}/info_*.json; do
+                echo "Finding bundle {{ bundle_name }} in: $info_file"
+                set -o pipefail &&
+                  jq 'select(.schema == "olm.bundle" and .name == "{{ bundle_name }}").name' "$info_file" | grep ^
+              done
+          args:
+            executable: /bin/bash
+
+      always:
+        - name: Cleanup folder
+          ansible.builtin.file:
+            path: "{{ tmp_folder }}"
+            state: absent
