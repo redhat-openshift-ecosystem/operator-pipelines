@@ -480,12 +480,12 @@ files = [
 
 [[package]]
 name = "idna"
-version = "3.4"
+version = "3.7"
 requires_python = ">=3.5"
 summary = "Internationalized Domain Names in Applications (IDNA)"
 files = [
-    {file = "idna-3.4-py3-none-any.whl", hash = "sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2"},
-    {file = "idna-3.4.tar.gz", hash = "sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4"},
+    {file = "idna-3.7-py3-none-any.whl", hash = "sha256:82fee1fc78add43492d3a1898bfa6d8a904cc97d8427f683ed8e798d07761aa0"},
+    {file = "idna-3.7.tar.gz", hash = "sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc"},
 ]
 
 [[package]]
@@ -1063,16 +1063,16 @@ files = [
 
 [[package]]
 name = "stomp-py"
-version = "8.1.0"
-requires_python = ">=3.6,<4.0"
+version = "8.1.2"
+requires_python = "<4.0,>=3.7"
 summary = "Python STOMP client, supporting versions 1.0, 1.1 and 1.2 of the protocol"
 dependencies = [
     "docopt<0.7.0,>=0.6.2",
     "websocket-client<2.0.0,>=1.2.3",
 ]
 files = [
-    {file = "stomp.py-8.1.0-py3-none-any.whl", hash = "sha256:49bc4cf5a4b17b6dce6dc2da0cb869f6522f77eff5ba46ee3e26ceb4793be0df"},
-    {file = "stomp.py-8.1.0.tar.gz", hash = "sha256:b4737d002684639753fbf12dedecb8aa85e5e260749c947acd49c482db42a594"},
+    {file = "stomp_py-8.1.2-py3-none-any.whl", hash = "sha256:61200b85442a0f374155820f122518371c9c3dc77bb320ae9052d5a840fc5875"},
+    {file = "stomp_py-8.1.2.tar.gz", hash = "sha256:b56e62da090863cc65e5fbf832230318cd53e99dc777de19ecb04e83914f1371"},
 ]
 
 [[package]]
