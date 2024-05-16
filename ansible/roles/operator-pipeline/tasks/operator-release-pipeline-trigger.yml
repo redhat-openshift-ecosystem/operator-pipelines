@@ -80,6 +80,7 @@
                 spec:
                   timeouts:
                     pipeline: "4h15m0s"
+                    tasks: "4h5m"
                   pipelineRef:
                     name: operator-release-pipeline
                   params:

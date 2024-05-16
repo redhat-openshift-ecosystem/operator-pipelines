@@ -91,6 +91,7 @@
                 spec:
                   timeouts:
                     pipeline: "2h"
+                    tasks: "1h50m"
                   pipelineRef:
                     name: operator-hosted-pipeline
                   params:
