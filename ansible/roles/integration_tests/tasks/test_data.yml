@@ -28,6 +28,7 @@
     # Modify the test operator version
     cp -avr $SRC_VERSION $DEST_VERSION
     find $DEST_VERSION/ -type f -exec sed -i "s/${SRC_VERSION//\./\\.}/$DEST_VERSION/g" {} \;
+    find $DEST_VERSION/metadata/annotations.yaml -type f -exec sed -i "s/stable/$DEST_VERSION/g" {} \;
     diff -bur $SRC_VERSION/ $DEST_VERSION/ || true
     rm -rv ./$SRC_VERSION
 
