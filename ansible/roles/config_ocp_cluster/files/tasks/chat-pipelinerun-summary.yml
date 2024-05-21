@@ -84,7 +84,15 @@ spec:
 
         jq -n --rawfile summary pipelinerun.txt '{"text": $summary}' > payload.json
 
-        echo "Posting message to Slack"
-        curl -s -X POST -H "Content-Type: application/json" \
-          --data @payload.json \
-          "$WEBHOOK_URL"
+        status=$(cat payload.json | grep -oP "Status: (?=\*).\K.*(?=\*)")
+
+        # Skip notifications for operator-hosted-pipeline and passed pipelines
+        if cat payload.json | grep -oP "PipelineRun: operator-hosted-pipeline*" > /dev/null || [ "$status" != "Failed" ];
+        then
+          echo "Skipping Slack notification"
+        else
+            echo "Posting message to Slack"
+            curl -s -X POST -H "Content-Type: application/json" \
+              --data @payload.json \
+              "$WEBHOOK_URL"
+        fi
