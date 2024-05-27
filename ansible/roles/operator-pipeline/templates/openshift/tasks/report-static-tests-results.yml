@@ -49,6 +49,11 @@ spec:
         #!/usr/bin/env bash
         set -xe
 
+        if [ -z "$(params.messages_count)" ]; then
+          echo "No bundle added or changed, no tests to report"
+          exit 0
+        fi
+
         [ "$(params.messages_count)" -gt 0 ] || exit 0
 
         JSON_RESULTS_FILE="$(workspaces.output.path)/static-test-results.json"

@@ -27,6 +27,11 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        if [ -z "$(params.bundle_path)" ]; then
+          echo "No bundle added or changed"
+          exit 0
+        fi
+
         if [ "$(params.enabled)" != "true" ]; then
           echo "Digest pinning is not enabled"
           exit 0
@@ -52,6 +57,11 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        if [ -z "$(params.bundle_path)" ]; then
+          echo "No bundle added or changed"
+          exit 0
+        fi
+
         if [ "$(params.enabled)" != "true" ]; then
           echo "Digest pinning is not enabled"
           exit 0
@@ -71,6 +81,12 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
+
+        if [ -z "$(params.bundle_path)" ]; then
+          echo "No bundle added or changed"
+          echo -n "false" | tee $(results.dirty_flag.path)
+          exit 0
+        fi
 
         if [ "$(params.enabled)" != "true" ]; then
           echo "Digest pinning is not enabled"
@@ -99,6 +115,12 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
+
+        if [ -z "$(params.bundle_path)" ]; then
+          echo "No bundle added or changed"
+          echo -n "true" | tee $(results.related_images_flag.path)
+          exit 0
+        fi
 
         if [ "$(params.enabled)" != "true" ]; then
           echo "Digest pinning is not enabled"

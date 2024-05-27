@@ -19,6 +19,11 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        if [ -z "$(params.bundle_path)" ]; then
+          echo "No bundle added or changed"
+          exit 0
+        fi
+
         DOCKERFILE_PATH=Dockerfile
 
         bundle-dockerfile \

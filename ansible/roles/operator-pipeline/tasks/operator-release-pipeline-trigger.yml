@@ -138,3 +138,6 @@
                     - name: registry-serve-credentials
                       secret:
                         secretName: release-pipeline-registry-auth-serve-secret
+                    - name: hosted-registry-credentials
+                      secret:
+                        secretName: hosted-pipeline-registry-auth-secret

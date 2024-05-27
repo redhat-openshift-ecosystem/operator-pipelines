@@ -137,3 +137,28 @@ def test_get_ocp_supported_versions_error(mock_get: MagicMock) -> None:
     result = utils.get_ocp_supported_versions("org", "4.12")
     assert result is None
     mock_get.assert_called_once()
+
+
+@patch("operatorcert.utils.subprocess")
+def test_copy_images_to_destination(mock_subprocess: MagicMock) -> None:
+    iib_response = [
+        {
+            "from_index": "quay.io/qwe/asd:v4.12",
+            "index_image_resolved": "quay.io/qwe/asd@sha256:1234",
+        }
+    ]
+    utils.copy_images_to_destination(iib_response, "quay.io/foo/bar", "foo", "test.txt")
+
+    mock_subprocess.run.assert_called_once_with(
+        [
+            "skopeo",
+            "copy",
+            "docker://quay.io/qwe/asd@sha256:1234",
+            "docker://quay.io/foo/bar:v4.12-foo",
+            "--authfile",
+            "test.txt",
+        ],
+        stdout=mock_subprocess.PIPE,
+        stderr=mock_subprocess.PIPE,
+        check=True,
+    )

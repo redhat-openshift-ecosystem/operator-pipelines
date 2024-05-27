@@ -59,6 +59,11 @@ spec:
       script: |
         set -xe
 
+        if [ -z "$(params.CONTEXT)" ]; then
+          echo "No bundle added or changed"
+          exit 0
+        fi
+
         echo "Building $(params.IMAGE)"
         buildah --storage-driver=$(params.STORAGE_DRIVER) bud \
           $(params.BUILD_EXTRA_ARGS) --format=$(params.FORMAT) \

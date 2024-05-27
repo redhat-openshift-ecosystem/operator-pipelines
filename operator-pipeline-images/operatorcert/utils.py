@@ -193,3 +193,34 @@ def get_ocp_supported_versions(organization: str, ocp_metadata_version: Any) -> 
 
     indices = rsp.json().get("data")
     return [index.get("ocp_version") for index in indices]
+
+
+def copy_images_to_destination(
+    iib_responses: Any,
+    destination: str,
+    tag_suffix: str,
+    auth_file: Optional[str] = None,
+) -> None:
+    """
+    Copy IIB index images to a destination given by parameter
+
+    Args:
+        iib_response (Any): IIB build response object
+        destination (str): Registry and repository destination for the index images
+        tag_suffix (str): Tag suffix to append to the index image
+        auth_file (Optional[str], optional): Auth file for destination registry.
+        Defaults to None.
+    """
+    for response in iib_responses:
+        version = response.get("from_index", "").split(":")[-1]
+        cmd = [
+            "skopeo",
+            "copy",
+            f"docker://{response.get('index_image_resolved')}",
+            f"docker://{destination}:{version}-{tag_suffix}",
+        ]
+        if auth_file:
+            cmd.extend(["--authfile", auth_file])
+
+        LOGGER.info("Copying image to destination: %s", cmd)
+        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)

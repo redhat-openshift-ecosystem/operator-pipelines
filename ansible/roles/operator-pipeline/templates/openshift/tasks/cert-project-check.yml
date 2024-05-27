@@ -25,6 +25,12 @@ spec:
         set -xe
         echo "Checking availability of cert project identifier"
 
+        if [ "$(params.cert_project_required)" != "true" ]; then
+          echo "Cert project ID is not required."
+          echo -n "" | tee $(results.certification_project_id.path)
+          exit 0
+        fi
+
         PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
 
         CI_FILE_PATH="$PKG_PATH/ci.yaml"
@@ -32,14 +38,8 @@ spec:
         CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id | select (.!=null)')
 
         if [ -z $CERT_PROJECT_ID ]; then
-          if [ "$(params.cert_project_required)" == "true" ]; then
-            echo "Certification project ID is missing in ci.yaml file (cert_project_id)"
-            exit 1
-          else
-            echo "Cert project ID is not required."
-            echo -n "" | tee $(results.certification_project_id.path)
-            exit 0
-          fi
+          echo "Certification project ID is missing in ci.yaml file (cert_project_id)"
+          exit 1
         fi
 
         echo -n $CERT_PROJECT_ID | tee $(results.certification_project_id.path)
