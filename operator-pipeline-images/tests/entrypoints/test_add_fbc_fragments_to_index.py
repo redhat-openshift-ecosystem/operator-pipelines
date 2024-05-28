@@ -233,9 +233,6 @@ def test_output_index_image_paths() -> None:
     )
 
 
-@patch(
-    "operatorcert.entrypoints.add_fbc_fragments_to_index.utils.copy_images_to_destination"
-)
 @patch("operatorcert.entrypoints.add_fbc_fragments_to_index.add_fbc_fragment_to_index")
 @patch("operatorcert.entrypoints.add_fbc_fragments_to_index.map_index_to_fragment")
 @patch("operatorcert.entrypoints.add_fbc_fragments_to_index.utils.set_client_keytab")
@@ -247,7 +244,6 @@ def test_main(
     mock_keytab: MagicMock,
     mock_mapping: MagicMock,
     mock_add_fbc: MagicMock,
-    mock_copy_images: MagicMock,
 ) -> None:
     args = MagicMock()
     args.indices = ["foo:v4.15", "foo:v4.16"]
@@ -274,12 +270,6 @@ def test_main(
         args.iib_url,
         mock_mapping.return_value,
         args.image_output,
-    )
-    mock_copy_images.assert_called_once_with(
-        mock_add_fbc.return_value,
-        args.image_repository,
-        args.commit_sha,
-        args.authfile,
     )
 
 

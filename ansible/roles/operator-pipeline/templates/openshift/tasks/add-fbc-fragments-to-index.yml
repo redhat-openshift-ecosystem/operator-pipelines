@@ -4,6 +4,10 @@ kind: Task
 metadata:
   name: add-fbc-fragments-to-index
 spec:
+  description: |-
+    This task submits to IIB the catalog fragments created by build-fragment-images
+    task. Each fragment is paired with corresponding index, submitted to build and
+    resulting index image paths are stored in a file.
   params:
     - name: pipeline_image
 
@@ -27,11 +31,6 @@ spec:
       description: |
         Which environment the pipeline is running in. Can be one of [dev, qa, stage, prod]
 
-    - name: hosted
-      default: "false"
-      description: Flag to signal hosted pipeline
-      type: string
-
     - name: kerberos_keytab_secret_name
       description: >-
         The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
@@ -49,9 +48,6 @@ spec:
         secretName: "$(params.kerberos_keytab_secret_name)"
   workspaces:
     - name: output
-    - name: credentials
-      optional: true
-      description: A workspace with credentials for registry push
 
   steps:
     - name: add-fbc-fragments-to-index
@@ -83,15 +79,6 @@ spec:
             INDEX_IMAGES=${INDEX_IMAGES//registry.redhat.io/registry.stage.redhat.io}
         fi
 
-        EXTRA_ARGS=""
-        if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
-          EXTRA_ARGS+=" --authfile $(workspaces.credentials.path)/.dockerconfigjson"
-        fi
-
-        if [[ "$(params.hosted)" == "true" ]]; then
-          EXTRA_ARGS+=" --hosted"
-        fi
-
         # DO NOT use `--verbose` to avoid auth headers appearing in logs
         add-fbc-fragments-to-index \
           --iib-url "$(params.iib_url)" \
@@ -99,7 +86,7 @@ spec:
           --catalog-names "$(params.affected_catalogs)" \
           --image-repository "$(params.image_repository)" \
           --commit-sha "$(params.commit_sha)" \
-          --image-output fbc-index-image-paths.txt $EXTRA_ARGS
+          --image-output fbc-index-image-paths.txt
 
         echo -n "success" | tee "$(results.status.path)"
         cat fbc-index-image-paths.txt | tee "$(workspaces.output.path)/fbc-index-image-paths.txt"

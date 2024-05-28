@@ -835,14 +835,10 @@ spec:
           value: "$(params.kerberos_keytab_secret_name)"
         - name: kerberos_keytab_secret_key
           value: "$(params.kerberos_keytab_secret_key)"
-        - name: hosted
-          value: "true"
       workspaces:
         - name: output
           workspace: results
           subPath: paths
-        - name: credentials
-          workspace: registry-credentials
 
     # Build new temporary index using IIB
     - name: add-bundle-to-index

@@ -60,13 +60,6 @@ def setup_argparser() -> argparse.ArgumentParser:
         help="File name to output comma-separated list of temporary location of the "
         "unpublished index images built by IIB.",
     )
-    parser.add_argument("--authfile", help="")
-
-    parser.add_argument(
-        "--hosted",
-        action="store_true",
-        help="Wether the pipeline is hosted or not.",
-    )
 
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
@@ -251,18 +244,11 @@ def main() -> None:
         args.commit_sha,
     )
 
-    iib_responses = add_fbc_fragment_to_index(
+    add_fbc_fragment_to_index(
         args.iib_url,
         index_fragment_mapping,
         args.image_output,
     )
-    if args.hosted:
-        utils.copy_images_to_destination(
-            iib_responses,
-            args.image_repository,
-            args.commit_sha,
-            args.authfile,
-        )
 
 
 if __name__ == "__main__":  # pragma: no cover

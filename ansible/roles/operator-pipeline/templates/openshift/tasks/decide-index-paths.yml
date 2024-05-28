@@ -4,6 +4,10 @@ kind: Task
 metadata:
   name: decide-index-paths
 spec:
+  description: |-
+    This task checks output of the two previous tasks (add-bundle-to-index
+    and add-fbc-fragments-to-index) which are mutually exclusive.
+    Uses existing output as a result to be used by following tasks.
   params:
     - name: pipeline_image
   results:
@@ -22,13 +26,13 @@ spec:
 
         echo "Checking which build actually ran, FBC change or operator/bundle change."
 
-        LEGACY_BUILD="$(workspaces.input.path)/index-image-paths.txt"
+        BUILD="$(workspaces.input.path)/index-image-paths.txt"
         FBC_BUILD="$(workspaces.input.path)/fbc-index-image-paths.txt"
         INDEX_IMAGE_PATHS="$(results.index_image_paths.path)"
 
-        if [[ -f $LEGACY_BUILD ]]; then
+        if [[ -f $BUILD ]]; then
           echo "Using bundle build results"
-          cat $LEGACY_BUILD | tee $INDEX_IMAGE_PATHS
+          cat $BUILD | tee $INDEX_IMAGE_PATHS
         elif [[ -f $FBC_BUILD ]]; then
           echo "Using FBC build results"
           cat $FBC_BUILD | tee $INDEX_IMAGE_PATHS
