@@ -15,3 +15,11 @@
         remote_src: true
         include:
           - tkn
+
+    - name: Download and extract the opm binary
+      ansible.builtin.unarchive:
+        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest-4.15/opm-linux.tar.gz
+        dest: "{{ temp_tools_dir.path }}"
+        remote_src: true
+        include:
+          - opm

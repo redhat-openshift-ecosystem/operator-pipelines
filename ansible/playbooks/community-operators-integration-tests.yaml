@@ -15,6 +15,7 @@
     operator_package_name: test-e2e-community-operator
     operator_pipeline_url: "https://community-operator-pipeline-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
     git_base_branch: community  # contains config.yaml containing pointer to community-operators index
+    organization: community-operators
   environment:
     K8S_AUTH_API_KEY: '{{ ocp_token }}'
     K8S_AUTH_HOST: '{{ ocp_host }}'
@@ -97,6 +98,14 @@
             apply:
               tags:
                 - test-community-release-pipeline
+
+        - name: Verify the Bundle was released to image indices
+          vars:
+            registry_access_token: "{{ stage_operator_pipelines_test_service_account_access_token }}"
+            ocp_versions_range: "v4.11-v4.14"
+          include_role:
+            name: integration_tests
+            tasks_from: check_bundle_existence_in_index_image
 
       always:
         - name: Cleanup test data

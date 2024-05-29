@@ -27,6 +27,15 @@ jobs:
           # Install python dependencies
           pip install --user openshift pygithub
 
+          # Add certificates to trusted list
+          sudo cp  operator-pipeline-images/certs/* /usr/local/share/ca-certificates
+          # Rename all .pem files to .crt to allow update-ca-certificates
+          for file in /usr/local/share/ca-certificates/*.pem
+          do
+            sudo mv "$file" "${file%.pem}.crt"
+          done
+          sudo update-ca-certificates
+
           echo "${{ secrets.VAULT_PASSWORD }}" > "$HOME"/.vault-password
 
           # secret used also in hosted pipeline for enabling
@@ -75,6 +84,15 @@ jobs:
         run: |
           # Install python dependencies
           pip install --user openshift pygithub
+
+          # Add certificates to trusted list
+          sudo cp  operator-pipeline-images/certs/* /usr/local/share/ca-certificates
+          # Rename all .pem files to .crt to allow update-ca-certificates
+          for file in /usr/local/share/ca-certificates/*.pem
+          do
+            sudo mv "$file" "${file%.pem}.crt"
+          done
+          sudo update-ca-certificates
 
           echo "${{ secrets.VAULT_PASSWORD }}" > "$HOME"/.vault-password
 
