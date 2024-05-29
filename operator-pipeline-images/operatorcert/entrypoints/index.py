@@ -5,10 +5,9 @@ IIB module for building a index images for a bundle
 import argparse
 import logging
 import os
-import subprocess
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from operatorcert import iib, utils
 from operatorcert.logger import setup_logger
@@ -187,37 +186,6 @@ def output_index_image_paths(
     LOGGER.info("Index image paths written to output file %s.", image_output)
 
 
-def copy_images_to_destination(
-    iib_response: Any,
-    destination: str,
-    tag_suffix: str,
-    auth_file: Optional[str] = None,
-) -> None:
-    """
-    Copy IIB index images to a destination given by parameter
-
-    Args:
-        iib_response (Any): IIB build response object
-        destination (str): Registry and repository destination for the index images
-        tag_suffix (str): Tag suffix to append to the index image
-        auth_file (Optional[str], optional): Auth file for destination registry.
-        Defaults to None.
-    """
-    for image in iib_response.get("items", []):
-        version = image.get("from_index", "").split(":")[-1]
-        cmd = [
-            "skopeo",
-            "copy",
-            f"docker://{image.get('index_image_resolved')}",
-            f"docker://{destination}:{version}{tag_suffix}",
-        ]
-        if auth_file:
-            cmd.extend(["--authfile", auth_file])
-
-        LOGGER.info("Copying image to destination: %s", cmd)
-        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-
-
 def main() -> None:  # pragma: no cover
     """
     Main function
@@ -240,8 +208,8 @@ def main() -> None:  # pragma: no cover
         args.mode,
     )
     if args.index_image_destination:
-        copy_images_to_destination(
-            iib_response,
+        utils.copy_images_to_destination(
+            iib_response.get("items", []),
             args.index_image_destination,
             args.index_image_destination_tag_suffix,
             args.authfile,

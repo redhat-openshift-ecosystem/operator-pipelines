@@ -60,6 +60,9 @@ spec:
       description: "Set to 'true' to skip"
       default: 'false'
       type: string
+
+    - name: bundle_path
+
   results:
     - description: ''
       name: log_output_file
@@ -95,7 +98,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [ "$(params.skip)" == "true" ]; then
+          if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" ]]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
@@ -134,7 +137,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [ "$(params.skip)" == "true" ]; then
+          if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" ]]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
@@ -196,7 +199,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [ "$(params.skip)" == "true" ]; then
+          if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" ]]; then
               echo "Preflight testing has been skipped"
               echo -n "none" > "$(results.log_output_file.path)"
               echo -n "$(params.test_result_path)" > "$(results.result_output_file.path)"

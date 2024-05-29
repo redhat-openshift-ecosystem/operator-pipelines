@@ -14,6 +14,9 @@ spec:
       description: |
         Path to an operator within the git repository where the config is expected.
 
+    - name: bundle_path
+      description: Path indicating bundle affected with the change
+
   results:
     - name: upgrade-graph-mode
       description: "A graph update mode that defines how channel graphs are updated"
@@ -32,8 +35,8 @@ spec:
 
         CONFIG_PATH="$(params.operator_path)/ci.yaml"
 
-        if [ ! -f "$CONFIG_PATH" ]; then
-            echo "Config file $CONFIG_PATH does not exist."
+        if [[ ! -f "$CONFIG_PATH" || -z "$(params.bundle_path)" ]]; then
+            echo "Config file $CONFIG_PATH does not exist or no bundle affected."
             echo "replaces" | tee $(results.upgrade-graph-mode.path)
             echo "false" | tee $(results.fbc-enabled.path)
             exit 0

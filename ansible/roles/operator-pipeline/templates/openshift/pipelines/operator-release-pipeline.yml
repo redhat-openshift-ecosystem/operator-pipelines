@@ -79,6 +79,7 @@ spec:
     - name: registry-pull-credentials
     - name: registry-push-credentials
     - name: registry-serve-credentials
+    - name: hosted-registry-credentials
     - name: image-data
 
   tasks:
@@ -220,15 +221,13 @@ spec:
         kind: Task
       runAfter:
         - detect-changes
-      when: &bundleAdded
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: operator_path
           value: "$(tasks.detect-changes.results.operator_path)"
+        - name: bundle_path
+          value: "$(tasks.detect-changes.results.bundle_path)"
       workspaces:
         - name: source
           workspace: repository
@@ -395,13 +394,41 @@ spec:
           workspace: repository
           subPath: src
 
+    - name: build-fragment-images
+      taskRef:
+        name: build-fragment-images
+        kind: Task
+      runAfter:
+        # This is just a temporary location until we have a proper
+        # FCB branch based on config
+        - get-supported-versions
+      when:
+        - input: "$(tasks.detect-changes.results.affected_catalogs)"
+          operator: notin
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: affected_catalogs
+          value: "$(tasks.detect-changes.results.affected_catalogs)"
+        - name: fragment_repository
+          value: "$(params.registry)/$(params.image_namespace)/catalog"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+        - name: credentials
+          workspace: hosted-registry-credentials
+
     # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
     - name: acquire-lease
       retries: 8
       runAfter:
-        - get-supported-versions
+        - build-fragment-images
       when: &whenNotUndistributed
-        - input: &operatorDistribution "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
+        - input: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
           operator: notin
           values:
             - undistributed
@@ -415,11 +442,57 @@ spec:
         - name: lease-owner
           value: "$(context.pipelineRun.name)"
 
+    - name: add-fbc-fragments-to-index
+      runAfter:
+        # This is just a temporary location until we have a proper
+        # FCB branch based on config
+        - acquire-lease
+      when:
+        - input: "$(tasks.detect-changes.results.affected_catalogs)"
+          operator: notin
+          values: [""]
+        - input: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
+          operator: notin
+          values:
+            - undistributed
+      taskRef:
+        name: add-fbc-fragments-to-index
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: index_images
+          value: "$(tasks.get-supported-versions.results.indices)"
+        - name: commit_sha
+          value: "$(params.git_commit)"
+        - name: affected_catalogs
+          value: "$(tasks.detect-changes.results.affected_catalogs)"
+        - name: image_repository
+          value: "$(params.registry)/$(params.image_namespace)/catalog"
+        - name: iib_url
+          value: "$(tasks.set-env.results.iib_url)"
+        - name: environment
+          value: "$(params.env)"
+        - name: kerberos_keytab_secret_name
+          value: "$(params.kerberos_keytab_secret_name)"
+        - name: kerberos_keytab_secret_key
+          value: "$(params.kerberos_keytab_secret_key)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: paths
+
     # call IIB to add the bundle to index
     - name: add-bundle-to-index
       runAfter:
-        - acquire-lease
-      when: *whenNotUndistributed
+        - add-fbc-fragments-to-index
+      when:
+        - input: "$(tasks.detect-changes.results.affected_catalogs)"
+          operator: in
+          values: [""]
+        - input: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
+          operator: notin
+          values:
+            - undistributed
       taskRef:
         name: add-bundle-to-index
       params:
@@ -440,13 +513,28 @@ spec:
         - name: upgrade-graph-mode
           value: "$(tasks.read-config.results.upgrade-graph-mode)"
       workspaces:
-        - name: results
+        - name: output
           workspace: results
+          subPath: paths
+
+    - name: decide-index-paths
+      runAfter:
+        - add-bundle-to-index
+      when: *whenNotUndistributed
+      taskRef:
+        name: decide-index-paths
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: input
+          workspace: results
+          subPath: paths
 
     # use manifest list digests from IIB output and get the manifest digests from registry
     - name: get-manifest-digests
       runAfter:
-        - add-bundle-to-index
+        - decide-index-paths
       when: *whenNotUndistributed
       taskRef:
         name: get-manifest-digests
@@ -454,7 +542,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: index_image_paths
-          value: "$(tasks.add-bundle-to-index.results.index_image_paths)"
+          value: "$(tasks.decide-index-paths.results.index_image_paths)"
         - name: environment
           value: "$(params.env)"
 
@@ -547,7 +635,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: index_image_paths
-          value: "$(tasks.add-bundle-to-index.results.index_image_paths)"
+          value: "$(tasks.decide-index-paths.results.index_image_paths)"
         - name: environment
           value: "$(params.env)"
         - name: organization

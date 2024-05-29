@@ -133,32 +133,3 @@ def test_output_index_image_paths() -> None:
         "registry/index:v4.8+registry.test/test@sha256:1234,"
         "registry/index:v4.9+registry.test/test@sha256:5678"
     )
-
-
-@patch("operatorcert.entrypoints.index.subprocess")
-def test_copy_images_to_destination(mock_subprocess: MagicMock) -> None:
-    iib_response = {
-        "items": [
-            {
-                "from_index": "quay.io/qwe/asd:v4.12",
-                "index_image_resolved": "quay.io/qwe/asd@sha256:1234",
-            }
-        ]
-    }
-    index.copy_images_to_destination(
-        iib_response, "quay.io/foo/bar", "--foo", "test.txt"
-    )
-
-    mock_subprocess.run.assert_called_once_with(
-        [
-            "skopeo",
-            "copy",
-            "docker://quay.io/qwe/asd@sha256:1234",
-            "docker://quay.io/foo/bar:v4.12--foo",
-            "--authfile",
-            "test.txt",
-        ],
-        stdout=mock_subprocess.PIPE,
-        stderr=mock_subprocess.PIPE,
-        check=True,
-    )
