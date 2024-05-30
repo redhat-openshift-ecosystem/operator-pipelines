@@ -141,12 +141,12 @@ from typing import Any
             ("hello", "0.0.3"),
             {
                 (
-                    Fail,
+                    Warn,
                     "Operator name from annotations.yaml (foo) does not match"
                     " the operator's directory name (hello)",
                 ),
                 (
-                    Fail,
+                    Warn,
                     "Operator name from annotations.yaml (foo) does not match"
                     " the name defined in the CSV (hello)",
                 ),
@@ -171,7 +171,7 @@ from typing import Any
             ("hello", "0.0.3"),
             {
                 (
-                    Fail,
+                    Warn,
                     "Operator name from annotations.yaml (hello) does not match"
                     " the name defined in the CSV (foo)",
                 ),
@@ -182,6 +182,34 @@ from typing import Any
                 ),
             },
             id="Wrong CSV name, consistent bundles",
+        ),
+        pytest.param(
+            [
+                bundle_files(
+                    "hello",
+                    "0.0.1",
+                    csv={"metadata": {"name": "foo.v0.0.1"}},
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.2",
+                    csv={"metadata": {"name": "foo.v0.0.2"}},
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.3",
+                    csv={"metadata": {"name": "foo.v0.0.3"}},
+                ),
+            ],
+            ("hello", "0.0.3"),
+            {
+                (
+                    Warn,
+                    "Operator name from annotations.yaml (hello) does not match"
+                    " the name defined in the CSV (foo)",
+                ),
+            },
+            id="Wrong CSV name in all bundles",
         ),
     ],
     indirect=False,

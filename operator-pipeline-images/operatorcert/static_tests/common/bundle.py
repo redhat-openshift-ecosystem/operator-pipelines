@@ -42,11 +42,6 @@ def check_operator_name(bundle: Bundle) -> Iterator[CheckResult]:
     other_bundles = all_bundles - {bundle}
     other_metadata_operator_names = {x.metadata_operator_name for x in other_bundles}
     other_csv_operator_names = {x.csv_operator_name for x in other_bundles}
-    # Count how many unique names are in use in the CSV and annotations.yaml across
-    # all other bundles. Naming is consistent if the count is zero (when the bundle
-    # under test is the only bundle for its operator) or one
-    consistent_metadata_names = len(other_metadata_operator_names) < 2
-    consistent_csv_names = len(other_csv_operator_names) < 2
     if other_bundles:
         yield from _check_consistency(
             bundle.metadata_operator_name,
@@ -65,16 +60,10 @@ def check_operator_name(bundle: Bundle) -> Iterator[CheckResult]:
             f"Operator name from annotations.yaml ({bundle.metadata_operator_name})"
             f" does not match the name defined in the CSV ({bundle.csv_operator_name})"
         )
-        if consistent_metadata_names and consistent_csv_names:
-            yield Fail(msg)
-        else:
-            yield Warn(msg)
+        yield Warn(msg) if other_bundles else Fail(msg)
     if bundle.metadata_operator_name != bundle.operator_name:
         msg = (
             f"Operator name from annotations.yaml ({bundle.metadata_operator_name})"
             f" does not match the operator's directory name ({bundle.operator_name})"
         )
-        if consistent_metadata_names:
-            yield Fail(msg)
-        else:
-            yield Warn(msg)
+        yield Warn(msg) if other_bundles else Fail(msg)
