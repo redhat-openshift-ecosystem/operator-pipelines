@@ -9,7 +9,6 @@
 # OPM allows for the generation of catalogs using different templates.
 # - basic: generates a basic catalog
 # - semver: generates a catalog with semver versioning
-# - composite: generates a catalog using a composite template
 
 PDW=$(shell pwd)
 OPERATOR_NAME=$(shell basename $(PDW))
@@ -49,9 +48,7 @@ fbc-onboarding: fbc-onboarding-deps ${BINDIR}/opm clean
 #
 # --- SEMVER TEMPLATE ---
 #catalog: semver
-#
-# --- COMPOSITE TEMPLATE ---
-catalog: composite
+
 
 # basic target provides an example FBC generation from a `basic` template type.
 # this example takes a single file as input and generates a well-formed FBC operator contribution as an output
@@ -71,13 +68,6 @@ semver: ${BINDIR}/opm clean
 		mkdir -p ${CATALOG_DIR}/$${version}/${OPERATOR_NAME}/ && \
 		${BINDIR}/opm alpha render-template semver -o yaml  ${OPERATOR_CATALOG_TEMPLATE_DIR}/$${version}.yaml > ${CATALOG_DIR}/$${version}/${OPERATOR_NAME}/catalog.yaml; \
 	done
-
-# composite target processes a composite template to generate the FBC contributions
-# `render-template composite` has `--validate` option enabled by default,
-# so no subsequent validation is required
-.PHONY: composite
-composite: ${BINDIR}/opm clean
-	${BINDIR}/opm alpha render-template composite -f ${PDW}/catalogs.yaml -c ${PDW}/composite-config.yaml
 
 #
 # validate target illustrates FBC validation

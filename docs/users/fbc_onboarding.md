@@ -56,7 +56,6 @@ $ tree operators/aqua
 operators/aqua
 ├── 0.0.1
 ...
-├── catalogs.yaml
 ├── catalog-templates
 │   ├── v4.12.yaml
 │   ├── v4.13.yaml
@@ -64,11 +63,10 @@ operators/aqua
 │   ├── v4.15.yaml
 │   └── v4.16.yaml
 ├── ci.yaml
-└── composite-config.yaml
 ```
 ... and File-based catalog in `catalogs` directory
 ```bash
-$ tree catalogs
+$ tree (repository root)/catalogs
 catalogs
 ├── v4.12
 │   └── aqua
@@ -92,16 +90,15 @@ catalogs
 Artifacts generated in the previous step need to be added to a git and submitted via pull request. The operator pipeline validates the content of the catalogs and releases changes into ocp catalogs.
 
 ```bash
-$ git add operators/aqua/{catalog-templates,catalogs.yaml,composite-config.yaml,ci.yaml}
+$ git add operators/aqua/{catalog-templates,ci.yaml}
 
-$ git add
 $ git add catalogs/{v4.12,v4.13,v4.14,v4.15,v4.16}/aqua
 
 $ git commit --signoff -m "Add FBC resources for aqua operator"
 ```
 
 ## Generating catalogs from templates
-Catalog templates are used to simplify a view of a catalog and allow easier manipulation of catalogs. The automated conversion pre-generates a basic + composite template that can be turned into full FBC using the following command:
+Catalog templates are used to simplify a view of a catalog and allow easier manipulation of catalogs. The automated conversion pre-generates a basic template that can be turned into full FBC using the following command:
 
 ```bash
 make catalog
