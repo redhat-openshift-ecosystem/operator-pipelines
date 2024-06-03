@@ -14,8 +14,6 @@ from operatorcert.utils import run_command
 
 LOGGER = logging.getLogger("operator-cert")
 
-COMPOSITE_TEMPLATE_CATALOGS = "catalogs.yaml"
-COMPOSITE_TEMPLATE_CONTRIBUTIONS = "composite-config.yaml"
 CATALOG_TEMPLATES_DIR = "catalog-templates"
 
 
@@ -96,7 +94,7 @@ def opm_cache(image: str) -> bytes:
         bytes: An output of the opm command
     """
     LOGGER.debug("Building cache for %s", image)
-    output = run_command(["opm", "render", "-o", "yaml", "--migrate", image])
+    output = run_command(["opm", "render", "-o", "yaml", image])
     return output.stdout
 
 
@@ -205,81 +203,6 @@ def generate_and_save_base_templates(
     LOGGER.info("Template for %s saved to %s", version, template_path)
 
 
-def generate_composite_templates(
-    operator: Operator, catalog_versions: List[str]
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """
-    Generate a composite template for given operator and all supported versions
-
-    Args:
-        operator (Operator): A operator object
-        catalog_versions (List[str]): List of supported catalog versions
-
-    Returns:
-        Tuple[Dict, Dict]: catalog and contributions templates
-    """
-    catalogs = [
-        {
-            "name": f"v{version}",
-            "destination": {
-                "workingDir": f"../../catalogs/v{version}",
-            },
-            "builders": ["olm.builder.basic", "olm.builder.semver"],
-        }
-        for version in catalog_versions
-    ]
-    composite_catalogs = {
-        "schema": "olm.composite.catalogs",
-        "catalogs": catalogs,
-    }
-
-    components = [
-        {
-            "name": f"v{version}",
-            "destination": {
-                "path": operator.operator_name,
-            },
-            "strategy": {
-                "name": "basic",
-                "template": {
-                    "schema": "olm.builder.basic",
-                    "config": {
-                        "input": f"{CATALOG_TEMPLATES_DIR}/v{version}.yaml",
-                        "output": "catalog.yaml",
-                    },
-                },
-            },
-        }
-        for version in catalog_versions
-    ]
-
-    contributions = {"schema": "olm.composite", "components": components}
-    return composite_catalogs, contributions
-
-
-def generate_and_save_composite_templates(
-    operator: Operator, catalog_versions: List[str]
-) -> None:
-    """
-    Generate and save composite templates for given operator and all supported versions
-
-    Args:
-        operator (Operator): A operator object
-        catalog_versions (List[str]): List of supported catalog versions
-    """
-    catalog, contributions = generate_composite_templates(operator, catalog_versions)
-    with open(
-        os.path.join(operator.root, COMPOSITE_TEMPLATE_CATALOGS), "w", encoding="utf8"
-    ) as f:
-        yaml.safe_dump(catalog, f, explicit_start=True)
-    with open(
-        os.path.join(operator.root, COMPOSITE_TEMPLATE_CONTRIBUTIONS),
-        "w",
-        encoding="utf8",
-    ) as f:
-        yaml.safe_dump(contributions, f, explicit_start=True)
-
-
 def update_operator_config(operator: Operator) -> None:
     """
     Switch operator config to FBC
@@ -299,7 +222,7 @@ def update_operator_config(operator: Operator) -> None:
         yaml.safe_dump(config, f, explicit_start=True)
 
 
-def render_fbc_from_template(operator: Operator) -> None:
+def render_fbc_from_template(operator: Operator, version: str) -> None:
     """
     Render catalog from templates
 
@@ -311,11 +234,12 @@ def render_fbc_from_template(operator: Operator) -> None:
             "opm",
             "alpha",
             "render-template",
-            "composite",
-            "-f",
-            COMPOSITE_TEMPLATE_CATALOGS,
-            "-c",
-            COMPOSITE_TEMPLATE_CONTRIBUTIONS,
+            "basic",
+            "-o",
+            "yaml",
+            os.path.join(operator.root, CATALOG_TEMPLATES_DIR, f"v{version}.yaml"),
+            ">",
+            f"../../catalogs/v{version}/catalog.yaml"
         ],
         cwd=operator.root,
     )
@@ -356,11 +280,8 @@ def onboard_operator_to_fbc(
             version, operator_name, cache_dir, template_dir
         )
 
-    LOGGER.info("Generating composite templates")
-    generate_and_save_composite_templates(operator, supported_versions)
-
-    LOGGER.info("Rendering FBC from templates")
-    render_fbc_from_template(operator)
+        LOGGER.info("Rendering FBC from templates")
+        render_fbc_from_template(operator, version)
 
     LOGGER.info("Updating operator config")
     update_operator_config(operator)
