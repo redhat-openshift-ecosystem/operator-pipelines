@@ -24,12 +24,10 @@ template the operator will be using.
 
 * Basic template
 * SemVer template
-* Composite template
 
 More information about each template can be found at [opm doc](https://olm.operatorframework.io/docs/reference/catalog-templates/).
 
-The recommended template from the maintainability point of view is `SemVer` or `Composite` with
-`SemVer`integration.
+The recommended template from the maintainability point of view is `SemVer`.
 
 ## Generate catalogs using templates
 To generate a final catalog for an operator a user needs to execute different `opm`
@@ -49,10 +47,8 @@ The right place for the Makefile is in the operator's root directory
 ├── 0.0.1
 │   ├── manifests
 │   └── metadata
-├── catalogs.yaml
 ├── catalog-templates
 ├── ci.yaml
-├── composite-config.yaml
 └── Makefile
 
 ```
@@ -63,7 +59,7 @@ can be submitted as a PR in Github and once the PR is processed changes will be 
 OCP index.
 
 ```bash
-$ tree catalogs
+$ tree (repository-root)/catalogs
 catalogs
 ├── v4.12
 │   └── aqua

@@ -38,8 +38,7 @@ a local cache is generated during a run.
 The script will execute the following steps:
  - Fetch a list of currently supported OCP catalogs
  - Transform existing catalogs into a basic template
- - Generate a composite template for an operator
- - Generate an FBC catalog for a given operator
+ - Generate FBC catalog contributions for an operator for all supported catalog versions
  - Update operator ci.yaml config
 
 The following examples will be using `aqua` operator as an example. Change an operator name that matches the operator you want to convert.
@@ -61,7 +60,6 @@ $ tree operatos/aqua
 operators/aqua
 ├── 0.0.1
 ...
-├── catalogs.yaml
 ├── catalog-templates
 │   ├── v4.12.yaml
 │   ├── v4.13.yaml
@@ -69,11 +67,10 @@ operators/aqua
 │   ├── v4.15.yaml
 │   └── v4.16.yaml
 ├── ci.yaml
-└── composite-config.yaml
 ```
 ... and File-based catalog in `catalogs` directory
 ```bash
-$ tree catalogs
+$ tree (repository root)/catalogs
 catalogs
 ├── v4.12
 │   └── aqua
@@ -97,19 +94,38 @@ catalogs
 Artifacts generated in the previous step need to be added to a git and submitted via pull request. The operator pipeline validates the content of the catalogs and releases changes into ocp catalogs.
 
 ```bash
-$ git add operators/aqua/{catalog-templates,catalogs.yaml,composite-config.yaml,ci.yaml}
+$ git add operators/aqua/{catalog-templates,ci.yaml}
 
-$ git add
 $ git add catalogs/{v4.12,v4.13,v4.14,v4.15,v4.16}/aqua
 
 $ git commit --signoff -m "Add FBC resources for aqua operator"
 ```
 
 ## Generating catalogs from templates
-Catalog templates are used to simplify a view of a catalog and allow easier manipulation of catalogs. The automated conversion pre-generates a basic + composite template that can be turned into full FBC using the following command:
+Catalog templates are used to simplify a view of a catalog and allow easier manipulation of catalogs. The automated conversion pre-generates a basic template that can be turned into full FBC using the following command:
 
 ```bash
-opm alpha render-template composite -f catalogs.yaml -c composite-config.yaml
+opm alpha render-template basic ./catalog-templates/v${VERSION}.yaml > ${ROOT}/catalogs/v${VERSION}/${OPERATOR_NAME}/catalog.yaml
 ```
+For the example `aqua` operator above, if could look like:
+```bash
+ROOT=../..
+for VERSION in "4.12 4.13 4.14 4.15 4.16"
+do
+   opm alpha render-template basic ./catalog-templates/v${VERSION}.yaml > ${ROOT}/catalogs/v${VERSION}/aqua/catalog.yaml
+done
+```
+
+# -------------------------------------------------------------------
+## @Ales
+not sure why the Makefile 'workflow' is separate from this doc, since the care-and-maintenance of catalog templates is pretty closely tied to an automation path, like the Makefile target:
+```Makefile
+# --- BASIC TEMPLATE ---
+catalog: basic
+```
+I'd be tempted to merge these two docs and keep the "howto generate FBC contributions" is all about the Makefile,
+deleting the contribution generation phases from the onboarding doc & script
+# -------------------------------------------------------------------
+
 
 Of course, you can choose any type of template that you prefer. More information about catalog templates can be found [here](https://olm.operatorframework.io/docs/reference/catalog-templates/)
