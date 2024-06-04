@@ -38,7 +38,7 @@ spec:
         if [[ ! -f "$CONFIG_PATH" || -z "$(params.bundle_path)" ]]; then
             echo "Config file $CONFIG_PATH does not exist or no bundle affected."
             echo "replaces" | tee $(results.upgrade-graph-mode.path)
-            echo "false" | tee $(results.fbc-enabled.path)
+            echo -n "false" | tee $(results.fbc-enabled.path)
             exit 0
         fi
 
@@ -62,5 +62,5 @@ spec:
             UPGRADE_GRAPH_MODE=`echo $UPGRADE_GRAPH_MODE | sed 's/-mode$//'`
         fi
 
-        echo $FBC_ENABLEMENT | tee $(results.fbc-enabled.path)
+        echo -n $FBC_ENABLEMENT | tee $(results.fbc-enabled.path)
         echo -n $UPGRADE_GRAPH_MODE | tee $(results.upgrade-graph-mode.path)

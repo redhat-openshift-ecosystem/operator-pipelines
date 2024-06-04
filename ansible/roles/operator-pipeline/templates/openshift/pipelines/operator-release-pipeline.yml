@@ -331,6 +331,9 @@ spec:
           workspace: registry-pull-credentials
         - name: dest-registry-credentials
           workspace: registry-push-credentials
+        - name: output
+          workspace: results
+          subPath: summary
 
     # Publish bundle metadata to Pyxis
     - name: publish-pyxis-data
@@ -642,6 +645,10 @@ spec:
           value: "$(tasks.get-organization.results.organization)"
         - name: quay_push_final_index_secret
           value: "$(params.quay_push_final_index_secret)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: summary
 
 
   finally:
@@ -840,6 +847,10 @@ spec:
           value: "true"
         - name: pipeline_name
           value: "$(context.pipeline.name)"
+        - name: pipeline_status
+          value: "$(tasks.status)"
+        - name: fbc-enabled
+          value: "$(tasks.read-config.results.fbc-enabled)"
       workspaces:
         - name: base
           workspace: repository

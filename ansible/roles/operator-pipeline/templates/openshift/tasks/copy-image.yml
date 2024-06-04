@@ -23,6 +23,8 @@ spec:
       description: Docker config for the source registry
     - name: dest-registry-credentials
       description: Docker config for the destination registry
+    - name: output
+      description: Scratch space and storage for the comment and related data
   results:
     - name: container_digest
     - name: image_pullspec
@@ -31,6 +33,11 @@ spec:
       image: "$(params.pipeline_image)"
       script: |
         set -xe
+
+        # Save data about released bundle to volume
+        RELEASE_INFO_DIR_PATH="$(workspaces.output.path)/release_info"
+        mkdir "$RELEASE_INFO_DIR_PATH"
+        echo "- $(params.src_image)" | tee "$RELEASE_INFO_DIR_PATH/released_bundle.txt"
 
         if [[ "$(params.vendor_label)" == "" ]]; then
           echo "Image pullspec for community bundle is the source image itself."

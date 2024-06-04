@@ -1397,6 +1397,10 @@ spec:
           value: "true"
         - name: pipeline_name
           value: "$(context.pipeline.name)"
+        - name: pipeline_status
+          value: "$(tasks.status)"
+        - name: fbc-enabled
+          value: "$(tasks.read-config.results.fbc-enabled)"
       workspaces:
         - name: base
           workspace: repository
