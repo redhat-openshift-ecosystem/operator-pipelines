@@ -260,6 +260,14 @@ def _validate_result(result: dict[str, list[str]]) -> None:
         message += f"The PR deletes existing bundles: {sorted(deleted_bundles)}\n"
     if len(added_bundles := result.get("added_bundles", [])) > 1:
         message += f"The PR affects more than one bundle: {sorted(added_bundles)}\n"
+    if len(
+        affected_catalog_operators := result.get("affected_catalog_operators", [])
+    ) > 0 and (len(affected_bundles := result.get("affected_bundles", [])) > 0):
+        message += (
+            f"The PR affects a bundle ({affected_bundles}) and catalog"
+            f"({affected_catalog_operators}) at the same time. Split operator and "
+            "catalog changes into 2 separate pull requests.\n"
+        )
 
     catalog_operators = sorted(
         list(
