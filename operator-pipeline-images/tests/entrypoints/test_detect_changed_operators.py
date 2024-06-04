@@ -569,20 +569,109 @@ def test_github_pr_affected_files_invalid_url(
         pytest.param(
             {
                 "extra_files": ["empty.txt", "operators/empty.txt"],
+                "affected_operators": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "added_bundles": [],
+                "affected_catalog_operators": [],
+            },
+            False,
+            "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt']\n",
+            id="Extra files",
+        ),
+        pytest.param(
+            {
+                "extra_files": [],
                 "affected_operators": ["operator-e2e", "operator-clone-e2e"],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "added_bundles": [],
+                "affected_catalog_operators": [],
+            },
+            False,
+            "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']\n",
+            id="Multiple operators",
+        ),
+        pytest.param(
+            {
+                "extra_files": [],
+                "affected_operators": [],
                 "modified_bundles": ["operator-e2e/0.0.101"],
+                "deleted_bundles": [],
+                "added_bundles": [],
+                "affected_catalog_operators": [],
+            },
+            False,
+            "The PR modifies existing bundles: ['operator-e2e/0.0.101']\n",
+            id="Modified bundles",
+        ),
+        pytest.param(
+            {
+                "extra_files": [],
+                "affected_operators": [],
+                "modified_bundles": [],
                 "deleted_bundles": ["operator-clone-e2e/0.0.100"],
+                "added_bundles": [],
+                "affected_catalog_operators": [],
+            },
+            False,
+            "The PR deletes existing bundles: ['operator-clone-e2e/0.0.100']\n",
+            id="Deleted bundles",
+        ),
+        pytest.param(
+            {
+                "extra_files": [],
+                "affected_operators": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
                 "added_bundles": ["operator-e2e/0.0.101", "operator-clone-e2e/0.0.100"],
+                "affected_catalog_operators": [],
+            },
+            False,
+            "The PR affects more than one bundle: ['operator-clone-e2e/0.0.100', 'operator-e2e/0.0.101']\n",
+            id="Multiple bundles",
+        ),
+        pytest.param(
+            {
+                "extra_files": [],
+                "affected_operators": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "added_bundles": [],
                 "affected_catalog_operators": ["v4.15/operator-1", "v4.15/operator-2"],
             },
             False,
-            "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt']\n"
-            "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']\n"
-            "The PR modifies existing bundles: ['operator-e2e/0.0.101']\n"
-            "The PR deletes existing bundles: ['operator-clone-e2e/0.0.100']\n"
-            "The PR affects more than one bundle: ['operator-clone-e2e/0.0.100', 'operator-e2e/0.0.101']\n"
             "The PR affects more than one catalog operator: ['operator-1', 'operator-2']",
-            id="Invalid changes detected",
+            id="Multiple catalog operators",
+        ),
+        pytest.param(
+            {
+                "extra_files": ["empty.txt", "operators/empty.txt"],
+                "affected_operators": ["operator-e2e", "operator-clone-e2e"],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "added_bundles": [],
+                "affected_catalog_operators": [],
+            },
+            False,
+            "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt']\n"
+            "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']\n",
+            id="Multiple issues",
+        ),
+        pytest.param(
+            {
+                "extra_files": [],
+                "affected_operators": ["operator-e2e"],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "affected_bundles": ["operator-e2e/0.0.101"],
+                "added_bundles": [],
+                "affected_catalog_operators": ["v4.15/operator-e2e"],
+            },
+            False,
+            "The PR affects a bundle (['operator-e2e/0.0.101']) and catalog(['v4.15/operator-e2e']) "
+            "at the same time. Split operator and catalog changes into 2 separate pull requests.\n",
+            id="Operator and catalog changes are mixed",
         ),
         pytest.param(
             {
@@ -591,11 +680,24 @@ def test_github_pr_affected_files_invalid_url(
                 "modified_bundles": [],
                 "deleted_bundles": [],
                 "added_bundles": ["operator-e2e/0.0.101"],
-                "affected_catalog_operators": ["v4.15/operator-1", "v4.16/operator-1"],
+                "affected_catalog_operators": [],
             },
             True,
             None,
-            id="Valid result",
+            id="Add bundle",
+        ),
+        pytest.param(
+            {
+                "extra_files": [],
+                "affected_operators": [],
+                "modified_bundles": [],
+                "deleted_bundles": [],
+                "added_bundles": [],
+                "affected_catalog_operators": ["v4.15/operator-e2e"],
+            },
+            True,
+            None,
+            id="Add operator catalog",
         ),
     ],
 )
