@@ -7,7 +7,7 @@ spec:
   params:
     - name: pipeline_image
     - name: base_image
-      default: quay.io/redhat-isv/preflight-test@sha256:38696d4b6de4cc944d1b231e538a294ac276fa137c4ffca282e21d36896ae586
+      default: quay.io/redhat-isv/preflight-test@sha256:dfc129ac9b6f6969ad648edb113edbcbf344373c3223d74aa7fc7aad49e21bf4
       description: Preflight image used
     - name: package_name
       description: Package name for the Operator under test
