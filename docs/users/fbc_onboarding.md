@@ -18,35 +18,22 @@ existing operator into FBC format.
 We want to help with this process and we prepared a tooling that helps with this transition.
 
 ## Convert existing operator to FBC
-As a prerequisite to this process, you need to install a few dependencies.
+As a prerequisite to this process, you need to download a `Makefile` that
+automates the migration process.
 
 ```bash
 # Go to the operator repo directory (certified-operators, marketplace-operators, community-operators-prod)
-cd certified-operators
-
-# Install a migration script
-pip install git+https://github.com/redhat-openshift-ecosystem/operator-pipelines.git
-
-# Download opm cli tool
-curl -sL https://github.com/operator-framework/operator-registry/releases/download/v1.39.0/linux-amd64-opm -o opm && \
-chmod +x opm && mv opm ~/.local/bin
+cd <operator-repo>/operator/<operator-name>
+wget https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipelines/main/fbc/Makefile
 ```
 
 Now we can convert existing operator into FBC. The initial run takes a while because
 a local cache is generated during a run.
 
-The script will execute the following steps:
- - Fetch a list of currently supported OCP catalogs
- - Transform existing catalogs into a basic template
- - Generate a composite template for an operator
- - Generate an FBC catalog for a given operator
- - Update operator ci.yaml config
+To convert existing operator to `FBC` format you need to execute following command:
 
-The following examples will be using `aqua` operator as an example. Change an operator name that matches the operator you want to convert.
 ```bash
-$ fbc-onboarding --operator-name aqua \
- --repo-root . \
- --verbose
+$ make fbc-onboarding
 
 2024-04-24 15:53:05,537 [operator-cert] INFO Generating FBC templates for the following versions: ['4.12', '4.13', '4.14', '4.15', '4.16']
 2024-04-24 15:53:07,632 [operator-cert] INFO Processing catalog: v4.12
@@ -54,9 +41,17 @@ $ fbc-onboarding --operator-name aqua \
 ...
 ```
 
+The Makefile will execute the following steps:
+ - Download dependencies needed for the migration (opm, fbc-onboarding CLI)
+ - Fetch a list of currently supported OCP catalogs
+ - Transform existing catalogs into a basic template
+ - Generate a composite template for an operator
+ - Generate an FBC catalog for a given operator
+ - Update operator ci.yaml config
+
 After a script is finished you should see a template and generated fbc in the repository.
 ```bash
-$ tree operatos/aqua
+$ tree operators/aqua
 
 operators/aqua
 ├── 0.0.1
@@ -109,7 +104,8 @@ $ git commit --signoff -m "Add FBC resources for aqua operator"
 Catalog templates are used to simplify a view of a catalog and allow easier manipulation of catalogs. The automated conversion pre-generates a basic + composite template that can be turned into full FBC using the following command:
 
 ```bash
-opm alpha render-template composite -f catalogs.yaml -c composite-config.yaml
+make catalog
 ```
 
-Of course, you can choose any type of template that you prefer. More information about catalog templates can be found [here](https://olm.operatorframework.io/docs/reference/catalog-templates/)
+Of course, you can choose any type of template that you prefer by modifying the Makefile target.
+More information about catalog templates can be found [here](https://olm.operatorframework.io/docs/reference/catalog-templates/)

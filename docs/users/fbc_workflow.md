@@ -36,7 +36,9 @@ To generate a final catalog for an operator a user needs to execute different `o
 commands based on the template type. We as operator pipeline maintainers want
 to simplify this process and we prepared a `Makefile` with all pre-configured targets.
 
-To get the `Makefile` follow these steps
+To get the `Makefile` follow these steps (In case you converted the existing operator and
+followed the [onboarding](./fbc_onboarding.md) guide the `Makefile` should be already in
+your operator directory and you can skip the step.)
 
 ```bash
 cd <operator-repo>/operator/<operator-name>

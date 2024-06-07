@@ -16,6 +16,8 @@ OPERATOR_NAME=$(shell basename $(PDW))
 TOPDIR=$(abspath $(dir $(PWD))/../)
 BINDIR=${TOPDIR}/bin
 
+# Add the bin directory to the PATH
+export PATH := $(BINDIR):$(PATH)
 # A place to store the generated catalogs
 CATALOG_DIR=${TOPDIR}/catalogs
 
@@ -29,7 +31,7 @@ OCP_VERSIONS=$(shell echo "v4.12 v4.13 v4.14 v4.15 v4.16" )
 
 #
 .PHONY: fbc-onboarding
-fbc-onboarding: fbc-onboarding-deps clean
+fbc-onboarding: fbc-onboarding-deps ${BINDIR}/opm clean
 	fbc-onboarding \
 		--repo-root $(TOPDIR) \
 		--operator-name $(OPERATOR_NAME) \
