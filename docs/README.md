@@ -25,15 +25,15 @@ If you have an existing Operator read our contribution guidelines on how to [ope
 
 ## Contributing Guide
 
-- [Prerequisites](contributing-prerequisites.md)
-- [Where to place operator](contributing-where-to.md)
-- [Creating pull request (PR)](contributing-via-pr.md)
-- [Operator Publishing / Review settings](operator-ci-yaml.md)
-- [OKD/OpenShift Catalogs criteria and options](packaging-required-criteria-ocp.md)
+- [Prerequisites](users/contributing-prerequisites.md)
+- [Where to place operator](users/contributing-where-to.md)
+- [Creating pull request (PR)](users/contributing-via-pr.md)
+- [Operator Publishing / Review settings](users/operator-ci-yaml.md)
+- [OKD/OpenShift Catalogs criteria and options](users/packaging-required-criteria-ocp.md)
 
 ## Test and release process for the Operator
 
-Refer to the [operator pipeline documentation](docs/pipelines_overview.md) .
+Refer to the [operator pipeline documentation](users/pipelines_overview.md) .
 
 ## IMPORTANT NOTICE
 
