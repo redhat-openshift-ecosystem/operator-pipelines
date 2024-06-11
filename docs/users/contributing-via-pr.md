@@ -1,15 +1,15 @@
-# Submitting your Operator via Pull Requests (PR) in community operators project
+# Submitting your Operator via Pull Requests (PR)
 
 ## Overview
 To submit an operator one has to do these steps
 
-1. Fork project `https://github.com/redhat-openshift-ecosystem/community-operators-prod`
-1. Make a pull request
+1. Fork project based on desired [Operator Repository](./pipelines_overview.md#operator-repositories)
 1. Place the operator in the target directory. [More info](./contributing-where-to.md)
     - operators
 1. Configure `ci.yaml` file. [More info](./operator-ci-yaml.md)
     - Setup reviewers
     - Operator versioning strategy
+1. Make a pull request
 1. Verify tests and fix problems, if possible
 1. Ask for help in the PR in case of problems
 
