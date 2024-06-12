@@ -137,11 +137,15 @@ def run_operator_sdk_bundle_validate(
             test_suite_selector,
             f"--optional-values=k8s-version={kube_version_for_deprecation_test}",
         ]
-        sdk_result = json.loads(
-            subprocess.run(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False
-            ).stdout
-        )
+        try:
+            sdk_result = json.loads(
+                subprocess.run(
+                    cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False
+                ).stdout
+            )
+        except json.JSONDecodeError:
+            yield Fail("operator-sdk returned non-JSON output when validating bundle")
+            return
         for output in sdk_result.get("outputs") or []:
             output_type = output.get("type")
             output_message = output.get("message", "")

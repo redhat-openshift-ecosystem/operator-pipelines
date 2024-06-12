@@ -39,7 +39,7 @@ spec:
 
         if [[ ! -f "$CONFIG_PATH" ]]; then
             echo "Config file $CONFIG_PATH does not exist or no bundle affected."
-            echo "replaces" | tee $(results.upgrade-graph-mode.path)
+            echo -n "replaces" | tee $(results.upgrade-graph-mode.path)
             echo -n "false" | tee $(results.fbc-enabled.path)
             echo -n "false" | tee "$(workspaces.output.path)/fbc_enabled"
             exit 0

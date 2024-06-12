@@ -236,10 +236,28 @@ spec:
           workspace: results
           subPath: summary
 
+    - name: resolve-pr-type
+      taskRef:
+        name: resolve-pr-type
+        kind: Task
+      runAfter:
+        - read-config
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(tasks.detect-changes.results.bundle_path)"
+        - name: affected_catalogs
+          value: "$(tasks.detect-changes.results.affected_catalogs)"
+        - name: affected_catalog_operators
+          value: "$(tasks.detect-changes.results.affected_catalog_operators)"
+        - name: fbc-enabled
+          value: "$(tasks.read-config.results.fbc-enabled)"
+
     # Compute a hash of the content so pipeline logs can be uploaded with it
     - name: content-hash
       runAfter:
-        - read-config
+        - resolve-pr-type
       taskRef:
         name: content-hash
       params:
@@ -346,11 +364,13 @@ spec:
         - copy-bundle-image-to-released-registry
       taskRef:
         name: publish-pyxis-data
-      when: &certProjectExists
-        - input: "$(tasks.certification-project-check.results.certification_project_id)"
-          operator: "notin"
-          values: [""]
-        - input: "$(tasks.detect-changes.results.added_bundle)"
+      when:
+        - &bundleAdded
+          input: "$(tasks.resolve-pr-type.results.add-bundle)"
+          operator: "in"
+          values: ["true"]
+        - &certProjectExists
+          input: "$(tasks.certification-project-check.results.certification_project_id)"
           operator: "notin"
           values: [""]
       params:
@@ -382,7 +402,6 @@ spec:
           value: "$(params.pipeline_ssl_cert_secret_key)"
         - name: pyxis_ssl_key_secret_key
           value: "$(params.pipeline_ssl_key_secret_key)"
-
       workspaces:
         - name: image-data
           workspace: image-data
@@ -414,9 +433,15 @@ spec:
         # FCB branch based on config
         - get-supported-versions
       when:
-        - input: "$(tasks.detect-changes.results.affected_catalogs)"
-          operator: notin
-          values: [""]
+        - &catalogUpdated
+          input: "$(tasks.resolve-pr-type.results.update-catalog)"
+          operator: in
+          values: ["true"]
+        - &isFBC
+          input: "$(tasks.read-config.results.fbc-enabled)"
+          operator: in
+          values:
+            - "true"
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -438,8 +463,9 @@ spec:
       retries: 8
       runAfter:
         - build-fragment-images
-      when: &whenNotUndistributed
-        - input: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
+      when:
+        - &notUndistributed
+          input: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
           operator: notin
           values:
             - undistributed
@@ -459,13 +485,9 @@ spec:
         # FCB branch based on config
         - acquire-lease
       when:
-        - input: "$(tasks.detect-changes.results.affected_catalogs)"
-          operator: notin
-          values: [""]
-        - input: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
-          operator: notin
-          values:
-            - undistributed
+        - *catalogUpdated
+        - *notUndistributed
+        - *isFBC
       taskRef:
         name: add-fbc-fragments-to-index
       params:
@@ -497,13 +519,13 @@ spec:
       runAfter:
         - add-fbc-fragments-to-index
       when:
-        - input: "$(tasks.detect-changes.results.affected_catalogs)"
-          operator: in
-          values: [""]
-        - input: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
+        - *catalogUpdated
+        - *notUndistributed
+        - &isNotFBC
+          input: "$(tasks.read-config.results.fbc-enabled)"
           operator: notin
           values:
-            - undistributed
+            - "true"
       taskRef:
         name: add-bundle-to-index
       params:
@@ -531,7 +553,9 @@ spec:
     - name: decide-index-paths
       runAfter:
         - add-bundle-to-index
-      when: *whenNotUndistributed
+      when:
+        - *catalogUpdated
+        - *notUndistributed
       taskRef:
         name: decide-index-paths
       params:
@@ -546,7 +570,9 @@ spec:
     - name: get-manifest-digests
       runAfter:
         - decide-index-paths
-      when: *whenNotUndistributed
+      when:
+        - *catalogUpdated
+        - *notUndistributed
       taskRef:
         name: get-manifest-digests
       params:
@@ -561,7 +587,9 @@ spec:
     - name: request-signature
       runAfter:
         - get-manifest-digests
-      when: *whenNotUndistributed
+      when:
+        - *catalogUpdated
+        - *notUndistributed
       taskRef:
         resolver: bundles
         params:
@@ -602,7 +630,9 @@ spec:
     - name: upload-signature
       runAfter:
         - request-signature
-      when: *whenNotUndistributed
+      when:
+        - *catalogUpdated
+        - *notUndistributed
       taskRef:
         resolver: bundles
         params:
@@ -639,7 +669,9 @@ spec:
     - name: publish-to-index
       runAfter:
         - upload-signature
-      when: *whenNotUndistributed
+      when:
+        - *catalogUpdated
+        - *notUndistributed
       taskRef:
         name: publish-to-index
       params:
@@ -677,7 +709,8 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
-      when: *certProjectExists
+      when:
+        - *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
