@@ -964,7 +964,9 @@ template the operator will be using.</p>
 <p>To generate a final catalog for an operator a user needs to execute different <code>opm</code>
 commands based on the template type. We as operator pipeline maintainers want
 to simplify this process and we prepared a <code>Makefile</code> with all pre-configured targets.</p>
-<p>To get the <code>Makefile</code> follow these steps</p>
+<p>To get the <code>Makefile</code> follow these steps (In case you converted the existing operator and
+followed the <a href="../fbc_onboarding/">onboarding</a> guide the <code>Makefile</code> should be already in
+your operator directory and you can skip the step.)</p>
 <pre><code class="language-bash">cd &lt;operator-repo&gt;/operator/&lt;operator-name&gt;
 wget https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipelines/main/fbc/Makefile
 </code></pre>
