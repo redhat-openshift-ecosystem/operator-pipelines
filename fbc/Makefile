@@ -44,7 +44,7 @@ fbc-onboarding: fbc-onboarding-deps ${BINDIR}/opm clean
 # comment out / customize the one that makes the most sense, or use them as examples in defining your own
 #
 # --- BASIC TEMPLATE ---
-#catalog: basic
+catalog: basic
 #
 # --- SEMVER TEMPLATE ---
 #catalog: semver

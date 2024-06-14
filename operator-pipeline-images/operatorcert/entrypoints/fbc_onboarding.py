@@ -4,7 +4,7 @@ import argparse
 import logging
 import os
 import sys
-from typing import Any, Dict, List, Tuple
+from typing import Any, List
 
 import requests
 import yaml
@@ -229,7 +229,7 @@ def render_fbc_from_template(operator: Operator, version: str) -> None:
     Args:
         operator (Operator): Operator object
     """
-    run_command(
+    output = run_command(
         [
             "opm",
             "alpha",
@@ -238,14 +238,26 @@ def render_fbc_from_template(operator: Operator, version: str) -> None:
             "-o",
             "yaml",
             os.path.join(operator.root, CATALOG_TEMPLATES_DIR, f"v{version}.yaml"),
-            ">",
-            f"../../catalogs/v{version}/catalog.yaml"
         ],
         cwd=operator.root,
     )
-    catalog_path = os.path.join(operator.root, "../../catalogs")
-    catalog_path = os.path.abspath(catalog_path)
-    LOGGER.info("FBC rendered to %s", catalog_path)
+
+    catalogs_path = os.path.join(operator.root, "../../catalogs")
+    catalogs_path = os.path.abspath(catalogs_path)
+    operator_in_catalogs_path = os.path.join(
+        catalogs_path, f"v{version}/{operator.operator_name}"
+    )
+
+    if not os.path.exists(operator_in_catalogs_path):
+        os.makedirs(operator_in_catalogs_path)
+
+    with open(
+        os.path.join(operator_in_catalogs_path, "catalog.yaml"), "w", encoding="utf8"
+    ) as f:
+        catalog_content = yaml.safe_load_all(output.stdout)
+        yaml.safe_dump_all(catalog_content, f, explicit_start=True, indent=2)
+
+    LOGGER.info("FBC rendered to %s", operator_in_catalogs_path)
 
 
 def onboard_operator_to_fbc(
