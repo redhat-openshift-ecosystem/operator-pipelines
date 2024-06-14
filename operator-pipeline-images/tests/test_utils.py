@@ -147,7 +147,9 @@ def test_copy_images_to_destination(mock_subprocess: MagicMock) -> None:
             "index_image_resolved": "quay.io/qwe/asd@sha256:1234",
         }
     ]
-    utils.copy_images_to_destination(iib_response, "quay.io/foo/bar", "foo", "test.txt")
+    utils.copy_images_to_destination(
+        iib_response, "quay.io/foo/bar", "-foo", "test.txt"
+    )
 
     mock_subprocess.run.assert_called_once_with(
         [
