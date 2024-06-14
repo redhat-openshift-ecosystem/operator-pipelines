@@ -465,6 +465,7 @@ spec:
         name: content-hash
       runAfter:
         - apply-test-waivers
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -484,8 +485,8 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.detect-changes.results.bundle_path)"
+        - name: operator_path
+          value: "$(tasks.detect-changes.results.operator_path)"
         - name: cert_project_required
           value: "$(params.cert_project_required)"
       workspaces:
@@ -898,6 +899,7 @@ spec:
     - name: get-ci-results-attempt
       runAfter:
         - make-index-repo-public
+      when: *bundleAdded
       taskRef:
         name: get-ci-results-attempt
       params:
@@ -983,6 +985,9 @@ spec:
         - input: "$(tasks.detect-changes.results.affected_catalogs)"
           operator: in
           values: [""]
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1056,6 +1061,7 @@ spec:
         - evaluate-preflight-result
       taskRef:
         name: get-ci-results
+      when: *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1201,7 +1207,9 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
-      when: *certProjectExists
+      when: 
+        - *certProjectExists
+        - *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
