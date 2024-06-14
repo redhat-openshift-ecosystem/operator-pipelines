@@ -10,8 +10,10 @@ from collections.abc import Iterator
 
 from operator_repo import Operator
 from operator_repo.checks import CheckResult, Fail, Warn
+from operatorcert.static_tests.helpers import skip_fbc
 
 
+@skip_fbc
 def check_operator_name_unique(operator: Operator) -> Iterator[CheckResult]:
     """Ensure all operator's bundles use the same operator name in their CSV"""
     names = {bundle.csv_operator_name for bundle in operator}

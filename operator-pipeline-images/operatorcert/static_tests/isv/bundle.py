@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
+from operatorcert.static_tests.helpers import skip_fbc
 
 PRUNED_GRAPH_ERROR = (
     "olm.skipRange annotation is set but replaces field is not set in the CSV. "
@@ -15,6 +16,7 @@ PRUNED_GRAPH_ERROR = (
 )
 
 
+@skip_fbc
 def check_pruned_graph(bundle: Bundle) -> Iterator[CheckResult]:
     """
     Check if the update graph is pruned when the bundle is added to the index
