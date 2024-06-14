@@ -1,7 +1,9 @@
-from operatorcert.entrypoints import fbc_onboarding
-from unittest.mock import MagicMock, patch
+import os
 from unittest import mock
+from unittest.mock import MagicMock, patch
+
 import pytest
+from operatorcert.entrypoints import fbc_onboarding
 
 
 def test_setup_argparser() -> None:
@@ -60,9 +62,7 @@ def test_get_supported_catalogs_stage(mock_requests: MagicMock) -> None:
 @patch("operatorcert.entrypoints.fbc_onboarding.run_command")
 def test_opm_cache(mock_command: MagicMock) -> None:
     resp = fbc_onboarding.opm_cache("image")
-    mock_command.assert_called_once_with(
-        ["opm", "render", "-o", "yaml", "--migrate", "image"]
-    )
+    mock_command.assert_called_once_with(["opm", "render", "-o", "yaml", "image"])
     assert resp == mock_command.return_value.stdout
 
 
@@ -142,78 +142,6 @@ def test_generate_and_save_base_templates(
         mock_yaml_dump.assert_called_once()
 
 
-def test_generate_composite_templates() -> None:
-    versions = ["1", "2"]
-    operator = MagicMock()
-    operator.operator_name = "op"
-    catalogs, contributions = fbc_onboarding.generate_composite_templates(
-        operator, versions
-    )
-
-    assert catalogs == {
-        "catalogs": [
-            {
-                "builders": ["olm.builder.basic", "olm.builder.semver"],
-                "destination": {"workingDir": "../../catalogs/v1"},
-                "name": "v1",
-            },
-            {
-                "builders": ["olm.builder.basic", "olm.builder.semver"],
-                "destination": {"workingDir": "../../catalogs/v2"},
-                "name": "v2",
-            },
-        ],
-        "schema": "olm.composite.catalogs",
-    }
-    assert contributions == {
-        "schema": "olm.composite",
-        "components": [
-            {
-                "destination": {"path": "op"},
-                "name": "v1",
-                "strategy": {
-                    "name": "basic",
-                    "template": {
-                        "config": {
-                            "input": "catalog-templates/v1.yaml",
-                            "output": "catalog.yaml",
-                        },
-                        "schema": "olm.builder.basic",
-                    },
-                },
-            },
-            {
-                "destination": {"path": "op"},
-                "name": "v2",
-                "strategy": {
-                    "name": "basic",
-                    "template": {
-                        "config": {
-                            "input": "catalog-templates/v2.yaml",
-                            "output": "catalog.yaml",
-                        },
-                        "schema": "olm.builder.basic",
-                    },
-                },
-            },
-        ],
-    }
-
-
-@patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump")
-@patch("operatorcert.entrypoints.fbc_onboarding.generate_composite_templates")
-def test_generate_and_save_composite_templates(
-    mock_template: MagicMock, mock_yaml_dump: MagicMock
-) -> None:
-    operator = MagicMock()
-    mock_template.return_value = ({}, {})
-    with mock.patch("builtins.open", mock.mock_open()) as mock_open:
-        fbc_onboarding.generate_and_save_composite_templates(operator, ["1", "2"])
-
-        mock_template.assert_called_once()
-        assert mock_yaml_dump.call_count == 2
-
-
 @patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump")
 def test_update_operator_config(mock_yaml_dump: MagicMock) -> None:
     operator = MagicMock()
@@ -227,29 +155,45 @@ def test_update_operator_config(mock_yaml_dump: MagicMock) -> None:
     )
 
 
+@patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump_all")
+@patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_load_all")
+@patch("operatorcert.entrypoints.fbc_onboarding.os.makedirs")
+@patch("operatorcert.entrypoints.fbc_onboarding.os.path.exists")
 @patch("operatorcert.entrypoints.fbc_onboarding.run_command")
-def test_render_fbc_from_template(mock_run_command: MagicMock) -> None:
+def test_render_fbc_from_template(
+    mock_run_command: MagicMock,
+    mock_path_exists: MagicMock,
+    mock_makedir: MagicMock,
+    mock_safe_load_all: MagicMock,
+    mock_safe_dump_all: MagicMock,
+) -> None:
     operator = MagicMock()
-    fbc_onboarding.render_fbc_from_template(operator)
+    mock_path_exists.return_value = False
+    mock_safe_load_all.return_value = []
 
-    mock_run_command.assert_called_once_with(
-        [
-            "opm",
-            "alpha",
-            "render-template",
-            "composite",
-            "-f",
-            fbc_onboarding.COMPOSITE_TEMPLATE_CATALOGS,
-            "-c",
-            fbc_onboarding.COMPOSITE_TEMPLATE_CONTRIBUTIONS,
-        ],
-        cwd=operator.root,
-    )
+    with mock.patch("builtins.open", mock.mock_open()) as mock_open:
+        fbc_onboarding.render_fbc_from_template(operator, "4.15")
+
+        mock_run_command.assert_called_once_with(
+            [
+                "opm",
+                "alpha",
+                "render-template",
+                "basic",
+                "-o",
+                "yaml",
+                os.path.join(
+                    operator.root, fbc_onboarding.CATALOG_TEMPLATES_DIR, "v4.15.yaml"
+                ),
+            ],
+            cwd=operator.root,
+        )
+        mock_makedir.assert_called_once()
+        mock_safe_dump_all.assert_called_once()
 
 
 @patch("operatorcert.entrypoints.fbc_onboarding.update_operator_config")
 @patch("operatorcert.entrypoints.fbc_onboarding.render_fbc_from_template")
-@patch("operatorcert.entrypoints.fbc_onboarding.generate_and_save_composite_templates")
 @patch("operatorcert.entrypoints.fbc_onboarding.generate_and_save_base_templates")
 @patch("operatorcert.entrypoints.fbc_onboarding.build_cache")
 @patch(
@@ -261,7 +205,6 @@ def test_onboard_operator_to_fbc(
     mock_template_dir: MagicMock,
     mock_cache: MagicMock,
     mock_base_template: MagicMock,
-    mock_composite_template: MagicMock,
     mock_render: MagicMock,
     mock_config: MagicMock,
 ) -> None:
@@ -280,6 +223,6 @@ def test_onboard_operator_to_fbc(
     assert mock_cache.call_count == 2
     assert mock_base_template.call_count == 2
 
-    mock_composite_template.assert_called_once_with(operator, ["1", "2"])
-    mock_render.assert_called_once_with(operator)
+    mock_render.assert_has_calls([mock.call(operator, "1"), mock.call(operator, "2")])
+
     mock_config.assert_called_once_with(operator)
