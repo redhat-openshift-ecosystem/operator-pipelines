@@ -1207,7 +1207,7 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
-      when: 
+      when:
         - *certProjectExists
         - *bundleAdded
       params:
