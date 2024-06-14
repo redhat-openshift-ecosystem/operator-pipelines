@@ -217,7 +217,7 @@ def copy_images_to_destination(
             "skopeo",
             "copy",
             f"docker://{response.get('index_image_resolved')}",
-            f"docker://{destination}:{version}-{tag_suffix}",
+            f"docker://{destination}:{version}{tag_suffix}",
         ]
         if auth_file:
             cmd.extend(["--authfile", auth_file])
