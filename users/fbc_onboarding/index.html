@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
     
     
       
@@ -932,7 +932,6 @@ a local cache is generated during a run.</p>
 operators/aqua
 ├── 0.0.1
 ...
-├── catalogs.yaml
 ├── catalog-templates
 │   ├── v4.12.yaml
 │   ├── v4.13.yaml
@@ -940,10 +939,9 @@ operators/aqua
 │   ├── v4.15.yaml
 │   └── v4.16.yaml
 ├── ci.yaml
-└── composite-config.yaml
 </code></pre>
 <p>... and File-based catalog in <code>catalogs</code> directory</p>
-<pre><code class="language-bash">$ tree catalogs
+<pre><code class="language-bash">$ tree (repository root)/catalogs
 catalogs
 ├── v4.12
 │   └── aqua
@@ -964,15 +962,14 @@ catalogs
 </code></pre>
 <h2 id="submit-fbc-changes">Submit FBC changes</h2>
 <p>Artifacts generated in the previous step need to be added to a git and submitted via pull request. The operator pipeline validates the content of the catalogs and releases changes into ocp catalogs.</p>
-<pre><code class="language-bash">$ git add operators/aqua/{catalog-templates,catalogs.yaml,composite-config.yaml,ci.yaml}
+<pre><code class="language-bash">$ git add operators/aqua/{catalog-templates,ci.yaml}
 
-$ git add
 $ git add catalogs/{v4.12,v4.13,v4.14,v4.15,v4.16}/aqua
 
 $ git commit --signoff -m &quot;Add FBC resources for aqua operator&quot;
 </code></pre>
 <h2 id="generating-catalogs-from-templates">Generating catalogs from templates</h2>
-<p>Catalog templates are used to simplify a view of a catalog and allow easier manipulation of catalogs. The automated conversion pre-generates a basic + composite template that can be turned into full FBC using the following command:</p>
+<p>Catalog templates are used to simplify a view of a catalog and allow easier manipulation of catalogs. The automated conversion pre-generates a basic template that can be turned into full FBC using the following command:</p>
 <pre><code class="language-bash">make catalog
 </code></pre>
 <p>Of course, you can choose any type of template that you prefer by modifying the Makefile target.

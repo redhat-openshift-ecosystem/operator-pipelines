@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
     
     
       
@@ -955,11 +955,9 @@ template the operator will be using.</p>
 <ul>
 <li>Basic template</li>
 <li>SemVer template</li>
-<li>Composite template</li>
 </ul>
 <p>More information about each template can be found at <a href="https://olm.operatorframework.io/docs/reference/catalog-templates/">opm doc</a>.</p>
-<p>The recommended template from the maintainability point of view is <code>SemVer</code> or <code>Composite</code> with
-<code>SemVer</code>integration.</p>
+<p>The recommended template from the maintainability point of view is <code>SemVer</code>.</p>
 <h2 id="generate-catalogs-using-templates">Generate catalogs using templates</h2>
 <p>To generate a final catalog for an operator a user needs to execute different <code>opm</code>
 commands based on the template type. We as operator pipeline maintainers want
@@ -975,10 +973,8 @@ wget https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipel
 ├── 0.0.1
 │   ├── manifests
 │   └── metadata
-├── catalogs.yaml
 ├── catalog-templates
 ├── ci.yaml
-├── composite-config.yaml
 └── Makefile
 
 </code></pre>
@@ -986,7 +982,7 @@ wget https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipel
 The command uses the <code>opm</code> and converts templates into catalogs. The generated catalogs
 can be submitted as a PR in Github and once the PR is processed changes will be released to the
 OCP index.</p>
-<pre><code class="language-bash">$ tree catalogs
+<pre><code class="language-bash">$ tree (repository-root)/catalogs
 catalogs
 ├── v4.12
 │   └── aqua
