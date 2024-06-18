@@ -10,7 +10,7 @@
 
     - name: Download and extract the tkn binary
       ansible.builtin.unarchive:
-        src: https://mirror.openshift.com/pub/openshift-v4/clients/pipelines/1.11.2/x86_64/linux/tkn-linux-amd64.tar.gz
+        src: https://mirror.openshift.com/pub/openshift-v4/clients/pipelines/1.13.0/tkn-linux-amd64.tar.gz
         dest: "{{ temp_tools_dir.path }}"
         remote_src: true
         include:
