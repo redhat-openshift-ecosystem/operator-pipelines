@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 from operator_repo import Repo
@@ -291,9 +291,7 @@ def test_metadata_container_image_validation(
     assert expected_successes.intersection(collected_results.keys()) == set()
 
 
-@patch("operator_repo.core.Operator.config")
-def test_check_dangling_bundles(mock_config: MagicMock, tmp_path: Path) -> None:
-    mock_config.get.return_value = "replaces-mode"
+def test_check_dangling_bundles(tmp_path: Path) -> None:
     create_files(
         tmp_path,
         bundle_files("hello", "0.0.1"),
@@ -303,16 +301,23 @@ def test_check_dangling_bundles(mock_config: MagicMock, tmp_path: Path) -> None:
     repo = Repo(tmp_path)
     operator = repo.operator("hello")
     bundle3 = operator.bundle("0.0.3")
-    failures = list(check_dangling_bundles(bundle3))
-    assert failures == []
 
-    mock_config.get.return_value = "unknown-mode"
-    is_loop = list(check_dangling_bundles(bundle3))
-    assert is_loop == [
-        Fail("Operator(hello): unsupported updateGraph value: unknown-mode")
-    ]
+    with patch.object(
+        type(operator), "config", new_callable=PropertyMock
+    ) as mock_config:
+        mock_config.return_value = {"updateGraph": "replaces-mode"}
+        failures = list(check_dangling_bundles(bundle3))
+        assert failures == []
 
-    mock_config.get.return_value = "replaces-mode"
+    with patch.object(
+        type(operator), "config", new_callable=PropertyMock
+    ) as mock_config:
+        mock_config.return_value = {"updateGraph": "unknown-mode"}
+        is_loop = list(check_dangling_bundles(bundle3))
+        assert is_loop == [
+            Fail("Operator(hello): unsupported updateGraph value: unknown-mode")
+        ]
+
     # Bundle 0.0.2 is not referenced by any bundle and it is not a HEAD of channel
     create_files(
         tmp_path,
@@ -323,11 +328,16 @@ def test_check_dangling_bundles(mock_config: MagicMock, tmp_path: Path) -> None:
     repo = Repo(tmp_path)
     operator = repo.operator("hello")
     bundle3 = operator.bundle("0.0.3")
-    failures = list(check_dangling_bundles(bundle3))
-    assert len(failures) == 1 and isinstance(failures[0], Fail)
-    assert (
-        failures[0].reason == "Channel beta has dangling bundles: {Bundle(hello/0.0.2)}"
-    )
+    with patch.object(
+        type(operator), "config", new_callable=PropertyMock
+    ) as mock_config:
+        mock_config.return_value = {"updateGraph": "replaces-mode"}
+        failures = list(check_dangling_bundles(bundle3))
+        assert len(failures) == 1 and isinstance(failures[0], Fail)
+        assert (
+            failures[0].reason
+            == "Channel beta has dangling bundles: {Bundle(hello/0.0.2)}"
+        )
 
     # Malformed .spec.replaces
     create_files(
@@ -338,9 +348,16 @@ def test_check_dangling_bundles(mock_config: MagicMock, tmp_path: Path) -> None:
     repo = Repo(tmp_path)
     operator = repo.operator("malformed")
     bundle1 = operator.bundle("0.0.1")
-    failures = list(check_dangling_bundles(bundle1))
-    assert len(failures) == 1 and isinstance(failures[0], Fail)
-    assert "Bundle(malformed/0.0.1) has invalid 'replaces' field:" in failures[0].reason
+    with patch.object(
+        type(operator), "config", new_callable=PropertyMock
+    ) as mock_config:
+        mock_config.return_value = {"updateGraph": "replaces-mode"}
+        failures = list(check_dangling_bundles(bundle1))
+        assert len(failures) == 1 and isinstance(failures[0], Fail)
+        assert (
+            "Bundle(malformed/0.0.1) has invalid 'replaces' field:"
+            in failures[0].reason
+        )
 
 
 @pytest.mark.parametrize(
@@ -444,9 +461,7 @@ def test_check_api_version_constraints(
     assert set(check_api_version_constraints(bundle)) == expected
 
 
-@patch("operator_repo.core.Operator.config")
-def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> None:
-    mock_config.get.return_value = "replaces-mode"
+def test_check_upgrade_graph_loop(tmp_path: Path) -> None:
     create_files(
         tmp_path,
         bundle_files("hello", "0.0.1"),
@@ -456,16 +471,22 @@ def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> Non
     repo = Repo(tmp_path)
     operator = repo.operator("hello")
     bundle = operator.bundle("0.0.1")
-    is_loop = list(check_upgrade_graph_loop(bundle))
-    assert is_loop == []
+    with patch.object(
+        type(operator), "config", new_callable=PropertyMock
+    ) as mock_config:
+        mock_config.return_value = {"updateGraph": "replaces-mode"}
+        is_loop = list(check_upgrade_graph_loop(bundle))
+        assert is_loop == []
 
-    mock_config.get.return_value = "unknown-mode"
-    is_loop = list(check_upgrade_graph_loop(bundle))
-    assert is_loop == [
-        Fail("Operator(hello): unsupported updateGraph value: unknown-mode")
-    ]
+    with patch.object(
+        type(operator), "config", new_callable=PropertyMock
+    ) as mock_config:
+        mock_config.return_value = {"updateGraph": "unknown-mode"}
+        is_loop = list(check_upgrade_graph_loop(bundle))
+        assert is_loop == [
+            Fail("Operator(hello): unsupported updateGraph value: unknown-mode")
+        ]
 
-    mock_config.get.return_value = "replaces-mode"
     # Both bundles replace each other
     create_files(
         tmp_path,
@@ -476,13 +497,17 @@ def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> Non
     repo = Repo(tmp_path)
     operator = repo.operator("hello")
     bundle = operator.bundle("0.0.1")
-    is_loop = list(check_upgrade_graph_loop(bundle))
-    assert len(is_loop) == 1 and isinstance(is_loop[0], Fail)
-    assert (
-        is_loop[0].reason
-        == "Upgrade graph loop detected for bundle: [Bundle(hello/0.0.1), "
-        "Bundle(hello/0.0.2), Bundle(hello/0.0.1)]"
-    )
+    with patch.object(
+        type(operator), "config", new_callable=PropertyMock
+    ) as mock_config:
+        mock_config.return_value = {"updateGraph": "replaces-mode"}
+        is_loop = list(check_upgrade_graph_loop(bundle))
+        assert len(is_loop) == 1 and isinstance(is_loop[0], Fail)
+        assert (
+            is_loop[0].reason
+            == "Upgrade graph loop detected for bundle: [Bundle(hello/0.0.1), "
+            "Bundle(hello/0.0.2), Bundle(hello/0.0.1)]"
+        )
 
     # Malformed .spec.replaces
     create_files(
@@ -493,9 +518,16 @@ def test_check_upgrade_graph_loop(mock_config: MagicMock, tmp_path: Path) -> Non
     repo = Repo(tmp_path)
     operator = repo.operator("malformed")
     bundle = operator.bundle("0.0.1")
-    failures = list(check_upgrade_graph_loop(bundle))
-    assert len(failures) == 1 and isinstance(failures[0], Fail)
-    assert "Bundle(malformed/0.0.1) has invalid 'replaces' field:" in failures[0].reason
+    with patch.object(
+        type(operator), "config", new_callable=PropertyMock
+    ) as mock_config:
+        mock_config.return_value = {"updateGraph": "replaces-mode"}
+        failures = list(check_upgrade_graph_loop(bundle))
+        assert len(failures) == 1 and isinstance(failures[0], Fail)
+        assert (
+            "Bundle(malformed/0.0.1) has invalid 'replaces' field:"
+            in failures[0].reason
+        )
 
 
 def test_check_replaces_availability_no_replaces(

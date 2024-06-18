@@ -17,6 +17,7 @@ from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
 from operator_repo.utils import lookup_dict
 from operatorcert import utils
+from operatorcert.static_tests.helpers import skip_fbc
 from semver import Version
 
 from .validations import (
@@ -179,6 +180,7 @@ def check_required_fields(bundle: Bundle) -> Iterator[CheckResult]:
         yield Fail(message) if fatal else Warn(message)
 
 
+@skip_fbc
 def check_dangling_bundles(bundle: Bundle) -> Iterator[CheckResult]:
     """
     Check dangling bundles in the operator update graph
@@ -216,6 +218,7 @@ def check_dangling_bundles(bundle: Bundle) -> Iterator[CheckResult]:
             yield Fail(f"Channel {channel} has dangling bundles: {dangling_bundles}")
 
 
+@skip_fbc
 def check_api_version_constraints(bundle: Bundle) -> Iterator[CheckResult]:
     """Check that the ocp and k8s api version constraints are consistent"""
     ocp_versions_str = bundle.annotations.get("com.redhat.openshift.versions")
@@ -297,6 +300,7 @@ def check_api_version_constraints(bundle: Bundle) -> Iterator[CheckResult]:
         )
 
 
+@skip_fbc
 def check_upgrade_graph_loop(bundle: Bundle) -> Iterator[CheckResult]:
     """
     Detect loops in the upgrade graph
@@ -358,6 +362,7 @@ def follow_graph(graph: Any, bundle: Bundle, visited: List[Bundle]) -> List[Bund
     return visited
 
 
+@skip_fbc
 def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
     """
     Check if the current bundle and the replaced bundle support the same OCP versions
