@@ -696,6 +696,9 @@ spec:
     # with the support link pointing to the affected PR
     - name: post-support-link-for-pr
       when:
+        - input: "$(tasks.certification-project-check.results.certification_project_id)"
+          operator: "notin"
+          values: [""]
         - input: $(tasks.status)
           operator: notin
           values: ["Succeeded", "Completed"]
