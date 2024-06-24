@@ -157,7 +157,7 @@ spec:
           fi
 
           # Add info how to update catalog for FBC bundles
-          if [[ "$(params.fbc-enabled)" == "true" ]]; then
+          if [[ "$(params.fbc-enabled)" == "true" && -f "$RELEASE_INFO_DIR_PATH/released_bundle.txt" ]]; then
             echo -e "\n## Catalog update\n" >> "$PR_NAME/comment.md"
             echo -e "Operator bundle using FBC mode has been released.\nTo add bundle to FBC templates, follow [this guide](https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_workflow/#adding-new-bundle-to-catalog) to create a new PR with catalog changes." >> "$PR_NAME/comment.md"
           fi

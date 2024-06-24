@@ -36,7 +36,7 @@ spec:
 
         # Save data about released bundle to volume
         RELEASE_INFO_DIR_PATH="$(workspaces.output.path)/release_info"
-        mkdir "$RELEASE_INFO_DIR_PATH"
+        mkdir -p "$RELEASE_INFO_DIR_PATH"
         echo "- $(params.src_image)" | tee "$RELEASE_INFO_DIR_PATH/released_bundle.txt"
 
         if [[ "$(params.vendor_label)" == "" ]]; then
