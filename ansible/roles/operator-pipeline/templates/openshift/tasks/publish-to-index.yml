@@ -97,6 +97,10 @@ spec:
         else
           FROM_INDEX_PROXY="registry.stage.redhat.io/redhat/${INDEX_NAME}"
         fi
+        # Create folder for release info if it's non-existent
+        RELEASE_INFO_DIR_PATH="$(workspaces.output.path)/release_info"
+        mkdir -p "$RELEASE_INFO_DIR_PATH"
+
         echo "Copying index images to published repos..."
 
         TEMP_IMAGES=$(echo $(params.index_image_paths) | tr "," " ")
@@ -133,7 +137,6 @@ spec:
             docker://$SRC_IMAGE \
             docker://$DEST_IMAGE_PERMANENT_TAG
 
-          # Save data about indexes to volume
-          RELEASE_INFO_DIR_PATH="$(workspaces.output.path)/release_info"
+          # Save data about updated indices to volume
           echo "- ${FROM_INDEX_PROXY}:${VERSION}" | tee -a "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
         done
