@@ -30,11 +30,6 @@ def setup_argparser() -> Any:
         default="https://pyxis.engineering.redhat.com",
         help="Base URL for Pyxis container metadata API",
     )
-    parser.add_argument(
-        "--wait-for-grades",
-        action="store_true",
-        help="Wait for container freshness grades before submitting the request",
-    )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     return parser
@@ -65,22 +60,6 @@ def submit_image_request(args: Any) -> Any:
     return image_request
 
 
-def is_clair_enabled(pyxis_url: str) -> bool:
-    """
-    Check if Clair is enabled in the environment.
-
-    Some environments do not have Clair enabled,
-    so we need to check if it is enabled.
-
-    Args:
-        pyxis_url (str): Pyxis URL
-
-    Returns:
-        bool: True if Clair is enabled, False otherwise
-    """
-    return not (".qa." in pyxis_url or ".uat." in pyxis_url)
-
-
 def main() -> None:
     """
     Main function
@@ -92,8 +71,7 @@ def main() -> None:
     if args.verbose:
         log_level = "DEBUG"
     setup_logger(level=log_level)
-    if args.wait_for_grades and is_clair_enabled(args.pyxis_url):
-        pyxis.wait_for_container_grades(args.pyxis_url, args.image_identifier)
+
     submit_image_request(args)
 
 
