@@ -119,6 +119,7 @@ def wait_for_results(
         for build in responses:
             LOGGER.debug("%s - %s", build["id"], build["state"])
 
+        LOGGER.info("Waiting for IIB builds to finish: %s", request_ids)
         time.sleep(delay)
 
     return None
