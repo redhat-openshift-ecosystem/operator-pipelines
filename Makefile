@@ -11,6 +11,29 @@ PIPELINE_IMAGE ?= $(PIPELINE_IMAGE_REPO):$(TAG)
 OPERATOR_VERSION_RELEASE ?= 1-1
 OPERATOR_VERSION ?= 0.1.$(OPERATOR_VERSION_RELEASE)
 
+.PHONY: build-and-deploy-playground
+build-and-deploy-playground:
+	@echo "Building and deploying playground..."
+	$(MAKE) build
+	$(MAKE) deploy-playground TAG=$(TAG)
+
+.PHONY: deploy-playground
+deploy-playground:
+	@echo "Deploying playground..."
+	ansible-playbook \
+		ansible/playbooks/deploy.yml \
+		--inventory ansible/inventory/operator-pipeline-stage \
+		-e oc_namespace=$(USER)-playground \
+		-e operator_bundle_version=$(OPERATOR_VERSION) \
+		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
+		-e suffix=123 \
+		-e ocp_token=`oc whoami -t` \
+		-e branch=$(USER) \
+		-e env=stage \
+		--skip-tags ci,import-index-images \
+		-vv \
+		--vault-password-file ansible/vault-password
+
 .PHONY: build-and-test-isv
 build-and-test-isv:
 	@echo "Building and testing ISV operator pipelines..."

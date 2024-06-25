@@ -89,4 +89,4 @@ spec:
           --image-output fbc-index-image-paths.txt
 
         echo -n "success" | tee "$(results.status.path)"
-        cat fbc-index-image-paths.txt | tee "$(workspaces.output.path)/fbc-index-image-paths.txt"
+        cat fbc-index-image-paths.txt

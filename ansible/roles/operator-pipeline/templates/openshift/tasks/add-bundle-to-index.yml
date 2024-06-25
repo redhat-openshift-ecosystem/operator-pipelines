@@ -108,4 +108,4 @@ spec:
 
 
         echo -n "success" | tee "$(results.status.path)"
-        cat index-image-paths.txt | tee "$(workspaces.output.path)/index-image-paths.txt"
+        cat index-image-paths.txt
