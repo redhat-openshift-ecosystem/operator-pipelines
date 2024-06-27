@@ -237,6 +237,11 @@ spec:
     - name: content-hash
       runAfter:
         - read-config
+      when:
+        - &bundleAdded
+          input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
       taskRef:
         name: content-hash
       params:
@@ -258,8 +263,8 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.detect-changes.results.bundle_path)"
+        - name: operator_path
+          value: "$(tasks.detect-changes.results.operator_path)"
         - name: cert_project_required
           value: "$(params.cert_project_required)"
       workspaces:
@@ -338,8 +343,9 @@ spec:
         - copy-bundle-image-to-released-registry
       taskRef:
         name: publish-pyxis-data
-      when: &certProjectExists
-        - input: "$(tasks.certification-project-check.results.certification_project_id)"
+      when:
+        - &certProjectExists
+          input: "$(tasks.certification-project-check.results.certification_project_id)"
           operator: "notin"
           values: [""]
       params:
@@ -662,7 +668,9 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
-      when: *certProjectExists
+      when:
+        - *certProjectExists
+        - *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
