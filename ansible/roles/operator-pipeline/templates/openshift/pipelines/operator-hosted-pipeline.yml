@@ -668,10 +668,12 @@ spec:
         - static-tests-results
       taskRef:
         name: yaml-lint
-      when: &operatorOrBundleChange
-        - input: "$(tasks.detect-changes.results.affected_catalogs)"
+      when:
+        - &operatorOrBundleChange
+          input: "$(tasks.detect-changes.results.affected_catalogs)"
           operator: in
           values: [""]
+        - *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -784,7 +786,8 @@ spec:
     - name: make-bundle-repo-public
       runAfter:
         - build-bundle
-      when: *operatorOrBundleChange
+      when: 
+        - *operatorOrBundleChange
       taskRef:
         name: set-quay-repo-visibility
       params:
@@ -850,7 +853,8 @@ spec:
     - name: add-bundle-to-index
       runAfter:
         - add-fbc-fragments-to-index
-      when: *operatorOrBundleChange
+      when: 
+        - *operatorOrBundleChange
       taskRef:
         name: add-bundle-to-index
       params:
@@ -884,7 +888,8 @@ spec:
     - name: make-index-repo-public
       runAfter:
         - add-bundle-to-index
-      when: *operatorOrBundleChange
+      when: 
+        - *operatorOrBundleChange
       taskRef:
         name: set-quay-repo-visibility
       params:
@@ -1032,9 +1037,7 @@ spec:
         kind: Task
         name: evaluate-preflight-result
       when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
+        - *bundleAdded
         - input: "$(tasks.detect-changes.results.affected_catalogs)"
           operator: in
           values: [""]
