@@ -440,9 +440,8 @@ spec:
         kind: Task
       runAfter:
         - build-fragment-images
-      when:
-        - &bundleAdded
-          input: "$(tasks.detect-changes.results.added_bundle)"
+      when: &bundleAdded
+        - input: "$(tasks.detect-changes.results.added_bundle)"
           operator: notin
           values: [""]
       params:
@@ -466,8 +465,6 @@ spec:
         name: content-hash
       runAfter:
         - apply-test-waivers
-      when:
-        - *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -487,8 +484,8 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: operator_path
-          value: "$(tasks.detect-changes.results.operator_path)"
+        - name: bundle_path
+          value: "$(tasks.detect-changes.results.bundle_path)"
         - name: cert_project_required
           value: "$(params.cert_project_required)"
       workspaces:
@@ -540,9 +537,8 @@ spec:
         - get-pyxis-certification-data
       taskRef:
         name: verify-project
-      when:
-        - &certProjectExists
-          input: "$(tasks.certification-project-check.results.certification_project_id)"
+      when: &certProjectExists
+        - input: "$(tasks.certification-project-check.results.certification_project_id)"
           operator: "notin"
           values: [""]
       params:
@@ -562,8 +558,7 @@ spec:
         - verify-project
       taskRef:
         name: update-cert-project-status
-      when:
-        - *certProjectExists
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -588,8 +583,7 @@ spec:
         - update-cert-project-status
       taskRef:
         name: reserve-operator-name
-      when:
-        - *certProjectExists
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -668,12 +662,10 @@ spec:
         - static-tests-results
       taskRef:
         name: yaml-lint
-      when:
-        - &operatorOrBundleChange
-          input: "$(tasks.detect-changes.results.affected_catalogs)"
+      when: &operatorOrBundleChange
+        - input: "$(tasks.detect-changes.results.affected_catalogs)"
           operator: in
           values: [""]
-        - *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -786,8 +778,7 @@ spec:
     - name: make-bundle-repo-public
       runAfter:
         - build-bundle
-      when:
-        - *operatorOrBundleChange
+      when: *operatorOrBundleChange
       taskRef:
         name: set-quay-repo-visibility
       params:
@@ -853,8 +844,7 @@ spec:
     - name: add-bundle-to-index
       runAfter:
         - add-fbc-fragments-to-index
-      when:
-        - *operatorOrBundleChange
+      when: *operatorOrBundleChange
       taskRef:
         name: add-bundle-to-index
       params:
@@ -888,8 +878,7 @@ spec:
     - name: make-index-repo-public
       runAfter:
         - add-bundle-to-index
-      when:
-        - *operatorOrBundleChange
+      when: *operatorOrBundleChange
       taskRef:
         name: set-quay-repo-visibility
       params:
@@ -909,8 +898,6 @@ spec:
     - name: get-ci-results-attempt
       runAfter:
         - make-index-repo-public
-      when:
-        - *bundleAdded
       taskRef:
         name: get-ci-results-attempt
       params:
@@ -996,7 +983,6 @@ spec:
         - input: "$(tasks.detect-changes.results.affected_catalogs)"
           operator: in
           values: [""]
-        - *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1037,7 +1023,9 @@ spec:
         kind: Task
         name: evaluate-preflight-result
       when:
-        - *bundleAdded
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
         - input: "$(tasks.detect-changes.results.affected_catalogs)"
           operator: in
           values: [""]
@@ -1068,8 +1056,6 @@ spec:
         - evaluate-preflight-result
       taskRef:
         name: get-ci-results
-      when:
-        - *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1215,9 +1201,7 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
-      when:
-        - *certProjectExists
-        - *bundleAdded
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1281,8 +1265,7 @@ spec:
     - name: github-add-connect-url-comment
       taskRef:
         name: github-add-comment
-      when:
-        - *certProjectExists
+      when: *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
