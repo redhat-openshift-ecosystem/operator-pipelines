@@ -786,7 +786,7 @@ spec:
     - name: make-bundle-repo-public
       runAfter:
         - build-bundle
-      when: 
+      when:
         - *operatorOrBundleChange
       taskRef:
         name: set-quay-repo-visibility
@@ -853,7 +853,7 @@ spec:
     - name: add-bundle-to-index
       runAfter:
         - add-fbc-fragments-to-index
-      when: 
+      when:
         - *operatorOrBundleChange
       taskRef:
         name: add-bundle-to-index
@@ -888,7 +888,7 @@ spec:
     - name: make-index-repo-public
       runAfter:
         - add-bundle-to-index
-      when: 
+      when:
         - *operatorOrBundleChange
       taskRef:
         name: set-quay-repo-visibility
