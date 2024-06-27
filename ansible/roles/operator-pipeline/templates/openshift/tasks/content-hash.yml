@@ -19,11 +19,6 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        if [ -z "$(params.bundle_path)" ]; then
-          echo "No bundle added or changed"
-          exit 0
-        fi
-
         echo "Compute md5hash of bundle content..."
 
         find $(params.bundle_path) -not -name "Dockerfile" -type f | \
