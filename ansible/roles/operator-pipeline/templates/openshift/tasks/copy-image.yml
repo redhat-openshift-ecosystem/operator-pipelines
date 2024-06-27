@@ -34,6 +34,13 @@ spec:
       script: |
         set -xe
 
+        if [[ "$(params.dest_image_tag)" == "" ]]; then
+          echo "A pipeline is not releasing a bundle. Skipping a copy step.."
+          echo -n > "$(results.container_digest.path)"
+          echo -n "$(params.src_image)" > "$(results.image_pullspec.path)"
+          exit 0
+        fi
+
         # Save data about released bundle to volume
         RELEASE_INFO_DIR_PATH="$(workspaces.output.path)/release_info"
         mkdir -p "$RELEASE_INFO_DIR_PATH"

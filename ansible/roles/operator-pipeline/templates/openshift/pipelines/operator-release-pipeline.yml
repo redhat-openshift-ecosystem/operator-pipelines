@@ -351,6 +351,9 @@ spec:
           input: "$(tasks.certification-project-check.results.certification_project_id)"
           operator: "notin"
           values: [""]
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: "notin"
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"

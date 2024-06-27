@@ -35,7 +35,7 @@ spec:
 
         CONFIG_PATH="$(params.operator_path)/ci.yaml"
 
-        if [[ ! -f "$CONFIG_PATH" || -z "$(params.bundle_path)" ]]; then
+        if [[ ! -f "$CONFIG_PATH" ]]; then
             echo "Config file $CONFIG_PATH does not exist or no bundle affected."
             echo "replaces" | tee $(results.upgrade-graph-mode.path)
             echo -n "false" | tee $(results.fbc-enabled.path)
