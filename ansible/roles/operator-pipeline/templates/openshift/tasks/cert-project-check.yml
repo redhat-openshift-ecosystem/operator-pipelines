@@ -31,9 +31,7 @@ spec:
           exit 0
         fi
 
-        PKG_PATH=$(realpath $(params.operator_path))
-
-        CI_FILE_PATH="$PKG_PATH/ci.yaml"
+        CI_FILE_PATH="$(params.operator_path)/ci.yaml"
 
         CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id | select (.!=null)')
 
