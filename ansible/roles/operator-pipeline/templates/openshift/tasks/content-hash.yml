@@ -18,7 +18,6 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
-
         echo "Compute md5hash of bundle content..."
 
         find $(params.bundle_path) -not -name "Dockerfile" -type f | \
