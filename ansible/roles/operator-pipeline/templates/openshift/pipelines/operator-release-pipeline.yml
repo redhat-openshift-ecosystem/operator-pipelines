@@ -237,8 +237,9 @@ spec:
     - name: content-hash
       runAfter:
         - read-config
-      when: &bundleAdded
-        - input: "$(tasks.detect-changes.results.added_bundle)"
+      when: 
+        - &bundleAdded
+          input: "$(tasks.detect-changes.results.added_bundle)"
           operator: notin
           values: [""]
       taskRef:
@@ -342,8 +343,9 @@ spec:
         - copy-bundle-image-to-released-registry
       taskRef:
         name: publish-pyxis-data
-      when: &certProjectExists
-        - input: "$(tasks.certification-project-check.results.certification_project_id)"
+      when:
+        - &certProjectExists
+          input: "$(tasks.certification-project-check.results.certification_project_id)"
           operator: "notin"
           values: [""]
       params:
