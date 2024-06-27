@@ -440,7 +440,7 @@ spec:
         kind: Task
       runAfter:
         - build-fragment-images
-      when: 
+      when:
         - &bundleAdded
           input: "$(tasks.detect-changes.results.added_bundle)"
           operator: notin
@@ -466,7 +466,7 @@ spec:
         name: content-hash
       runAfter:
         - apply-test-waivers
-      when: 
+      when:
         - *bundleAdded
       params:
         - name: pipeline_image
@@ -562,7 +562,7 @@ spec:
         - verify-project
       taskRef:
         name: update-cert-project-status
-      when: 
+      when:
         - *certProjectExists
       params:
         - name: pipeline_image
@@ -588,7 +588,7 @@ spec:
         - update-cert-project-status
       taskRef:
         name: reserve-operator-name
-      when: 
+      when:
         - *certProjectExists
       params:
         - name: pipeline_image
@@ -904,7 +904,7 @@ spec:
     - name: get-ci-results-attempt
       runAfter:
         - make-index-repo-public
-      when: 
+      when:
         - *bundleAdded
       taskRef:
         name: get-ci-results-attempt
@@ -1065,7 +1065,7 @@ spec:
         - evaluate-preflight-result
       taskRef:
         name: get-ci-results
-      when: 
+      when:
         - *bundleAdded
       params:
         - name: pipeline_image
@@ -1212,7 +1212,7 @@ spec:
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
-      when: 
+      when:
         - *certProjectExists
         - *bundleAdded
       params:
@@ -1278,7 +1278,7 @@ spec:
     - name: github-add-connect-url-comment
       taskRef:
         name: github-add-comment
-      when: 
+      when:
         - *certProjectExists
       params:
         - name: pipeline_image
