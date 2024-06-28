@@ -6,8 +6,8 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-    - name: operator_path
-      description: path indicating the location of the certified operator within the repository
+    - name: bundle_path
+      description: path indicating the location of the certified bundle within the repository
     - name: cert_project_required
       description: A flag determines whether a cert project ID needs to be present
       default: "true"
@@ -31,7 +31,9 @@ spec:
           exit 0
         fi
 
-        CI_FILE_PATH="$(params.operator_path)/ci.yaml"
+        PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
+
+        CI_FILE_PATH="$PKG_PATH/ci.yaml"
 
         CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id | select (.!=null)')
 
