@@ -84,7 +84,7 @@ def open_pr(  # pylint: disable=too-many-arguments
         github_api_url (str): Github API URL
         repo_name (str): Repository name where the PR will be open
         head (str): Current git head that's used as a source for the PR
-        base (str): A targer branch
+        base (str): A target branch
         title (str): Pull request title
         body (str): Pull request body
 
