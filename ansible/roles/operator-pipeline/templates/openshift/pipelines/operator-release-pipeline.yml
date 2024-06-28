@@ -260,6 +260,8 @@ spec:
         - content-hash
       taskRef:
         name: certification-project-check
+      when:
+        - *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
