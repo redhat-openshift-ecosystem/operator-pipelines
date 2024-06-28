@@ -844,7 +844,14 @@ spec:
     - name: add-bundle-to-index
       runAfter:
         - add-fbc-fragments-to-index
-      when: *operatorOrBundleChange
+      when:
+        # Run only when a bundle is added and it doesn't use FBC
+        - input: "$(tasks.detect-changes.results.affected_catalogs)"
+          operator: in
+          values: [""]
+        - input: "$(tasks.read-config.results.fbc-enabled)"
+          operator: notin
+          values: ["true"]
       taskRef:
         name: add-bundle-to-index
       params:
@@ -875,9 +882,50 @@ spec:
           workspace: results
           subPath: paths
 
+    - name: build-fbc-scratch-catalog
+      runAfter:
+        - add-fbc-fragments-to-index
+      when:
+        # Run only when a bundle is added and it uses FBC
+        - input: "$(tasks.detect-changes.results.affected_catalogs)"
+          operator: in
+          values: [""]
+        - input: "$(tasks.read-config.results.fbc-enabled)"
+          operator: in
+          values: ["true"]
+      taskRef:
+        name: build-fbc-scratch-catalog
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: fbc_enabled
+          value: "$(tasks.read-config.results.fbc-enabled)"
+        - name: ocp_version
+          value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
+        - name: bundle_pullspec
+          value: *bundleImage
+        - name: operator_name
+          value: "$(tasks.detect-changes.results.added_operator)"
+        - name: bundle_version
+          value: "$(tasks.detect-changes.results.added_bundle)"
+        - name: index_image_destination
+          value: *tempIndexRepo
+        - name: index_image_destination_tag_suffix
+          value: "-$(params.git_commit)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+        - name: credentials
+          workspace: registry-credentials
+        - name: output
+          workspace: results
+          subPath: paths
+
     - name: make-index-repo-public
       runAfter:
         - add-bundle-to-index
+        - build-fbc-scratch-catalog
       when: *operatorOrBundleChange
       taskRef:
         name: set-quay-repo-visibility
