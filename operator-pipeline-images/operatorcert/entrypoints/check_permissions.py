@@ -7,7 +7,7 @@ import os
 import urllib
 from typing import Any
 
-from github import Auth, Github
+from github import Auth, Github, UnknownObjectException
 from operator_repo import Operator
 from operator_repo import Repo as OperatorRepo
 from operatorcert import pyxis
@@ -194,7 +194,11 @@ class OperatorReview:
         )
         github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN") or "")
         github = Github(auth=github_auth)
-        members = github.get_organization(self.github_repo_org).get_members()
+        try:
+            members = github.get_organization(self.github_repo_org).get_members()
+        except UnknownObjectException:
+            LOGGER.info("Organization %s does not exist", self.github_repo_org)
+            return False
 
         for member in members:
             if self.pr_owner in member.login:
