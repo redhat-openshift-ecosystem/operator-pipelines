@@ -12,7 +12,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
     
     
       
@@ -935,14 +935,6 @@ retrieve them from the preflight job, gpg decryption key should be supplied.</p>
   --from-literal private=&lt;private gpg key&gt; \
   --from-literal public=&lt;public gpg key&gt;
 </code></pre>
-<h3 id="ocp-registry-kubeconfig">OCP-registry-kubeconfig</h3>
-<p>OCP clusters contains the public registries for Operator Bundle Images.
-To publish the image to this registry, Pipeline connects to OCP cluster via
-kubeconfig.
-To create the secret which contains the OCP cluster kubeconfig:</p>
-<pre><code class="language-bash">oc create secret generic ocp-registry-kubeconfig \
-  --from-literal kubeconfig=&lt;kubeconfig&gt;
-</code></pre>
 <h3 id="quay-oauth-token">Quay OAuth Token</h3>
 <p>A Quay OAuth token is required to set repo visibility to public.</p>
 <pre><code class="language-bash">oc create secret generic quay-oauth-token --from-literal token=&lt;token&gt;
@@ -979,7 +971,7 @@ during the IIB build.</p>
   --from-literal username=&lt;QUAY_USERNAME&gt; \
   --from-literal password=&lt;QUAY_PASSWORD&gt;
 </code></pre>
-<h3 id="ocp-registry-kubeconfig_1">OCP-registry-kubeconfig</h3>
+<h3 id="ocp-registry-kubeconfig">OCP-registry-kubeconfig</h3>
 <p>OCP clusters contains the public registries for Operator Bundle Images.
 To publish the image to this registry, Pipeline connects to OCP cluster via
 kubeconfig.
@@ -1037,7 +1029,7 @@ To create the secret which contains the OCP cluster kubeconfig:</p>
     <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.ad660dcc.min.js"></script>
+      <script src="../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
       
     
   </body>
