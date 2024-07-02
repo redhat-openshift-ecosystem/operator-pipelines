@@ -178,18 +178,6 @@ oc create secret generic preflight-decryption-key \
   --from-literal public=<public gpg key>
 ```
 
-### OCP-registry-kubeconfig
-
-OCP clusters contains the public registries for Operator Bundle Images.
-To publish the image to this registry, Pipeline connects to OCP cluster via
-kubeconfig.
-To create the secret which contains the OCP cluster kubeconfig:
-
-```bash
-oc create secret generic ocp-registry-kubeconfig \
-  --from-literal kubeconfig=<kubeconfig>
-```
-
 ### Quay OAuth Token
 
 A Quay OAuth token is required to set repo visibility to public.
