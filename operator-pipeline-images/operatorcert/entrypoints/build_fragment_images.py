@@ -3,11 +3,10 @@
 import argparse
 import json
 import logging
-import os
-from typing import Any
 
+from operatorcert import buildah, opm
 from operatorcert.logger import setup_logger
-from operatorcert.utils import SplitArgs, run_command
+from operatorcert.utils import SplitArgs
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -52,84 +51,6 @@ def setup_argparser() -> argparse.ArgumentParser:
     return parser
 
 
-def create_dockerfile(catalog_path: str, catalog_name: str) -> str:
-    """
-    Generate a Dockerfile using opm for a given catalog.
-
-    Args:
-        catalog_path (str): Path to a catalogs direcotory
-        catalog_name (str): Name of the catalog in the catalogs directory
-
-    Returns:
-        str: A Dockerfile path for the given catalog
-    """
-    dockerfile_path = f"{catalog_path}/{catalog_name}.Dockerfile"
-    if os.path.exists(dockerfile_path):
-        LOGGER.warning("Dockerfile already exists: %s. Removing...", dockerfile_path)
-        os.remove(dockerfile_path)
-    cmd = [
-        "opm",
-        "generate",
-        "dockerfile",
-        f"{catalog_path}/{catalog_name}",
-    ]
-    LOGGER.debug("Creating dockerfile: %s", catalog_name)
-    run_command(cmd)
-    return f"{catalog_path}/{catalog_name}.Dockerfile"
-
-
-def build_fragment_image(dockerfile_path: str, context: str, output_image: str) -> Any:
-    """
-    Build a fragment image using buildah using given dockerfile and context.
-
-    Args:
-        dockerfile_path (str): Path to a dockerfile
-        context (str): Build context directory
-        output_image (str): A name of the output image
-
-    Returns:
-        Any: Command output
-    """
-    cmd = [
-        "buildah",
-        "bud",
-        "--format",
-        "docker",
-        "-f",
-        dockerfile_path,
-        "-t",
-        output_image,
-        context,
-    ]
-    LOGGER.info("Building fragment image: %s", output_image)
-    return run_command(cmd)
-
-
-def push_fragment_image(image: str, authfile: str) -> Any:
-    """
-    Push a fragment image to a registry using buildah.
-
-    Args:
-        image (str): A name of the image to push
-        authfile (str): A path to the authentication file
-
-    Returns:
-        Any: Command output
-    """
-    authfile = os.path.expanduser(authfile)
-    cmd = [
-        "buildah",
-        "push",
-        "--authfile",
-        authfile,
-        image,
-        f"docker://{image}",
-    ]
-
-    LOGGER.info("Pushing fragment image: %s", image)
-    return run_command(cmd)
-
-
 def create_fragment_image(
     catalog_path: str, catalog_name: str, args: argparse.Namespace
 ) -> str:
@@ -145,19 +66,19 @@ def create_fragment_image(
     Returns:
         str: A pullspec of the pushed fragment image
     """
-    dockerfile_path = create_dockerfile(catalog_path, catalog_name)
+    dockerfile_path = opm.create_catalog_dockerfile(catalog_path, catalog_name)
 
     # Add '-<tag_suffix>' to the repository destination if tag_suffix is set
     suffix = f"-{args.tag_suffix}" if args.tag_suffix else ""
     repository_destination = f"{args.repository_destination}:{catalog_name}{suffix}"
 
     # Build and push the fragment image
-    build_fragment_image(
+    buildah.build_image(
         dockerfile_path,
         catalog_path,
         repository_destination,
     )
-    push_fragment_image(repository_destination, args.authfile)
+    buildah.push_image(repository_destination, args.authfile)
 
     return repository_destination
 
