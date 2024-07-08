@@ -3,10 +3,12 @@
 import argparse
 import logging
 import os
+import re
 import shutil
 
 from datetime import datetime
 from git import Repo as GitRepo
+from pathlib import Path
 from typing import Any
 
 from operatorcert import github, ocp_version_info
@@ -89,29 +91,27 @@ def copy_files_if_not_exist(
     to_commit = []
 
     # copy catalog files if they don't exist
-    relative_catalog_dir = os.path.join("catalogs", f"v{target_version}", operator_name)
-    catalog_target_dir = os.path.join(repo_dir, relative_catalog_dir)
+    relative_catalog_dir = Path("catalogs", f"v{target_version}", operator_name)
+    catalog_target_dir = Path(repo_dir, relative_catalog_dir)
     if not os.path.exists(catalog_target_dir):
         os.makedirs(catalog_target_dir)
-    catalog_source_dir = os.path.join(
-        repo_dir, "catalogs", f"v{source_version}", operator_name
-    )
+    catalog_source_dir = Path(repo_dir, "catalogs", f"v{source_version}", operator_name)
     for file in os.listdir(catalog_source_dir):
-        source_file = os.path.join(catalog_source_dir, file)
-        target_file = os.path.join(catalog_target_dir, file)
+        source_file = Path(catalog_source_dir, file)
+        target_file = Path(catalog_target_dir, file)
         if not os.path.exists(target_file):
             LOG.info("Copying catalog %s to %s", source_file, target_file)
             shutil.copyfile(source_file, target_file)
-            to_commit.append(os.path.join(relative_catalog_dir, file))
+            to_commit.append(Path(relative_catalog_dir, file))
 
     # copy template file if they don't exist
-    relative_template_file = os.path.join(
+    relative_template_file = Path(
         "operators", operator_name, "catalog-templates", f"v{target_version}.yaml"
     )
-    source_template = os.path.join(
+    source_template = Path(
         repo_dir, f"operators/{operator_name}/catalog-templates/v{source_version}.yaml"
     )
-    target_template = os.path.join(repo_dir, relative_template_file)
+    target_template = Path(repo_dir, relative_template_file)
     if not os.path.exists(target_template):
         LOG.info("Copying template %s to %s", source_template, target_template)
         shutil.copyfile(source_template, target_template)
@@ -135,18 +135,33 @@ def update_makefile(
     """
     to_commit = ""
 
-    relative_makefile_path = os.path.join("operators", operator_name, "Makefile")
-    makefile_path = os.path.join(repo_dir, relative_makefile_path)
+    relative_makefile_path = Path("operators", operator_name, "Makefile")
+    makefile_path = Path(repo_dir, relative_makefile_path)
     with open(makefile_path, "r") as makefile:
         makefile_content = makefile.readlines()
 
     makefile_out = []
     for line in makefile_content:
-        if line.startswith("OCP_VERSIONS"):
-            if target_version not in line:
-                # assuming line looks like:
-                # `OCP_VERSIONS=$(shell echo "v4.12 v4.13 v4.14 v4.15" )`
-                split_point = line.rindex('"')
+        # search for variable assignment
+        if line.startswith("OCP_VERSIONS="):
+            # find the quoted part of the line
+            # assuming line might looks like:
+            # `OCP_VERSIONS=$(shell echo "v4.12 v4.13 v4.14 v4.15" )`
+            # OR
+            # `OCP_VERSIONS="v4.12 v4.13 v4.14 v4.15"`
+            # OR any single quoted variants
+            match = re.search(r"['\"](.*?)['\"]", line)
+            if not match:
+                LOG.warning(
+                    "No OCP versions found in Makefile or invalid format: %s", line
+                )
+                return to_commit
+            ocp_string = match.group(1)
+            # check target version in versions list to avoid false positives
+            # from searching just the string
+            if target_version not in ocp_string.split():
+                split_point = line.rindex(ocp_string) + len(ocp_string)
+                # update the line with target version
                 updated = f"{line[:split_point]} v{target_version}{line[split_point:]}"
                 makefile_out.append(updated)
                 to_commit = relative_makefile_path
@@ -184,7 +199,9 @@ def triage_operators(
         elif strategy == "review-needed":
             review.append(operator)
         else:
-            LOG.warning("Unknown promotion strategy for operator %s", operator)
+            LOG.warning(
+                "Unknown promotion strategy for operator %s: %s", operator, strategy
+            )
             never.append(operator)
 
     return never, always, review
@@ -262,7 +279,7 @@ def promote_catalog(
     LOG.info("Source version for promotion: %s", source_version)
 
     # get list of operators from the source catalog
-    source_catalog = os.path.join(repo_dir, "catalogs", f"v{source_version}")
+    source_catalog = Path(repo_dir, "catalogs", f"v{source_version}")
     if not os.path.exists(source_catalog):
         LOG.error("Source catalog %s not found", source_catalog)
         return

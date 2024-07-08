@@ -25,6 +25,8 @@ OPERATOR_CATALOG_TEMPLATE_DIR = ${PDW}/catalog-templates
 
 # A list of OCP versions to generate catalogs for
 # This list can be customized to include the versions that are relevant to the operator
+# DO NOT change this line (except for the versions) if you want to take advantage 
+# of the automated catalog promotion
 OCP_VERSIONS=$(shell echo "v4.12 v4.13 v4.14 v4.15 v4.16" )
 
 
