@@ -140,7 +140,6 @@ def update_makefile(
         # search for variable assignment
         if bool(re.match(r"^OCP_VERSIONS\s*=", line)):
             # find the group of versions on the line
-            # OR any single quoted variants
             versions = re.search(r"(v\d+\.\d+(?:\s+v\d+\.\d+)*)", line)
             if not versions:
                 LOG.warning(
@@ -151,7 +150,7 @@ def update_makefile(
             # check target version in versions list to avoid false positives
             # from searching just the string
             if target_version not in ocp_string.split():
-                split_point = line.rindex(ocp_string) + len(ocp_string)
+                split_point = line.index(ocp_string) + len(ocp_string)
                 # update the line with target version
                 updated = f"{line[:split_point]} v{target_version}{line[split_point:]}"
                 makefile_out.append(updated)
