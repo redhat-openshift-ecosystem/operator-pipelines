@@ -9,7 +9,7 @@ import shutil
 from datetime import datetime
 from git import Repo as GitRepo
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from operatorcert import github, ocp_version_info
 from operator_repo import Repo as OperatorRepo
@@ -17,6 +17,10 @@ from operator_repo import Repo as OperatorRepo
 LOG = logging.getLogger(__name__)
 
 ORGANIZATIONS = {
+    "community-test-repo": {
+        "gh_repository": "mantomas/community-test-repo",
+        "organization": "community-operators",
+    },
     "certified-operators": {
         "gh_repository": "redhat-openshift-ecosystem/certified-operators",
         "organization": "certified-operators",
@@ -71,7 +75,7 @@ def setup_argparser() -> Any:
 
 def copy_files_if_not_exist(
     operator_name: str,
-    repo_dir: str,
+    repo_dir: Path,
     source_version: str,
     target_version: str,
 ) -> list[str]:
@@ -80,7 +84,7 @@ def copy_files_if_not_exist(
 
     Args:
         operator_name (str): Operator name
-        repo_dir (str): Path to the processed local repository
+        repo_dir (Path): Path to the processed local repository
         source (str): Source catalog directory
         target (str): Target catalog directory
 
@@ -91,72 +95,59 @@ def copy_files_if_not_exist(
     to_commit = []
 
     # copy catalog files if they don't exist
-    relative_catalog_dir = Path("catalogs", f"v{target_version}", operator_name)
-    catalog_target_dir = Path(repo_dir, relative_catalog_dir)
-    if not os.path.exists(catalog_target_dir):
-        os.makedirs(catalog_target_dir)
-    catalog_source_dir = Path(repo_dir, "catalogs", f"v{source_version}", operator_name)
+    catalog_dir = repo_dir / "catalogs"
+    catalog_target_dir = catalog_dir / f"v{target_version}" / operator_name
+    catalog_target_dir.mkdir(mode=755, parents=True, exist_ok=True)
+    catalog_source_dir = catalog_dir / f"v{source_version}" / operator_name
     for file in os.listdir(catalog_source_dir):
-        source_file = Path(catalog_source_dir, file)
-        target_file = Path(catalog_target_dir, file)
-        if not os.path.exists(target_file):
+        source_file = catalog_source_dir / file
+        target_file = catalog_target_dir / file
+        if source_file.is_file() and not target_file.exists():
             LOG.info("Copying catalog %s to %s", source_file, target_file)
             shutil.copyfile(source_file, target_file)
-            to_commit.append(Path(relative_catalog_dir, file))
-
+            to_commit.append(target_file)
+            to_commit.append(target_file)
     # copy template file if they don't exist
-    relative_template_file = Path(
-        "operators", operator_name, "catalog-templates", f"v{target_version}.yaml"
-    )
-    source_template = Path(
-        repo_dir, f"operators/{operator_name}/catalog-templates/v{source_version}.yaml"
-    )
-    target_template = Path(repo_dir, relative_template_file)
-    if not os.path.exists(target_template):
+    templates_dir = repo_dir / "operators" / operator_name / "catalog-templates"
+    source_template = templates_dir / f"v{source_version}.yaml"
+    target_template = templates_dir / f"v{target_version}.yaml"
+    if source_template.is_file() and not target_template.exists():
         LOG.info("Copying template %s to %s", source_template, target_template)
         shutil.copyfile(source_template, target_template)
-        to_commit.append(relative_template_file)
+        to_commit.append(target_template)
 
     return to_commit
 
 
 def update_makefile(
     operator_name: str,
-    repo_dir: str,
+    repo_dir: Path,
     target_version: str,
-) -> str:
+) -> Optional[Path]:
     """
     Add target version to the `OCP_VERSIONS` in the Makefile if missing
 
     Args:
         operator_name (str): Operator name
-        repo_dir (str): Path to the processed local repository
+        repo_dir (Path): Path to the processed local repository
         target_version (str): Target version to add
     """
-    to_commit = ""
-
-    relative_makefile_path = Path("operators", operator_name, "Makefile")
-    makefile_path = Path(repo_dir, relative_makefile_path)
-    with open(makefile_path, "r") as makefile:
-        makefile_content = makefile.readlines()
+    makefile_path = repo_dir / "operators" / operator_name / "Makefile"
+    makefile_content = makefile_path.read_text().splitlines(keepends=True)
 
     makefile_out = []
     for line in makefile_content:
         # search for variable assignment
-        if line.startswith("OCP_VERSIONS="):
-            # find the quoted part of the line
-            # assuming line might looks like:
-            # `OCP_VERSIONS=$(shell echo "v4.12 v4.13 v4.14 v4.15" )`
-            # OR
-            # `OCP_VERSIONS="v4.12 v4.13 v4.14 v4.15"`
+        if bool(re.match(r"^OCP_VERSIONS\s*=", line)):
+            # find the group of versions on the line
             # OR any single quoted variants
-            match = re.search(r"['\"](.*?)['\"]", line)
-            if not match:
+            versions = re.search(r"(v\d+\.\d+(?:\s+v\d+\.\d+)*)", line)
+            if not versions:
                 LOG.warning(
                     "No OCP versions found in Makefile or invalid format: %s", line
                 )
-                return to_commit
-            ocp_string = match.group(1)
+                return
+            ocp_string = versions.group(1)
             # check target version in versions list to avoid false positives
             # from searching just the string
             if target_version not in ocp_string.split():
@@ -164,7 +155,7 @@ def update_makefile(
                 # update the line with target version
                 updated = f"{line[:split_point]} v{target_version}{line[split_point:]}"
                 makefile_out.append(updated)
-                to_commit = relative_makefile_path
+                to_commit = makefile_path
             else:
                 makefile_out.append(line)
         else:
@@ -251,7 +242,7 @@ def create_pr(
 
 
 def promote_catalog(
-    repo_dir: str,
+    repo_dir: Path,
     git_repo: GitRepo,
     valid_versions: list[str],
     target_version: str,
@@ -279,8 +270,8 @@ def promote_catalog(
     LOG.info("Source version for promotion: %s", source_version)
 
     # get list of operators from the source catalog
-    source_catalog = Path(repo_dir, "catalogs", f"v{source_version}")
-    if not os.path.exists(source_catalog):
+    source_catalog = repo_dir / "catalogs" / f"v{source_version}"
+    if not source_catalog.exists():
         LOG.error("Source catalog %s not found", source_catalog)
         return
     source_operators = os.listdir(source_catalog)
@@ -478,7 +469,7 @@ def main() -> None:
     # process promotion
     LOG.info("Promotion to version: %s", target_version)
     pr_info, branch_suffix = promote_catalog(
-        args.local_repo, git_repo, valid_versions, target_version
+        Path(args.local_repo), git_repo, valid_versions, target_version
     )
     LOG.info("Suffix for all branches created and pushed: %s", branch_suffix)
 
