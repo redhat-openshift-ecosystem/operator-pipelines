@@ -97,7 +97,7 @@ def copy_files_if_not_exist(
     # copy catalog files if they don't exist
     catalog_dir = repo_dir / "catalogs"
     catalog_target_dir = catalog_dir / f"v{target_version}" / operator_name
-    catalog_target_dir.mkdir(mode=755, parents=True, exist_ok=True)
+    catalog_target_dir.mkdir(mode=0o755, parents=True, exist_ok=True)
     catalog_source_dir = catalog_dir / f"v{source_version}" / operator_name
     for file in os.listdir(catalog_source_dir):
         source_file = catalog_source_dir / file
