@@ -4,8 +4,8 @@
 [metadata]
 groups = ["default", "operatorcert-dev", "tox"]
 strategy = ["cross_platform"]
-lock_version = "4.4.1"
-content_hash = "sha256:9c5f7ad776d9dd03d91ef8aa0c95f3edbb764040a2d8f5e3cf909e747d3c985f"
+lock_version = "4.4.2"
+content_hash = "sha256:326d5038d9b194383571099fff92d9311e189dae414da0c10eab2638a8c8f8de"
 
 [[package]]
 name = "argcomplete"
