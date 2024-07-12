@@ -211,6 +211,93 @@ from typing import Any
             },
             id="Wrong CSV name in all bundles",
         ),
+        pytest.param(
+            [
+                bundle_files(
+                    "hello",
+                    "0.0.1",
+                    csv={"metadata": {"name": "hello"}},
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.2",
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.3",
+                ),
+            ],
+            ("hello", "0.0.3"),
+            set(),
+            id="Invalid CSV name in old bundle",
+        ),
+        pytest.param(
+            [
+                bundle_files(
+                    "hello",
+                    "0.0.1",
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.2",
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.3",
+                    csv={"metadata": {"name": "hello"}},
+                ),
+            ],
+            ("hello", "0.0.3"),
+            {
+                (Fail, "Invalid operator name in CSV for Bundle(hello/0.0.3)"),
+            },
+            id="Invalid CSV name in new bundle",
+        ),
+        pytest.param(
+            [
+                bundle_files(
+                    "hello",
+                    "0.0.1",
+                ),
+                {"operators/hello/0.0.1/metadata/annotations.yaml": ":invalid"},
+                bundle_files(
+                    "hello",
+                    "0.0.2",
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.3",
+                ),
+            ],
+            ("hello", "0.0.3"),
+            set(),
+            id="Invalid annotations.yaml name in old bundle",
+        ),
+        pytest.param(
+            [
+                bundle_files(
+                    "hello",
+                    "0.0.1",
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.2",
+                ),
+                bundle_files(
+                    "hello",
+                    "0.0.3",
+                ),
+                {"operators/hello/0.0.3/metadata/annotations.yaml": ":invalid"},
+            ],
+            ("hello", "0.0.3"),
+            {
+                (
+                    Fail,
+                    "Invalid operator name in annotations.yaml for Bundle(hello/0.0.3)",
+                ),
+            },
+            id="Invalid annotations.yaml name in new bundle",
+        ),
     ],
     indirect=False,
 )
