@@ -41,7 +41,7 @@ spec:
             echo "Config file $CONFIG_PATH does not exist or no bundle affected."
             echo "replaces" | tee $(results.upgrade-graph-mode.path)
             echo -n "false" | tee $(results.fbc-enabled.path)
-            echo -n "true" | tee "$(workspaces.output.path)/fbc_enabled"
+            echo -n "false" | tee "$(workspaces.output.path)/fbc_enabled"
             exit 0
         fi
 
@@ -66,5 +66,5 @@ spec:
         fi
 
         echo -n $FBC_ENABLEMENT | tee $(results.fbc-enabled.path)
-        echo -n "true" | tee "$(workspaces.output.path)/fbc_enabled"
+        echo -n $FBC_ENABLEMENT | tee "$(workspaces.output.path)/fbc_enabled"
         echo -n $UPGRADE_GRAPH_MODE | tee $(results.upgrade-graph-mode.path)
