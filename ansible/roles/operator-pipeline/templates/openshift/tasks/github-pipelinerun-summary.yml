@@ -53,12 +53,6 @@ spec:
         A flag that determines whether pipeline logs should be uploaded to Github gists
       type: string
 
-    - name: fbc-enabled
-      default: "false"
-      description: |
-        A flag that determines whether bundle uses fbc mode.
-
-
   steps:
     - name: gather-info
       workingDir: $(workspaces.output.path)
@@ -139,6 +133,15 @@ spec:
           DOC_LINK="https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/troubleshooting.md"
         fi
 
+        # Load info about fbc_enablement from file
+        if [[ -f "$(workspaces.output.path)/fbc_enabled" ]]; then
+          fbc_enabled=$(cat "$(workspaces.output.path)/fbc_enabled")
+        else
+          fbc_enabled="false"
+        fi
+        echo -e "\n## FBC enabled:\n" >> "$PR_NAME/comment.md"
+        echo -e "$fbc_enabled \n" >> "$PR_NAME/comment.md"
+
         if [[ "$(params.pipeline_name)" == "operator-release-pipeline" && ("$(params.pipeline_status)" == "Succeeded" || "$(params.pipeline_status)" == "Completed") ]]; then
           # Add details about released bundle and indices
           echo -e "\n## Release info\n" >> "$PR_NAME/comment.md"
@@ -157,7 +160,7 @@ spec:
           fi
 
           # Add info how to update catalog for FBC bundles
-          if [[ "$(params.fbc-enabled)" == "true" && -f "$RELEASE_INFO_DIR_PATH/released_bundle.txt" ]]; then
+          if [[ "$fbc_enabled" == "true" && -f "$RELEASE_INFO_DIR_PATH/released_bundle.txt" ]]; then
             echo -e "\n## Catalog update\n" >> "$PR_NAME/comment.md"
             echo -e "Operator bundle using FBC mode has been released.\nTo add bundle to FBC templates, follow [this guide](https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_workflow/#adding-new-bundle-to-catalog) to create a new PR with catalog changes." >> "$PR_NAME/comment.md"
           fi
