@@ -139,8 +139,6 @@ spec:
         else
           fbc_enabled="false"
         fi
-        echo -e "\n## FBC enabled:\n" >> "$PR_NAME/comment.md"
-        echo -e "$fbc_enabled \n" >> "$PR_NAME/comment.md"
 
         if [[ "$(params.pipeline_name)" == "operator-release-pipeline" && ("$(params.pipeline_status)" == "Succeeded" || "$(params.pipeline_status)" == "Completed") ]]; then
           # Add details about released bundle and indices
