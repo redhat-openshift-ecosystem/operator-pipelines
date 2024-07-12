@@ -232,6 +232,9 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: output
+          workspace: results
+          subPath: summary
 
     # Compute a hash of the content so pipeline logs can be uploaded with it
     - name: content-hash
@@ -852,8 +855,6 @@ spec:
           value: "$(context.pipeline.name)"
         - name: pipeline_status
           value: "$(tasks.status)"
-        - name: fbc-enabled
-          value: "$(tasks.read-config.results.fbc-enabled)"
       workspaces:
         - name: base
           workspace: repository
