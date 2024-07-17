@@ -425,7 +425,7 @@ def test_check_dangling_bundles(tmp_path: Path) -> None:
         pytest.param(
             {"spec": {"minKubeVersion": "1.0.0"}},
             {"com.redhat.openshift.versions": "=v3.1"},
-            {Fail("Unknown OCP version in com.redhat.openshift.versions: 3.1")},
+            set(),
             id='Valid minKubeVersion, unknown com.redhat.openshift.versions ("=")',
         ),
         pytest.param(

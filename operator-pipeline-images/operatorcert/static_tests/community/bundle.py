@@ -78,6 +78,17 @@ OCP_TO_K8S_SEMVER = {
 }
 
 
+def find_closest_ocp_version(ocp_ver: Version) -> Version:
+    """
+    Find the closest openshift version between all known versions
+    """
+    all_ocp_versions = sorted(OCP_TO_K8S_SEMVER.keys())
+    pos = bisect(all_ocp_versions, ocp_ver)
+    if pos == 0:
+        return all_ocp_versions[0]
+    return all_ocp_versions[pos - 1]
+
+
 def ocp_to_k8s_ver(ocp_ver: str) -> str:
     """
     Lookup the corresponding k8s version for an openshift version
@@ -85,13 +96,7 @@ def ocp_to_k8s_ver(ocp_ver: str) -> str:
     try:
         return OCP_TO_K8S[ocp_ver]
     except KeyError:
-        ocp_versions = sorted(OCP_TO_K8S_SEMVER.keys())
-        ocp = _parse_ocp_version(ocp_ver)
-        pos = bisect(ocp_versions, ocp)
-        if pos == 0:
-            closest_ocp = ocp_versions[0]
-        else:
-            closest_ocp = ocp_versions[pos - 1]
+        closest_ocp = find_closest_ocp_version(_parse_ocp_version(ocp_ver))
         LOGGER.warning(
             "Using openshift version %s in place of unknown openshift version %s",
             closest_ocp,
@@ -283,14 +288,9 @@ def check_api_version_constraints(bundle: Bundle) -> Iterator[CheckResult]:
                 # com.redhat.openshift.versions contains a single version
                 if selector.startswith("="):
                     # Select a specific version
-                    version = _parse_ocp_version(selector.removeprefix("="))
-                    if version not in OCP_TO_K8S_SEMVER:
-                        yield Fail(
-                            "Unknown OCP version in "
-                            "com.redhat.openshift.versions: "
-                            f"{version.major}.{version.minor}"
-                        )
-                        return
+                    version = find_closest_ocp_version(
+                        _parse_ocp_version(selector.removeprefix("="))
+                    )
                     ocp_versions = {version}
                 else:
                     # Any version >= the specified value
