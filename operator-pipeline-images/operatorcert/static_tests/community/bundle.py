@@ -6,6 +6,7 @@
     (either Fail or Warn) to describe the issues found in the given Bundle.
 """
 
+from bisect import bisect
 import json
 import logging
 import re
@@ -33,9 +34,24 @@ from .validations import (
 
 LOGGER = logging.getLogger("operator-cert")
 
+
+def _parse_semver(version: str) -> Version:
+    return Version.parse(version.strip(), optional_minor_and_patch=True).replace(
+        prerelease=None, build=None
+    )
+
+
+def _parse_ocp_version(version: str) -> Version:
+    return _parse_semver(version.strip().removeprefix("v")).replace(patch=0)
+
+
 # convert table for OCP <-> k8s versions
 # for now these are hardcoded pairs -> if new version of OCP:k8s is released,
 # this table should be updated
+# This is documented at https://access.redhat.com/solutions/4870701
+# When adding an upcoming release the document above won't include the new
+# version: to find the corresponding k8s version look at
+# https://github.com/openshift/kubernetes/blob/release-4.YY/CHANGELOG/README.md
 OCP_TO_K8S = {
     "4.1": "1.13",
     "4.2": "1.14",
@@ -53,29 +69,47 @@ OCP_TO_K8S = {
     "4.14": "1.27",
     "4.15": "1.28",
     "4.16": "1.29",
+    "4.17": "1.30",
 }
+
+OCP_TO_K8S_SEMVER = {
+    _parse_ocp_version(ocp_ver): _parse_semver(k8s_ver)
+    for ocp_ver, k8s_ver in OCP_TO_K8S.items()
+}
+
+
+def find_closest_ocp_version(ocp_ver: Version) -> Version:
+    """
+    Find the closest openshift version between all known versions
+    """
+    all_ocp_versions = sorted(OCP_TO_K8S_SEMVER.keys())
+    pos = bisect(all_ocp_versions, ocp_ver)
+    if pos == 0:
+        return all_ocp_versions[0]
+    return all_ocp_versions[pos - 1]
+
+
+def ocp_to_k8s_ver(ocp_ver: str) -> str:
+    """
+    Lookup the corresponding k8s version for an openshift version
+    """
+    try:
+        return OCP_TO_K8S[ocp_ver]
+    except KeyError:
+        closest_ocp = find_closest_ocp_version(_parse_ocp_version(ocp_ver))
+        LOGGER.warning(
+            "Using openshift version %s in place of unknown openshift version %s",
+            closest_ocp,
+            ocp_ver,
+        )
+        k8s = OCP_TO_K8S_SEMVER[closest_ocp]
+        return f"{k8s.major}.{k8s.minor}"
 
 
 class GraphLoopException(Exception):
     """
     Exception raised when a loop is detected in the update graph
     """
-
-
-def _parse_semver(version: str) -> Version:
-    return Version.parse(version.strip(), optional_minor_and_patch=True).replace(
-        prerelease=None, build=None
-    )
-
-
-def _parse_ocp_version(version: str) -> Version:
-    return _parse_semver(version.strip().removeprefix("v")).replace(patch=0)
-
-
-OCP_TO_K8S_SEMVER = {
-    _parse_ocp_version(ocp_ver): _parse_semver(k8s_ver)
-    for ocp_ver, k8s_ver in OCP_TO_K8S.items()
-}
 
 
 def run_operator_sdk_bundle_validate(
@@ -87,40 +121,34 @@ def run_operator_sdk_bundle_validate(
     ocp_versions = utils.get_ocp_supported_versions(
         "community-operators", ocp_annotation
     )
-    ocp_latest_version = ocp_versions[0] if ocp_versions else None
+    if ocp_versions:
+        ocp_latest_version = ocp_versions[0]
 
-    kube_version_for_deprecation_test = OCP_TO_K8S.get(ocp_latest_version)
+        kube_version_for_deprecation_test = ocp_to_k8s_ver(ocp_latest_version)
 
-    if kube_version_for_deprecation_test is None:
-        LOGGER.info(
-            "There was no OCP version specified. API deprecation test for the testing "
-            "suite - %s - was run with 'None' value.",
+        cmd = [
+            "operator-sdk",
+            "bundle",
+            "validate",
+            "-o",
+            "json-alpha1",
+            bundle.root,
+            "--select-optional",
             test_suite_selector,
+            f"--optional-values=k8s-version={kube_version_for_deprecation_test}",
+        ]
+        sdk_result = json.loads(
+            subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False
+            ).stdout
         )
-
-    cmd = [
-        "operator-sdk",
-        "bundle",
-        "validate",
-        "-o",
-        "json-alpha1",
-        bundle.root,
-        "--select-optional",
-        test_suite_selector,
-        f"--optional-values=k8s-version={kube_version_for_deprecation_test}",
-    ]
-    sdk_result = json.loads(
-        subprocess.run(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False
-        ).stdout
-    )
-    for output in sdk_result.get("outputs") or []:
-        output_type = output.get("type")
-        output_message = output.get("message", "")
-        if output_type == "error":
-            yield Fail(output_message)
-        else:
-            yield Warn(output_message)
+        for output in sdk_result.get("outputs") or []:
+            output_type = output.get("type")
+            output_message = output.get("message", "")
+            if output_type == "error":
+                yield Fail(output_message)
+            else:
+                yield Warn(output_message)
 
 
 def check_osdk_bundle_validate_operatorhub(bundle: Bundle) -> Iterator[CheckResult]:
@@ -260,14 +288,9 @@ def check_api_version_constraints(bundle: Bundle) -> Iterator[CheckResult]:
                 # com.redhat.openshift.versions contains a single version
                 if selector.startswith("="):
                     # Select a specific version
-                    version = _parse_ocp_version(selector.removeprefix("="))
-                    if version not in OCP_TO_K8S_SEMVER:
-                        yield Fail(
-                            "Unknown OCP version in "
-                            "com.redhat.openshift.versions: "
-                            f"{version.major}.{version.minor}"
-                        )
-                        return
+                    version = find_closest_ocp_version(
+                        _parse_ocp_version(selector.removeprefix("="))
+                    )
                     ocp_versions = {version}
                 else:
                     # Any version >= the specified value
