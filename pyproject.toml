@@ -21,7 +21,10 @@ operatorcert-dev = [
     "pylint>=2.17.5",
     # "pymarkdownlnt>=0.9.13.4",
 ]
-tox = ["tox>=4.6.0", "tox-pdm>=0.6.1"]
+tox = [
+    "tox>=4.16.0",
+    "tox-pdm>=0.7.2",
+]
 
 
 [project]
@@ -49,7 +52,7 @@ dependencies = [
     "GitPython>=3.1.37",
     "semver>=3.0.1",
     "operator-repo @ git+https://github.com/mporrato/operator-repo.git@v0.4.3",
-    "urllib3>=2.0.7",
+    "urllib3>=2.2.2",
 ]
 
 [project.scripts]
