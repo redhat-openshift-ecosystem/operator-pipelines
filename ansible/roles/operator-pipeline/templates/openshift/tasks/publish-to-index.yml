@@ -22,6 +22,9 @@ spec:
         - iib-quay-credentials (default) - for connect and marketplace repositories
         - community-push-final-index-quay-credentials - for community repositories
       default: iib-quay-credentials
+  workspaces:
+    - name: output
+      description: Scratch space and storage for the comment and related data
   steps:
     - name: skopeo-copy
       # Pipeline image is needed for Red Hat internal SSL cert
@@ -87,6 +90,17 @@ spec:
         esac
 
         echo "FROM_INDEX: $FROM_INDEX"
+        # Replace internal registry with external address
+        INDEX_NAME="${FROM_INDEX#*----}"
+        if [[ "$(params.environment)" == "prod" ]]; then
+          FROM_INDEX_PROXY="registry.redhat.io/redhat/${INDEX_NAME}"
+        else
+          FROM_INDEX_PROXY="registry.stage.redhat.io/redhat/${INDEX_NAME}"
+        fi
+        # Create folder for release info if it's non-existent
+        RELEASE_INFO_DIR_PATH="$(workspaces.output.path)/release_info"
+        mkdir -p "$RELEASE_INFO_DIR_PATH"
+
         echo "Copying index images to published repos..."
 
         TEMP_IMAGES=$(echo $(params.index_image_paths) | tr "," " ")
@@ -122,4 +136,7 @@ spec:
             --dest-creds $QUAY_USER:$QUAY_TOKEN \
             docker://$SRC_IMAGE \
             docker://$DEST_IMAGE_PERMANENT_TAG
+
+          # Save data about updated indices to volume
+          echo "- ${FROM_INDEX_PROXY}:${VERSION}" | tee -a "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
         done

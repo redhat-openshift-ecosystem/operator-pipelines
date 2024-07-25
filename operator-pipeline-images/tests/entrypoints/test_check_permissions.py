@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call, patch
 
 import operatorcert.entrypoints.check_permissions as check_permissions
 import pytest
+from github import UnknownObjectException
 from operator_repo import Repo as OperatorRepo
 from tests.utils import bundle_files, create_files
 
@@ -178,6 +179,13 @@ def test_OperatorReview_is_org_member(
     # User is not a member of the organization
     members = [MagicMock(login="user123")]
     mock_organization.get_members.return_value = members
+    assert review_community.is_org_member() == False
+
+    # Organization does not exist
+    members = [MagicMock(login="user123")]
+    mock_github.return_value.get_organization.side_effect = UnknownObjectException(
+        404, "", {}
+    )
     assert review_community.is_org_member() == False
 
 

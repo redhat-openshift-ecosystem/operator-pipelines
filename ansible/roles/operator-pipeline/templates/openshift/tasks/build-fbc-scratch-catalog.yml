@@ -1,0 +1,77 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: build-fbc-scratch-catalog
+spec:
+  description: |
+    The purpose of this task is to build a new index/catalog image with a single
+    operator bundle. The catalog is used only for testing purposes to test if
+    a bundle can be installed. After the tests are executed the catalog is
+    no longer used.
+
+    The catalog is build using FBC mechanism:
+      - create an empty catalog
+      - create a basic FBC template and insert the bundle
+      - render a template to FBC
+      - build and push a catalog to registry given by arguments
+  params:
+    - name: pipeline_image
+
+    - name: catalog_repository
+      default: "."
+      description: A git repository where catalog is pushed
+
+    - name: ocp_version
+      description: A version of OCP that is going to be used as a target for a catalog
+
+    - name: bundle_pullspec
+      description: Bundle pullspec
+
+    - name: operator_name
+      description: A name of an operator given by the directory name in git repository.
+
+    - name: bundle_version
+      description: A version of a bundle that will be added to the catalog
+
+    - name: index_image_destination
+      default: ""
+      description: "The destination registry and repository where index images will be pushed"
+
+    - name: index_image_destination_tag_suffix
+      default: ""
+      description: "A tag suffix that is added to an image tag in destination registry"
+
+  workspaces:
+    - name: source
+    - name: output
+    - name: credentials
+      optional: true
+      description: A workspace with credentials for registry push
+  steps:
+    - name: build-fbc-catalog
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        privileged: true
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        EXTRA_ARGS=""
+        if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
+          EXTRA_ARGS+=" --authfile $(workspaces.credentials.path)/.dockerconfigjson"
+        fi
+
+        # The registry pull-spec is in following format:
+        # quay.io/{namespace}/{repository}:{ocp-version}{suffix}
+        # Example: quay.io/namespace/repo-name:v4.15-suffix
+        CATALOG_REPO="$(params.index_image_destination):v$(params.ocp_version)$(params.index_image_destination_tag_suffix)"
+
+        build-scratch-catalog \
+          --repo-path "$(params.catalog_repository)" \
+          --operator-name "$(params.operator_name)" \
+          --bundle-version "$(params.bundle_version)" \
+          --bundle-pullspec "$(params.bundle_pullspec)" \
+          --repository-destination $CATALOG_REPO \
+          --verbose $EXTRA_ARGS

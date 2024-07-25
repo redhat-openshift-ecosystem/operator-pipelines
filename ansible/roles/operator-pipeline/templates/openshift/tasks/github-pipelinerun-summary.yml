@@ -41,6 +41,9 @@ spec:
     - name: pipeline_name
       description: The name of the Pipeline.
 
+    - name: pipeline_status
+      description: The result status of the Pipeline.
+
     - name: pipeline_image
       description: The common pipeline image.
 
@@ -128,6 +131,37 @@ spec:
           DOC_LINK="https://redhat-openshift-ecosystem.github.io/community-operators-prod/"
         else
           DOC_LINK="https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/troubleshooting.md"
+        fi
+
+        # Load info about fbc_enablement from file
+        if [[ -f "$(workspaces.output.path)/fbc_enabled" ]]; then
+          fbc_enabled=$(cat "$(workspaces.output.path)/fbc_enabled")
+        else
+          fbc_enabled="false"
+        fi
+
+        if [[ "$(params.pipeline_name)" == "operator-release-pipeline" && ("$(params.pipeline_status)" == "Succeeded" || "$(params.pipeline_status)" == "Completed") ]]; then
+          # Add details about released bundle and indices
+          echo -e "\n## Release info\n" >> "$PR_NAME/comment.md"
+          RELEASE_INFO_DIR_PATH="$(workspaces.output.path)/release_info"
+          if [[ -d "$RELEASE_INFO_DIR_PATH" ]]; then
+            if [[ -f "$RELEASE_INFO_DIR_PATH/released_bundle.txt" ]]; then
+              echo -e "\n*Released bundle:* \n" >> "$PR_NAME/comment.md"
+              cat "$RELEASE_INFO_DIR_PATH/released_bundle.txt" >> "$PR_NAME/comment.md"
+            fi
+            if [[ -f "$RELEASE_INFO_DIR_PATH/updated_indices.txt" ]]; then
+              echo -e "\n*Updated indices:* \n" >> "$PR_NAME/comment.md"
+              cat "$RELEASE_INFO_DIR_PATH/updated_indices.txt" >> "$PR_NAME/comment.md"
+            fi
+          else
+            echo -e "\nNothing was released.\n" >> "$PR_NAME/comment.md"
+          fi
+
+          # Add info how to update catalog for FBC bundles
+          if [[ "$fbc_enabled" == "true" && -f "$RELEASE_INFO_DIR_PATH/released_bundle.txt" ]]; then
+            echo -e "\n## Catalog update\n" >> "$PR_NAME/comment.md"
+            echo -e "Operator bundle using FBC mode has been released.\nTo add bundle to FBC templates, follow [this guide](https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_workflow/#adding-new-bundle-to-catalog) to create a new PR with catalog changes." >> "$PR_NAME/comment.md"
+          fi
         fi
 
         echo -e "\n## Troubleshooting\n\nPlease refer to the [troubleshooting guide]($DOC_LINK)." >> $PR_NAME/comment.md

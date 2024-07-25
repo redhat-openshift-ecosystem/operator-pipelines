@@ -19,8 +19,6 @@ tekton_pruner_keep: 10
 operator_pipeline_private_key_local_path: ../../vaults/{{ env }}/operator-pipeline.key
 operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipeline.pem
 
-operator_pipeline_kubeconfig_ocp_local_path: ../../vaults/{{ env }}/kubeconfig-ocp
-
 operator_hosted_pipeline_registry_auth_path: ../../vaults/{{ env }}/registry-auth/hosted-pipeline.json
 operator_release_pipeline_registry_auth_pull_path: ../../vaults/{{ env }}/registry-auth/release-pipeline-pull.json
 operator_release_pipeline_registry_auth_push_path: ../../vaults/{{ env }}/registry-auth/release-pipeline-push.json

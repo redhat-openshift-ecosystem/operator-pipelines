@@ -15,28 +15,38 @@ from operatorcert.static_tests.community.bundle import (
     check_api_version_constraints,
     check_replaces_availability,
     check_upgrade_graph_loop,
+    ocp_to_k8s_ver,
 )
+from semver import Version
 from tests.utils import bundle_files, create_files, merge
 
 
-@pytest.mark.parametrize("version", ["4.8-4.9", ["4.9", "4.8"], None])
 @pytest.mark.parametrize(
-    "osdk_output, expected",
+    "osdk_output, ocp_versions, expected",
     [
         (
             '{"passed": false, "outputs":'
             '[{"type": "error", "message": "foo"}, {"type": "warning", "message": "bar"}]}',
+            ["4.9", "4.8"],
             {Fail("foo"), Warn("bar")},
         ),
         (
+            '{"passed": false, "outputs":'
+            '[{"type": "error", "message": "foo"}, {"type": "warning", "message": "bar"}]}',
+            None,
+            set(),
+        ),
+        (
             '{"passed": true, "outputs": null}',
+            ["4.9", "4.8"],
             set(),
         ),
     ],
     indirect=False,
     ids=[
-        "A warning and an error",
-        "No warnings or errors",
+        "A warning and an error from operator-sdk",
+        "No matching ocp versions",
+        "No warnings or errors from operator-sdk",
     ],
 )
 @patch("operatorcert.static_tests.community.bundle.utils.get_ocp_supported_versions")
@@ -44,19 +54,53 @@ from tests.utils import bundle_files, create_files, merge
 def test_run_operator_sdk_bundle_validate(
     mock_run: MagicMock,
     mock_version: MagicMock,
-    version: Any,
     osdk_output: str,
+    ocp_versions: Optional[list[str]],
     expected: set[CheckResult],
     tmp_path: Path,
 ) -> None:
     create_files(tmp_path, bundle_files("test-operator", "0.0.1"))
     repo = Repo(tmp_path)
     bundle = repo.operator("test-operator").bundle("0.0.1")
-    mock_version.return_value = version
+    mock_version.return_value = ocp_versions
     process_mock = MagicMock()
     process_mock.stdout = osdk_output
     mock_run.return_value = process_mock
     assert set(run_operator_sdk_bundle_validate(bundle, "")) == expected
+
+
+@pytest.mark.parametrize(
+    "ocp_ver, expected",
+    [
+        pytest.param("4.2", "1.14", id="Known ocp_ver"),
+        pytest.param("4.0", "1.13", id="Old ocp_ver"),
+        pytest.param("4.4", "1.16", id="New ocp_ver"),
+    ],
+)
+def test_ocp_to_k8s_ver(
+    monkeypatch: pytest.MonkeyPatch, ocp_ver: str, expected: str
+) -> None:
+    # prevent the test from breaking when the OCP_TO_K8S mapping
+    # is updated
+    test_ver_map = {
+        "4.1": "1.13",
+        "4.2": "1.14",
+        "4.3": "1.16",
+    }
+    test_ver_map_semver = {
+        Version.parse(k, optional_minor_and_patch=True): Version.parse(
+            v, optional_minor_and_patch=True
+        )
+        for k, v in test_ver_map.items()
+    }
+    monkeypatch.setattr(
+        "operatorcert.static_tests.community.bundle.OCP_TO_K8S", test_ver_map
+    )
+    monkeypatch.setattr(
+        "operatorcert.static_tests.community.bundle.OCP_TO_K8S_SEMVER",
+        test_ver_map_semver,
+    )
+    assert ocp_to_k8s_ver(ocp_ver) == expected
 
 
 @patch("operatorcert.static_tests.community.bundle.run_operator_sdk_bundle_validate")
@@ -381,7 +425,7 @@ def test_check_dangling_bundles(tmp_path: Path) -> None:
         pytest.param(
             {"spec": {"minKubeVersion": "1.0.0"}},
             {"com.redhat.openshift.versions": "=v3.1"},
-            {Fail("Unknown OCP version in com.redhat.openshift.versions: 3.1")},
+            set(),
             id='Valid minKubeVersion, unknown com.redhat.openshift.versions ("=")',
         ),
         pytest.param(

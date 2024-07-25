@@ -1,6 +1,7 @@
 """A common test suite for operator bundles"""
 
 from collections.abc import Iterator
+from typing import Any
 
 from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
@@ -30,18 +31,46 @@ def _check_consistency(
         yield Warn(msg)
 
 
+def _safe_extract(bundles: set[Bundle], attribute: str) -> tuple[set[Any], set[Bundle]]:
+    """Helper function to extract an attribute from all the bundles in a collection.
+    If the extraction fails, keep track of which bundle caused the failure.
+    Returns a tuple containing the set of attributes extracted and the set of bundles
+    that failed the extraction"""
+    results: set[Any] = set()
+    bad: set[Bundle] = set()
+
+    for bundle in bundles:
+        try:
+            results.add(getattr(bundle, attribute))
+        except Exception:  # pylint: disable=broad-except
+            bad.add(bundle)
+
+    return results, bad
+
+
 def check_operator_name(bundle: Bundle) -> Iterator[CheckResult]:
     """Check if the operator names used in CSV, metadata and filesystem are consistent
     in the bundle and across other operator's bundles"""
-    if not bundle.metadata_operator_name:
-        yield Fail("Bundle does not define the operator name in annotations.yaml")
+    try:
+        if not bundle.metadata_operator_name:
+            yield Fail("Bundle does not define the operator name in annotations.yaml")
+            return
+    except Exception:  # pylint: disable=broad-except
+        yield Fail(f"Invalid operator name in annotations.yaml for {bundle}")
         return
     all_bundles = set(bundle.operator.all_bundles())
-    all_metadata_operator_names = {x.metadata_operator_name for x in all_bundles}
-    all_csv_operator_names = {x.csv_operator_name for x in all_bundles}
+    all_metadata_operator_names, _ = _safe_extract(
+        all_bundles, "metadata_operator_name"
+    )
+    all_csv_operator_names, bad = _safe_extract(all_bundles, "csv_operator_name")
+    if bundle in bad:
+        yield Fail(f"Invalid operator name in CSV for {bundle}")
+        return
     other_bundles = all_bundles - {bundle}
-    other_metadata_operator_names = {x.metadata_operator_name for x in other_bundles}
-    other_csv_operator_names = {x.csv_operator_name for x in other_bundles}
+    other_metadata_operator_names, _ = _safe_extract(
+        other_bundles, "metadata_operator_name"
+    )
+    other_csv_operator_names, _ = _safe_extract(other_bundles, "csv_operator_name")
     if other_bundles:
         yield from _check_consistency(
             bundle.metadata_operator_name,

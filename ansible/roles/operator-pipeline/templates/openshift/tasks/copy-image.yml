@@ -23,6 +23,8 @@ spec:
       description: Docker config for the source registry
     - name: dest-registry-credentials
       description: Docker config for the destination registry
+    - name: output
+      description: Scratch space and storage for the comment and related data
   results:
     - name: container_digest
     - name: image_pullspec
@@ -32,10 +34,22 @@ spec:
       script: |
         set -xe
 
+        if [[ "$(params.dest_image_tag)" == "" ]]; then
+          echo "A pipeline is not releasing a bundle. Skipping a copy step.."
+          echo -n > "$(results.container_digest.path)"
+          echo -n "$(params.src_image)" > "$(results.image_pullspec.path)"
+          exit 0
+        fi
+
+        # Create directory for info about release data
+        RELEASE_INFO_DIR_PATH="$(workspaces.output.path)/release_info"
+        mkdir -p "$RELEASE_INFO_DIR_PATH"
+
         if [[ "$(params.vendor_label)" == "" ]]; then
           echo "Image pullspec for community bundle is the source image itself."
           echo -n > "$(results.container_digest.path)"
           echo -n "$(params.src_image)" > "$(results.image_pullspec.path)"
+          echo "- $(params.src_image)" | tee "$RELEASE_INFO_DIR_PATH/released_bundle.txt"
           exit 0
         fi
 
@@ -58,4 +72,5 @@ spec:
 
         DIGEST=$(skopeo inspect --authfile $DEST_AUTHFILE docker://$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag) | jq -r .Digest)
         echo -n $DIGEST | tee $(results.container_digest.path)
+        echo "- $CONNECT_REPO_PATH:$(params.dest_image_tag)" | tee "$RELEASE_INFO_DIR_PATH/released_bundle.txt"
         echo -n "$CONNECT_REPO_PATH@${DIGEST}" > $(results.image_pullspec.path)

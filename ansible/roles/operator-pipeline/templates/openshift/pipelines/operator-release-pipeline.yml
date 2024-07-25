@@ -232,6 +232,9 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: output
+          workspace: results
+          subPath: summary
 
     # Compute a hash of the content so pipeline logs can be uploaded with it
     - name: content-hash
@@ -338,6 +341,9 @@ spec:
           workspace: registry-pull-credentials
         - name: dest-registry-credentials
           workspace: registry-push-credentials
+        - name: output
+          workspace: results
+          subPath: summary
 
     # Publish bundle metadata to Pyxis
     - name: publish-pyxis-data
@@ -348,6 +354,9 @@ spec:
       when:
         - &certProjectExists
           input: "$(tasks.certification-project-check.results.certification_project_id)"
+          operator: "notin"
+          values: [""]
+        - input: "$(tasks.detect-changes.results.added_bundle)"
           operator: "notin"
           values: [""]
       params:
@@ -650,6 +659,10 @@ spec:
           value: "$(tasks.get-organization.results.organization)"
         - name: quay_push_final_index_secret
           value: "$(params.quay_push_final_index_secret)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: summary
 
 
   finally:
@@ -850,6 +863,8 @@ spec:
           value: "true"
         - name: pipeline_name
           value: "$(context.pipeline.name)"
+        - name: pipeline_status
+          value: "$(tasks.status)"
       workspaces:
         - name: base
           workspace: repository
