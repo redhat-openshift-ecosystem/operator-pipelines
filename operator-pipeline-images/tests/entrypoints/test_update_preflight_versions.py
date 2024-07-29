@@ -1,5 +1,4 @@
 import json
-import requests
 from unittest.mock import patch, MagicMock
 import pytest
 from typing import Any
@@ -8,7 +7,6 @@ import datetime
 from operatorcert.entrypoints.update_preflight_versions import (
     synchronize_versions,
     get_versions,
-    PreflightVersion,
 )
 
 PYXIS_URL = "https://pyxis.com"
@@ -83,7 +81,7 @@ def test_no_change(
             "2024-07-17T14:44:54.546896+00:00"
         )
 
-        synchronize_versions(pyxis_url=PYXIS_URL, dry_run=False)
+        synchronize_versions(pyxis_url=PYXIS_URL, dry_run=False, log_current=False)
 
     mock_patch.assert_not_called()
 
@@ -176,7 +174,7 @@ def test_disable_old(
             "2024-07-17T14:44:54.546896+00:00"
         )
 
-        synchronize_versions(pyxis_url=PYXIS_URL, dry_run=False)
+        synchronize_versions(pyxis_url=PYXIS_URL, dry_run=False, log_current=False)
 
     for expected_url in expected_patch_urls:
         mock_patch.assert_any_call(expected_url, {"enabled_for_testing": False})
@@ -231,4 +229,4 @@ def test_pyxis_error(mock_pyxis_get: MagicMock):
     mock_pyxis_get.return_value = mock_resp
 
     with pytest.raises(RuntimeError):
-        synchronize_versions(PYXIS_URL, dry_run=False)
+        synchronize_versions(PYXIS_URL, dry_run=False, log_current=False)
