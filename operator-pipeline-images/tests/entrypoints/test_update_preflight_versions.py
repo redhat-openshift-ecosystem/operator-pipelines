@@ -183,7 +183,7 @@ def test_disable_old(
 
 
 @patch("operatorcert.entrypoints.update_preflight_versions.get_version_data_page")
-def test_get_version_paging(mock_data_page: MagicMock):
+def test_get_version_paging(mock_data_page: MagicMock) -> None:
     mock_data_page.side_effect = map(
         json.dumps,
         [
@@ -223,7 +223,7 @@ def test_get_version_paging(mock_data_page: MagicMock):
 
 
 @patch("operatorcert.entrypoints.update_preflight_versions.pyxis.get")
-def test_pyxis_error(mock_pyxis_get: MagicMock):
+def test_pyxis_error(mock_pyxis_get: MagicMock) -> None:
     mock_resp = MagicMock()
     mock_resp.status_code = 500
     mock_pyxis_get.return_value = mock_resp

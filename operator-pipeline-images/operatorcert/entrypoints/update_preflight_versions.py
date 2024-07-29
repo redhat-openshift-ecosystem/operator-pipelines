@@ -113,7 +113,7 @@ def disable_version(pyxis_url: str, version: PreflightVersion) -> None:
     pyxis.patch(url, {"enabled_for_testing": False})
 
 
-def synchronize_versions(pyxis_url: str, dry_run: bool, log_current: bool):
+def synchronize_versions(pyxis_url: str, dry_run: bool, log_current: bool) -> None:
     """
     Invalidate older versions of Preflight in Pyxis based on rules in
     https://issues.redhat.com/browse/ISV-4964
@@ -137,7 +137,7 @@ def synchronize_versions(pyxis_url: str, dry_run: bool, log_current: bool):
         )
 
 
-def main():  # pragma: no cover
+def main() -> int:  # pragma: no cover
     """
     Invalidate older versions of Preflight in Pyxis based on rules in
     https://issues.redhat.com/browse/ISV-4964
