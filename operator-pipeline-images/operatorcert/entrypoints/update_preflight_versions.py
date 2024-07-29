@@ -119,7 +119,7 @@ def synchronize_versions(pyxis_url: str, dry_run: bool, log_current: bool):
     https://issues.redhat.com/browse/ISV-4964
     """
     current = get_versions(pyxis_url)
-    if log_current or dry_run:
+    if log_current or dry_run:  # pragma: no cover
         logger.info("Current versions in Pyxis: %s", pprint.pformat(current))
     to_disable = get_versions_to_disable(current)
 
