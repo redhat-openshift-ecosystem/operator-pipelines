@@ -24,7 +24,7 @@ deploy-playground:
 		ansible/playbooks/deploy.yml \
 		--inventory ansible/inventory/operator-pipeline-stage \
 		-e oc_namespace=$(USER)-playground \
-		-e operator_bundle_version=$(OPERATOR_VERSION) \
+		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
 		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
 		-e suffix=123 \
 		-e ocp_token=`oc whoami -t` \
@@ -46,6 +46,18 @@ build-and-test-community:
 	$(MAKE) build
 	$(MAKE) integration-test-community TAG=$(TAG)
 
+.PHONY: build-and-test-isv-fbc-bundle
+build-and-test-isv-fbc-bundle:
+	@echo "Building and testing isv FBC operator pipelines..."
+	$(MAKE) build
+	$(MAKE) integration-test-isv-fbc-bundle TAG=$(TAG)
+
+.PHONY: build-and-test-isv-fbc-catalog
+build-and-test-isv-fbc-catalog:
+	@echo "Building and testing isv FBC catalog pipelines..."
+	$(MAKE) build
+	$(MAKE) integration-test-isv-fbc-catalog TAG=$(TAG)
+
 
 .PHONY: build
 build:
@@ -59,9 +71,9 @@ build:
 integration-test-isv:
 	ansible-playbook \
 		ansible/playbooks/operator-pipeline-integration-tests.yml \
-		-i ansible/inventory/operator-pipeline-integration-tests \
+		-e test_type=isv \
 		-e oc_namespace=$(USER)-isv-test-$(OPERATOR_VERSION_RELEASE) \
-		-e operator_bundle_version=$(OPERATOR_VERSION) \
+		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
 		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
 		-e suffix=123 \
 		--skip-tags=signing-pipeline \
@@ -72,12 +84,40 @@ integration-test-isv:
 integration-test-community:
 	@echo "Running integration tests..."
 	ansible-playbook \
-		ansible/playbooks/community-operators-integration-tests.yaml \
-		-i ansible/inventory/operator-pipeline-integration-tests \
+		ansible/playbooks/operator-pipeline-integration-tests.yml \
+		-e test_type=community \
 		-e oc_namespace=$(USER)-comm-test-$(OPERATOR_VERSION_RELEASE) \
-		-e operator_bundle_version=$(OPERATOR_VERSION) \
+		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
 		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
 		-e suffix=8c6beec \
 		--skip-tags=signing-pipeline,import-index-images \
 		-vv \
+		--vault-password-file ansible/vault-password
+
+.PHONY: integration-test-isv-fbc-bundle
+integration-test-isv-fbc-bundle:
+	@echo "Running integration tests..."
+	ansible-playbook \
+		ansible/playbooks/operator-pipeline-integration-tests.yml \
+		-e test_type=isv-fbc-bundle \
+		-e oc_namespace=$(USER)-isv-fbc-bundle-test-$(OPERATOR_VERSION_RELEASE) \
+		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
+		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
+		-e suffix=8c6beec \
+		--skip-tags=signing-pipeline \
+		-vv \
+		--vault-password-file ansible/vault-password
+
+.PHONY: integration-test-isv-fbc-catalog
+integration-test-isv-fbc-catalog:
+	@echo "Running integration tests..."
+	ansible-playbook \
+		ansible/playbooks/operator-pipeline-integration-tests.yml \
+		-e test_type=isv-fbc-catalog \
+		-e oc_namespace=$(USER)-fbc-catalog-test-$(OPERATOR_VERSION_RELEASE) \
+		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
+		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
+		-e suffix=8c6beec \
+		--skip-tags=signing-pipeline \
+		-vvvv \
 		--vault-password-file ansible/vault-password

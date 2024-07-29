@@ -1,15 +1,15 @@
 ---
 # Branch containing the source operator bundle to copy
-src_operator_git_branch: main  # noqa: var-naming[no-role-prefix]
+integration_tests_src_operator_git_branch: main
 
 # The branch representing the upstream/base state to copy
-git_base_branch: main  # noqa: var-naming[no-role-prefix]
+integration_tests_git_base_branch: main
 
 # Replace the source bundle's version
-operator_bundle_version: 0.0.1  # noqa: var-naming[no-role-prefix]
+integration_tests_operator_bundle_version: 0.0.1
 
 # Copy the bundle into this branch
-git_bundle_branch: "{{ operator_package_name }}-{{ operator_bundle_version }}"  # noqa: var-naming[no-role-prefix]
+integration_tests_git_bundle_branch: "{{ integration_tests_operator_package_name }}-{{ integration_tests_operator_bundle_version }}-head"
 
 # Raise pull requests against this upstream branch
-git_upstream_branch: "{{ operator_package_name }}-{{ operator_bundle_version }}-base"  # noqa: var-naming[no-role-prefix]
+integration_tests_git_upstream_branch: "{{ integration_tests_operator_package_name }}-{{ integration_tests_operator_bundle_version }}-base"

@@ -1,7 +1,6 @@
 ---
 env: integration-tests
 ocp_host: https://api.pipelines-stage.0ce8.p1.openshiftapps.com:6443
-branch: "{{ oc_namespace }}"
 
 operator_pipeline_pending_namespace: operator-pipeline-stage
 operator_pipeline_release_namespace: redhat-isv-operators-stage
@@ -19,3 +18,21 @@ ci_pipeline_kubeconfig_path: ../../vaults/{{ env }}/ci-pipeline-kubeconfig
 # Webhook vars
 operator_pipeline_github_webhook_repos:
   - redhat-openshift-ecosystem/operator-pipelines-test
+
+# Test data configuration
+integration_tests_src_operator_git_branch: e2e-test-operator
+integration_tests_src_operator_package_name: test-e2e-operator
+integration_tests_src_operator_bundle_version: 0.0.8
+
+integration_tests_ocp_versions_range: "v4.14-v4.15"
+
+integration_tests_fbc_catalog: false
+integration_tests_verify_bundle_in_catalog: true
+
+integration_tests_pr_title: "operator {{ integration_tests_operator_package_name }} ({{ integration_tests_operator_bundle_version }})"
+
+integration_tests_git_upstream_repo: redhat-openshift-ecosystem/operator-pipelines-test
+integration_tests_git_repo_url: "git@github.com:{{ integration_tests_git_upstream_repo }}.git"
+
+# A branch name for event listener to listen to
+branch: "{{ integration_tests_git_upstream_branch }}"

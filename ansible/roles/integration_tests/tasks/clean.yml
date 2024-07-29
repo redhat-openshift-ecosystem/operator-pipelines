@@ -4,8 +4,8 @@
 
 - name: Delete remote branches
   loop:
-    - "{{ git_bundle_branch }}"
-    - "{{ git_upstream_branch }}"
+    - "{{ integration_tests_git_bundle_branch }}"
+    - "{{ integration_tests_git_upstream_branch }}"
   tags:
     - delete-branches
   ansible.builtin.shell: |

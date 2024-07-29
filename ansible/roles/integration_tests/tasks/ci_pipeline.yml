@@ -23,15 +23,15 @@
               - name: env
                 value: integration-tests
               - name: git_repo_url
-                value: "{{ git_repo_url }}"
+                value: "{{ integration_tests_git_repo_url }}"
               - name: git_branch
-                value: "{{ git_bundle_branch }}"
+                value: "{{ integration_tests_git_bundle_branch }}"
               - name: upstream_repo_name
-                value: "{{ git_upstream_repo }}"
+                value: "{{ integration_tests_git_upstream_repo }}"
               - name: upstream_repo_branch
-                value: "{{ git_upstream_branch }}"
+                value: "{{ integration_tests_git_upstream_branch }}"
               - name: bundle_path
-                value: "operators/{{ operator_package_name }}/{{ operator_bundle_version }}"
+                value: "operators/{{ integration_tests_operator_package_name }}/{{ integration_tests_operator_bundle_version }}"
               - name: pipeline_image
                 value: "{{ operator_pipeline_image_pull_spec }}"
               - name: submit

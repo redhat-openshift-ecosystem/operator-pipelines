@@ -1,5 +1,0 @@
-[operator-pipeline:children]
-operator-pipeline-qa
-
-[operator-pipeline-qa]
-localhost

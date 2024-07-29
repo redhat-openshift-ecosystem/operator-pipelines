@@ -10,7 +10,7 @@
 
     - name: Clone repository
       ansible.builtin.git:
-        repo: "{{ git_repo_url }}"
+        repo: "{{ integration_tests_git_repo_url }}"
         dest: "{{ git_temp_dir.path }}"
-        version: "{{ git_base_branch }}"
-        refspec: "refs/heads/{{ src_operator_git_branch }}"
+        version: "{{ integration_tests_git_base_branch }}"
+        refspec: "refs/heads/{{ integration_tests_src_operator_git_branch }}"

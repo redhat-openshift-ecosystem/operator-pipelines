@@ -2,42 +2,157 @@
 - name: Include clone task
   ansible.builtin.include_tasks: tasks/clone.yml
 
-- name: Generate and push Operator Bundle
+- name: Render ci.yaml file from template
+  tags:
+    - prepare-bundle
+  ansible.builtin.template:
+    src: ci.yaml.j2
+    dest: "{{ git_temp_dir.path }}/ci.yaml"
+    mode: 0644
+  changed_when: true
+
+- name: Prepare ci.yaml in target branch
   tags:
     - prepare-bundle
   ansible.builtin.shell: |
-    BASE_BRANCH="{{ git_base_branch }}"
-    UPSTREAM_BRANCH="{{ git_upstream_branch }}"
-    OPERATOR_PACKAGE_NAME="{{ operator_package_name }}"
-    SRC_BRANCH="{{ src_operator_git_branch }}"
-    BUNDLE_BRANCH="{{ git_bundle_branch }}"
-    SRC_VERSION="{{ src_operator_bundle_version }}"
-    DEST_VERSION="{{ operator_bundle_version }}"
+    UPSTREAM_BRANCH="{{ integration_tests_git_upstream_branch }}"
+    OPERATOR_PACKAGE_NAME="{{ integration_tests_operator_package_name }}"
+    SRC_BRANCH="{{ integration_tests_src_operator_git_branch }}"
+    BASE_BRANCH="{{ integration_tests_git_base_branch }}"
 
     git config user.name 'rh-operator-bundle-test-e2e'
     git config user.email 'exd-guild-isv+operators-test-e2e@redhat.com'
 
-    git checkout -b $UPSTREAM_BRANCH $BASE_BRANCH
-    git push origin $UPSTREAM_BRANCH
+    # Create a new target branch from the base branch
+    git checkout -b "$UPSTREAM_BRANCH" "$BASE_BRANCH"
 
-    git checkout -b $BUNDLE_BRANCH $BASE_BRANCH
-    git checkout origin/$SRC_BRANCH -- operators/$OPERATOR_PACKAGE_NAME
+    # Copy the ci.yaml from rendered template and push it to the target branch
+    mkdir -p "operators/$OPERATOR_PACKAGE_NAME"
+    cp ci.yaml "operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
 
-    pushd operators/$OPERATOR_PACKAGE_NAME
+    git add "operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
+    git commit -m "Copied ci.yaml from $SRC_BRANCH"
+    git push origin "$UPSTREAM_BRANCH"
+  args:
+    executable: /bin/bash
+    chdir: "{{ git_temp_dir.path }}"
+  changed_when: true
 
-    # Modify the test operator version
-    cp -avr $SRC_VERSION $DEST_VERSION
-    find $DEST_VERSION/ -type f -exec sed -i "s/${SRC_VERSION//\./\\.}/$DEST_VERSION/g" {} \;
-    find $DEST_VERSION/metadata/annotations.yaml -type f -exec sed -i "s/stable/$DEST_VERSION/g" {} \;
-    diff -bur $SRC_VERSION/ $DEST_VERSION/ || true
-    rm -rv ./$SRC_VERSION
+- name: Generate and push Operator Bundle
+  tags:
+    - prepare-bundle
+  ansible.builtin.shell: |
+    UPSTREAM_BRANCH="{{ integration_tests_git_upstream_branch }}"
+    SRC_OPERATOR_PACKAGE_NAME="{{ integration_tests_src_operator_package_name }}"
+    OPERATOR_PACKAGE_NAME="{{ integration_tests_operator_package_name }}"
+
+    # A branch from where the bundle will be copied
+    SRC_OPERATOR_BRANCH="{{ integration_tests_src_operator_git_branch }}"
+
+    # A branch where the bundle will be pushed
+    BUNDLE_BRANCH="{{ integration_tests_git_bundle_branch }}"
+
+    # A version of the bundle to be copied from the source branch
+    SRC_VERSION="{{ integration_tests_src_operator_bundle_version }}"
+
+    # A version of the bundle to be pushed to the target branch
+    DEST_VERSION="{{ integration_tests_operator_bundle_version }}"
+
+    # A flag to determine if the bundle is for FBC catalog submission
+    FBC_CATALOG="{{ integration_tests_fbc_catalog }}"
+
+    echo "FBC catalog is: $FBC_CATALOG"
+
+    if [[ $FBC_CATALOG == "True" ]]; then
+      # In case of FBC catalog submission a bundle needs to be pushed in the target branch
+      BUNDLE_BRANCH=$UPSTREAM_BRANCH
+      git checkout "$BUNDLE_BRANCH"
+    else
+      git checkout -b "$BUNDLE_BRANCH" "$UPSTREAM_BRANCH"
+    fi
+
+    git checkout "origin/$SRC_OPERATOR_BRANCH" -- "operators/$SRC_OPERATOR_PACKAGE_NAME"
+
+    mv operators/$SRC_OPERATOR_PACKAGE_NAME/* "operators/$OPERATOR_PACKAGE_NAME"
+
+    pushd "operators/$OPERATOR_PACKAGE_NAME"
+
+    # Reset the ci.yaml to the latest version
+    git checkout ./ci.yaml
+
+    # Render a new version of the bundle using ansible config vars
+    cp -avr "$SRC_VERSION" "$DEST_VERSION"
+
+    mv "$DEST_VERSION/manifests/$SRC_OPERATOR_PACKAGE_NAME.clusterserviceversion.yaml" "$DEST_VERSION/manifests/$OPERATOR_PACKAGE_NAME.clusterserviceversion.yaml"
+    find "$DEST_VERSION/" -type f -exec sed -i "s/${SRC_VERSION//\./\\.}/$DEST_VERSION/g" {} \;
+    find "$DEST_VERSION/" -type f -exec sed -i "s/name: ${SRC_OPERATOR_PACKAGE_NAME}/name: $OPERATOR_PACKAGE_NAME/g" {} \;
+
+    find "$DEST_VERSION/metadata/annotations.yaml" -type f -exec sed -i "s/stable/$DEST_VERSION/g" {} \;
+    find "$DEST_VERSION/metadata/annotations.yaml" -type f -exec sed -i "s/$SRC_OPERATOR_PACKAGE_NAME/$OPERATOR_PACKAGE_NAME/g" {} \;
+    find "$DEST_VERSION/metadata/annotations.yaml" -type f -exec \
+      sed -i "s/com.redhat.openshift.versions: v4.10/com.redhat.openshift.versions: {{ integration_tests_ocp_versions_range }}/g" {} \;
+
+    diff -bur "$SRC_VERSION/" "$DEST_VERSION/" || true
+    rm -rv "./$SRC_VERSION"
 
     popd
 
     git add operators
     git commit -m "[Integration Test] Add $OPERATOR_PACKAGE_NAME $DEST_VERSION"
-    git push origin $BUNDLE_BRANCH
+    git push origin "$BUNDLE_BRANCH"
   args:
     executable: /bin/bash
     chdir: "{{ git_temp_dir.path }}"
   changed_when: true
+
+- name: Generate and push Catalog to a PR branch
+  tags:
+    - prepare-bundle
+  ansible.builtin.shell: |
+    UPSTREAM_BRANCH="{{ integration_tests_git_upstream_branch }}"
+    SRC_OPERATOR_PACKAGE_NAME="{{ integration_tests_src_operator_package_name }}"
+
+    # A version of the bundle to be pushed to the target branch
+    DEST_VERSION="{{ integration_tests_operator_bundle_version }}"
+
+    # A version of the bundle to be copied from the source branch
+    SRC_VERSION="{{ integration_tests_src_operator_bundle_version }}"
+
+    OPERATOR_PACKAGE_NAME="{{ integration_tests_operator_package_name }}"
+
+    # A branch from where the catalog will be copied
+    SRC_CATALOG_BRANCH="{{ integration_tests_src_operator_git_branch }}"
+
+    # A branch with changes for a pull request
+    PR_BRANCH="{{ integration_tests_git_bundle_branch }}"
+
+    git checkout -b "$PR_BRANCH" "$UPSTREAM_BRANCH"
+
+    git checkout "origin/$SRC_CATALOG_BRANCH" -- "catalogs/v4.15/$SRC_OPERATOR_PACKAGE_NAME/catalog.json"
+
+    # Create a new catalog for the operator package and copy the catalog.json from sample catalog
+    mkdir -p "catalogs/v4.16/$OPERATOR_PACKAGE_NAME"
+    cp "catalogs/v4.15/$SRC_OPERATOR_PACKAGE_NAME/catalog.json" "catalogs/v4.16/$OPERATOR_PACKAGE_NAME/catalog.json"
+    rm -rf "catalogs/v4.15/$SRC_OPERATOR_PACKAGE_NAME"
+
+    pushd "catalogs/v4.16/$OPERATOR_PACKAGE_NAME/"
+
+    # Replace the package name and version in the catalog
+    sed -i "s/\"name\": \"$SRC_OPERATOR_PACKAGE_NAME/\"name\": \"$OPERATOR_PACKAGE_NAME/g" catalog.json
+    sed -i "s/\"package\": \"$SRC_OPERATOR_PACKAGE_NAME\"/\"package\": \"$OPERATOR_PACKAGE_NAME\"/g" catalog.json
+    sed -i "s/\"packageName\": \"$SRC_OPERATOR_PACKAGE_NAME\"/\"packageName\": \"$OPERATOR_PACKAGE_NAME\"/g" catalog.json
+    sed -i "s/$SRC_VERSION/$DEST_VERSION/g" catalog.json
+
+    popd
+
+    # Copy a same catalog to one more version
+    cp -r catalogs/v4.16 catalogs/v4.17
+
+    git add catalogs
+    git commit -m "[Integration Test] Add catalog for $OPERATOR_PACKAGE_NAME"
+    git push origin "$PR_BRANCH"
+  args:
+    executable: /bin/bash
+    chdir: "{{ git_temp_dir.path }}"
+  changed_when: true
+  when: integration_tests_fbc_catalog

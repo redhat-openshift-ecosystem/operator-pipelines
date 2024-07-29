@@ -1,8 +1,8 @@
 ---
 - name: Verify that bundle was released to index image
   vars:
-    bundle_name: "{{ operator_package_name }}.v{{ operator_bundle_version }}"
-    tmp_folder: /tmp/check_bundle
+    bundle_name: "{{ integration_tests_operator_package_name }}.v{{ integration_tests_operator_bundle_version }}"
+    tmp_folder: "/tmp/check_bundle_{{ bundle_name }}"
   block:
 
     - name: Verify that bundle was released to index image
@@ -36,7 +36,7 @@
 
         - name: Fetch index image list from Pyxis
           ansible.builtin.shell:
-            cmd: "set -o pipefail && curl -X 'GET' 'https://catalog.redhat.com/api/containers/v1/operators/indices?filter=organization=={{ organization }}&page=0&page_size=100&include=data.path&ocp_versions_range={{ ocp_versions_range }}' -H 'accept: application/json' | jq -r '.data[].path' > {{ tmp_folder }}/image_versions.txt"  # noqa: yaml[line-length]
+            cmd: "set -o pipefail && curl -X 'GET' 'https://catalog.redhat.com/api/containers/v1/operators/indices?filter=organization=={{ integration_tests_organization }}&page=0&page_size=100&include=data.path&ocp_versions_range={{ integration_tests_ocp_versions_range }}' -H 'accept: application/json' | jq -r '.data[].path' > {{ tmp_folder }}/image_versions.txt"  # noqa: yaml[line-length]
             creates: "{{ tmp_folder }}/image_versions.txt"
           args:
             executable: /bin/bash

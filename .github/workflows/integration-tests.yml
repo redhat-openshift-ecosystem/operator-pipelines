@@ -11,8 +11,25 @@ on:  # yamllint disable-line rule:truthy
       - completed
   workflow_dispatch:
 
+
 jobs:
-  integration-tests-certified-operators:
+  integration-tests:
+    strategy:
+      matrix:
+        test_type:
+          - isv
+          - community
+          - isv-fbc-bundle
+        experimental: [false]
+        include:
+          # Test ISV FBC Catalog only in experimental mode
+          # because there is a bug that needs to be fixed
+          # TODO: remove this block when the bug is fixed
+          - test_type: isv-fbc-catalog
+            experimental: true
+
+      fail-fast: false
+    continue-on-error: ${{ matrix.experimental }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +71,7 @@ jobs:
             --output "$HOME"/.ssh/id_rsa \
             ansible/vaults/integration-tests/ci-pipeline-github-ssh-key
 
-      - name: Run the certified operators integration tests ansible playbook
+      - name: Run the integration tests ansible playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: playbooks/operator-pipeline-integration-tests.yml
@@ -62,68 +79,10 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            -i inventory/operator-pipeline-integration-tests
-            -e "oc_namespace=integration-tests-${{ github.run_number }}-${{ github.run_attempt }}"
-            -e "operator_bundle_version=0.1.${{ github.run_number }}-${{ github.run_attempt }}"
+            -e "test_type=${{ matrix.test_type }}"
+            -e "oc_namespace=int-tests-${{ matrix.test_type }}-${{ github.run_number }}-${{ github.run_attempt }}"
+            -e "integration_tests_operator_bundle_version=0.1.${{ github.run_number }}-${{ github.run_attempt }}"
             -e "operator_pipeline_image_tag=${{ github.sha }}"
             -e "suffix=${{ steps.prepare.outputs.suffix }}"
             --skip-tags=signing-pipeline
-            -v
-
-  integration-tests-community-operators:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Prepare
-        id: prepare
-        run: |
-          echo "suffix=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      - name: Install dependencies
-        run: |
-          # Install python dependencies
-          pip install --user openshift pygithub
-
-          # Add certificates to trusted list
-          sudo cp  operator-pipeline-images/certs/* /usr/local/share/ca-certificates
-          # Rename all .pem files to .crt to allow update-ca-certificates
-          for file in /usr/local/share/ca-certificates/*.pem
-          do
-            sudo mv "$file" "${file%.pem}.crt"
-          done
-          sudo update-ca-certificates
-
-          echo "${{ secrets.VAULT_PASSWORD }}" > "$HOME"/.vault-password
-
-          # secret used also in hosted pipeline for enabling
-          # access to cluster for tkn command log accessing
-          mkdir -p "$HOME"/.kube
-          ansible-vault decrypt \
-            --vault-password-file "$HOME"/.vault-password \
-            --output "$HOME"/.kube/config \
-            ansible/vaults/integration-tests/ci-pipeline-kubeconfig
-
-          # secret used also in hosted pipeline for enabling
-          # cloning of the repository
-          mkdir -p "$HOME"/.ssh
-          ansible-vault decrypt \
-            --vault-password-file "$HOME"/.vault-password \
-            --output "$HOME"/.ssh/id_rsa \
-            ansible/vaults/integration-tests/ci-pipeline-github-ssh-key
-
-      - name: Run the community operators integration tests ansible playbook
-        uses: dawidd6/action-ansible-playbook@v2
-        with:
-          playbook: playbooks/community-operators-integration-tests.yaml
-          directory: ./ansible
-          requirements: playbooks/requirements.yml
-          vault_password: ${{secrets.VAULT_PASSWORD}}
-          options: |
-            -i inventory/operator-pipeline-integration-tests
-            -e "oc_namespace=integration-tests-community-${{ github.run_number }}-${{ github.run_attempt }}"
-            -e "operator_bundle_version=0.1.${{ github.run_number }}-${{ github.run_attempt }}"
-            -e "operator_pipeline_image_tag=${{ github.sha }}"
-            -e "suffix=${{ steps.prepare.outputs.suffix }}"
-            --skip-tags=signing-pipeline,import-index-images
             -v
