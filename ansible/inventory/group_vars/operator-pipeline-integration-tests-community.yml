@@ -1,0 +1,9 @@
+---
+integration_tests_operator_package_name: test-e2e-community-operator
+operator_pipeline_url: "https://community-operator-pipeline-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
+integration_tests_git_base_branch: community  # contains config.yaml containing pointer to community-operators index
+integration_tests_organization: community-operators
+integration_tests_ci_pipeline_enabled: false
+
+integration_tests_ci_file_reviewers:
+  - rh-operator-bundle-test-e2e

@@ -45,6 +45,10 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
+        if [ -z "$(params.operator_name)" ]; then
+          echo "Operator name is not provided."
+          exit 0
+        fi
 
         echo "Attempting to reserve operator name for association $ASSOCIATION"
 

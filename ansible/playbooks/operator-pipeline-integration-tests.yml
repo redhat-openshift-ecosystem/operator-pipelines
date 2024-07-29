@@ -1,136 +1,27 @@
 ---
 - name: Execute integration tests
-  hosts: all
+  hosts: operator-pipeline-integration-tests-{{ test_type }}
   vars_files:
     - ../vaults/{{ env }}/secret-vars.yml
     - ../vaults/{{ env }}/ocp-token.yml
-  vars:
-    # Customized defaults for the test-e2e-operator package
-    git_upstream_repo: redhat-openshift-ecosystem/operator-pipelines-test
-    git_repo_url: "git@github.com:{{ git_upstream_repo }}.git"
-    git_upstream_branch: "{{ branch }}"
-    git_bundle_branch: "{{ branch }}-{{ operator_package_name}}-{{ operator_bundle_version }}"
-    src_operator_git_branch: e2e-test-operator
-    src_operator_bundle_version: 0.0.8
-    operator_package_name: test-e2e-operator
-    organization: certified-operators
+
   environment:
     K8S_AUTH_API_KEY: '{{ ocp_token }}'
     K8S_AUTH_HOST: '{{ ocp_host }}'
 
   tasks:
-    - block:
-        - name: Install CLI tools
-          tags:
-            - prepare-tools
-            - test-ci-pipeline
-            - test-hosted-pipeline
-            - test-release-pipeline
-          include_role:
-            name: integration_tests
-            tasks_from: tools
-            apply:
-              tags:
-                - prepare-tools
-                - test-ci-pipeline
-                - test-hosted-pipeline
-                - test-release-pipeline
-
-        - name: Prepare integration test data
-          tags:
-            - prepare-test-data
-          include_role:
-            name: integration_tests
-            tasks_from: test_data
-            apply:
-              tags:
-                - prepare-test-data
-
-        - name: Deploy operator pipelines
-          tags:
-            - deploy-operator-pipelines
-          include_role:
+    - name: Deploy environment and run tests
+      block:
+        - name: Deploy pipelines
+          import_role:
             name: operator-pipeline
-            apply:
-              tags:
-                - deploy-operator-pipelines
-
-
-        - name: Run the Operator CI pipeline
           tags:
-            - test-ci-pipeline
-          include_role:
+            - pipeline
+        - name: Run integration tests
+          import_role:
             name: integration_tests
-            tasks_from: ci_pipeline
-            apply:
-              tags:
-                - test-ci-pipeline
-
-        - name: Verify the Operator CI pipeline run succeeds
-          tags:
-            - test-ci-pipeline
-          vars:
-            pipeline_name: operator-ci-pipeline
-          include_role:
-            name: integration_tests
-            tasks_from: check_pipeline_run
-            apply:
-              tags:
-                - test-ci-pipeline
-
-        - name: Verify the Operator hosted pipeline run succeeds
-          tags:
-            - test-hosted-pipeline
-          vars:
-            pipeline_name: operator-hosted-pipeline
-          include_role:
-            name: integration_tests
-            tasks_from: check_pipeline_run
-            apply:
-              tags:
-                - test-hosted-pipeline
-
-        - name: Verify the Operator release pipeline run succeeds
-          tags:
-            - test-release-pipeline
-          vars:
-            pipeline_name: operator-release-pipeline
-          include_role:
-            name: integration_tests
-            tasks_from: check_pipeline_run
-            apply:
-              tags:
-                - test-release-pipeline
-
-        - name: Verify the Bundle was released to image indices
-          vars:
-            registry_access_token: "{{ stage_operator_pipelines_test_service_account_access_token }}"
-            ocp_versions_range: "v4.10"
-          include_role:
-            name: integration_tests
-            tasks_from: check_bundle_existence_in_index_image
-
       always:
-        - name: Cleanup test data
-          tags:
-            - clean
-            - clean-test-data
-          include_role:
-            name: integration_tests
-            tasks_from: clean
-            apply:
-              tags:
-                - clean
-                - clean-test-data
-
         - name: Cleanup operator pipeline
-          tags:
-            - clean
-            - clean-deployment
-          include_role:
+          import_role:
             name: operator-pipeline
             tasks_from: cleanup
-            apply:
-              tags:
-                - clean
-                - clean-deployment

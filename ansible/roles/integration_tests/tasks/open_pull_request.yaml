@@ -1,7 +1,7 @@
 ---
 - name: Create a pull request
   ansible.builtin.uri:
-    url: "https://api.github.com/repos/{{ git_upstream_repo }}/pulls"
+    url: "https://api.github.com/repos/{{ integration_tests_git_upstream_repo }}/pulls"
     method: POST
     status_code: 201
     headers:
@@ -9,10 +9,10 @@
       Accept: application/vnd.github.v3+json
     body_format: json
     body:
-      title: "operator {{ operator_package_name }} ({{ operator_bundle_version }})"
-      body: E2e test for community operators
-      head: "{{ git_bundle_branch }}"
-      base: "{{ git_upstream_branch }}"
+      title: "{{ integration_tests_pr_title }}"
+      body: E2e test for {{ integration_tests_operator_package_name }} ({{ integration_tests_operator_bundle_version }})
+      head: "{{ integration_tests_git_bundle_branch }}"
+      base: "{{ integration_tests_git_upstream_branch }}"
   register: pr_response
   no_log: true
 

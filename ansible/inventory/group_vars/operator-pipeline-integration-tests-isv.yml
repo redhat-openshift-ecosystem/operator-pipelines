@@ -1,0 +1,8 @@
+---
+integration_tests_operator_package_name: test-e2e-operator
+
+integration_tests_organization: certified-operators
+
+integration_tests_ci_pipeline_enabled: true
+
+integration_tests_ci_file_cert_project_id: 660d345800be06826aff1fc1

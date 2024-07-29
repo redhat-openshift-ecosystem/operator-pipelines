@@ -1,0 +1,49 @@
+---
+operator-pipeline:
+  children:
+    operator-pipeline-prod:
+    operator-pipeline-stage:
+    operator-pipeline-dev:
+    operator-pipeline-qa:
+    operator-pipeline-integration-tests:
+
+# Operator pipeline environments
+operator-pipeline-prod:
+  hosts:
+    operator-pipeline-prod-project:
+
+operator-pipeline-stage:
+  hosts:
+    operator-pipeline-stage-project:
+
+operator-pipeline-dev:
+  hosts:
+    operator-pipeline-dev-project:
+
+operator-pipeline-qa:
+  hosts:
+    operator-pipeline-qa-project:
+
+# Integration tests
+operator-pipeline-integration-tests:
+  children:
+    operator-pipeline-integration-tests-isv:
+    operator-pipeline-integration-tests-community:
+    operator-pipeline-integration-tests-isv-fbc-bundle:
+    operator-pipeline-integration-tests-isv-fbc-catalog:
+
+operator-pipeline-integration-tests-community:
+  hosts:
+    operator-pipeline-integration-tests-community-project:
+
+operator-pipeline-integration-tests-isv:
+  hosts:
+    operator-pipeline-integration-tests-isv-project:
+
+operator-pipeline-integration-tests-isv-fbc-bundle:
+  hosts:
+    operator-pipeline-integration-tests-isv-fbc-bundle-project:
+
+operator-pipeline-integration-tests-isv-fbc-catalog:
+  hosts:
+    operator-pipeline-integration-tests-isv-fbc-catalog-project:

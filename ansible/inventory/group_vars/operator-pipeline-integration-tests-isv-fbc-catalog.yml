@@ -1,0 +1,13 @@
+---
+integration_tests_operator_package_name: test-e2e-operator-fbc-catalog
+integration_tests_organization: certified-operators
+integration_tests_ci_pipeline_enabled: false
+
+integration_tests_ci_file_cert_project_id: 66a743c4ed864bc7d00e51b7
+integration_tests_ci_file_fbc_enabled: true
+
+integration_tests_fbc_catalog: true
+integration_tests_pr_title: "Catalog update {{ integration_tests_operator_package_name }} ({{ integration_tests_operator_bundle_version }})"
+
+# To avoid conflicts with the non-fbc tests, we use a different range
+integration_tests_ocp_versions_range: "v4.16-v4.17"

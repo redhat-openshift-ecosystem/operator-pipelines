@@ -31,12 +31,6 @@
                           secretKey: webhook-secret
                       - name: "eventTypes"
                         value: ["pull_request"]
-                      - name: "addChangedFiles"
-                        value:
-                          enabled: true
-                          personalAccessToken:
-                            secretName: github-bot-token
-                            secretKey: github_bot_token
                   - ref:
                       name: cel
                     params:
@@ -46,7 +40,6 @@
                             header.match("X-GitHub-Event", "pull_request")
                             && body.action in ["opened", "reopened", "synchronize"]
                             && body.pull_request.base.ref == "{{ branch }}"
-                            && (extensions.changed_files.matches("operators/") || extensions.changed_files.matches("catalogs/"))
                           )
                 bindings:
                   - ref: community-operator-hosted-pipeline-trigger-binding
@@ -64,12 +57,6 @@
                           secretKey: webhook-secret
                       - name: "eventTypes"
                         value: ["pull_request"]
-                      - name: "addChangedFiles"
-                        value:
-                          enabled: true
-                          personalAccessToken:
-                            secretName: github-bot-token
-                            secretKey: github_bot_token
                   - ref:
                       name: cel
                     params:
@@ -80,7 +67,6 @@
                             && body.action == "closed"
                             && body.pull_request.base.ref == "{{ branch }}"
                             && body.pull_request.merged == true
-                            && (extensions.changed_files.matches("operators/") || extensions.changed_files.matches("catalogs/"))
                           )
                 bindings:
                   - ref: community-operator-release-pipeline-trigger-binding
@@ -99,12 +85,6 @@
                           secretKey: webhook-secret
                       - name: "eventTypes"
                         value: ["pull_request"]
-                      - name: "addChangedFiles"
-                        value:
-                          enabled: true
-                          personalAccessToken:
-                            secretName: github-bot-token
-                            secretKey: github_bot_token
                   - ref:
                       name: cel
                     params:
@@ -132,12 +112,6 @@
                           secretKey: webhook-secret
                       - name: "eventTypes"
                         value: ["pull_request"]
-                      - name: "addChangedFiles"
-                        value:
-                          enabled: true
-                          personalAccessToken:
-                            secretName: github-bot-token
-                            secretKey: github_bot_token
                   - ref:
                       name: cel
                     params:

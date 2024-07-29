@@ -1,0 +1,65 @@
+---
+- name: Prepare test data and run integration tests
+  block:
+    - name: Install CLI tools
+      ansible.builtin.import_tasks: tasks/tools.yml
+      tags:
+        - prepare-tools
+
+    - name: Prepare integration test data
+      tags:
+        - prepare-test-data
+      ansible.builtin.import_tasks: tasks/test_data.yml
+
+    # CI pipeline is only enabled in ISV workflow
+    - name: Run CI pipeline and wait for completion
+      when: integration_tests_ci_pipeline_enabled
+      block:
+        - name: Run the Operator CI pipeline
+          tags:
+            - test-ci-pipeline
+          ansible.builtin.import_tasks: tasks/ci_pipeline.yml
+
+        - name: Verify the Operator CI pipeline run succeeds
+          tags:
+            - test-ci-pipeline
+          vars:
+            pipeline_name: operator-ci-pipeline
+          ansible.builtin.import_tasks: tasks/check_pipeline_run.yml
+
+    # If a CI pipeline is not enabled, open a PR to trigger the hosted pipeline
+    - name: Open pull request to trigger hosted pipeline
+      tags:
+        - open-pull-request
+      ansible.builtin.import_tasks: tasks/open_pull_request.yaml
+      when: not integration_tests_ci_pipeline_enabled
+
+
+    - name: Verify the Operator hosted pipeline run succeeds
+      tags:
+        - test-hosted-pipeline
+      vars:
+        pipeline_name: operator-hosted-pipeline
+      ansible.builtin.import_tasks: tasks/check_pipeline_run.yml
+
+    - name: Verify the Operator release pipeline run succeeds
+      tags:
+        - test-release-pipeline
+      vars:
+        pipeline_name: operator-release-pipeline
+      ansible.builtin.import_tasks: tasks/check_pipeline_run.yml
+
+    - name: Verify the Bundle was released to image indices
+      vars:
+        registry_access_token: "{{ stage_operator_pipelines_test_service_account_access_token }}"
+      ansible.builtin.import_tasks: tasks/check_bundle_existence_in_index_image.yml
+      when: integration_tests_verify_bundle_in_catalog
+      tags:
+        - test-bundle-existence
+
+  always:
+    - name: Cleanup test data
+      tags:
+        - clean
+        - clean-test-data
+      ansible.builtin.import_tasks: tasks/clean.yml

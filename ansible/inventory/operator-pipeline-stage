@@ -1,5 +1,0 @@
-[operator-pipeline:children]
-operator-pipeline-stage
-
-[operator-pipeline-stage]
-localhost

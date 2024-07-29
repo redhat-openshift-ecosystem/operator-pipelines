@@ -1,5 +1,0 @@
-[operator-pipeline:children]
-operator-pipeline-integration-tests
-
-[operator-pipeline-integration-tests]
-localhost

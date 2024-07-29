@@ -1,0 +1,12 @@
+---
+merge: true
+{% if integration_tests_ci_file_cert_project_id is defined %}
+cert_project_id: "{{ integration_tests_ci_file_cert_project_id }}"
+{% endif %}
+{%  if integration_tests_ci_file_reviewers is defined %}
+reviewers: {{ integration_tests_ci_file_reviewers | to_yaml }}
+{% endif %}
+{% if integration_tests_ci_file_fbc_enabled is defined %}
+fbc:
+  enabled: {{ integration_tests_ci_file_fbc_enabled }}
+{% endif %}
