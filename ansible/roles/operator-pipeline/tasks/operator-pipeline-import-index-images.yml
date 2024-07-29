@@ -26,15 +26,43 @@
           env: "{{ env }}"
       spec:
         import: true
-        repository:
-          from:
-            kind: DockerImage
-            name: "{{ certified_operator_index }}"
-          importPolicy:
-            insecure: "{{ insecure_index_import | default(false) }}"
-            scheduled: true
-          referencePolicy:
-            type: Local
+        images:
+          - from:
+              kind: DockerImage
+              name: "{{ certified_operator_index }}:v4.12"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ certified_operator_index }}:v4.13"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ certified_operator_index }}:v4.14"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ certified_operator_index }}:v4.15"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ certified_operator_index }}:v4.16"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ certified_operator_index }}:v4.17"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
 
 - name: Import redhat-marketplace-index imagestream
   tags:
@@ -61,12 +89,40 @@
           env: "{{ env }}"
       spec:
         import: true
-        repository:
-          from:
-            kind: DockerImage
-            name: "{{ redhat_marketplace_index }}"
-          importPolicy:
-            insecure: "{{ insecure_index_import | default(false) }}"
-            scheduled: true
-          referencePolicy:
-            type: Local
+        images:
+          - from:
+              kind: DockerImage
+              name: "{{ redhat_marketplace_index }}:v4.12"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ redhat_marketplace_index }}:v4.13"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ redhat_marketplace_index }}:v4.14"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ redhat_marketplace_index }}:v4.15"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ redhat_marketplace_index }}:v4.16"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
+          - from:
+              kind: DockerImage
+              name: "{{ redhat_marketplace_index }}:v4.17"
+            importPolicy:
+              insecure: "{{ insecure_index_import | default(false) }}"
+              scheduled: true
