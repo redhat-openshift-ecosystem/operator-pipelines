@@ -447,6 +447,11 @@ spec:
                   touch /var/lib/containers/java
                 fi
 
+                # install csutils, including csdiff-static
+                dnf install -y 'dnf-command(copr)'
+                dnf copr enable -y packit/csutils-csdiff-196
+                dnf install -y cs{diff{,-static},gcca,wrap}
+
                 # Fixing group permission on /var/lib/containers
                 chown root:root /var/lib/containers
 
@@ -564,6 +569,34 @@ spec:
                   done < <(find $ADDITIONAL_SECRET_TMP -maxdepth 1 -type f -exec basename {} \;)
                 fi
 
+                # pre-create files for raw SAST scan results
+                cap_dir="$(workspaces.source.path)/gcc-capture"
+                mkdir "${cap_dir}"
+                touch "${cap_dir}/empty.json"
+
+                # hook GCC Analyzer on the system compiler and capture its output
+                # convert GCC's plain-text output to JSON
+                # TODO: make GCC produce JSON output for each process separately
+                # embed source code context after the build/scan (needed for csdiff/v1 SARIF fingerprints)
+                cap_file_raw="/tmp/gcc-capture.txt"
+                tee /usr/bin/cmd-wrap.sh << EOF
+                #!/bin/bash -x
+                env "PATH=/usr/lib64/csgcca:/usr/lib64/cswrap:\$PATH" "CSWRAP_CAP_FILE=${cap_file_raw}" CSWRAP_TIMEOUT=10 CSWRAP_TIMEOUT_FOR=gcc "\$@"
+                EC=\$?
+                if test -f "${cap_file_raw}"; then
+                  cap_file_json="$cap_dir/gcc-\$\$.json"
+                  /usr/libexec/csgrep-static --mode=json --event=^warning --embed-context=3 --quiet "${cap_file_raw}" >"\${cap_file_json}"
+                  rm -fv "${cap_file_raw}"
+                  /usr/libexec/csgrep-static --mode=evtstat "\${cap_file_json}"
+                fi
+                exit \$EC
+                EOF
+                chmod 0755 /usr/bin/cmd-wrap.sh
+                for i in /usr/bin/cmd-wrap.sh /usr/{bin,lib64}/cs{gcca,wrap} /usr/libexec/csgrep-static "$cap_dir"; do
+                  VOLUME_MOUNTS="${VOLUME_MOUNTS} --volume ${i}:${i}"
+                done
+                cstrans-df-run --in-place "$dockerfile_path" --verbose /usr/bin/cmd-wrap.sh
+
                 unshare -Uf $UNSHARE_ARGS --keep-caps -r --map-users 1,1,65536 --map-groups 1,1,65536 -w ${SOURCE_CODE_DIR}/$CONTEXT -- buildah build \
                   $VOLUME_MOUNTS \
                   "${BUILDAH_ARGS[@]}" \
@@ -571,6 +604,26 @@ spec:
                   --tls-verify=$TLSVERIFY --no-cache \
                   --ulimit nofile=4096:4096 \
                   -f "$dockerfile_path" -t $IMAGE .
+
+                (
+                  set -x
+
+                  # concatenate scan results from all RUN lines (we change working directory to avoid exceeding command line length)
+                  (cd "${cap_dir}" && csgrep --mode=json --remove-duplicates *.json) > gcc.json
+
+                  # print key events to CI log
+                  csgrep --prune=0 gcc.json
+
+                  # print SAST scanning summary
+                  csgrep --mode=evtstat gcc.json
+
+                  # convert the SAST scanning results to SARIF
+                  csgrep --mode=sarif gcc.json > gcc.sarif
+
+                  # check how many csdiff/v1 fingerprints were produced
+                  grep csdiff/v0 gcc.sarif | wc -l
+                  grep csdiff/v1 gcc.sarif | wc -l
+                )
 
                 container=$(buildah from --pull-never $IMAGE)
                 buildah mount $container | tee /shared/container_path
@@ -772,6 +825,34 @@ spec:
               image: quay.io/redhat-appstudio/cosign:v2.1.1@sha256:c883d6f8d39148f2cea71bff4622d196d89df3e510f36c140c097b932f0dd5d5
               name: upload-sbom
               workingDir: $(workspaces.source.path)
+            - name: upload-gcc-results
+              image: quay.io/konflux-ci/oras:latest@sha256:04cbd5efbcf1a38944b050e3adbc3071218643f6aa92e95d5d25b173574bca5e
+              workingDir: $(workspaces.source.path)
+              script: |
+                #!/usr/bin/env bash
+
+                IMAGE_URL=$(cat $(results.IMAGE_URL.path))
+                UPLOAD_FILE=gcc.sarif
+                MEDIA_TYPE=application/sarif+json
+
+                if [ -z "${IMAGE_URL}" ]; then
+                  echo 'No image-url provided. Skipping upload.'
+                  exit 0;
+                else
+                  echo "IMAGE_URL=${IMAGE_URL}"
+                fi
+            
+                if [ ! -f "${UPLOAD_FILE}" ]; then
+                  echo "No ${UPLOAD_FILE} exists. Skipping upload."
+                  exit 0;
+                fi
+
+                echo "Selecting auth"
+                select-oci-auth $IMAGE_URL > $HOME/auth.json
+                echo "Attaching to ${IMAGE_URL} via the OCI 1.1 Referrers API"
+                oras attach --no-tty --registry-config "$HOME/auth.json" --distribution-spec v1.1-referrers-api --artifact-type "${MEDIA_TYPE}" "${IMAGE_URL}" "${UPLOAD_FILE}:${MEDIA_TYPE}"
+                echo "Attaching to ${IMAGE_URL} via the OCI 1.1 Referrers Tag"
+                oras attach --no-tty --registry-config "$HOME/auth.json" --distribution-spec v1.1-referrers-tag --artifact-type "${MEDIA_TYPE}" "${IMAGE_URL}" "${UPLOAD_FILE}:${MEDIA_TYPE}"
           volumes:
             - emptyDir: {}
               name: varlibcontainers
