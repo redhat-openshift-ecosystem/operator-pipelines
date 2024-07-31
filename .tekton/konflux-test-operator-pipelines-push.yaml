@@ -6,8 +6,7 @@ metadata:
     build.appstudio.redhat.com/commit_sha: '{{revision}}'
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
-    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "main"
+    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch == "main"
   creationTimestamp: null
   labels:
     appstudio.openshift.io/application: konflux-test-operator-pipelines
@@ -17,532 +16,1085 @@ metadata:
   namespace: rhn-support-kdudka-tenant
 spec:
   params:
-  - name: git-url
-    value: '{{source_url}}'
-  - name: revision
-    value: '{{revision}}'
-  - name: output-image
-    value: quay.io/redhat-user-workloads/rhn-support-kdudka-tenant/konflux-test-operator-pipelines/konflux-test-operator-pipelines:{{revision}}
-  - name: dockerfile
-    value: operator-pipeline-images/Dockerfile
+    - name: git-url
+      value: '{{source_url}}'
+    - name: revision
+      value: '{{revision}}'
+    - name: output-image
+      value: quay.io/redhat-user-workloads/rhn-support-kdudka-tenant/konflux-test-operator-pipelines/konflux-test-operator-pipelines:{{revision}}
+    - name: dockerfile
+      value: operator-pipeline-images/Dockerfile
   pipelineSpec:
     finally:
-    - name: show-sbom
-      params:
-      - name: IMAGE_URL
-        value: $(tasks.build-container.results.IMAGE_URL)
-      taskRef:
+      - name: show-sbom
         params:
-        - name: name
-          value: show-sbom
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-show-sbom:0.1@sha256:7f8b5499a21de9aca718d0cf2e170949af6b30cacf882d64983471a2c673b1da
-        - name: kind
-          value: task
-        resolver: bundles
-    - name: show-summary
-      params:
-      - name: pipelinerun-name
-        value: $(context.pipelineRun.name)
-      - name: git-url
-        value: $(tasks.clone-repository.results.url)?rev=$(tasks.clone-repository.results.commit)
-      - name: image-url
-        value: $(params.output-image)
-      - name: build-task-status
-        value: $(tasks.build-container.status)
-      taskRef:
+          - name: IMAGE_URL
+            value: $(tasks.build-container.results.IMAGE_URL)
+        taskRef:
+          params:
+            - name: name
+              value: show-sbom
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-show-sbom:0.1@sha256:7f8b5499a21de9aca718d0cf2e170949af6b30cacf882d64983471a2c673b1da
+            - name: kind
+              value: task
+          resolver: bundles
+      - name: show-summary
         params:
-        - name: name
-          value: summary
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-summary:0.2@sha256:d97c04ab42f277b1103eb6f3a053b247849f4f5b3237ea302a8ecada3b24e15b
-        - name: kind
-          value: task
-        resolver: bundles
-      workspaces:
-      - name: workspace
-        workspace: workspace
-    params:
-    - description: Source Repository URL
-      name: git-url
-      type: string
-    - default: ""
-      description: Revision of the Source Repository
-      name: revision
-      type: string
-    - description: Fully Qualified Output Image
-      name: output-image
-      type: string
-    - default: .
-      description: Path to the source code of an application's component from where
-        to build image.
-      name: path-context
-      type: string
-    - default: Dockerfile
-      description: Path to the Dockerfile inside the context specified by parameter
-        path-context
-      name: dockerfile
-      type: string
-    - default: "false"
-      description: Force rebuild image
-      name: rebuild
-      type: string
-    - default: "false"
-      description: Skip checks against built image
-      name: skip-checks
-      type: string
-    - default: "false"
-      description: Execute the build with network isolation
-      name: hermetic
-      type: string
-    - default: ""
-      description: Build dependencies to be prefetched by Cachi2
-      name: prefetch-input
-      type: string
-    - default: "false"
-      description: Java build
-      name: java
-      type: string
-    - default: ""
-      description: Image tag expiration time, time values could be something like
-        1h, 2d, 3w for hours, days, and weeks, respectively.
-      name: image-expires-after
-    - default: "false"
-      description: Build a source image.
-      name: build-source-image
-      type: string
-    - default: []
-      description: Array of --build-arg values ("arg=value" strings) for buildah
-      name: build-args
-      type: array
-    - default: ""
-      description: Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file
-      name: build-args-file
-      type: string
-    results:
-    - description: ""
-      name: IMAGE_URL
-      value: $(tasks.build-container.results.IMAGE_URL)
-    - description: ""
-      name: IMAGE_DIGEST
-      value: $(tasks.build-container.results.IMAGE_DIGEST)
-    - description: ""
-      name: CHAINS-GIT_URL
-      value: $(tasks.clone-repository.results.url)
-    - description: ""
-      name: CHAINS-GIT_COMMIT
-      value: $(tasks.clone-repository.results.commit)
-    - description: ""
-      name: JAVA_COMMUNITY_DEPENDENCIES
-      value: $(tasks.build-container.results.JAVA_COMMUNITY_DEPENDENCIES)
-    tasks:
-    - name: init
-      params:
-      - name: image-url
-        value: $(params.output-image)
-      - name: rebuild
-        value: $(params.rebuild)
-      - name: skip-checks
-        value: $(params.skip-checks)
-      taskRef:
-        params:
-        - name: name
-          value: init
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-init:0.2@sha256:99c98d3e5195e9920482f2187590d6f9150c4b8a2001b1ce5dcd5077abda9481
-        - name: kind
-          value: task
-        resolver: bundles
-    - name: clone-repository
-      params:
-      - name: url
-        value: $(params.git-url)
-      - name: revision
-        value: $(params.revision)
-      runAfter:
-      - init
-      taskRef:
-        params:
-        - name: name
-          value: git-clone
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-git-clone:0.1@sha256:de0ca8872c791944c479231e21d68379b54877aaf42e5f766ef4a8728970f8b3
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(tasks.init.results.build)
-        operator: in
-        values:
-        - "true"
-      workspaces:
-      - name: output
-        workspace: workspace
-      - name: basic-auth
-        workspace: git-auth
-    - name: prefetch-dependencies
-      params:
-      - name: input
-        value: $(params.prefetch-input)
-      runAfter:
-      - clone-repository
-      taskRef:
-        params:
-        - name: name
-          value: prefetch-dependencies
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies:0.1@sha256:9f1dd115789528ed0d9f8469828d180724efb0dca244d17c9ac99663edf5bcda
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(params.prefetch-input)
-        operator: notin
-        values:
-        - ""
-      workspaces:
-      - name: source
-        workspace: workspace
-      - name: git-basic-auth
-        workspace: git-auth
-      - name: netrc
-        workspace: netrc
-    - name: build-container
-      params:
-      - name: IMAGE
-        value: $(params.output-image)
-      - name: DOCKERFILE
-        value: $(params.dockerfile)
-      - name: CONTEXT
-        value: $(params.path-context)
-      - name: HERMETIC
-        value: $(params.hermetic)
-      - name: PREFETCH_INPUT
-        value: $(params.prefetch-input)
-      - name: IMAGE_EXPIRES_AFTER
-        value: $(params.image-expires-after)
-      - name: COMMIT_SHA
-        value: $(tasks.clone-repository.results.commit)
-      - name: BUILD_ARGS
-        value:
-        - $(params.build-args[*])
-      - name: BUILD_ARGS_FILE
-        value: $(params.build-args-file)
-      runAfter:
-      - prefetch-dependencies
-      taskRef:
-        params:
-        - name: name
-          value: buildah
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-buildah:0.1@sha256:72e4ddd9b543e2766830e3a513da5c2fec26ea7a72a50e8c85be642912caa603
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(tasks.init.results.build)
-        operator: in
-        values:
-        - "true"
-      workspaces:
-      - name: source
-        workspace: workspace
-    - name: build-source-image
-      params:
-      - name: BINARY_IMAGE
-        value: $(params.output-image)
-      - name: BASE_IMAGES
-        value: $(tasks.build-container.results.BASE_IMAGES_DIGESTS)
-      runAfter:
-      - build-container
-      taskRef:
-        params:
-        - name: name
-          value: source-build
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-source-build:0.1@sha256:9eee3cf280d33106ea5a0a25f48ca54478d4120594c0e1b5a7849d3566cef670
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(tasks.init.results.build)
-        operator: in
-        values:
-        - "true"
-      - input: $(params.build-source-image)
-        operator: in
-        values:
-        - "true"
-      workspaces:
-      - name: workspace
-        workspace: workspace
-    - name: deprecated-base-image-check
-      params:
-      - name: BASE_IMAGES_DIGESTS
-        value: $(tasks.build-container.results.BASE_IMAGES_DIGESTS)
-      - name: IMAGE_URL
-        value: $(tasks.build-container.results.IMAGE_URL)
-      - name: IMAGE_DIGEST
-        value: $(tasks.build-container.results.IMAGE_DIGEST)
-      runAfter:
-      - build-container
-      taskRef:
-        params:
-        - name: name
-          value: deprecated-image-check
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.4@sha256:ea275aeb7d204ef203a67e6a45a4902479afc1d906d2120f0d8c77d9541ea850
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(params.skip-checks)
-        operator: in
-        values:
-        - "false"
-    - name: clair-scan
-      params:
-      - name: image-digest
-        value: $(tasks.build-container.results.IMAGE_DIGEST)
-      - name: image-url
-        value: $(tasks.build-container.results.IMAGE_URL)
-      runAfter:
-      - build-container
-      taskRef:
-        params:
-        - name: name
-          value: clair-scan
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-clair-scan:0.1@sha256:a13278c3ee419db573a3919d8f86091497d2e7b52b5a800c2767c265df51c58a
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(params.skip-checks)
-        operator: in
-        values:
-        - "false"
-    - name: ecosystem-cert-preflight-checks
-      params:
-      - name: image-url
-        value: $(tasks.build-container.results.IMAGE_URL)
-      runAfter:
-      - build-container
-      taskRef:
-        params:
-        - name: name
-          value: ecosystem-cert-preflight-checks
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-ecosystem-cert-preflight-checks:0.1@sha256:8838d3e1628dbe61f4851b3640d2e3a9a3079d3ff3da955f4a3e4c2c95a013df
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(params.skip-checks)
-        operator: in
-        values:
-        - "false"
-    - name: sast-shellcheck
-      runAfter:
-        - build-container
-      when:
-        - input: $(params.skip-checks)
-          operator: in
-          values:
-            - "false"
-      params:
-      - name: image-digest
-        value: $(tasks.build-container.results.IMAGE_DIGEST)
-      - name: image-url
-        value: $(tasks.build-container.results.IMAGE_URL)
-      workspaces:
-        - name: workspace
-          workspace: workspace
-      taskSpec:
-        description: Scans source code for security vulnerabilities using ShellCheck, a Static Application Security Testing (SAST) tool.
-        params:
-          - description: Image URL.
-            name: image-url
-            type: string
-          - description: Image digest to report findings for.
-            name: image-digest
-            type: string
-        results:
-          - description: Tekton task test output.
-            name: TEST_OUTPUT
-        steps:
-          - image: quay.io/fedora/fedora:40
-            name: sast-shellcheck
-            workingDir: $(workspaces.workspace.path)
-            script: |
-              #!/usr/bin/env bash
-              set -exuo pipefail
-
-              dnf install -y csdiff shellcheck
-
-              ./source/.ci/run-shellcheck.sh * > shellcheck-results.json
-              csgrep --mode=evtstat shellcheck-results.json
-              csgrep --mode=sarif shellcheck-results.json > $(workspaces.workspace.path)/hacbs/$(context.task.name)/shellcheck-results.sarif
-          - name: upload
-            image: quay.io/konflux-ci/oras:latest@sha256:04cbd5efbcf1a38944b050e3adbc3071218643f6aa92e95d5d25b173574bca5e
-            workingDir: $(workspaces.workspace.path)/hacbs/$(context.task.name)
-            env:
-              - name: IMAGE_URL
-                value: $(params.image-url)
-              - name: IMAGE_DIGEST
-                value: $(params.image-digest)
-            script: |
-              #!/usr/bin/env bash
-          
-              UPLOAD_FILE=shellcheck-results.sarif
-              MEDIA_TYPE=application/sarif+json
-
-              if [ -z "${IMAGE_URL}" ] || [ -z "${IMAGE_DIGEST}"  ]; then
-                echo 'No image-url or image-digest param provided. Skipping upload.'
-                exit 0;
-              fi
-
-              if [ ! -f "${UPLOAD_FILE}" ]; then
-                echo "No ${UPLOAD_FILE} exists. Skipping upload."
-                exit 0;
-              fi
-          
-              echo "Selecting auth"
-              select-oci-auth $IMAGE_URL > $HOME/auth.json
-              echo "Attaching to ${IMAGE_URL} via the OCI 1.1 Referrers API"
-              oras attach --no-tty --registry-config "$HOME/auth.json" --distribution-spec v1.1-referrers-api --artifact-type "${MEDIA_TYPE}" "${IMAGE_URL}" "${UPLOAD_FILE}:${MEDIA_TYPE}"
-              echo "Attaching to ${IMAGE_URL} via the OCI 1.1 Referrers Tag"
-              oras attach --no-tty --registry-config "$HOME/auth.json" --distribution-spec v1.1-referrers-tag --artifact-type "${MEDIA_TYPE}" "${IMAGE_URL}" "${UPLOAD_FILE}:${MEDIA_TYPE}"
+          - name: pipelinerun-name
+            value: $(context.pipelineRun.name)
+          - name: git-url
+            value: $(tasks.clone-repository.results.url)?rev=$(tasks.clone-repository.results.commit)
+          - name: image-url
+            value: $(params.output-image)
+          - name: build-task-status
+            value: $(tasks.build-container.status)
+        taskRef:
+          params:
+            - name: name
+              value: summary
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-summary:0.2@sha256:d97c04ab42f277b1103eb6f3a053b247849f4f5b3237ea302a8ecada3b24e15b
+            - name: kind
+              value: task
+          resolver: bundles
         workspaces:
           - name: workspace
-    - name: sast-snyk-check
-      params:
-      - name: image-digest
+            workspace: workspace
+    params:
+      - description: Source Repository URL
+        name: git-url
+        type: string
+      - default: ""
+        description: Revision of the Source Repository
+        name: revision
+        type: string
+      - description: Fully Qualified Output Image
+        name: output-image
+        type: string
+      - default: .
+        description: Path to the source code of an application's component from where to build image.
+        name: path-context
+        type: string
+      - default: Dockerfile
+        description: Path to the Dockerfile inside the context specified by parameter path-context
+        name: dockerfile
+        type: string
+      - default: "false"
+        description: Force rebuild image
+        name: rebuild
+        type: string
+      - default: "false"
+        description: Skip checks against built image
+        name: skip-checks
+        type: string
+      - default: "false"
+        description: Execute the build with network isolation
+        name: hermetic
+        type: string
+      - default: ""
+        description: Build dependencies to be prefetched by Cachi2
+        name: prefetch-input
+        type: string
+      - default: "false"
+        description: Java build
+        name: java
+        type: string
+      - default: ""
+        description: Image tag expiration time, time values could be something like 1h, 2d, 3w for hours, days, and weeks, respectively.
+        name: image-expires-after
+      - default: "false"
+        description: Build a source image.
+        name: build-source-image
+        type: string
+      - default: []
+        description: Array of --build-arg values ("arg=value" strings) for buildah
+        name: build-args
+        type: array
+      - default: ""
+        description: Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file
+        name: build-args-file
+        type: string
+    results:
+      - description: ""
+        name: IMAGE_URL
+        value: $(tasks.build-container.results.IMAGE_URL)
+      - description: ""
+        name: IMAGE_DIGEST
         value: $(tasks.build-container.results.IMAGE_DIGEST)
-      - name: image-url
-        value: $(tasks.build-container.results.IMAGE_URL)
-      runAfter:
-      - build-container
-      taskRef:
+      - description: ""
+        name: CHAINS-GIT_URL
+        value: $(tasks.clone-repository.results.url)
+      - description: ""
+        name: CHAINS-GIT_COMMIT
+        value: $(tasks.clone-repository.results.commit)
+      - description: ""
+        name: JAVA_COMMUNITY_DEPENDENCIES
+        value: $(tasks.build-container.results.JAVA_COMMUNITY_DEPENDENCIES)
+    tasks:
+      - name: init
         params:
-        - name: name
-          value: sast-snyk-check
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-sast-snyk-check:0.1@sha256:d68390c8d771a50dcc99841ae224d18f36b677d9da6ad9bf8972878bde5f0f8f
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(params.skip-checks)
-        operator: in
-        values:
-        - "false"
-      workspaces:
-      - name: workspace
-        workspace: workspace
-    - name: clamav-scan
-      params:
-      - name: image-digest
-        value: $(tasks.build-container.results.IMAGE_DIGEST)
-      - name: image-url
-        value: $(tasks.build-container.results.IMAGE_URL)
-      runAfter:
-      - build-container
-      taskRef:
+          - name: image-url
+            value: $(params.output-image)
+          - name: rebuild
+            value: $(params.rebuild)
+          - name: skip-checks
+            value: $(params.skip-checks)
+        taskRef:
+          params:
+            - name: name
+              value: init
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-init:0.2@sha256:99c98d3e5195e9920482f2187590d6f9150c4b8a2001b1ce5dcd5077abda9481
+            - name: kind
+              value: task
+          resolver: bundles
+      - name: clone-repository
         params:
-        - name: name
-          value: clamav-scan
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-clamav-scan:0.1@sha256:a5742024c2755d3636110aea0b86d298660bb8b7708894674baec16bb90b7106
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(params.skip-checks)
-        operator: in
-        values:
-        - "false"
-    - name: sbom-json-check
-      params:
-      - name: IMAGE_URL
-        value: $(tasks.build-container.results.IMAGE_URL)
-      - name: IMAGE_DIGEST
-        value: $(tasks.build-container.results.IMAGE_DIGEST)
-      runAfter:
-      - build-container
-      taskRef:
+          - name: url
+            value: $(params.git-url)
+          - name: revision
+            value: $(params.revision)
+        runAfter:
+          - init
+        taskRef:
+          params:
+            - name: name
+              value: git-clone
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-git-clone:0.1@sha256:de0ca8872c791944c479231e21d68379b54877aaf42e5f766ef4a8728970f8b3
+            - name: kind
+              value: task
+          resolver: bundles
+        when:
+          - input: $(tasks.init.results.build)
+            operator: in
+            values:
+              - "true"
+        workspaces:
+          - name: output
+            workspace: workspace
+          - name: basic-auth
+            workspace: git-auth
+      - name: prefetch-dependencies
         params:
-        - name: name
-          value: sbom-json-check
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-sbom-json-check:0.1@sha256:acc9cb8a714f33c0e48d6ca219b6bd0191f09cdd767af4ef3a35d0a5cac53b5d
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(params.skip-checks)
-        operator: in
-        values:
-        - "false"
-    - name: apply-tags
-      params:
-      - name: IMAGE
-        value: $(tasks.build-container.results.IMAGE_URL)
-      runAfter:
-      - build-container
-      taskRef:
+          - name: input
+            value: $(params.prefetch-input)
+        runAfter:
+          - clone-repository
+        taskRef:
+          params:
+            - name: name
+              value: prefetch-dependencies
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies:0.1@sha256:9f1dd115789528ed0d9f8469828d180724efb0dca244d17c9ac99663edf5bcda
+            - name: kind
+              value: task
+          resolver: bundles
+        when:
+          - input: $(params.prefetch-input)
+            operator: notin
+            values:
+              - ""
+        workspaces:
+          - name: source
+            workspace: workspace
+          - name: git-basic-auth
+            workspace: git-auth
+          - name: netrc
+            workspace: netrc
+      - name: build-container
         params:
-        - name: name
-          value: apply-tags
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-apply-tags:0.1@sha256:516875845f2988848ebde5f3e9c717d6077af7bf9b3cb2b34a3c3f86b2609a14
-        - name: kind
-          value: task
-        resolver: bundles
-    - name: push-dockerfile
-      params:
-      - name: IMAGE
-        value: $(tasks.build-container.results.IMAGE_URL)
-      - name: IMAGE_DIGEST
-        value: $(tasks.build-container.results.IMAGE_DIGEST)
-      - name: DOCKERFILE
-        value: $(params.dockerfile)
-      - name: CONTEXT
-        value: $(params.path-context)
-      runAfter:
-      - build-container
-      taskRef:
+          - name: IMAGE
+            value: $(params.output-image)
+          - name: DOCKERFILE
+            value: $(params.dockerfile)
+          - name: CONTEXT
+            value: $(params.path-context)
+          - name: HERMETIC
+            value: $(params.hermetic)
+          - name: PREFETCH_INPUT
+            value: $(params.prefetch-input)
+          - name: IMAGE_EXPIRES_AFTER
+            value: $(params.image-expires-after)
+          - name: COMMIT_SHA
+            value: $(tasks.clone-repository.results.commit)
+          - name: BUILD_ARGS
+            value:
+              - $(params.build-args[*])
+          - name: BUILD_ARGS_FILE
+            value: $(params.build-args-file)
+        runAfter:
+          - prefetch-dependencies
+        when:
+          - input: $(tasks.init.results.build)
+            operator: in
+            values:
+              - "true"
+        workspaces:
+          - name: source
+            workspace: workspace
+        taskSpec:
+          description: |-
+            Buildah task builds source code into a container image and pushes the image into container registry using buildah tool.
+            In addition it generates a SBOM file, injects the SBOM file into final container image and pushes the SBOM file as separate image using cosign tool.
+            When [Java dependency rebuild](https://redhat-appstudio.github.io/docs.stonesoup.io/Documentation/main/cli/proc_enabled_java_dependencies.html) is enabled it triggers rebuilds of Java artifacts.
+            When prefetch-dependencies task was activated it is using its artifacts to run build in hermetic environment.
+          params:
+            - description: Reference of the image buildah will produce.
+              name: IMAGE
+              type: string
+            - default: ""
+              description: Deprecated. Has no effect. Will be removed in the future.
+              name: BUILDER_IMAGE
+              type: string
+            - default: ./Dockerfile
+              description: Path to the Dockerfile to build.
+              name: DOCKERFILE
+              type: string
+            - default: .
+              description: Path to the directory to use as context.
+              name: CONTEXT
+              type: string
+            - default: "true"
+              description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS registry)
+              name: TLSVERIFY
+              type: string
+            - default: ""
+              description: unused, should be removed in next task version
+              name: DOCKER_AUTH
+              type: string
+            - default: "false"
+              description: Determines if build will be executed without network access.
+              name: HERMETIC
+              type: string
+            - default: ""
+              description: In case it is not empty, the prefetched content should be made available to the build.
+              name: PREFETCH_INPUT
+              type: string
+            - default: ""
+              description: Delete image tag after specified time. Empty means to keep the image tag. Time values could be something like 1h, 2d, 3w for hours, days, and weeks, respectively.
+              name: IMAGE_EXPIRES_AFTER
+              type: string
+            - default: ""
+              description: The image is built from this commit.
+              name: COMMIT_SHA
+              type: string
+            - default: repos.d
+              description: Path in the git repository in which yum repository files are stored
+              name: YUM_REPOS_D_SRC
+            - default: fetched.repos.d
+              description: Path in source workspace where dynamically-fetched repos are present
+              name: YUM_REPOS_D_FETCHED
+            - default: /etc/yum.repos.d
+              description: Target path on the container in which yum repository files should be made available
+              name: YUM_REPOS_D_TARGET
+            - default: ""
+              description: Target stage in Dockerfile to build. If not specified, the Dockerfile is processed entirely to (and including) its last stage.
+              name: TARGET_STAGE
+              type: string
+            - default: etc-pki-entitlement
+              description: Name of secret which contains the entitlement certificates
+              name: ENTITLEMENT_SECRET
+              type: string
+            - default: activation-key
+              description: Name of secret which contains subscription activation key
+              name: ACTIVATION_KEY
+              type: string
+            - default: does-not-exist
+              description: Name of a secret which will be made available to the build with 'buildah build --secret' at /run/secrets/$ADDITIONAL_SECRET
+              name: ADDITIONAL_SECRET
+              type: string
+            - default: []
+              description: Array of --build-arg values ("arg=value" strings)
+              name: BUILD_ARGS
+              type: array
+            - default: ""
+              description: Path to a file with build arguments, see https://www.mankier.com/1/buildah-build#--build-arg-file
+              name: BUILD_ARGS_FILE
+              type: string
+            - default: trusted-ca
+              description: The name of the ConfigMap to read CA bundle data from.
+              name: caTrustConfigMapName
+              type: string
+            - default: ca-bundle.crt
+              description: The name of the key in the ConfigMap that contains the CA bundle data.
+              name: caTrustConfigMapKey
+              type: string
+            - default: ""
+              description: Comma separated list of extra capabilities to add when running 'buildah build'
+              name: ADD_CAPABILITIES
+              type: string
+            - default: "false"
+              description: Squash all new and previous layers added as a part of this build, as per --squash
+              name: SQUASH
+              type: string
+            - default: vfs
+              description: Storage driver to configure for buildah
+              name: STORAGE_DRIVER
+              type: string
+            - default: "true"
+              description: Whether to skip stages in Containerfile that seem unused by subsequent stages
+              name: SKIP_UNUSED_STAGES
+              type: string
+          results:
+            - description: Digest of the image just built
+              name: IMAGE_DIGEST
+            - description: Image repository where the built image was pushed
+              name: IMAGE_URL
+            - description: Digests of the base images used for build
+              name: BASE_IMAGES_DIGESTS
+            - description: The counting of Java components by publisher in JSON format
+              name: SBOM_JAVA_COMPONENTS_COUNT
+              type: string
+            - description: The Java dependencies that came from community sources such as Maven central.
+              name: JAVA_COMMUNITY_DEPENDENCIES
+          stepTemplate:
+            env:
+              - name: BUILDAH_FORMAT
+                value: oci
+              - name: STORAGE_DRIVER
+                value: $(params.STORAGE_DRIVER)
+              - name: HERMETIC
+                value: $(params.HERMETIC)
+              - name: CONTEXT
+                value: $(params.CONTEXT)
+              - name: DOCKERFILE
+                value: $(params.DOCKERFILE)
+              - name: IMAGE
+                value: $(params.IMAGE)
+              - name: TLSVERIFY
+                value: $(params.TLSVERIFY)
+              - name: IMAGE_EXPIRES_AFTER
+                value: $(params.IMAGE_EXPIRES_AFTER)
+              - name: YUM_REPOS_D_SRC
+                value: $(params.YUM_REPOS_D_SRC)
+              - name: YUM_REPOS_D_FETCHED
+                value: $(params.YUM_REPOS_D_FETCHED)
+              - name: YUM_REPOS_D_TARGET
+                value: $(params.YUM_REPOS_D_TARGET)
+              - name: TARGET_STAGE
+                value: $(params.TARGET_STAGE)
+              - name: PARAM_BUILDER_IMAGE
+                value: $(params.BUILDER_IMAGE)
+              - name: ENTITLEMENT_SECRET
+                value: $(params.ENTITLEMENT_SECRET)
+              - name: ACTIVATION_KEY
+                value: $(params.ACTIVATION_KEY)
+              - name: ADDITIONAL_SECRET
+                value: $(params.ADDITIONAL_SECRET)
+              - name: BUILD_ARGS_FILE
+                value: $(params.BUILD_ARGS_FILE)
+              - name: ADD_CAPABILITIES
+                value: $(params.ADD_CAPABILITIES)
+              - name: SQUASH
+                value: $(params.SQUASH)
+              - name: SKIP_UNUSED_STAGES
+                value: $(params.SKIP_UNUSED_STAGES)
+            volumeMounts:
+              - mountPath: /shared
+                name: shared
+          steps:
+            - args:
+                - $(params.BUILD_ARGS[*])
+              computeResources:
+                limits:
+                  memory: 4Gi
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+              env:
+                - name: COMMIT_SHA
+                  value: $(params.COMMIT_SHA)
+              image: quay.io/konflux-ci/buildah:latest@sha256:3fe211715717eca9eca1f19d326e19dd052c92fc6eb4f2434d8f903fe5b9aeb7
+              name: build
+              script: |
+                if [ -n "${PARAM_BUILDER_IMAGE}" ]; then
+                  echo "WARNING: provided deprecated BUILDER_IMAGE parameter has no effect."
+                fi
+
+                ca_bundle=/mnt/trusted-ca/ca-bundle.crt
+                if [ -f "$ca_bundle" ]; then
+                  echo "INFO: Using mounted CA bundle: $ca_bundle"
+                  cp -vf $ca_bundle /etc/pki/ca-trust/source/anchors
+                  update-ca-trust
+                fi
+
+                SOURCE_CODE_DIR=source
+                if [ -e "$SOURCE_CODE_DIR/$CONTEXT/$DOCKERFILE" ]; then
+                  dockerfile_path="$(pwd)/$SOURCE_CODE_DIR/$CONTEXT/$DOCKERFILE"
+                elif [ -e "$SOURCE_CODE_DIR/$DOCKERFILE" ]; then
+                  dockerfile_path="$(pwd)/$SOURCE_CODE_DIR/$DOCKERFILE"
+                elif echo "$DOCKERFILE" | grep -q "^https\?://"; then
+                  echo "Fetch Dockerfile from $DOCKERFILE"
+                  dockerfile_path=$(mktemp --suffix=-Dockerfile)
+                  http_code=$(curl -s -L -w "%{http_code}" --output "$dockerfile_path" "$DOCKERFILE")
+                  if [ $http_code != 200 ]; then
+                    echo "No Dockerfile is fetched. Server responds $http_code"
+                    exit 1
+                  fi
+                  http_code=$(curl -s -L -w "%{http_code}" --output "$dockerfile_path.dockerignore.tmp" "$DOCKERFILE.dockerignore")
+                  if [ $http_code = 200 ]; then
+                    echo "Fetched .dockerignore from $DOCKERFILE.dockerignore"
+                    mv "$dockerfile_path.dockerignore.tmp" $SOURCE_CODE_DIR/$CONTEXT/.dockerignore
+                  fi
+                else
+                  echo "Cannot find Dockerfile $DOCKERFILE"
+                  exit 1
+                fi
+                if [ -n "$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR" ] && grep -q '^\s*RUN \(./\)\?mvn' "$dockerfile_path"; then
+                  sed -i -e "s|^\s*RUN \(\(./\)\?mvn\)\(.*\)|RUN echo \"<settings><mirrors><mirror><id>mirror.default</id><url>http://$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR/v1/cache/default/0/</url><mirrorOf>*</mirrorOf></mirror></mirrors></settings>\" > /tmp/settings.yaml; \1 -s /tmp/settings.yaml \3|g" "$dockerfile_path"
+                  touch /var/lib/containers/java
+                fi
+
+                # Fixing group permission on /var/lib/containers
+                chown root:root /var/lib/containers
+
+                sed -i 's/^\s*short-name-mode\s*=\s*.*/short-name-mode = "disabled"/' /etc/containers/registries.conf
+
+                # Setting new namespace to run buildah - 2^32-2
+                echo 'root:1:4294967294' | tee -a /etc/subuid >> /etc/subgid
+
+                BUILDAH_ARGS=()
+
+                BASE_IMAGES=$(grep -i '^\s*FROM' "$dockerfile_path" | sed 's/--platform=\S*//' | awk '{print $2}' | (grep -v ^oci-archive: || true))
+                if [ "${HERMETIC}" == "true" ]; then
+                  BUILDAH_ARGS+=("--pull=never")
+                  UNSHARE_ARGS="--net"
+                  for image in $BASE_IMAGES; do
+                    if [ "${image}" != "scratch" ]; then
+                      unshare -Ufp --keep-caps -r --map-users 1,1,65536 --map-groups 1,1,65536 -- buildah pull $image
+                    fi
+                  done
+                  echo "Build will be executed with network isolation"
+                fi
+
+                if [ -n "${TARGET_STAGE}" ]; then
+                  BUILDAH_ARGS+=("--target=${TARGET_STAGE}")
+                fi
+
+                if [ -n "${BUILD_ARGS_FILE}" ]; then
+                  BUILDAH_ARGS+=("--build-arg-file=$(pwd)/$SOURCE_CODE_DIR/${BUILD_ARGS_FILE}")
+                fi
+
+                for build_arg in "$@"; do
+                  BUILDAH_ARGS+=("--build-arg=$build_arg")
+                done
+
+                if [ -n "${ADD_CAPABILITIES}" ]; then
+                  BUILDAH_ARGS+=("--cap-add=${ADD_CAPABILITIES}")
+                fi
+
+                if [ "${SQUASH}" == "true" ]; then
+                  BUILDAH_ARGS+=("--squash")
+                fi
+
+                if [ "${SKIP_UNUSED_STAGES}" != "true" ] ; then
+                  BUILDAH_ARGS+=("--skip-unused-stages=false")
+                fi
+
+                if [ -f "$(workspaces.source.path)/cachi2/cachi2.env" ]; then
+                  cp -r "$(workspaces.source.path)/cachi2" /tmp/
+                  chmod -R go+rwX /tmp/cachi2
+                  VOLUME_MOUNTS="--volume /tmp/cachi2:/cachi2"
+                  # Read in the whole file (https://unix.stackexchange.com/questions/533277), then
+                  # for each RUN ... line insert the cachi2.env command *after* any options like --mount
+                  sed -E -i \
+                      -e 'H;1h;$!d;x' \
+                      -e 's@^\s*(run((\s|\\
+                )+-\S+)*(\s|\\
+                )+)@\1. /cachi2/cachi2.env \&\& \\
+                    @igM' \
+                      "$dockerfile_path"
+                  echo "Prefetched content will be made available"
+
+                  prefetched_repo_for_my_arch="/tmp/cachi2/output/deps/rpm/$(uname -m)/repos.d/cachi2.repo"
+                  if [ -f "$prefetched_repo_for_my_arch" ]; then
+                    echo "Adding $prefetched_repo_for_my_arch to $YUM_REPOS_D_FETCHED"
+                    mkdir -p "$YUM_REPOS_D_FETCHED"
+                    cp --no-clobber "$prefetched_repo_for_my_arch" "$YUM_REPOS_D_FETCHED"
+                  fi
+                fi
+
+                # if yum repofiles stored in git, copy them to mount point outside the source dir
+                if [ -d "${SOURCE_CODE_DIR}/${YUM_REPOS_D_SRC}" ]; then
+                  mkdir -p ${YUM_REPOS_D_FETCHED}
+                  cp -r ${SOURCE_CODE_DIR}/${YUM_REPOS_D_SRC}/* ${YUM_REPOS_D_FETCHED}
+                fi
+
+                # if anything in the repofiles mount point (either fetched or from git), mount it
+                if [ -d "${YUM_REPOS_D_FETCHED}" ]; then
+                  chmod -R go+rwX ${YUM_REPOS_D_FETCHED}
+                  mount_point=$(realpath ${YUM_REPOS_D_FETCHED})
+                  VOLUME_MOUNTS="${VOLUME_MOUNTS} --volume ${mount_point}:${YUM_REPOS_D_TARGET}"
+                fi
+
+                LABELS=(
+                  "--label" "build-date=$(date -u +'%Y-%m-%dT%H:%M:%S')"
+                  "--label" "architecture=$(uname -m)"
+                  "--label" "vcs-type=git"
+                )
+                [ -n "$COMMIT_SHA" ] && LABELS+=("--label" "vcs-ref=$COMMIT_SHA")
+                [ -n "$IMAGE_EXPIRES_AFTER" ] && LABELS+=("--label" "quay.expires-after=$IMAGE_EXPIRES_AFTER")
+
+                ACTIVATION_KEY_PATH="/activation-key"
+                ENTITLEMENT_PATH="/entitlement"
+
+                # do not enable activation key and entitlement at same time. If both vars are provided, prefer activation key.
+                # when activation keys are used, an empty directory on shared emptydir volume to /etc/pki/entitlement to prevent certificates from being included in the produced container.
+
+                if [ -d "$ACTIVATION_KEY_PATH" ]; then
+                  cp -r --preserve=mode "$ACTIVATION_KEY_PATH" /tmp/activation-key
+                  mkdir /shared/rhsm-tmp
+                  VOLUME_MOUNTS="${VOLUME_MOUNTS} --volume /tmp/activation-key:/activation-key -v /shared/rhsm-tmp:/etc/pki/entitlement:Z"
+                  echo "Adding activation key to the build"
+                elif [ -d "$ENTITLEMENT_PATH" ]; then
+                  cp -r --preserve=mode "$ENTITLEMENT_PATH" /tmp/entitlement
+                  VOLUME_MOUNTS="${VOLUME_MOUNTS} --volume /tmp/entitlement:/etc/pki/entitlement"
+                  echo "Adding the entitlement to the build"
+                fi
+
+                ADDITIONAL_SECRET_PATH="/additional-secret"
+                ADDITIONAL_SECRET_TMP="/tmp/additional-secret"
+                if [ -d "$ADDITIONAL_SECRET_PATH" ]; then
+                  cp -r --preserve=mode -L "$ADDITIONAL_SECRET_PATH" $ADDITIONAL_SECRET_TMP
+                  while read -r filename; do
+                    echo "Adding the secret ${ADDITIONAL_SECRET}/${filename} to the build, available at /run/secrets/${ADDITIONAL_SECRET}/${filename}"
+                    BUILDAH_ARGS+=("--secret=id=${ADDITIONAL_SECRET}/${filename},src=$ADDITIONAL_SECRET_TMP/${filename}")
+                  done < <(find $ADDITIONAL_SECRET_TMP -maxdepth 1 -type f -exec basename {} \;)
+                fi
+
+                unshare -Uf $UNSHARE_ARGS --keep-caps -r --map-users 1,1,65536 --map-groups 1,1,65536 -w ${SOURCE_CODE_DIR}/$CONTEXT -- buildah build \
+                  $VOLUME_MOUNTS \
+                  "${BUILDAH_ARGS[@]}" \
+                  "${LABELS[@]}" \
+                  --tls-verify=$TLSVERIFY --no-cache \
+                  --ulimit nofile=4096:4096 \
+                  -f "$dockerfile_path" -t $IMAGE .
+
+                container=$(buildah from --pull-never $IMAGE)
+                buildah mount $container | tee /shared/container_path
+                echo $container > /shared/container_name
+
+                # Save the SBOM produced by Cachi2 so it can be merged into the final SBOM later
+                if [ -f "/tmp/cachi2/output/bom.json" ]; then
+                  cp /tmp/cachi2/output/bom.json ./sbom-cachi2.json
+                fi
+
+                # Expose base image digests
+                touch $(results.BASE_IMAGES_DIGESTS.path)
+                for image in $BASE_IMAGES; do
+                  if [ "${image}" != "scratch" ]; then
+                    buildah images --format '{{ .Name }}:{{ .Tag }}@{{ .Digest }}' --filter reference="$image" >> $(results.BASE_IMAGES_DIGESTS.path)
+                  fi
+                done
+
+                # Needed to generate base images SBOM
+                echo "$BASE_IMAGES" > $(workspaces.source.path)/base_images_from_dockerfile
+              securityContext:
+                capabilities:
+                  add:
+                    - SETFCAP
+              volumeMounts:
+                - mountPath: /var/lib/containers
+                  name: varlibcontainers
+                - mountPath: /entitlement
+                  name: etc-pki-entitlement
+                - mountPath: /activation-key
+                  name: activation-key
+                - mountPath: /additional-secret
+                  name: additional-secret
+                - mountPath: /mnt/trusted-ca
+                  name: trusted-ca
+                  readOnly: true
+              workingDir: $(workspaces.source.path)
+            - image: quay.io/redhat-appstudio/syft:v0.105.1@sha256:1910b829997650c696881e5fc2fc654ddf3184c27edb1b2024e9cb2ba51ac431
+              name: sbom-syft-generate
+              script: |
+                echo "Running syft on the source directory"
+                syft dir:$(workspaces.source.path)/source --output cyclonedx-json=$(workspaces.source.path)/sbom-source.json
+                find $(cat /shared/container_path) -xtype l -delete
+                echo "Running syft on the image filesystem"
+                syft dir:$(cat /shared/container_path) --output cyclonedx-json=$(workspaces.source.path)/sbom-image.json
+              volumeMounts:
+                - mountPath: /var/lib/containers
+                  name: varlibcontainers
+                - mountPath: /shared
+                  name: shared
+              workingDir: $(workspaces.source.path)/source
+            - image: quay.io/redhat-appstudio/hacbs-jvm-build-request-processor:127ee0c223a2b56a9bd20a6f2eaeed3bd6015f77
+              name: analyse-dependencies-java-sbom
+              script: |
+                if [ -f /var/lib/containers/java ]; then
+                  /opt/jboss/container/java/run/run-java.sh analyse-dependencies path $(cat /shared/container_path) -s $(workspaces.source.path)/sbom-image.json --task-run-name $(context.taskRun.name) --publishers $(results.SBOM_JAVA_COMPONENTS_COUNT.path)
+                  sed -i 's/^/ /' $(results.SBOM_JAVA_COMPONENTS_COUNT.path) # Workaround for SRVKP-2875
+                else
+                  touch $(results.JAVA_COMMUNITY_DEPENDENCIES.path)
+                fi
+              securityContext:
+                runAsUser: 0
+              volumeMounts:
+                - mountPath: /var/lib/containers
+                  name: varlibcontainers
+                - mountPath: /shared
+                  name: shared
+            - image: registry.access.redhat.com/ubi9/python-39:1-192@sha256:01c9e53b32acd96f9fe7781727140df6868c91ebc916ed95dc58999fbf4d8ddd
+              name: merge-syft-sboms
+              script: |
+                #!/bin/python3
+                import json
+
+                # load SBOMs
+                with open("./sbom-image.json") as f:
+                  image_sbom = json.load(f)
+
+                with open("./sbom-source.json") as f:
+                  source_sbom = json.load(f)
+
+                # fetch unique components from available SBOMs
+                def get_identifier(component):
+                  return component["name"] + '@' + component.get("version", "")
+
+                image_sbom_components = image_sbom.setdefault("components", [])
+                existing_components = [get_identifier(component) for component in image_sbom_components]
+
+                source_sbom_components = source_sbom.get("components", [])
+                for component in source_sbom_components:
+                  if get_identifier(component) not in existing_components:
+                    image_sbom_components.append(component)
+                    existing_components.append(get_identifier(component))
+
+                image_sbom_components.sort(key=lambda c: get_identifier(c))
+
+                # write the CycloneDX unified SBOM
+                with open("./sbom-cyclonedx.json", "w") as f:
+                  json.dump(image_sbom, f, indent=4)
+              securityContext:
+                runAsUser: 0
+              workingDir: $(workspaces.source.path)
+            - image: quay.io/redhat-appstudio/cachi2:0.9.1@sha256:df67f9e063b544a8c49a271359377fed560562615e0278f6d0b9a3485f3f8fad
+              name: merge-cachi2-sbom
+              script: |
+                if [ -f "sbom-cachi2.json" ]; then
+                  echo "Merging contents of sbom-cachi2.json into sbom-cyclonedx.json"
+                  merge_syft_sbom sbom-cachi2.json sbom-cyclonedx.json > sbom-temp.json
+                  mv sbom-temp.json sbom-cyclonedx.json
+                else
+                  echo "Skipping step since no Cachi2 SBOM was produced"
+                fi
+              securityContext:
+                runAsUser: 0
+              workingDir: $(workspaces.source.path)
+            - image: registry.access.redhat.com/ubi9/python-39:1-192@sha256:01c9e53b32acd96f9fe7781727140df6868c91ebc916ed95dc58999fbf4d8ddd
+              name: create-purl-sbom
+              script: |
+                #!/bin/python3
+                import json
+
+                with open("./sbom-cyclonedx.json") as f:
+                  cyclonedx_sbom = json.load(f)
+
+                purls = [{"purl": component["purl"]} for component in cyclonedx_sbom.get("components", []) if "purl" in component]
+                purl_content = {"image_contents": {"dependencies": purls}}
+
+                with open("sbom-purl.json", "w") as output_file:
+                  json.dump(purl_content, output_file, indent=4)
+              securityContext:
+                runAsUser: 0
+              workingDir: $(workspaces.source.path)
+            - env:
+                - name: BASE_IMAGES_DIGESTS_PATH
+                  value: $(results.BASE_IMAGES_DIGESTS.path)
+              image: quay.io/redhat-appstudio/base-images-sbom-script@sha256:667669e3def018f9dbb8eaf8868887a40bc07842221e9a98f6787edcff021840
+              name: create-base-images-sbom
+              script: |
+                python3 /app/base_images_sbom_script.py --sbom=sbom-cyclonedx.json --base-images-from-dockerfile=base_images_from_dockerfile --base-images-digests=$BASE_IMAGES_DIGESTS_PATH
+              securityContext:
+                runAsUser: 0
+              workingDir: $(workspaces.source.path)
+            - computeResources: {}
+              image: quay.io/konflux-ci/buildah:latest@sha256:3fe211715717eca9eca1f19d326e19dd052c92fc6eb4f2434d8f903fe5b9aeb7
+              name: inject-sbom-and-push
+              script: |
+                if [ -n "${PARAM_BUILDER_IMAGE}" ]; then
+                  echo "WARNING: provided deprecated BUILDER_IMAGE parameter has no effect."
+                fi
+
+                base_image_name=$(buildah inspect --format '{{ index .ImageAnnotations "org.opencontainers.image.base.name"}}' $IMAGE | cut -f1 -d'@')
+                base_image_digest=$(buildah inspect --format '{{ index .ImageAnnotations "org.opencontainers.image.base.digest"}}' $IMAGE)
+                container=$(buildah from --pull-never $IMAGE)
+                buildah copy $container sbom-cyclonedx.json sbom-purl.json /root/buildinfo/content_manifests/
+                buildah config -a org.opencontainers.image.base.name=${base_image_name} -a org.opencontainers.image.base.digest=${base_image_digest} $container
+
+                BUILDAH_ARGS=()
+                if [ "${SQUASH}" == "true" ]; then
+                  BUILDAH_ARGS+=("--squash")
+                fi
+
+                buildah commit "${BUILDAH_ARGS[@]}" $container $IMAGE
+
+                status=-1
+                max_run=5
+                sleep_sec=10
+                for run in $(seq 1 $max_run); do
+                  status=0
+                  [ "$run" -gt 1 ] && sleep $sleep_sec
+                  echo "Pushing sbom image to registry"
+                  buildah push \
+                    --tls-verify=$TLSVERIFY \
+                    --digestfile $(workspaces.source.path)/image-digest $IMAGE \
+                    docker://$IMAGE && break || status=$?
+                done
+                if [ "$status" -ne 0 ]; then
+                    echo "Failed to push sbom image to registry after ${max_run} tries"
+                    exit 1
+                fi
+
+                cat "$(workspaces.source.path)"/image-digest | tee $(results.IMAGE_DIGEST.path)
+                echo -n "$IMAGE" | tee $(results.IMAGE_URL.path)
+              securityContext:
+                capabilities:
+                  add:
+                    - SETFCAP
+                runAsUser: 0
+              volumeMounts:
+                - mountPath: /var/lib/containers
+                  name: varlibcontainers
+              workingDir: $(workspaces.source.path)
+            - args:
+                - attach
+                - sbom
+                - --sbom
+                - sbom-cyclonedx.json
+                - --type
+                - cyclonedx
+                - $(params.IMAGE)
+              image: quay.io/redhat-appstudio/cosign:v2.1.1@sha256:c883d6f8d39148f2cea71bff4622d196d89df3e510f36c140c097b932f0dd5d5
+              name: upload-sbom
+              workingDir: $(workspaces.source.path)
+          volumes:
+            - emptyDir: {}
+              name: varlibcontainers
+            - emptyDir: {}
+              name: shared
+            - name: etc-pki-entitlement
+              secret:
+                optional: true
+                secretName: $(params.ENTITLEMENT_SECRET)
+            - name: activation-key
+              secret:
+                optional: true
+                secretName: $(params.ACTIVATION_KEY)
+            - name: additional-secret
+              secret:
+                optional: true
+                secretName: $(params.ADDITIONAL_SECRET)
+            - configMap:
+                items:
+                  - key: $(params.caTrustConfigMapKey)
+                    path: ca-bundle.crt
+                name: $(params.caTrustConfigMapName)
+                optional: true
+              name: trusted-ca
+          workspaces:
+            - description: Workspace containing the source code to build.
+              name: source
+      - name: build-source-image
         params:
-        - name: name
-          value: push-dockerfile
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-push-dockerfile:0.1@sha256:e2c8fa67da036cef81e407e28c14b6a2034c6564009e084c368005a4640c554c
-        - name: kind
-          value: task
-        resolver: bundles
-      workspaces:
-      - name: workspace
-        workspace: workspace
+          - name: BINARY_IMAGE
+            value: $(params.output-image)
+          - name: BASE_IMAGES
+            value: $(tasks.build-container.results.BASE_IMAGES_DIGESTS)
+        runAfter:
+          - build-container
+        taskRef:
+          params:
+            - name: name
+              value: source-build
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-source-build:0.1@sha256:9eee3cf280d33106ea5a0a25f48ca54478d4120594c0e1b5a7849d3566cef670
+            - name: kind
+              value: task
+          resolver: bundles
+        when:
+          - input: $(tasks.init.results.build)
+            operator: in
+            values:
+              - "true"
+          - input: $(params.build-source-image)
+            operator: in
+            values:
+              - "true"
+        workspaces:
+          - name: workspace
+            workspace: workspace
+      - name: deprecated-base-image-check
+        params:
+          - name: BASE_IMAGES_DIGESTS
+            value: $(tasks.build-container.results.BASE_IMAGES_DIGESTS)
+          - name: IMAGE_URL
+            value: $(tasks.build-container.results.IMAGE_URL)
+          - name: IMAGE_DIGEST
+            value: $(tasks.build-container.results.IMAGE_DIGEST)
+        runAfter:
+          - build-container
+        taskRef:
+          params:
+            - name: name
+              value: deprecated-image-check
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.4@sha256:ea275aeb7d204ef203a67e6a45a4902479afc1d906d2120f0d8c77d9541ea850
+            - name: kind
+              value: task
+          resolver: bundles
+        when:
+          - input: $(params.skip-checks)
+            operator: in
+            values:
+              - "false"
+      - name: clair-scan
+        params:
+          - name: image-digest
+            value: $(tasks.build-container.results.IMAGE_DIGEST)
+          - name: image-url
+            value: $(tasks.build-container.results.IMAGE_URL)
+        runAfter:
+          - build-container
+        taskRef:
+          params:
+            - name: name
+              value: clair-scan
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-clair-scan:0.1@sha256:a13278c3ee419db573a3919d8f86091497d2e7b52b5a800c2767c265df51c58a
+            - name: kind
+              value: task
+          resolver: bundles
+        when:
+          - input: $(params.skip-checks)
+            operator: in
+            values:
+              - "false"
+      - name: ecosystem-cert-preflight-checks
+        params:
+          - name: image-url
+            value: $(tasks.build-container.results.IMAGE_URL)
+        runAfter:
+          - build-container
+        taskRef:
+          params:
+            - name: name
+              value: ecosystem-cert-preflight-checks
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-ecosystem-cert-preflight-checks:0.1@sha256:8838d3e1628dbe61f4851b3640d2e3a9a3079d3ff3da955f4a3e4c2c95a013df
+            - name: kind
+              value: task
+          resolver: bundles
+        when:
+          - input: $(params.skip-checks)
+            operator: in
+            values:
+              - "false"
+      - name: sast-shellcheck
+        runAfter:
+          - build-container
+        when:
+          - input: $(params.skip-checks)
+            operator: in
+            values:
+              - "false"
+        params:
+          - name: image-digest
+            value: $(tasks.build-container.results.IMAGE_DIGEST)
+          - name: image-url
+            value: $(tasks.build-container.results.IMAGE_URL)
+        workspaces:
+          - name: workspace
+            workspace: workspace
+        taskSpec:
+          description: Scans source code for security vulnerabilities using ShellCheck, a Static Application Security Testing (SAST) tool.
+          params:
+            - description: Image URL.
+              name: image-url
+              type: string
+            - description: Image digest to report findings for.
+              name: image-digest
+              type: string
+          results:
+            - description: Tekton task test output.
+              name: TEST_OUTPUT
+          steps:
+            - image: quay.io/fedora/fedora:40
+              name: sast-shellcheck
+              workingDir: $(workspaces.workspace.path)
+              script: |
+                #!/usr/bin/env bash
+                set -exuo pipefail
+
+                dnf install -y csdiff shellcheck
+
+                ./source/.ci/run-shellcheck.sh * > shellcheck-results.json
+                csgrep --mode=evtstat shellcheck-results.json
+                csgrep --mode=sarif shellcheck-results.json > $(workspaces.workspace.path)/hacbs/$(context.task.name)/shellcheck-results.sarif
+            - name: upload
+              image: quay.io/konflux-ci/oras:latest@sha256:04cbd5efbcf1a38944b050e3adbc3071218643f6aa92e95d5d25b173574bca5e
+              workingDir: $(workspaces.workspace.path)/hacbs/$(context.task.name)
+              env:
+                - name: IMAGE_URL
+                  value: $(params.image-url)
+                - name: IMAGE_DIGEST
+                  value: $(params.image-digest)
+              script: |
+                #!/usr/bin/env bash
+
+                UPLOAD_FILE=shellcheck-results.sarif
+                MEDIA_TYPE=application/sarif+json
+
+                if [ -z "${IMAGE_URL}" ] || [ -z "${IMAGE_DIGEST}"  ]; then
+                  echo 'No image-url or image-digest param provided. Skipping upload.'
+                  exit 0;
+                fi
+
+                if [ ! -f "${UPLOAD_FILE}" ]; then
+                  echo "No ${UPLOAD_FILE} exists. Skipping upload."
+                  exit 0;
+                fi
+
+                echo "Selecting auth"
+                select-oci-auth $IMAGE_URL > $HOME/auth.json
+                echo "Attaching to ${IMAGE_URL} via the OCI 1.1 Referrers API"
+                oras attach --no-tty --registry-config "$HOME/auth.json" --distribution-spec v1.1-referrers-api --artifact-type "${MEDIA_TYPE}" "${IMAGE_URL}" "${UPLOAD_FILE}:${MEDIA_TYPE}"
+                echo "Attaching to ${IMAGE_URL} via the OCI 1.1 Referrers Tag"
+                oras attach --no-tty --registry-config "$HOME/auth.json" --distribution-spec v1.1-referrers-tag --artifact-type "${MEDIA_TYPE}" "${IMAGE_URL}" "${UPLOAD_FILE}:${MEDIA_TYPE}"
+          workspaces:
+            - name: workspace
+      - name: sast-snyk-check
+        params:
+          - name: image-digest
+            value: $(tasks.build-container.results.IMAGE_DIGEST)
+          - name: image-url
+            value: $(tasks.build-container.results.IMAGE_URL)
+        runAfter:
+          - build-container
+        taskRef:
+          params:
+            - name: name
+              value: sast-snyk-check
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-sast-snyk-check:0.1@sha256:d68390c8d771a50dcc99841ae224d18f36b677d9da6ad9bf8972878bde5f0f8f
+            - name: kind
+              value: task
+          resolver: bundles
+        when:
+          - input: $(params.skip-checks)
+            operator: in
+            values:
+              - "false"
+        workspaces:
+          - name: workspace
+            workspace: workspace
+      - name: clamav-scan
+        params:
+          - name: image-digest
+            value: $(tasks.build-container.results.IMAGE_DIGEST)
+          - name: image-url
+            value: $(tasks.build-container.results.IMAGE_URL)
+        runAfter:
+          - build-container
+        taskRef:
+          params:
+            - name: name
+              value: clamav-scan
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-clamav-scan:0.1@sha256:a5742024c2755d3636110aea0b86d298660bb8b7708894674baec16bb90b7106
+            - name: kind
+              value: task
+          resolver: bundles
+        when:
+          - input: $(params.skip-checks)
+            operator: in
+            values:
+              - "false"
+      - name: sbom-json-check
+        params:
+          - name: IMAGE_URL
+            value: $(tasks.build-container.results.IMAGE_URL)
+          - name: IMAGE_DIGEST
+            value: $(tasks.build-container.results.IMAGE_DIGEST)
+        runAfter:
+          - build-container
+        taskRef:
+          params:
+            - name: name
+              value: sbom-json-check
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-sbom-json-check:0.1@sha256:acc9cb8a714f33c0e48d6ca219b6bd0191f09cdd767af4ef3a35d0a5cac53b5d
+            - name: kind
+              value: task
+          resolver: bundles
+        when:
+          - input: $(params.skip-checks)
+            operator: in
+            values:
+              - "false"
+      - name: apply-tags
+        params:
+          - name: IMAGE
+            value: $(tasks.build-container.results.IMAGE_URL)
+        runAfter:
+          - build-container
+        taskRef:
+          params:
+            - name: name
+              value: apply-tags
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-apply-tags:0.1@sha256:516875845f2988848ebde5f3e9c717d6077af7bf9b3cb2b34a3c3f86b2609a14
+            - name: kind
+              value: task
+          resolver: bundles
+      - name: push-dockerfile
+        params:
+          - name: IMAGE
+            value: $(tasks.build-container.results.IMAGE_URL)
+          - name: IMAGE_DIGEST
+            value: $(tasks.build-container.results.IMAGE_DIGEST)
+          - name: DOCKERFILE
+            value: $(params.dockerfile)
+          - name: CONTEXT
+            value: $(params.path-context)
+        runAfter:
+          - build-container
+        taskRef:
+          params:
+            - name: name
+              value: push-dockerfile
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-push-dockerfile:0.1@sha256:e2c8fa67da036cef81e407e28c14b6a2034c6564009e084c368005a4640c554c
+            - name: kind
+              value: task
+          resolver: bundles
+        workspaces:
+          - name: workspace
+            workspace: workspace
     workspaces:
-    - name: workspace
-    - name: git-auth
-      optional: true
-    - name: netrc
-      optional: true
+      - name: workspace
+      - name: git-auth
+        optional: true
+      - name: netrc
+        optional: true
   taskRunTemplate: {}
   workspaces:
-  - name: workspace
-    volumeClaimTemplate:
-      metadata:
-        creationTimestamp: null
-      spec:
-        accessModes:
-        - ReadWriteOnce
-        resources:
-          requests:
-            storage: 1Gi
-      status: {}
-  - name: git-auth
-    secret:
-      secretName: '{{ git_auth_secret }}'
+    - name: workspace
+      volumeClaimTemplate:
+        metadata:
+          creationTimestamp: null
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+        status: {}
+    - name: git-auth
+      secret:
+        secretName: '{{ git_auth_secret }}'
 status: {}
