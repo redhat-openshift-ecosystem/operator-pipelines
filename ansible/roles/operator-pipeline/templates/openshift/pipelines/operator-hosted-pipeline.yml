@@ -489,6 +489,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: bundle_path
           value: "$(tasks.detect-changes.results.bundle_path)"
+        - name: catalog_operator_path
+          value: "$(tasks.detect-changes.results.affected_catalog_operators)"
         - name: cert_project_required
           value: "$(params.cert_project_required)"
       workspaces:
