@@ -14,8 +14,9 @@ spec:
       description: |
         Path to an operator within the git repository where the config is expected.
 
-    - name: bundle_path
-      description: Path indicating bundle affected with the change
+    - name: catalog_operator_path
+      description: path indicating the location of the catalog operator within the repository
+      default: ""
 
   results:
     - name: upgrade-graph-mode
@@ -35,7 +36,17 @@ spec:
         #! /usr/bin/env bash
         set -ex
 
-        CONFIG_PATH="$(params.operator_path)/ci.yaml"
+        if [ "$(params.operator_path)" != "" ]; then
+          PKG_PATH="$(params.operator_path)"
+        elif [ "$(params.catalog_operator_path)" != "" ]; then
+          OPERATOR_NAME=$(echo $(params.catalog_operator_path) | cut -d ',' -f 1 | cut -d '/' -f 2)
+          PKG_PATH=operators/$OPERATOR_NAME
+        else
+          echo "Bundle path is missing."
+          exit 1
+        fi
+
+        CONFIG_PATH="$PKG_PATH/ci.yaml"
 
         if [[ ! -f "$CONFIG_PATH" ]]; then
             echo "Config file $CONFIG_PATH does not exist or no bundle affected."
