@@ -43,8 +43,7 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            --inventory inventory/operator-pipeline-dev
-            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}} env=dev"
             --skip-tags ci,import-index-images
             --verbose
 
@@ -70,8 +69,7 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            --inventory inventory/operator-pipeline-qa
-            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}} env=qa"
             --skip-tags ci,import-index-images
             --verbose
 
@@ -98,8 +96,7 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            --inventory inventory/operator-pipeline-stage
-            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}} env=stage"
             --skip-tags ci,import-index-images
             --verbose
 
@@ -125,8 +122,7 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD_PROD}}
           options: |
-            --inventory inventory/operator-pipeline-prod
-            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}} env=prod"
             --skip-tags ci,import-index-images
             --verbose
 

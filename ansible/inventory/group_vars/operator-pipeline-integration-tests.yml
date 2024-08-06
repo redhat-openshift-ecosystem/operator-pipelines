@@ -24,7 +24,7 @@ integration_tests_src_operator_git_branch: e2e-test-operator
 integration_tests_src_operator_package_name: test-e2e-operator
 integration_tests_src_operator_bundle_version: 0.0.8
 
-integration_tests_ocp_versions_range: "=v4.15"
+integration_tests_ocp_versions_range: "=v4.14"
 
 integration_tests_fbc_catalog: false
 integration_tests_verify_bundle_in_catalog: true
