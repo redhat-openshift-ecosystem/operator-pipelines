@@ -10,4 +10,4 @@ integration_tests_fbc_catalog: true
 integration_tests_pr_title: "Catalog update {{ integration_tests_operator_package_name }} ({{ integration_tests_operator_bundle_version }})"
 
 # To avoid conflicts with the non-fbc tests, we use a different range
-integration_tests_ocp_versions_range: "v4.16-v4.17"
+integration_tests_ocp_versions_range: "=v4.16"

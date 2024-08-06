@@ -20,16 +20,9 @@ jobs:
           - isv
           - community
           - isv-fbc-bundle
-        experimental: [false]
-        include:
-          # Test ISV FBC Catalog only in experimental mode
-          # because there is a bug that needs to be fixed
-          # TODO: remove this block when the bug is fixed
-          - test_type: isv-fbc-catalog
-            experimental: true
+          - isv-fbc-catalog
 
       fail-fast: false
-    continue-on-error: ${{ matrix.experimental }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

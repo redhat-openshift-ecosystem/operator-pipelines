@@ -145,9 +145,6 @@
 
     popd
 
-    # Copy a same catalog to one more version
-    cp -r catalogs/v4.16 catalogs/v4.17
-
     git add catalogs
     git commit -m "[Integration Test] Add catalog for $OPERATOR_PACKAGE_NAME"
     git push origin "$PR_BRANCH"
