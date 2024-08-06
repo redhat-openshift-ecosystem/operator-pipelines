@@ -11,6 +11,8 @@ spec:
   results:
     - name: package_name
       description: Operator package name
+    - name: package_path
+      description: Path to the operator package
     - name: bundle_version
       description: Operator bundle version
   workspaces:
@@ -25,5 +27,6 @@ spec:
 
         BUNDLE_PATH=$(realpath $(params.bundle_path))
 
-        echo -n $BUNDLE_PATH | rev | cut -d '/' -f 2 | tr -d $'\n' | rev | tee $(results.package_name.path)
-        echo -n $BUNDLE_PATH | rev | cut -d '/' -f 1 | tr -d $'\n' | rev | tee $(results.bundle_version.path)
+        echo -n "$BUNDLE_PATH" | rev | cut -d '/' -f 2 | tr -d $'\n' | rev | tee "$(results.package_name.path)"
+        echo -n "$BUNDLE_PATH" | rev | cut -d '/' -f 1 | tr -d $'\n' | rev | tee "$(results.bundle_version.path)"
+        dirname "$BUNDLE_PATH" | tr -d $'\n' | tee "$(results.package_path.path)"

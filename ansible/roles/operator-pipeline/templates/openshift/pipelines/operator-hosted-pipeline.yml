@@ -148,10 +148,10 @@ spec:
       optional: true
     - name: registry-credentials
     - name: registry-credentials-all
-      description: Storage space for the result of merging certification project and
+      description:
+        Storage space for the result of merging certification project and
         pipeline service account registry tokens.
   tasks:
-
     # extract the PR number from the PR URL
     - name: get-pr-number
       taskRef:
@@ -309,12 +309,35 @@ spec:
           workspace: results
           subPath: changes
 
+    - name: yaml-lint
+      runAfter:
+        - detect-changes
+      taskRef:
+        name: yaml-lint
+      when:
+        - input: "$(tasks.detect-changes.results.bundle_path)"
+          operator: notin
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: args
+          value:
+            [
+              "-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}",
+              "$(tasks.detect-changes.results.bundle_path)",
+            ]
+      workspaces:
+        - name: shared-workspace
+          workspace: repository
+          subPath: src
+
     - name: check-permissions
       taskRef:
         name: check-permissions
         kind: Task
       runAfter:
-        - detect-changes
+        - yaml-lint
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -388,6 +411,24 @@ spec:
           workspace: results
           subPath: summary
 
+    - name: resolve-pr-type
+      taskRef:
+        name: resolve-pr-type
+        kind: Task
+      runAfter:
+        - read-config
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_path
+          value: "$(tasks.detect-changes.results.bundle_path)"
+        - name: affected_catalogs
+          value: "$(tasks.detect-changes.results.affected_catalogs)"
+        - name: affected_catalog_operators
+          value: "$(tasks.detect-changes.results.affected_catalog_operators)"
+        - name: fbc-enabled
+          value: "$(tasks.read-config.results.fbc-enabled)"
+
     - name: validate-catalog-format
       taskRef:
         name: validate-catalog-format
@@ -395,9 +436,10 @@ spec:
       runAfter:
         # This is just a temporary location until we have a proper
         # FCB branch based on config
-        - read-config
-      when: &catalogChange
-        - input: "$(tasks.detect-changes.results.affected_catalogs)"
+        - resolve-pr-type
+      when:
+        - &catalogFileChange
+          input: "$(tasks.detect-changes.results.affected_catalogs)"
           operator: notin
           values: [""]
       params:
@@ -420,7 +462,8 @@ spec:
         # This is just a temporary location until we have a proper
         # FCB branch based on config
         - validate-catalog-format
-      when: *catalogChange
+      when:
+        - *catalogFileChange
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -443,8 +486,9 @@ spec:
         kind: Task
       runAfter:
         - build-fragment-images
-      when: &bundleAdded
-        - input: "$(tasks.detect-changes.results.added_bundle)"
+      when:
+        - &bundleAdded
+          input: "$(tasks.detect-changes.results.added_bundle)"
           operator: notin
           values: [""]
       params:
@@ -542,8 +586,9 @@ spec:
         - get-pyxis-certification-data
       taskRef:
         name: verify-project
-      when: &certProjectExists
-        - input: "$(tasks.certification-project-check.results.certification_project_id)"
+      when:
+        - &certProjectExists
+          input: "$(tasks.certification-project-check.results.certification_project_id)"
           operator: "notin"
           values: [""]
       params:
@@ -563,7 +608,8 @@ spec:
         - verify-project
       taskRef:
         name: update-cert-project-status
-      when: *certProjectExists
+      when:
+        - *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -588,7 +634,8 @@ spec:
         - update-cert-project-status
       taskRef:
         name: reserve-operator-name
-      when: *certProjectExists
+      when:
+        - *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -662,25 +709,6 @@ spec:
           workspace: results
           subPath: summary
 
-    - name: yaml-lint
-      runAfter:
-        - static-tests-results
-      taskRef:
-        name: yaml-lint
-      when: &operatorOrBundleChange
-        - input: "$(tasks.detect-changes.results.affected_catalogs)"
-          operator: in
-          values: [""]
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: args
-          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(tasks.detect-changes.results.bundle_path)"]
-      workspaces:
-        - name: shared-workspace
-          workspace: repository
-          subPath: src
-
     # Merge user's registry tokens with service account credentials
     # used elsewhere by this pipeline.
     #
@@ -690,7 +718,7 @@ spec:
     # our credentials for that registry will be omitted.
     - name: merge-registry-credentials
       runAfter:
-        - yaml-lint
+        - static-tests-results
       taskRef:
         name: merge-registry-credentials
       params:
@@ -783,7 +811,11 @@ spec:
     - name: make-bundle-repo-public
       runAfter:
         - build-bundle
-      when: *operatorOrBundleChange
+      when:
+        - &operatorOrBundleChange
+          input: "$(tasks.detect-changes.results.affected_catalogs)"
+          operator: in
+          values: [""]
       taskRef:
         name: set-quay-repo-visibility
       params:
@@ -818,7 +850,8 @@ spec:
         # This is just a temporary location until we have a proper
         # FCB branch based on config
         - get-supported-versions
-      when: *catalogChange
+      when:
+        - *catalogFileChange
       taskRef:
         name: add-fbc-fragments-to-index
       params:
@@ -851,10 +884,9 @@ spec:
         - add-fbc-fragments-to-index
       when:
         # Run only when a bundle is added and it doesn't use FBC
-        - input: "$(tasks.detect-changes.results.affected_catalogs)"
-          operator: in
-          values: [""]
-        - input: "$(tasks.read-config.results.fbc-enabled)"
+        - *bundleAdded
+        - &isNotFBC
+          input: "$(tasks.read-config.results.fbc-enabled)"
           operator: notin
           values: ["true"]
       taskRef:
@@ -892,10 +924,9 @@ spec:
         - add-fbc-fragments-to-index
       when:
         # Run only when a bundle is added and it uses FBC
-        - input: "$(tasks.detect-changes.results.affected_catalogs)"
-          operator: in
-          values: [""]
-        - input: "$(tasks.read-config.results.fbc-enabled)"
+        - *bundleAdded
+        - &isFBC
+          input: "$(tasks.read-config.results.fbc-enabled)"
           operator: in
           values: ["true"]
       taskRef:
@@ -931,7 +962,8 @@ spec:
       runAfter:
         - add-bundle-to-index
         - build-fbc-scratch-catalog
-      when: *operatorOrBundleChange
+      when:
+        - *operatorOrBundleChange
       taskRef:
         name: set-quay-repo-visibility
       params:
@@ -1247,14 +1279,14 @@ spec:
           value: "merged"
 
   finally:
-
     # Upload the logs of this pipeline.
     # Dependencies on other task results should be minimized. If any
     # of those tasks fail, it'll prevent this task from executing.
     - name: upload-pipeline-logs
       taskRef:
         name: upload-pipeline-logs
-      when: *certProjectExists
+      when:
+        - *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1318,7 +1350,8 @@ spec:
     - name: github-add-connect-url-comment
       taskRef:
         name: github-add-comment
-      when: *certProjectExists
+      when:
+        - *certProjectExists
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"

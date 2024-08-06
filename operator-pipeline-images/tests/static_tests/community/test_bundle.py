@@ -41,12 +41,18 @@ from tests.utils import bundle_files, create_files, merge
             ["4.9", "4.8"],
             set(),
         ),
+        (
+            "rubbish",
+            ["4.9", "4.8"],
+            {Fail("operator-sdk returned non-JSON output when validating bundle")},
+        ),
     ],
     indirect=False,
     ids=[
         "A warning and an error from operator-sdk",
         "No matching ocp versions",
         "No warnings or errors from operator-sdk",
+        "Invalid output from operator-sdk",
     ],
 )
 @patch("operatorcert.static_tests.community.bundle.utils.get_ocp_supported_versions")

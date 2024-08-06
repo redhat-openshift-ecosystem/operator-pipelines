@@ -1,0 +1,48 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: resolve-pr-type
+spec:
+  description: |-
+    Depending on the change set and on the FBC onboarding status of the affected operator,
+    infer if the PR creates a new bundle, updates a catalog or both.
+  params:
+    - name: pipeline_image
+    - name: bundle_path
+    - name: affected_catalogs
+    - name: affected_catalog_operators
+    - name: fbc-enabled
+  results:
+    - name: add-bundle
+    - name: update-catalog
+  steps:
+    - name: evaluate-conditions
+      image: "$(params.pipeline_image)"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        if [ "$(params.fbc-enabled)" == "true" ] ; then
+          # PRs for fbc operators can result in the build of bundles only, catalogs only, both or none
+          if [ -n "$(params.bundle_path)" ] ; then
+            echo -n true >"$(results.add-bundle.path)"
+          else
+            echo -n false >"$(results.add-bundle.path)"
+          fi
+          if [ -n "$(params.affected_catalogs)" ] || [ -n "$(params.affected_catalog_operators)" ] ; then
+            echo -n true >"$(results.update-catalog.path)"
+          else
+            echo -n false >"$(results.update-catalog.path)"
+          fi
+        else
+          if [ -n "$(params.bundle_path)" ] ; then
+            # A bundle added to a non-fbc operator always triggers both bundle and catalog builds
+            echo -n true >"$(results.add-bundle.path)"
+            echo -n true >"$(results.update-catalog.path)"
+          else
+            # This happens when the PR only changes ci.yaml or any other non-bundle files in a non-fbc operator
+            echo -n false >"$(results.add-bundle.path)"
+            echo -n false >"$(results.update-catalog.path)"
+          fi
+        fi

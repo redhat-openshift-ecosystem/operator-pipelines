@@ -18,13 +18,19 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
-        echo "Compute md5hash of bundle content..."
 
-        find $(params.bundle_path) -not -name "Dockerfile" -type f | \
-          tr '\n' '\0' | \
-          xargs -r0 -I {} md5sum "{}" | \
-          sort >> hashes.txt
+        if [[ -n "$(params.bundle_path)" ]] ; then
+          echo "Compute md5hash of bundle content..."
 
-        cat hashes.txt
+          find "$(params.bundle_path)" -not -name "Dockerfile" -type f | \
+            tr '\n' '\0' | \
+            xargs -r0 -I {} md5sum "{}" | \
+            sort >> hashes.txt
 
-        md5sum hashes.txt | awk '{ print $1 }' | tr -d $'\n' | tee $(results.md5sum.path)
+          cat hashes.txt
+
+          md5sum hashes.txt | awk '{ print $1 }' | tr -d $'\n' | tee "$(results.md5sum.path)"
+        else
+          echo "No bundle added: skipping md5sum"
+          echo -n "N/A" >"$(results.md5sum.path)"
+        fi
