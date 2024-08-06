@@ -1,6 +1,6 @@
 ---
 - name: Deploy all the operator pipelines
-  hosts: all
+  hosts: "operator-pipeline-{{ env }}"
   vars_files:
     - ../vaults/{{ env }}/secret-vars.yml
     - ../vaults/{{ env }}/ocp-token.yml
