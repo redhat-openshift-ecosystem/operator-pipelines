@@ -27,10 +27,6 @@
         pyxis-client.key: "{{ lookup('file', preflight_invalidation_private_key_local_path, rstrip=False) | b64encode }}"
         pyxis-client.pem: "{{ lookup('file', preflight_invalidation_private_cert_local_path, rstrip=False) | b64encode }}"
 
-- name: Print the gateway for each host when defined
-  ansible.builtin.debug:
-    msg: "{{ pyxis_url }}"
-
 - name: Create invalidation CronJob
   kubernetes.core.k8s:
     state: present
