@@ -1,0 +1,10 @@
+---
+- name: Deploy preflight invalidation CronJob
+  hosts: "{{ clusters }}"
+  roles:
+    - preflight-invalidation
+  vars:
+    pyxis_url: "{{ 'https://pyxis.engineering.redhat.com' if env == 'prod' else 'https://pyxis.' + env + '.engineering.redhat.com' }}"
+  environment:
+    K8S_AUTH_API_KEY: "{{ ocp_token }}"
+    K8S_AUTH_HOST: "{{ ocp_host }}"
