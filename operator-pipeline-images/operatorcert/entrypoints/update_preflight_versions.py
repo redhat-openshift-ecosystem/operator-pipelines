@@ -59,7 +59,7 @@ def get_version_data_page(url: str, page: int, page_size: int) -> bytes:
         "page_size": page_size,
     }
 
-    resp: Response = pyxis.get(url, params, auth_required=False)
+    resp: Response = pyxis.get(url, params)
     if resp.status_code != 200:
         logger.warning("Pyxis returned code %s: %s", resp.status_code, resp.content)
         raise RuntimeError()
