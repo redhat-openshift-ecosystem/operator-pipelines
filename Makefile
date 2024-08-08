@@ -22,7 +22,6 @@ deploy-playground:
 	@echo "Deploying playground..."
 	ansible-playbook \
 		ansible/playbooks/deploy.yml \
-		--inventory ansible/inventory/operator-pipeline-stage \
 		-e oc_namespace=$(USER)-playground \
 		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
 		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \

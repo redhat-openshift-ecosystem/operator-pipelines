@@ -7,69 +7,9 @@ import pytest
 from operatorcert.entrypoints import index
 
 
-@patch("operatorcert.iib.get_builds")
-def test_wait_for_results(mock_get_builds: MagicMock) -> None:
-    wait = partial(
-        index.wait_for_results,
-        "https://iib.engineering.redhat.com",
-        123,
-        delay=0.1,
-        timeout=0.5,
-    )
-
-    # if the builds are in complete state
-    mock_get_builds.return_value = {"items": [{"state": "complete", "batch": 123}]}
-
-    assert wait()["items"] == [{"state": "complete", "batch": 123}]
-
-    # if the builds are in failed state
-    mock_get_builds.return_value = {
-        "items": [
-            {
-                "state": "failed",
-                "id": 1,
-                "batch": 123,
-                "state_reason": "failed due to timeout",
-            }
-        ]
-    }
-
-    assert wait()["items"] == [
-        {
-            "state": "failed",
-            "id": 1,
-            "batch": 123,
-            "state_reason": "failed due to timeout",
-        }
-    ]
-
-    # if not all the builds are completed
-    mock_get_builds.return_value = {
-        "items": [
-            {"state": "failed", "id": 2, "batch": 123},
-            {"state": "complete", "id": 1, "batch": 123},
-        ]
-    }
-
-    assert wait()["items"] == [
-        {"state": "failed", "id": 2, "batch": 123},
-        {"state": "complete", "id": 1, "batch": 123},
-    ]
-
-    # if there are no build failed, still all of the builds are not completed
-    mock_get_builds.return_value = {
-        "items": [
-            {"state": "pending", "id": 2, "batch": 123},
-            {"state": "complete", "id": 1, "batch": 123},
-        ]
-    }
-
-    assert wait() is None
-
-
 @patch("operatorcert.iib.add_builds")
 @patch("operatorcert.entrypoints.index.output_index_image_paths")
-@patch("operatorcert.entrypoints.index.wait_for_results")
+@patch("operatorcert.entrypoints.index.iib.wait_for_batch_results")
 def test_add_bundle_to_index(
     mock_results: MagicMock,
     mock_image_paths: MagicMock,

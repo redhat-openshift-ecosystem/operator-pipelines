@@ -5,8 +5,6 @@ IIB module for building a index images for a bundle
 import argparse
 import logging
 import os
-import time
-from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
 from operatorcert import iib, utils
@@ -66,56 +64,6 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     return parser
 
 
-def wait_for_results(
-    iib_url: str, batch_id: int, timeout: float = 60 * 60, delay: float = 20
-) -> Any:
-    """
-    Wait for IIB build till it finishes
-
-    Args:
-        iib_url (Any): CLI arguments
-        batch_id (int): IIB batch identifier
-        timeout ([type], optional): Maximum wait time. Defaults to 60*60 (3600 seconds/1 hour)
-        delay (int, optional): Delay between build pollin. Defaults to 20.
-
-    Returns:
-        Any: Build response
-    """
-    start_time = datetime.now()
-    loop = True
-
-    while loop:
-        response = iib.get_builds(iib_url, batch_id)
-
-        builds = response["items"]
-
-        # all builds have completed
-        if all(build.get("state") == "complete" for build in builds):
-            LOGGER.info("IIB batch build completed successfully: %s", batch_id)
-            return response
-        # any have failed
-        if any(build.get("state") == "failed" for build in builds):
-            for build in builds:
-                if build.get("state") == "failed":
-                    LOGGER.error("IIB build failed: %s", build["id"])
-                    reason = build.get("state_reason")
-                    LOGGER.info("Reason: %s", reason)
-            return response
-
-        LOGGER.debug("Waiting for IIB batch build: %s", batch_id)
-        LOGGER.debug("Current states [build id - state]:")
-        for build in builds:
-            LOGGER.debug("%s - %s", build["id"], build["state"])
-
-        if datetime.now() - start_time > timedelta(seconds=timeout):
-            LOGGER.error("Timeout: Waiting for IIB batch build failed: %s.", batch_id)
-            break
-
-        LOGGER.info("Waiting for IIB batch build to finish: %s", batch_id)
-        time.sleep(delay)
-    return None
-
-
 def add_bundle_to_index(
     bundle_pullspec: str,
     iib_url: str,
@@ -153,7 +101,7 @@ def add_bundle_to_index(
     resp = iib.add_builds(iib_url, payload)
 
     batch_id = resp[0]["batch"]
-    response = wait_for_results(iib_url, batch_id)
+    response = iib.wait_for_batch_results(iib_url, batch_id)
     if response is None or not all(
         build.get("state") == "complete" for build in response["items"]
     ):

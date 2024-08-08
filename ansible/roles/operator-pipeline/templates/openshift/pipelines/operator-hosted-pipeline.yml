@@ -434,21 +434,16 @@ spec:
         name: validate-catalog-format
         kind: Task
       runAfter:
-        # This is just a temporary location until we have a proper
-        # FCB branch based on config
         - resolve-pr-type
       when:
-        - &catalogFileChange
-          input: "$(tasks.detect-changes.results.affected_catalogs)"
+        - input: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
           operator: notin
           values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: affected_catalogs
-          value: "$(tasks.detect-changes.results.affected_catalogs)"
-        - name: operator_path
-          value: "$(tasks.detect-changes.results.operator_path)"
+          value: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
       workspaces:
         - name: source
           workspace: repository
@@ -459,18 +454,19 @@ spec:
         name: build-fragment-images
         kind: Task
       runAfter:
-        # This is just a temporary location until we have a proper
-        # FCB branch based on config
         - validate-catalog-format
       when:
-        - *catalogFileChange
+        - &catalogFileChange
+          input: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: commit_sha
           value: $(params.git_commit)
         - name: affected_catalogs
-          value: "$(tasks.detect-changes.results.affected_catalogs)"
+          value: "$(tasks.detect-changes.results.catalogs_with_added_or_modified_operators)"
         - name: fragment_repository
           value: "$(params.registry)/$(params.image_namespace)/catalog"
       workspaces:
@@ -845,15 +841,13 @@ spec:
           workspace: repository
           subPath: src
 
-    - name: add-fbc-fragments-to-index
+    - name: build-fbc-index-images
       runAfter:
-        # This is just a temporary location until we have a proper
-        # FCB branch based on config
         - get-supported-versions
       when:
         - *catalogFileChange
       taskRef:
-        name: add-fbc-fragments-to-index
+        name: build-fbc-index-images
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -861,8 +855,10 @@ spec:
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: commit_sha
           value: "$(params.git_commit)"
-        - name: affected_catalogs
-          value: "$(tasks.detect-changes.results.affected_catalogs)"
+        - name: catalogs_with_added_or_modified_operators
+          value: "$(tasks.detect-changes.results.catalogs_with_added_or_modified_operators)"
+        - name: deleted_catalog_operators
+          value: "$(tasks.detect-changes.results.deleted_catalog_operators)"
         - name: image_repository
           value: "$(params.registry)/$(params.image_namespace)/catalog"
         - name: iib_url
@@ -881,7 +877,7 @@ spec:
     # Build new temporary index using IIB
     - name: add-bundle-to-index
       runAfter:
-        - add-fbc-fragments-to-index
+        - build-fbc-index-images
       when:
         # Run only when a bundle is added and it doesn't use FBC
         - *bundleAdded
@@ -921,7 +917,7 @@ spec:
 
     - name: build-fbc-scratch-catalog
       runAfter:
-        - add-fbc-fragments-to-index
+        - build-fbc-index-images
       when:
         # Run only when a bundle is added and it uses FBC
         - *bundleAdded

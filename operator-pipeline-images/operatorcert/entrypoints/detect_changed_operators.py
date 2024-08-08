@@ -215,6 +215,11 @@ class AffectedCatalogOperatorCollection:
         """All the affected bundles"""
         return self.added | self.modified | self.deleted
 
+    @property
+    def catalogs_with_added_or_modified_operators(self) -> set[str]:
+        """Catalogs with added or modified operators"""
+        return {catalog for catalog, _ in self.added | self.modified}
+
 
 @dataclass
 class AffectedCatalogCollection:
@@ -477,6 +482,7 @@ def detect_changed_catalog_operators(
         )
     }
     LOGGER.debug("Affected catalog operators: %s", affected_catalog_operators)
+
     return {
         "affected_catalog_operators": [
             f"{x}/{y}" for x, y in affected_catalog_operators.union
@@ -490,6 +496,9 @@ def detect_changed_catalog_operators(
         "deleted_catalog_operators": [
             f"{x}/{y}" for x, y in affected_catalog_operators.deleted
         ],
+        "catalogs_with_added_or_modified_operators": list(
+            affected_catalog_operators.catalogs_with_added_or_modified_operators
+        ),
     }
 
 
@@ -536,6 +545,9 @@ def detect_changed_catalogs(
         "added_catalogs": list(affected_catalogs.added),
         "modified_catalogs": list(affected_catalogs.modified),
         "deleted_catalogs": list(affected_catalogs.deleted),
+        "added_or_modified_catalogs": list(
+            affected_catalogs.added | affected_catalogs.modified
+        ),
     }
 
 
