@@ -327,24 +327,46 @@ def test_check_permissions(
 
     mock_json_load.return_value = {
         "affected_operators": ["operator1", "operator2"],
-        "affected_catalog_operators": ["c1/operator3"],
+        "added_catalog_operators": ["c1/operator3"],
+        "modified_catalog_operators": ["c2/operator4"],
+        "removed_catalog_operators": ["c3/operator5"],
     }
     head_repo.operator.side_effect = [
         MagicMock(name="operator1"),
         MagicMock(name="operator2"),
     ]
+    base_repo.operator.side_effect = [MagicMock(name="operator5")]
     mock_review.return_value.check_permissions.side_effect = [
         False,
         check_permissions.MaintainersReviewNeeded("error"),
         True,
+        True,
+        True,
     ]
-    mock_catalog_operators.return_value = set([MagicMock(name="operator3")])
+    mock_catalog_operators.side_effect = [
+        set(
+            [
+                MagicMock(name="operator3"),
+                MagicMock(name="operator4"),
+            ]
+        ),
+        set(
+            [
+                MagicMock(name="operator5"),
+            ]
+        ),
+    ]
 
     result = check_permissions.check_permissions(base_repo, head_repo, MagicMock())
     assert not result
 
     head_repo.operator.assert_has_calls([call("operator1"), call("operator2")])
-    mock_catalog_operators.assert_called_once_with(head_repo, ["c1/operator3"])
+    mock_catalog_operators.assert_has_calls(
+        [
+            call(head_repo, ["c1/operator3", "c2/operator4"]),
+            call(base_repo, ["c3/operator5"]),
+        ]
+    )
 
 
 @patch("operatorcert.entrypoints.check_permissions.json.dump")

@@ -429,8 +429,6 @@ spec:
         name: build-fragment-images
         kind: Task
       runAfter:
-        # This is just a temporary location until we have a proper
-        # FCB branch based on config
         - get-supported-versions
       when:
         - &catalogUpdated
@@ -448,7 +446,7 @@ spec:
         - name: commit_sha
           value: $(params.git_commit)
         - name: affected_catalogs
-          value: "$(tasks.detect-changes.results.affected_catalogs)"
+          value: "$(tasks.detect-changes.results.catalogs_with_added_or_modified_operators)"
         - name: fragment_repository
           value: "$(params.registry)/$(params.image_namespace)/catalog"
       workspaces:
@@ -479,17 +477,15 @@ spec:
         - name: lease-owner
           value: "$(context.pipelineRun.name)"
 
-    - name: add-fbc-fragments-to-index
+    - name: build-fbc-index-images
       runAfter:
-        # This is just a temporary location until we have a proper
-        # FCB branch based on config
         - acquire-lease
       when:
         - *catalogUpdated
         - *notUndistributed
         - *isFBC
       taskRef:
-        name: add-fbc-fragments-to-index
+        name: build-fbc-index-images
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -497,8 +493,10 @@ spec:
           value: "$(tasks.get-supported-versions.results.indices)"
         - name: commit_sha
           value: "$(params.git_commit)"
-        - name: affected_catalogs
-          value: "$(tasks.detect-changes.results.affected_catalogs)"
+        - name: catalogs_with_added_or_modified_operators
+          value: "$(tasks.detect-changes.results.catalogs_with_added_or_modified_operators)"
+        - name: deleted_catalog_operators
+          value: "$(tasks.detect-changes.results.deleted_catalog_operators)"
         - name: image_repository
           value: "$(params.registry)/$(params.image_namespace)/catalog"
         - name: iib_url
@@ -517,7 +515,7 @@ spec:
     # call IIB to add the bundle to index
     - name: add-bundle-to-index
       runAfter:
-        - add-fbc-fragments-to-index
+        - build-fbc-index-images
       when:
         - *catalogUpdated
         - *notUndistributed

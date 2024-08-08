@@ -1,5 +1,5 @@
 from unittest.mock import patch, MagicMock
-
+from functools import partial
 import pytest
 from requests import HTTPError, Response
 from requests_kerberos import HTTPKerberosAuth
@@ -84,3 +84,65 @@ def test_get_build(mock_request: MagicMock) -> None:
     iib.get_build("https://foo.com/v1/", 1)
 
     mock_request.assert_called_once_with("https://foo.com/v1/api/v1/builds/1")
+
+
+@patch("operatorcert.iib.get_builds")
+def test_wait_for_batch_results(mock_get_builds: MagicMock) -> None:
+    wait = partial(
+        iib.wait_for_batch_results,
+        "https://iib.engineering.redhat.com",
+        1,
+        delay=0.1,
+        timeout=0.5,
+    )
+
+    # if the builds are in complete state
+    mock_get_builds.return_value = {
+        "items": [{"state": "complete", "batch": "some_batch_id"}]
+    }
+
+    assert wait()["items"] == [{"state": "complete", "batch": "some_batch_id"}]
+
+    # if the builds are in failed state
+    mock_get_builds.return_value = {
+        "items": [
+            {
+                "state": "failed",
+                "id": 1,
+                "batch": "some_batch_id",
+                "state_reason": "failed due to timeout",
+            }
+        ]
+    }
+
+    assert wait()["items"] == [
+        {
+            "state": "failed",
+            "id": 1,
+            "batch": "some_batch_id",
+            "state_reason": "failed due to timeout",
+        }
+    ]
+
+    # if not all the builds are completed
+    mock_get_builds.return_value = {
+        "items": [
+            {"state": "failed", "id": 2, "batch": "some_batch_id"},
+            {"state": "complete", "id": 1, "batch": "some_batch_id"},
+        ]
+    }
+
+    assert wait()["items"] == [
+        {"state": "failed", "id": 2, "batch": "some_batch_id"},
+        {"state": "complete", "id": 1, "batch": "some_batch_id"},
+    ]
+
+    # if there are no build failed, still all of the builds are not completed
+    mock_get_builds.return_value = {
+        "items": [
+            {"state": "pending", "id": 2, "batch": "some_batch_id"},
+            {"state": "complete", "id": 1, "batch": "some_batch_id"},
+        ]
+    }
+
+    assert wait() is None

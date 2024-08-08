@@ -374,9 +374,14 @@ def check_permissions(
     # In this step we need to map the affected catalog operators to the actual
     # operators. This needs to be done because the permission and reviewers
     # are stored in the operator config file
-    affected_catalog_operators = changes.get("affected_catalog_operators", [])
+    affected_catalog_operators = changes.get("added_catalog_operators", [])
+    affected_catalog_operators.extend(changes.get("modified_catalog_operators", []))
     operators = operators.union(
         extract_operators_from_catalog(head_repo, affected_catalog_operators)
+    )
+    removed_catalog_operators = changes.get("removed_catalog_operators", [])
+    operators = operators.union(
+        extract_operators_from_catalog(base_repo, removed_catalog_operators)
     )
 
     is_approved = []

@@ -16,10 +16,6 @@ spec:
     - name: commit_sha
       description: SHA of the commit to set the tag suffix.
 
-    - name: output_file
-      description: A path to a file where fragment image metadata will be stored.
-      default: "fragments.json"
-
   workspaces:
     - name: source
     - name: credentials
@@ -35,6 +31,11 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        if [[ "$(params.affected_catalogs)" == "" ]]; then
+          echo "No affected catalogs, skipping fragment image build"
+          exit 0
+        fi
+
         EXTRA_ARGS=""
         if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
           EXTRA_ARGS+=" --authfile $(workspaces.credentials.path)/.dockerconfigjson"
@@ -44,5 +45,4 @@ spec:
           --catalog-names "$(params.affected_catalogs)" \
           --repository-destination "$(params.fragment_repository)" \
           --tag-suffix "fragment-$(params.commit_sha)" \
-          --output-file "$(params.output_file)" \
           --verbose $EXTRA_ARGS
