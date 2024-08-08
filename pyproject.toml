@@ -21,10 +21,7 @@ operatorcert-dev = [
     "pylint>=2.17.5",
     # "pymarkdownlnt>=0.9.13.4",
 ]
-tox = [
-    "tox>=4.16.0",
-    "tox-pdm>=0.7.2",
-]
+tox = ["tox>=4.16.0", "tox-pdm>=0.7.2"]
 
 
 [project]
@@ -82,6 +79,7 @@ preflight-result-filter = "operatorcert.entrypoints.preflight_result_filter:main
 publish-pyxis-image = "operatorcert.entrypoints.publish_pyxis_image:main"
 request-signature = "operatorcert.entrypoints.request_signature:main"
 reserve-operator-name = "operatorcert.entrypoints.reserve_operator_name:main"
+rm-operator-from-index = "operatorcert.entrypoints.rm_operator_from_index:main"
 set-cert-project-repository = "operatorcert.entrypoints.set_cert_project_repository:main"
 set-github-status = "operatorcert.entrypoints.set_github_status:main"
 static-tests = "operatorcert.entrypoints.static_tests:main"

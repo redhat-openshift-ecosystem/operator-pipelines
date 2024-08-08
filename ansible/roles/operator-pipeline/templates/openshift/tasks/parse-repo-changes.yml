@@ -30,10 +30,18 @@ spec:
       description: Path to the new bundle
     - name: affected_catalogs
       description: Comma separated list of updated catalogs
+    - name: added_or_modified_catalogs
+      description: Comma separated list of added or updated catalogs
+    - name: catalogs_with_added_or_modified_operators
+      description: Comma separated list of catalogs with added or modified operator
     - name: affected_catalog_operators
       description: |
         Comma separated list of operators added/updater/deleted inside
         a catalogs directory structure
+    - name: deleted_catalog_operators
+      description: |
+        Comma separated list of operators deleted from the catalogs
+        directory structure
   workspaces:
     - name: pr
       description: Clone of the repo at the PR head
@@ -77,5 +85,14 @@ spec:
         affected_catalogs="$(jq -r '.affected_catalogs | join(",")' < changes.json)"
         echo -n $affected_catalogs > "$(results.affected_catalogs.path)"
 
+        added_or_modified_catalogs="$(jq -r '.added_or_modified_catalogs | join(",")' < changes.json)"
+        echo -n $added_or_modified_catalogs > "$(results.added_or_modified_catalogs.path)"
+
+        catalogs_with_added_or_modified_operators="$(jq -r '.catalogs_with_added_or_modified_operators | join(",")' < changes.json)"
+        echo -n $catalogs_with_added_or_modified_operators > "$(results.catalogs_with_added_or_modified_operators.path)"
+
         affected_catalog_operators="$(jq -r '.affected_catalog_operators | join(",")' < changes.json)"
         echo -n $affected_catalog_operators > "$(results.affected_catalog_operators.path)"
+
+        deleted_catalog_operators="$(jq -r '.deleted_catalog_operators | join(",")' < changes.json)"
+        echo -n $deleted_catalog_operators > "$(results.deleted_catalog_operators.path)"
