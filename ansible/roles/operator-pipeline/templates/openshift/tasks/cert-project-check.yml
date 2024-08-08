@@ -6,8 +6,8 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-    - name: bundle_path
-      description: path indicating the location of the certified bundle within the repository
+    - name: operator_path
+      description: path indicating the location of the certified operator within the repository
     - name: catalog_operator_path
       description: path indicating the location of the catalog operator within the repository
       default: ""
@@ -33,8 +33,8 @@ spec:
           echo -n "" | tee $(results.certification_project_id.path)
           exit 0
         fi
-        if [ "$(params.bundle_path)" != "" ]; then
-          PKG_PATH=$(dirname $(realpath $(params.bundle_path)))
+        if [ "$(params.operator_path)" != "" ]; then
+          PKG_PATH="$(params.operator_path)"
         elif [ "$(params.catalog_operator_path)" != "" ]; then
           OPERATOR_NAME=$(echo $(params.catalog_operator_path) | cut -d ',' -f 1 | cut -d '/' -f 2)
           PKG_PATH=operators/$OPERATOR_NAME
