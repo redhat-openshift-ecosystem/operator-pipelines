@@ -93,4 +93,5 @@ spec:
         else
             echo "Cannot merge PR"
             echo -n "false" > "$(results.pr_merged.path)"
+            exit 1
         fi
