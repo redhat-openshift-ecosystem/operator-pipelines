@@ -10,9 +10,6 @@ spec:
     - name: affected_catalogs
       description: Comma separated list of updated catalogs.
 
-    - name: operator_path
-      description: Path to the operator.
-
   workspaces:
     - name: source
   steps:

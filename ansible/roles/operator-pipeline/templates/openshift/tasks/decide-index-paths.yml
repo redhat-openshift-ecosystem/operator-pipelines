@@ -6,7 +6,7 @@ metadata:
 spec:
   description: |-
     This task checks output of the two previous tasks (add-bundle-to-index
-    and add-fbc-fragments-to-index) which are mutually exclusive.
+    and build-fbc-index-images) which are mutually exclusive.
     Uses existing output as a result to be used by following tasks.
   params:
     - name: pipeline_image

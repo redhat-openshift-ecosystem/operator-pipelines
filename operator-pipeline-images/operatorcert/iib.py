@@ -1,13 +1,14 @@
 """II Builder API client"""
 
 import logging
+import time
+from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
 import requests
-from requests_kerberos import HTTPKerberosAuth
-
 from operatorcert.utils import add_session_retries
+from requests_kerberos import HTTPKerberosAuth
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -152,3 +153,53 @@ def get_build(base_url: str, request_id: int) -> Any:
     get_build_url = urljoin(base_url, f"api/v1/builds/{request_id}")
 
     return _get_request(get_build_url)
+
+
+def wait_for_batch_results(
+    iib_url: str, batch_id: int, timeout: float = 60 * 60, delay: float = 20
+) -> Any:
+    """
+    Wait for IIB build till it finishes
+
+    Args:
+        iib_url (Any): CLI arguments
+        batch_id (int): IIB batch identifier
+        timeout ([type], optional): Maximum wait time. Defaults to 60*60 (3600 seconds/1 hour)
+        delay (int, optional): Delay between build pollin. Defaults to 20.
+
+    Returns:
+        Any: Build response
+    """
+    start_time = datetime.now()
+    loop = True
+
+    while loop:
+        response = get_builds(iib_url, batch_id)
+
+        builds = response["items"]
+
+        # all builds have completed
+        if all(build.get("state") == "complete" for build in builds):
+            LOGGER.info("IIB batch build completed successfully: %s", batch_id)
+            return response
+        # any have failed
+        if any(build.get("state") == "failed" for build in builds):
+            for build in builds:
+                if build.get("state") == "failed":
+                    LOGGER.error("IIB build failed: %s", build["id"])
+                    reason = build.get("state_reason")
+                    LOGGER.info("Reason: %s", reason)
+            return response
+
+        LOGGER.debug("Waiting for IIB batch build: %s", batch_id)
+        LOGGER.debug("Current states [build id - state]:")
+        for build in builds:
+            LOGGER.debug("%s - %s", build["id"], build["state"])
+
+        if datetime.now() - start_time > timedelta(seconds=timeout):
+            LOGGER.error("Timeout: Waiting for IIB batch build failed: %s.", batch_id)
+            break
+
+        LOGGER.info("Waiting for IIB batch build to finish: %s", batch_id)
+        time.sleep(delay)
+    return None

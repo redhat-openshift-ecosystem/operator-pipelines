@@ -1,0 +1,138 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: build-fbc-index-images
+spec:
+  description: |-
+    This task handles a process of updating index images by applying FBC
+    fragments (added or modified operators) and removing operators from
+    he index (deleted operators).
+
+    Both of these operations are supported in the FBC workflow.
+  params:
+    - name: pipeline_image
+
+    - name: index_images
+      description: All known supported index image pull specs (space separated)
+
+    - name: commit_sha
+      description: SHA of the commit to set the tag suffix.
+
+    - name: catalogs_with_added_or_modified_operators
+      description: Comma separated list of catalogs with added or modified operators
+
+    - name: deleted_catalog_operators
+      description: |
+        Comma separated list of operators deleted from the catalogs
+        directory structure
+
+    - name: image_repository
+      description: A repository where fragments are stored
+
+    - name: iib_url
+      description: IIB API url
+      default: https://iib.engineering.redhat.com
+
+    - name: environment
+      description: |
+        Which environment the pipeline is running in. Can be one of [dev, qa, stage, prod]
+
+    - name: kerberos_keytab_secret_name
+      description: >-
+        The name of the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+
+    - name: kerberos_keytab_secret_key
+      description: >-
+        The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
+
+  volumes:
+    - name: kerberos-volume
+      secret:
+        secretName: "$(params.kerberos_keytab_secret_name)"
+  workspaces:
+    - name: output
+
+  steps:
+    - name: add-fbc-fragments-to-index
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.output.path)
+      env:
+        - name: KRB_KEYTAB_FILE
+          value: "/etc/kerberos/$(params.kerberos_keytab_secret_key)"
+      volumeMounts:
+        - name: kerberos-volume
+          readOnly: true
+          mountPath: "/etc/kerberos"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        if [[ "$(params.catalogs_with_added_or_modified_operators)" == "" ]];then
+          echo "No affected catalogs, skipping fragment image build"
+          exit 0
+        fi
+
+        ENV=$(params.environment)
+        INDEX_IMAGES="$(params.index_images)"
+        if [[ $ENV == "dev" || $ENV == "qa" ]]; then
+            echo "Adding FBC fragment to an index is a NOOP for dev and qa environments at this time."
+            exit 0
+        fi
+
+        if [[ $ENV != "prod" ]]; then
+            # Replace registry urls with stage urls when in preprod
+            INDEX_IMAGES=${INDEX_IMAGES//registry.redhat.io/registry.stage.redhat.io}
+        fi
+
+        add-fbc-fragments-to-index \
+          --iib-url "$(params.iib_url)" \
+          --indices $INDEX_IMAGES \
+          --catalog-names "$(params.catalogs_with_added_or_modified_operators)" \
+          --image-repository "$(params.image_repository)" \
+          --commit-sha "$(params.commit_sha)" \
+          --image-output fbc-index-image-paths.txt \
+          --verbose
+
+        cat fbc-index-image-paths.txt
+
+    - name: rm-operator-from-index
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.output.path)
+      env:
+        - name: KRB_KEYTAB_FILE
+          value: "/etc/kerberos/$(params.kerberos_keytab_secret_key)"
+      volumeMounts:
+        - name: kerberos-volume
+          readOnly: true
+          mountPath: "/etc/kerberos"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        if [[ "$(params.deleted_catalog_operators)" == "" ]];then
+          echo "No deleted operators, skipping operator removal from index"
+          exit 0
+        fi
+
+        ENV=$(params.environment)
+        INDEX_IMAGES="$(params.index_images)"
+        if [[ $ENV == "dev" || $ENV == "qa" ]]; then
+            echo "Adding FBC fragment to an index is a NOOP for dev and qa environments at this time."
+            exit 0
+        fi
+
+        if [[ $ENV != "prod" ]]; then
+            # Replace registry urls with stage urls when in preprod
+            INDEX_IMAGES=${INDEX_IMAGES//registry.redhat.io/registry.stage.redhat.io}
+        fi
+
+        rm-operator-from-index  \
+          --iib-url "$(params.iib_url)" \
+          --indices $INDEX_IMAGES \
+          --fragment-builds-output fbc-index-image-paths.txt \
+          --rm-catalog-operators "$(params.deleted_catalog_operators)" \
+          --image-output fbc-index-image-paths.txt \
+          --verbose
+
+        cat fbc-index-image-paths.txt
