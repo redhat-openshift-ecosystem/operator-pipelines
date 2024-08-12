@@ -235,7 +235,8 @@ class OperatorReview:
                 f"Project {self.cert_project_id} does not exist and pipeline can't "
                 "verify permissions."
             )
-        usernames = project.get("container", {}).get("github_usernames", [])
+        container = project.get("container") or {}
+        usernames = container.get("github_usernames") or []
         if self.pr_owner not in usernames:
             raise NoPermissionError(
                 f"User {self.pr_owner} does not have permissions to submit a PR for "

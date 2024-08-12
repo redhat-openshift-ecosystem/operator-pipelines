@@ -189,22 +189,40 @@ def test_OperatorReview_is_org_member(
     assert review_community.is_org_member() == False
 
 
+@pytest.mark.parametrize(
+    ["project", "valid"],
+    [
+        pytest.param(None, False, id="no project"),
+        pytest.param({}, False, id="no container"),
+        pytest.param({"container": {}}, False, id="no github_usernames"),
+        pytest.param(
+            {"container": {"github_usernames": None}}, False, id="no github_usernames"
+        ),
+        pytest.param(
+            {"container": {"github_usernames": ["user123"]}},
+            False,
+            id="user not in github_usernames",
+        ),
+        pytest.param(
+            {"container": {"github_usernames": ["owner"]}},
+            True,
+            id="user in github_usernames",
+        ),
+    ],
+)
 @patch("operatorcert.entrypoints.check_permissions.pyxis.get_project")
 def test_OperatorReview_check_permission_for_partner(
     mock_pyxis_project: MagicMock,
     review_partner: check_permissions.OperatorReview,
+    project: dict[str, Any],
+    valid: bool,
 ) -> None:
-    mock_pyxis_project.return_value = None
-    with pytest.raises(check_permissions.NoPermissionError):
-        review_partner.check_permission_for_partner()
-
-    mock_pyxis_project.return_value = {"container": {"github_usernames": ["user123"]}}
-
-    with pytest.raises(check_permissions.NoPermissionError):
-        review_partner.check_permission_for_partner()
-
-    mock_pyxis_project.return_value = {"container": {"github_usernames": ["owner"]}}
-    assert review_partner.check_permission_for_partner() == True
+    mock_pyxis_project.return_value = project
+    if valid:
+        assert review_partner.check_permission_for_partner() == True
+    else:
+        with pytest.raises(check_permissions.NoPermissionError):
+            review_partner.check_permission_for_partner()
 
 
 @patch(
