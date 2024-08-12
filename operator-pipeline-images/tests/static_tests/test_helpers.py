@@ -20,6 +20,10 @@ def test_skip__fbc(
     def check_operator(operator: Operator) -> Iterator[str]:
         yield "processed"
 
+    @skip_fbc
+    def check_unknown(unknown: None) -> Iterator[str]:
+        yield "processed"
+
     operator = Operator("test-operator")
     operator.config = {"fbc": {"enabled": True}}
     bundle = Bundle("test-bundle", operator)
@@ -49,3 +53,6 @@ def test_skip__fbc(
     operator.config = {}
     assert list(check_bundle(bundle)) == ["processed"]
     assert list(check_operator(operator)) == ["processed"]
+
+    # if no operator provided wrapped func is executed
+    assert list(check_unknown(None)) == ["processed"]

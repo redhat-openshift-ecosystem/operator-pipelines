@@ -145,7 +145,7 @@ class OperatorReview:
         Returns:
             list[str]: A list of github users who are reviewers for the operator
         """
-        return self.base_repo_operator_config.get("reviewers", [])
+        return self.base_repo_operator_config.get("reviewers") or []
 
     @property
     def maintainers(self) -> list[str]:
@@ -155,7 +155,7 @@ class OperatorReview:
         Returns:
             list[str]: A list of github users who are maintainers for the repo
         """
-        return self.base_repo_config.get("maintainers", [])
+        return self.base_repo_config.get("maintainers") or []
 
     @property
     def github_repo_org(self) -> str:
@@ -235,7 +235,8 @@ class OperatorReview:
                 f"Project {self.cert_project_id} does not exist and pipeline can't "
                 "verify permissions."
             )
-        usernames = project.get("container", {}).get("github_usernames", [])
+        container = project.get("container") or {}
+        usernames = container.get("github_usernames") or []
         if self.pr_owner not in usernames:
             raise NoPermissionError(
                 f"User {self.pr_owner} does not have permissions to submit a PR for "

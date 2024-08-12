@@ -12,17 +12,15 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
     wait = partial(
         index.wait_for_results,
         "https://iib.engineering.redhat.com",
-        "some_batch_id",
+        123,
         delay=0.1,
         timeout=0.5,
     )
 
     # if the builds are in complete state
-    mock_get_builds.return_value = {
-        "items": [{"state": "complete", "batch": "some_batch_id"}]
-    }
+    mock_get_builds.return_value = {"items": [{"state": "complete", "batch": 123}]}
 
-    assert wait()["items"] == [{"state": "complete", "batch": "some_batch_id"}]
+    assert wait()["items"] == [{"state": "complete", "batch": 123}]
 
     # if the builds are in failed state
     mock_get_builds.return_value = {
@@ -30,7 +28,7 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
             {
                 "state": "failed",
                 "id": 1,
-                "batch": "some_batch_id",
+                "batch": 123,
                 "state_reason": "failed due to timeout",
             }
         ]
@@ -40,7 +38,7 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
         {
             "state": "failed",
             "id": 1,
-            "batch": "some_batch_id",
+            "batch": 123,
             "state_reason": "failed due to timeout",
         }
     ]
@@ -48,21 +46,21 @@ def test_wait_for_results(mock_get_builds: MagicMock) -> None:
     # if not all the builds are completed
     mock_get_builds.return_value = {
         "items": [
-            {"state": "failed", "id": 2, "batch": "some_batch_id"},
-            {"state": "complete", "id": 1, "batch": "some_batch_id"},
+            {"state": "failed", "id": 2, "batch": 123},
+            {"state": "complete", "id": 1, "batch": 123},
         ]
     }
 
     assert wait()["items"] == [
-        {"state": "failed", "id": 2, "batch": "some_batch_id"},
-        {"state": "complete", "id": 1, "batch": "some_batch_id"},
+        {"state": "failed", "id": 2, "batch": 123},
+        {"state": "complete", "id": 1, "batch": 123},
     ]
 
     # if there are no build failed, still all of the builds are not completed
     mock_get_builds.return_value = {
         "items": [
-            {"state": "pending", "id": 2, "batch": "some_batch_id"},
-            {"state": "complete", "id": 1, "batch": "some_batch_id"},
+            {"state": "pending", "id": 2, "batch": 123},
+            {"state": "complete", "id": 1, "batch": 123},
         ]
     }
 
