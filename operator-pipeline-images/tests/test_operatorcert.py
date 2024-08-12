@@ -61,13 +61,13 @@ def test_get_bundle_annotations(bundle: Bundle) -> None:
 @patch("operatorcert.pyxis.get")
 def test_get_supported_indices(mock_get: MagicMock) -> None:
     mock_rsp = MagicMock()
-    mock_rsp.json.return_value = {"data": ["foo", "bar"]}
+    mock_rsp.json.return_value = {"data": [{"foo": "bar"}]}
     mock_get.return_value = mock_rsp
 
     result = operatorcert.get_supported_indices(
         "https://foo.bar", "4.6-4.8", "certified-operators"
     )
-    assert result == ["foo", "bar"]
+    assert result == [{"foo": "bar"}]
 
 
 @patch("operatorcert.datetime")

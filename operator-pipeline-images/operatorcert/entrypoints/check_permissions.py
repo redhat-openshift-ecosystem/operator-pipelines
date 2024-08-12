@@ -145,7 +145,7 @@ class OperatorReview:
         Returns:
             list[str]: A list of github users who are reviewers for the operator
         """
-        return self.base_repo_operator_config.get("reviewers", [])
+        return self.base_repo_operator_config.get("reviewers") or []
 
     @property
     def maintainers(self) -> list[str]:
@@ -155,7 +155,7 @@ class OperatorReview:
         Returns:
             list[str]: A list of github users who are maintainers for the repo
         """
-        return self.base_repo_config.get("maintainers", [])
+        return self.base_repo_config.get("maintainers") or []
 
     @property
     def github_repo_org(self) -> str:

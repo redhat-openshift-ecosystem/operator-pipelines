@@ -25,16 +25,19 @@ def skip_fbc(func: Callable[..., Any]) -> Callable[..., Any]:
             operator = first_arg.operator
         elif isinstance(first_arg, Operator):
             operator = first_arg
+        else:
+            operator = None
 
         config = operator.config if operator else {}
         if not config.get("fbc", {}).get("enabled", False):
             yield from func(*args, **kwargs)
 
-        LOGGER.info(
-            "Skipping %s for FBC enabled operator %s",
-            func.__name__,
-            operator.operator_name,
-        )
+        if operator:
+            LOGGER.info(
+                "Skipping %s for FBC enabled operator %s",
+                func.__name__,
+                operator.operator_name,
+            )
         yield from []
 
     return wrapper
