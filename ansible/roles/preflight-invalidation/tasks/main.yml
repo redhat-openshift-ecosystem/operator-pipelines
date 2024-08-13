@@ -47,7 +47,7 @@
                   - name: preflight-invalidator
                     image: "{{ preflight_invalidation_image_pull_spec }}"
                     args:
-                      - update-preflight-versions
+                      - invalidate-preflight-versions
                       - --pyxis-url
                       - "{{ pyxis_url }}"
                     volumeMounts:

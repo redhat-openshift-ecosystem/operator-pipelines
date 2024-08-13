@@ -4,7 +4,7 @@ import pytest
 from typing import Any
 import datetime
 
-from operatorcert.entrypoints.update_preflight_versions import (
+from operatorcert.entrypoints.invalidate_preflight_versions import (
     synchronize_versions,
     get_versions,
 )
@@ -12,8 +12,8 @@ from operatorcert.entrypoints.update_preflight_versions import (
 PYXIS_URL = "https://pyxis.com"
 
 
-@patch("operatorcert.entrypoints.update_preflight_versions.pyxis.patch")
-@patch("operatorcert.entrypoints.update_preflight_versions.pyxis.get")
+@patch("operatorcert.entrypoints.invalidate_preflight_versions.pyxis.patch")
+@patch("operatorcert.entrypoints.invalidate_preflight_versions.pyxis.get")
 @pytest.mark.parametrize(
     "content",
     [
@@ -72,7 +72,7 @@ def test_no_change(
     mock_get.return_value = mock_resp
 
     with patch(
-        "operatorcert.entrypoints.update_preflight_versions.datetime"
+        "operatorcert.entrypoints.invalidate_preflight_versions.datetime"
     ) as mock_date:
         # have to patch fromisoformat as well or the test will break
         mock_date.fromisoformat = datetime.datetime.fromisoformat
@@ -86,8 +86,8 @@ def test_no_change(
     mock_patch.assert_not_called()
 
 
-@patch("operatorcert.entrypoints.update_preflight_versions.pyxis.patch")
-@patch("operatorcert.entrypoints.update_preflight_versions.pyxis.get")
+@patch("operatorcert.entrypoints.invalidate_preflight_versions.pyxis.patch")
+@patch("operatorcert.entrypoints.invalidate_preflight_versions.pyxis.get")
 @pytest.mark.parametrize(
     ["content", "expected_patch_urls"],
     [
@@ -165,7 +165,7 @@ def test_disable_old(
     mock_get.return_value = mock_resp
 
     with patch(
-        "operatorcert.entrypoints.update_preflight_versions.datetime"
+        "operatorcert.entrypoints.invalidate_preflight_versions.datetime"
     ) as mock_date:
         # have to patch fromisoformat as well or the test will break
         mock_date.fromisoformat = datetime.datetime.fromisoformat
@@ -182,7 +182,7 @@ def test_disable_old(
     assert mock_patch.call_count == len(expected_patch_urls)
 
 
-@patch("operatorcert.entrypoints.update_preflight_versions.get_version_data_page")
+@patch("operatorcert.entrypoints.invalidate_preflight_versions.get_version_data_page")
 def test_get_version_paging(mock_data_page: MagicMock) -> None:
     mock_data_page.side_effect = map(
         json.dumps,
@@ -222,7 +222,7 @@ def test_get_version_paging(mock_data_page: MagicMock) -> None:
     assert len(versions) == 3
 
 
-@patch("operatorcert.entrypoints.update_preflight_versions.pyxis.get")
+@patch("operatorcert.entrypoints.invalidate_preflight_versions.pyxis.get")
 def test_pyxis_error(mock_pyxis_get: MagicMock) -> None:
     mock_resp = MagicMock()
     mock_resp.status_code = 500
