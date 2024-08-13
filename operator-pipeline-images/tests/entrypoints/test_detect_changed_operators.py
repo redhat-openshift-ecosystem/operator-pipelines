@@ -1,18 +1,22 @@
 import pathlib
 import tarfile
-from pathlib import Path
-from typing import Any
 from dataclasses import dataclass
-from unittest.mock import MagicMock, patch
+from typing import Any, Dict
+from unittest.mock import MagicMock, mock_open, patch
 
-from git.repo import Repo as GitRepo
 import pytest
+from git.repo import Repo as GitRepo
+from operator_repo import Repo
 from operatorcert.entrypoints import detect_changed_operators
-from operatorcert.entrypoints.detect_changed_operators import (
-    github_pr_affected_files,
+from operatorcert.parsed_file import (
+    AffectedBundleCollection,
+    AffectedCatalogCollection,
+    AffectedCatalogOperatorCollection,
+    AffectedOperatorCollection,
+    ParserResults,
+    ParserRules,
     ValidationError,
 )
-from operator_repo import Repo
 
 
 @pytest.mark.parametrize(
@@ -414,9 +418,11 @@ from operator_repo import Repo
         "Modify operator in existing catalog and add new operator",
     ],
 )
+@patch("operatorcert.entrypoints.detect_changed_operators.ParserResults.enrich_result")
 @patch("operatorcert.entrypoints.detect_changed_operators.github_pr_affected_files")
 def test_detect_changes(
     mock_affected_files: MagicMock,
+    mock_enrich_result: MagicMock,
     tmp_path: pathlib.Path,
     head_commit: str,
     base_commit: str,
@@ -450,13 +456,15 @@ def test_detect_changes(
         "https://example.com/foo/bar/pull/1",
     )
 
-    for key in set(result.keys()) | set(expected.keys()):
-        assert sorted(result[key]) == sorted(
+    result_dict = result.to_dict()
+
+    for key in set(result_dict.keys()) | set(expected.keys()):
+        assert sorted(result_dict[key]) == sorted(
             expected[key]
-        ), f"Invalid value for {key}: expected {expected[key]} but {result[key]} was returned"
+        ), f"Invalid value for {key}: expected {expected[key]} but {result_dict[key]} was returned"
 
 
-@patch("operatorcert.entrypoints.detect_changed_operators._update_result")
+@patch("operatorcert.entrypoints.detect_changed_operators.ParserRules")
 @patch("operatorcert.entrypoints.detect_changed_operators.OperatorRepo")
 @patch("operatorcert.entrypoints.detect_changed_operators.detect_changes")
 @patch("operatorcert.entrypoints.detect_changed_operators.setup_logger")
@@ -464,7 +472,7 @@ def test_detect_changed_operators_main(
     mock_logger: MagicMock,
     mock_detect: MagicMock,
     mock_repo: MagicMock,
-    mock_update: MagicMock,
+    mock_validate: MagicMock,
     capsys: Any,
     tmpdir: Any,
 ) -> None:
@@ -474,9 +482,9 @@ def test_detect_changed_operators_main(
         "--base-repo-path=/tmp/base-repo",
         "--pr-url=https://example.com/foo/bar/pull/1",
     ]
-    return_value = {"foo": ["bar"]}
-    mock_detect.return_value = return_value
-    mock_update.return_value = return_value
+    parsed_result = MagicMock()
+    parsed_result.to_dict.return_value = {}
+    mock_detect.return_value = parsed_result
     repo_head = MagicMock()
     repo_base = MagicMock()
     mock_repo.side_effect = [repo_head, repo_base, repo_head, repo_base]
@@ -487,12 +495,13 @@ def test_detect_changed_operators_main(
         repo_base,
         "https://example.com/foo/bar/pull/1",
     )
-    assert capsys.readouterr().out.strip() == '{"foo": ["bar"]}'
+    assert capsys.readouterr().out.strip() == "{}"
     mock_logger.assert_called_once_with(level="INFO")
+    mock_validate.assert_called_once()
+    parsed_result.to_dict.assert_called_once()
 
     mock_logger.reset_mock()
     mock_detect.reset_mock()
-    mock_update.reset_mock()
 
     out_file = tmpdir / "out.json"
     out_file_name = str(out_file)
@@ -504,9 +513,7 @@ def test_detect_changed_operators_main(
         f"--output-file={out_file_name}",
         "--verbose",
     ]
-    return_value = {"bar": ["baz"]}
-    mock_detect.return_value = return_value
-    mock_update.return_value = return_value
+    mock_detect.return_value = parsed_result
     with patch("sys.argv", args):
         detect_changed_operators.main()
     mock_detect.assert_called_once_with(
@@ -514,7 +521,7 @@ def test_detect_changed_operators_main(
         repo_base,
         "https://example.com/foo/bar/pull/1",
     )
-    assert out_file.read().strip() == '{"bar": ["baz"]}'
+    assert out_file.read().strip() == "{}"
     mock_logger.assert_called_once_with(level="DEBUG")
 
 
@@ -548,7 +555,9 @@ def test_github_pr_affected_files(
     mock_gh.get_repo = MagicMock(return_value=mock_repo)
     mock_github.return_value = mock_gh
 
-    assert github_pr_affected_files("https://example.com/foo/bar/pull/123") == {
+    assert detect_changed_operators.github_pr_affected_files(
+        "https://example.com/foo/bar/pull/123"
+    ) == {
         "foo.txt",
         "bar.yaml",
     }
@@ -572,7 +581,9 @@ def test_github_pr_affected_files_no_token(
     mock_gh.get_repo = MagicMock(return_value=mock_repo)
     mock_github.return_value = mock_gh
 
-    assert github_pr_affected_files("https://example.com/foo/bar/pull/123") == {
+    assert detect_changed_operators.github_pr_affected_files(
+        "https://example.com/foo/bar/pull/123"
+    ) == {
         "foo.txt",
         "bar.yaml",
     }
@@ -586,7 +597,9 @@ def test_github_pr_affected_files_invalid_url(
     monkeypatch: Any,
 ) -> None:
     with pytest.raises(ValueError):
-        github_pr_affected_files("http://example.com/invalid/url")
+        detect_changed_operators.github_pr_affected_files(
+            "http://example.com/invalid/url"
+        )
 
 
 @pytest.mark.parametrize(
@@ -595,76 +608,45 @@ def test_github_pr_affected_files_invalid_url(
         pytest.param(
             {
                 "extra_files": ["empty.txt", "operators/empty.txt"],
-                "affected_operators": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "added_bundles": [],
-                "affected_catalog_operators": [],
             },
             False,
-            "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt']\n",
+            "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt']",
             id="Extra files",
         ),
         pytest.param(
             {
                 "extra_files": [],
-                "affected_operators": ["operator-e2e", "operator-clone-e2e"],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "added_bundles": [],
-                "affected_catalog_operators": [],
+                "added_operators": ["operator-e2e", "operator-clone-e2e"],
             },
             False,
-            "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']\n",
+            "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']",
             id="Multiple operators",
         ),
         pytest.param(
             {
-                "extra_files": [],
-                "affected_operators": [],
-                "modified_bundles": ["operator-e2e/0.0.101"],
-                "deleted_bundles": [],
-                "added_bundles": [],
-                "affected_catalog_operators": [],
+                "modified_bundles": [("operator-e2e", "0.0.101")],
             },
             False,
-            "The PR modifies existing bundles: ['operator-e2e/0.0.101']\n",
+            "The PR modifies existing bundles: [('operator-e2e', '0.0.101')]",
             id="Modified bundles",
         ),
         pytest.param(
             {
-                "extra_files": [],
-                "affected_operators": [],
-                "modified_bundles": [],
-                "deleted_bundles": ["operator-clone-e2e/0.0.100"],
-                "added_bundles": [],
-                "affected_catalog_operators": [],
+                "added_bundles": [
+                    ("operator-e2e", "0.0.101"),
+                    ("operator-clone-e2e", "0.0.101"),
+                ],
             },
             False,
-            "The PR deletes existing bundles: ['operator-clone-e2e/0.0.100']\n",
-            id="Deleted bundles",
-        ),
-        pytest.param(
-            {
-                "extra_files": [],
-                "affected_operators": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "added_bundles": ["operator-e2e/0.0.101", "operator-clone-e2e/0.0.100"],
-                "affected_catalog_operators": [],
-            },
-            False,
-            "The PR affects more than one bundle: ['operator-clone-e2e/0.0.100', 'operator-e2e/0.0.101']\n",
+            "The PR affects more than one bundle: [('operator-clone-e2e', '0.0.101'), ('operator-e2e', '0.0.101')]",
             id="Multiple bundles",
         ),
         pytest.param(
             {
-                "extra_files": [],
-                "affected_operators": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "added_bundles": [],
-                "affected_catalog_operators": ["v4.15/operator-1", "v4.15/operator-2"],
+                "added_catalog_operators": [
+                    ("v4.15", "operator-1"),
+                    ("v4.15", "operator-2"),
+                ],
             },
             False,
             "The PR affects more than one catalog operator: ['operator-1', 'operator-2']",
@@ -673,40 +655,38 @@ def test_github_pr_affected_files_invalid_url(
         pytest.param(
             {
                 "extra_files": ["empty.txt", "operators/empty.txt"],
-                "affected_operators": ["operator-e2e", "operator-clone-e2e"],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "added_bundles": [],
-                "affected_catalog_operators": [],
+                "added_operators": ["operator-e2e", "operator-clone-e2e"],
             },
             False,
-            "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt']\n"
-            "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']\n",
+            "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']\n"
+            "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt']",
             id="Multiple issues",
         ),
         pytest.param(
             {
-                "extra_files": [],
-                "affected_operators": ["operator-e2e"],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "affected_bundles": ["operator-e2e/0.0.101"],
-                "added_bundles": [],
-                "affected_catalog_operators": ["v4.15/operator-e2e"],
+                "added_operators": ["operator-e2e"],
+                "added_bundles": [("operator-e2e", "0.0.101")],
+                "added_catalog_operators": [("v4.15", "operator-e2e")],
             },
             False,
-            "The PR affects a bundle (['operator-e2e/0.0.101']) and catalog(['v4.15/operator-e2e']) "
-            "at the same time. Split operator and catalog changes into 2 separate pull requests.\n",
+            "The PR affects a bundle ([('operator-e2e', '0.0.101')]) and catalog ([('v4.15', 'operator-e2e')]) "
+            "at the same time. Split operator and catalog changes into 2 separate pull requests.",
             id="Operator and catalog changes are mixed",
         ),
         pytest.param(
             {
-                "extra_files": [],
-                "affected_operators": ["operator-e2e"],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "added_bundles": ["operator-e2e/0.0.101"],
-                "affected_catalog_operators": [],
+                "added_bundles": [("operator-e2e", "0.0.101")],
+                "deleted_bundles": [("operator-e2e", "0.0.102")],
+            },
+            False,
+            "The PR adds and deletes bundles at the same time. This is not allowed. "
+            "Please split the changes into 2 separate pull requests.",
+            id="Added and deleted bundles",
+        ),
+        pytest.param(
+            {
+                "added_operators": ["operator-e2e"],
+                "added_bundles": [("operator-e2e", "0.0.101")],
             },
             True,
             None,
@@ -714,12 +694,7 @@ def test_github_pr_affected_files_invalid_url(
         ),
         pytest.param(
             {
-                "extra_files": [],
-                "affected_operators": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "added_bundles": [],
-                "affected_catalog_operators": ["v4.15/operator-e2e"],
+                "added_catalog_operators": [("v4.15", "operator-e2e")],
             },
             True,
             None,
@@ -727,13 +702,170 @@ def test_github_pr_affected_files_invalid_url(
         ),
     ],
 )
-def test__validate_result(result: dict[str, Any], valid: bool, message: str) -> None:
+def test_ParserRules_validate(
+    result: Dict[str, Any], valid: bool, message: str
+) -> None:
+    affected_operator_collection = AffectedOperatorCollection()
+    affected_bundle_collection = AffectedBundleCollection()
+    affected_catalog_operator_collection = AffectedCatalogOperatorCollection()
+    affected_catalog_collection = AffectedCatalogCollection()
+
+    affected_operator_collection.added = set(result.get("added_operators", []))
+    affected_operator_collection.modified = set(result.get("modified_operators", []))
+    affected_operator_collection.deleted = set(result.get("deleted_operators", []))
+
+    affected_bundle_collection.added = set(result.get("added_bundles", []))
+    affected_bundle_collection.modified = set(result.get("modified_bundles", []))
+    affected_bundle_collection.deleted = set(result.get("deleted_bundles", []))
+
+    affected_catalog_operator_collection.added = set(
+        result.get("added_catalog_operators", [])
+    )
+    affected_catalog_operator_collection.modified = set(
+        result.get("modified_catalog_operators", [])
+    )
+    affected_catalog_operator_collection.deleted = set(
+        result.get("deleted_catalog_operators", [])
+    )
+
+    affected_catalog_collection.added = set(result.get("added_catalogs", []))
+    affected_catalog_collection.modified = set(result.get("modified_catalogs", []))
+    affected_catalog_collection.deleted = set(result.get("deleted_catalogs", []))
+
+    parser_results = ParserResults(
+        affected_operators=affected_operator_collection,
+        affected_bundles=affected_bundle_collection,
+        affected_catalog_operators=affected_catalog_operator_collection,
+        affected_catalogs=affected_catalog_collection,
+        extra_files=result.get("extra_files", []),
+    )
+    validator = ParserRules(parser_results, MagicMock(), MagicMock())
     if valid:
-        detect_changed_operators._validate_result(result)
+        validator.validate()
     else:
         with pytest.raises(ValidationError) as exc:
-            detect_changed_operators._validate_result(result)
+            validator.validate()
         assert str(exc.value) == message
+
+
+def test_ParserRules_validate_removal_non_fbc() -> None:
+    affected_bundle_collection = AffectedBundleCollection()
+    affected_operator_collection = AffectedOperatorCollection()
+
+    head_repo = MagicMock()
+    base_repo = MagicMock()
+
+    operator_non_fbc = MagicMock()
+    operator_non_fbc.config = {}
+    bundle_non_fbc = MagicMock()
+    bundle_non_fbc.operator = operator_non_fbc
+
+    base_repo.operator.return_value = operator_non_fbc
+    operator_non_fbc.bundle.return_value = bundle_non_fbc
+
+    affected_operator_collection.deleted = {"operator-non-fbc"}
+    affected_bundle_collection.deleted = {("operator-non-fbc", "v1.1")}
+
+    parser_results = ParserResults(
+        affected_operators=affected_operator_collection,
+        affected_bundles=affected_bundle_collection,
+        affected_catalog_operators=AffectedCatalogOperatorCollection(),
+        affected_catalogs=AffectedCatalogCollection(),
+        extra_files=set(),
+    )
+    validator = ParserRules(parser_results, head_repo, base_repo)
+    with pytest.raises(ValidationError) as exc:
+        validator.validate()
+    assert str(exc.value) == (
+        f"The PR deletes an existing operator: {operator_non_fbc}. This feature is only allowed for bundles with FBC enabled."
+    )
+
+
+def test_ParserRules_validate_removal_fbc_ok() -> None:
+    affected_bundle_collection = AffectedBundleCollection()
+    affected_operator_collection = AffectedOperatorCollection()
+
+    head_repo = MagicMock()
+    base_repo = MagicMock()
+
+    operator_fbc = MagicMock()
+    operator_fbc.config = {"fbc": {"enabled": True}}
+    bundle_fbc = MagicMock()
+    bundle_fbc.operator = operator_fbc
+
+    base_repo.operator.return_value = operator_fbc
+    operator_fbc.bundle.return_value = bundle_fbc
+
+    affected_operator_collection.deleted = {"operator-fbc"}
+    affected_bundle_collection.deleted = {("operator-fbc", "v1.1")}
+
+    parser_results = ParserResults(
+        affected_operators=affected_operator_collection,
+        affected_bundles=affected_bundle_collection,
+        affected_catalog_operators=AffectedCatalogOperatorCollection(),
+        affected_catalogs=AffectedCatalogCollection(),
+        extra_files=set(),
+    )
+    validator = ParserRules(parser_results, head_repo, base_repo)
+    validator.validate()
+
+
+@patch("yaml.safe_load_all")
+@patch("builtins.open", new_callable=mock_open)
+def test_ParserRules_validate_removal_fbc_fail(
+    mock_open: MagicMock, mock_yaml_load: MagicMock
+) -> None:
+    affected_bundle_collection = AffectedBundleCollection()
+    affected_operator_collection = AffectedOperatorCollection()
+
+    head_repo = MagicMock()
+    base_repo = MagicMock()
+
+    operator_fbc = MagicMock()
+    operator_fbc.config = {"fbc": {"enabled": True}}
+    bundle_fbc = MagicMock()
+    bundle_fbc.operator = operator_fbc
+    bundle_fbc.csv = {"metadata": {"name": "foo.v1"}}
+
+    base_repo.operator.return_value = operator_fbc
+    operator_fbc.bundle.return_value = bundle_fbc
+
+    catalog1, catalog2 = MagicMock(), MagicMock()
+    head_repo.all_catalogs.return_value = [catalog1, catalog2]
+    catalog1.has.return_value = False
+    catalog2.has.return_value = True
+
+    operator_catalog = MagicMock()
+    catalog2.operator_catalog.return_value = MagicMock()
+    bundles = [
+        {
+            "name": "foo.v1",
+            "schema": "olm.bundle",
+        },
+        {
+            "name": "foo.v2",
+            "schema": "olm.bundle",
+        },
+    ]
+    mock_yaml_load.return_value = iter(bundles)
+
+    affected_operator_collection.deleted = {"operator-fbc"}
+    affected_bundle_collection.deleted = {("operator-fbc", "v1.1")}
+
+    parser_results = ParserResults(
+        affected_operators=affected_operator_collection,
+        affected_bundles=affected_bundle_collection,
+        affected_catalog_operators=AffectedCatalogOperatorCollection(),
+        affected_catalogs=AffectedCatalogCollection(),
+        extra_files=set(),
+    )
+    validator = ParserRules(parser_results, head_repo, base_repo)
+    with pytest.raises(ValidationError) as exc:
+        validator.validate()
+        assert (
+            str(exc.value)
+            == f"The PR deletes a bundle (operator-fbc/v1.1) that is in use by a catalog ({catalog2})"
+        )
 
 
 @pytest.mark.parametrize(
@@ -787,4 +919,8 @@ def test__validate_result(result: dict[str, Any], valid: bool, message: str) -> 
     ],
 )
 def test__update_result(result: dict[str, Any], expected: dict[str, Any]) -> None:
-    assert detect_changed_operators._update_result(result) == expected
+    parsed_result = ParserResults(
+        MagicMock(), MagicMock(), MagicMock(), MagicMock(), set()
+    )
+    parsed_result.enrich_result(result)
+    assert result == expected
