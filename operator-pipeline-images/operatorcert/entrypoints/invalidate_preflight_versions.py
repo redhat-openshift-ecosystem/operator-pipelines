@@ -52,7 +52,10 @@ def parse_versions(data: dict[str, Any]) -> list[PreflightVersion]:
 
 def get_version_data_page(url: str, page: int, page_size: int) -> bytes:
     """Get single page of preflight data."""
-    preflight_filter = "name==github.com/redhat-openshift-ecosystem/openshift-preflight"
+    preflight_filter = (
+        "name==github.com/redhat-openshift-ecosystem/openshift-preflight"
+        + ";enabled_for_testing==true"
+    )
     params = {
         "filter": preflight_filter,
         "page": page,
@@ -95,8 +98,7 @@ def get_versions_to_disable(versions: list[PreflightVersion]) -> list[PreflightV
     to_update = []
 
     # ignore two newest versions
-    # only look at versions that are currently enabled
-    older_versions = filter(lambda v: v.enabled_for_testing, islice(versions, 2, None))
+    older_versions = islice(versions, 2, None)
 
     for version in older_versions:
         now = datetime.now(version.created.tzinfo)
