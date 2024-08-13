@@ -4,4 +4,4 @@ preflight_invalidation_namespace: preflight-invalidation
 preflight_invalidation_private_key_local_path: ../../vaults/{{ env }}/operator-pipeline.key
 preflight_invalidation_private_cert_local_path: ../../vaults/{{ env }}/operator-pipeline.pem
 
-preflight_invalidation_image_pull_spec: quay.io/redhat-isv/operator-pipelines-images:latest
+preflight_invalidation_image_pull_spec: quay.io/redhat-isv/operator-pipelines-images:released
