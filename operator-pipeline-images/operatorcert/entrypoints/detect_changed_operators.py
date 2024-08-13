@@ -6,12 +6,19 @@ import logging
 import os
 import pathlib
 import re
-from dataclasses import dataclass, field
-from typing import Optional, Any
-from operator_repo import Repo as OperatorRepo
+from typing import Optional
 
 from github import Auth, Github
+from operator_repo import Repo as OperatorRepo
 from operatorcert.logger import setup_logger
+from operatorcert.parsed_file import (
+    AffectedBundleCollection,
+    AffectedCatalogCollection,
+    AffectedCatalogOperatorCollection,
+    AffectedOperatorCollection,
+    ParserResults,
+    ParserRules,
+)
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -168,160 +175,11 @@ def _affected_bundles_and_operators_from_files(
     return all_affected_bundles, all_affected_catalog_operators, extra_files
 
 
-AffectedBundle = tuple[str, str]
-AffectedOperator = str
-AffectedCatalog = str
-AffectedCatalogOperator = tuple[str, str]
-
-
-@dataclass
-class AffectedBundleCollection:
-    """A collection of affected bundles"""
-
-    added: set[AffectedBundle] = field(default_factory=set)
-    modified: set[AffectedBundle] = field(default_factory=set)
-    deleted: set[AffectedBundle] = field(default_factory=set)
-
-    @property
-    def union(self) -> set[AffectedBundle]:
-        """All the affected bundles"""
-        return self.added | self.modified | self.deleted
-
-
-@dataclass
-class AffectedOperatorCollection:
-    """A collection of affected operators"""
-
-    added: set[AffectedOperator] = field(default_factory=set)
-    modified: set[AffectedOperator] = field(default_factory=set)
-    deleted: set[AffectedOperator] = field(default_factory=set)
-
-    @property
-    def union(self) -> set[AffectedOperator]:
-        """All the affected operators"""
-        return self.added | self.modified | self.deleted
-
-
-@dataclass
-class AffectedCatalogOperatorCollection:
-    """A collection of affected bundles"""
-
-    added: set[AffectedCatalogOperator] = field(default_factory=set)
-    modified: set[AffectedCatalogOperator] = field(default_factory=set)
-    deleted: set[AffectedCatalogOperator] = field(default_factory=set)
-
-    @property
-    def union(self) -> set[AffectedCatalogOperator]:
-        """All the affected bundles"""
-        return self.added | self.modified | self.deleted
-
-    @property
-    def catalogs_with_added_or_modified_operators(self) -> set[str]:
-        """Catalogs with added or modified operators"""
-        return {catalog for catalog, _ in self.added | self.modified}
-
-
-@dataclass
-class AffectedCatalogCollection:
-    """A collection of affected operators"""
-
-    added: set[AffectedCatalog] = field(default_factory=set)
-    modified: set[AffectedCatalog] = field(default_factory=set)
-    deleted: set[AffectedCatalog] = field(default_factory=set)
-
-    @property
-    def union(self) -> set[AffectedCatalog]:
-        """All the affected operators"""
-        return self.added | self.modified | self.deleted
-
-
-class ValidationError(Exception):
-    """
-    Exception raised when the result of the detect_changes function
-    violates any of the constraints
-    """
-
-
-def _validate_result(result: dict[str, list[str]]) -> None:
-    """
-    Validate the result of the detect_changes function.
-    Raises a ValidationError if the result violates
-    any of the constraints.
-
-    Args:
-        result: Dictionary with the detected changes
-    """
-    message = ""
-
-    if len(extra_files := result.get("extra_files", [])) > 0:
-        message += f"The PR affects non-operator files: {sorted(extra_files)}\n"
-    if len(affected_operators := result.get("affected_operators", [])) > 1:
-        message += (
-            f"The PR affects more than one operator: {sorted(affected_operators)}\n"
-        )
-    if len(modified_bundles := result.get("modified_bundles", [])) > 0:
-        message += f"The PR modifies existing bundles: {sorted(modified_bundles)}\n"
-    if len(deleted_bundles := result.get("deleted_bundles", [])) > 0:
-        message += f"The PR deletes existing bundles: {sorted(deleted_bundles)}\n"
-    if len(added_bundles := result.get("added_bundles", [])) > 1:
-        message += f"The PR affects more than one bundle: {sorted(added_bundles)}\n"
-    if len(
-        affected_catalog_operators := result.get("affected_catalog_operators", [])
-    ) > 0 and (len(affected_bundles := result.get("affected_bundles", [])) > 0):
-        message += (
-            f"The PR affects a bundle ({affected_bundles}) and catalog"
-            f"({affected_catalog_operators}) at the same time. Split operator and "
-            "catalog changes into 2 separate pull requests.\n"
-        )
-
-    catalog_operators = sorted(
-        list(
-            {
-                operator.split("/")[1]
-                for operator in result.get("affected_catalog_operators", [])
-            }
-        )
-    )
-    if len(catalog_operators) > 1:
-        message += f"The PR affects more than one catalog operator: {catalog_operators}"
-
-    if message:
-        raise ValidationError(message)
-
-
-def _update_result(result: dict[str, Any]) -> dict[str, Any]:
-    """
-    Enrich the result of the detect_changes function
-    with additional fields
-
-    Args:
-        result: Dictionary with the detected changes
-    """
-    if len(added_bundles := result.get("added_bundles", [])) == 1:
-        operator_name, bundle_version = added_bundles[0].split("/")
-    elif len(affected_operators := result.get("affected_operators", [])) == 1:
-        # no bundle was added (i.e.: only ci.yaml was added/modified/deleted)
-        operator_name = affected_operators[0]
-        bundle_version = ""
-    else:
-        operator_name = ""
-        bundle_version = ""
-
-    result["operator_name"] = operator_name
-    result["bundle_version"] = bundle_version
-
-    result["operator_path"] = f"operators/{operator_name}" if operator_name else ""
-    result["bundle_path"] = (
-        f"operators/{operator_name}/{bundle_version}" if bundle_version else ""
-    )
-    return result
-
-
 def detect_changed_operators(
     head_repo: OperatorRepo,
     base_repo: OperatorRepo,
     all_affected_bundles: dict[str, set[Optional[str]]],
-) -> dict[str, list[str]]:
+) -> AffectedOperatorCollection:
     """
     Given two snapshots of an operator repository returns a dictionary
     of changed operators
@@ -332,7 +190,7 @@ def detect_changed_operators(
         all_affected_bundles (dict[str, set[Optional[str]]]): A dictionary mapping operator
 
     Returns:
-        dict[str, list[str]]: A dictionary with added, modified and deleted operators
+        AffectedOperatorCollection: An object with added, modified and deleted operators
     """
     # determine exactly what was added, modified or removed
     affected_operators = AffectedOperatorCollection()
@@ -355,19 +213,14 @@ def detect_changed_operators(
 
     LOGGER.debug("Affected operators: %s", affected_operators)
 
-    return {
-        "affected_operators": list(affected_operators.union),
-        "added_operators": list(affected_operators.added),
-        "modified_operators": list(affected_operators.modified),
-        "deleted_operators": list(affected_operators.deleted),
-    }
+    return affected_operators
 
 
 def detect_changed_operator_bundles(
     head_repo: OperatorRepo,
     base_repo: OperatorRepo,
     all_affected_bundles: dict[str, set[Optional[str]]],
-) -> dict[str, list[str]]:
+) -> AffectedBundleCollection:
     """
     Given two snapshots of an operator repository returns a dictionary
     of changed operator bundles
@@ -378,7 +231,7 @@ def detect_changed_operator_bundles(
         all_affected_bundles (dict[str, set[Optional[str]]]): A dictionary mapping operator
 
     Returns:
-        dict[str, list[str]]: A dictionary with added, modified and deleted operator bundles
+        AffectedBundleCollection: An object with added, modified and deleted operator bundles
     """
     # determine exactly what was added, modified or removed
     affected_bundles = AffectedBundleCollection()
@@ -417,19 +270,14 @@ def detect_changed_operator_bundles(
 
     LOGGER.debug("Affected bundles: %s", affected_bundles)
 
-    return {
-        "affected_bundles": [f"{x}/{y}" for x, y in affected_bundles.union],
-        "added_bundles": [f"{x}/{y}" for x, y in affected_bundles.added],
-        "modified_bundles": [f"{x}/{y}" for x, y in affected_bundles.modified],
-        "deleted_bundles": [f"{x}/{y}" for x, y in affected_bundles.deleted],
-    }
+    return affected_bundles
 
 
 def detect_changed_catalog_operators(
     head_repo: OperatorRepo,
     base_repo: OperatorRepo,
     all_affected_catalog_operators: dict[str, set[Optional[str]]],
-) -> dict[str, list[str]]:
+) -> AffectedCatalogOperatorCollection:
     """
     Given two snapshots of an operator repository returns a dictionary
     of changed catalog operators
@@ -440,7 +288,7 @@ def detect_changed_catalog_operators(
         all_affected_bundles (dict[str, set[Optional[str]]]): A dictionary mapping catalogs
 
     Returns:
-        dict[str, list[str]]: A dictionary with added, modified and deleted
+        AffectedCatalogOperatorCollection: An object with added, modified and deleted
         catalog operators
     """
     affected_catalog_operators = AffectedCatalogOperatorCollection()
@@ -483,30 +331,14 @@ def detect_changed_catalog_operators(
     }
     LOGGER.debug("Affected catalog operators: %s", affected_catalog_operators)
 
-    return {
-        "affected_catalog_operators": [
-            f"{x}/{y}" for x, y in affected_catalog_operators.union
-        ],
-        "added_catalog_operators": [
-            f"{x}/{y}" for x, y in affected_catalog_operators.added
-        ],
-        "modified_catalog_operators": [
-            f"{x}/{y}" for x, y in affected_catalog_operators.modified
-        ],
-        "deleted_catalog_operators": [
-            f"{x}/{y}" for x, y in affected_catalog_operators.deleted
-        ],
-        "catalogs_with_added_or_modified_operators": list(
-            affected_catalog_operators.catalogs_with_added_or_modified_operators
-        ),
-    }
+    return affected_catalog_operators
 
 
 def detect_changed_catalogs(
     head_repo: OperatorRepo,
     base_repo: OperatorRepo,
     all_affected_catalog_operators: dict[str, set[Optional[str]]],
-) -> dict[str, list[str]]:
+) -> AffectedCatalogCollection:
     """
     Given two snapshots of an operator repository returns a dictionary
     of changed catalogs
@@ -517,7 +349,7 @@ def detect_changed_catalogs(
         all_affected_bundles (dict[str, set[Optional[str]]]): A dictionary mapping catalogs
 
     Returns:
-        dict[str, list[str]]: A dictionary with added, modified and deleted
+        AffectedCatalogCollection: An object with added, modified and deleted
         catalogs
     """
     affected_catalogs = AffectedCatalogCollection()
@@ -540,20 +372,12 @@ def detect_changed_catalogs(
     }
 
     LOGGER.debug("Affected catalogs: %s", affected_catalogs)
-    return {
-        "affected_catalogs": list(affected_catalogs.union),
-        "added_catalogs": list(affected_catalogs.added),
-        "modified_catalogs": list(affected_catalogs.modified),
-        "deleted_catalogs": list(affected_catalogs.deleted),
-        "added_or_modified_catalogs": list(
-            affected_catalogs.added | affected_catalogs.modified
-        ),
-    }
+    return affected_catalogs
 
 
 def detect_changes(
     head_repo: OperatorRepo, base_repo: OperatorRepo, pr_url: str
-) -> dict[str, list[str]]:
+) -> ParserResults:
     """
     Detect changes in the operator repository and return a dictionary containing
     categories of changes on catalog, operator, bundle and
@@ -585,15 +409,15 @@ def detect_changes(
         head_repo, base_repo, all_affected_catalog_operators
     )
 
-    result = {
-        **operators,
-        **bundles,
-        **catalogs,
-        **catalog_operators,
-        "extra_files": list(non_operator_files),
-    }
+    parsed_results = ParserResults(
+        affected_operators=operators,
+        affected_bundles=bundles,
+        affected_catalogs=catalogs,
+        affected_catalog_operators=catalog_operators,
+        extra_files=non_operator_files,
+    )
 
-    return result
+    return parsed_results
 
 
 def main() -> None:
@@ -617,16 +441,13 @@ def main() -> None:
     result = detect_changes(head_repo, base_repo, args.pr_url)
 
     # raise exception if the result is invalid
-    _validate_result(result)
-
-    # calculate additional result fields
-    result = _update_result(result)
+    ParserRules(result, head_repo, base_repo).validate()
 
     if args.output_file:
         with args.output_file.open(mode="w", encoding="utf-8") as output_file:
-            json.dump(result, output_file)
+            json.dump(result.to_dict(), output_file)
     else:
-        print(json.dumps(result))
+        print(json.dumps(result.to_dict(), indent=2))
 
 
 if __name__ == "__main__":  # pragma: no cover
