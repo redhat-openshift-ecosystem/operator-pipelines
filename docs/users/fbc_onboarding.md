@@ -30,6 +30,10 @@ wget https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipel
 Now we can convert existing operator into FBC. The initial run takes a while because
 a local cache is generated during a run.
 
+> [!NOTE]
+> A user executing the conversion script needs to be authenticated to registries used by OLM catalog.
+> Use `podman login` to log in into all registries.
+
 To convert existing operator to `FBC` format you need to execute following command:
 
 ```bash
@@ -41,7 +45,11 @@ $ make fbc-onboarding
 ...
 ```
 
-The Makefile will execute the following steps:
+> [!IMPORTANT]
+> In case an operator isn't shipped to all OCP catalog versions manually update `OCP_VERSIONS`
+> variable in the `Makefile` and include only versions supported by an operator.
+
+The Makefile will execute following steps:
  - Download dependencies needed for the migration (opm, fbc-onboarding CLI)
  - Fetch a list of currently supported OCP catalogs
  - Transform existing catalogs into a basic template
