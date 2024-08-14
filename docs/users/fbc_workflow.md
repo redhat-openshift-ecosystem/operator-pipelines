@@ -56,6 +56,11 @@ The right place for the Makefile is in the operator's root directory
 ```
 
 You can modify the Makefile based on your needs and use it to generate catalogs by running `make catalog`.
+
+> [!IMPORTANT]
+> In case an operator isn't shipped to all OCP catalog versions manually update `OCP_VERSIONS`
+> variable in the `Makefile` and include only versions supported by an operator.
+
 The command uses the `opm` and converts templates into catalogs. The generated catalogs
 can be submitted as a PR in Github and once the PR is processed changes will be released to the
 OCP index.

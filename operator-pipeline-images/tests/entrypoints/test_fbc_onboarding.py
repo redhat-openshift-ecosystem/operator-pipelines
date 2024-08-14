@@ -134,12 +134,30 @@ def test_generate_and_save_base_templates(
     mock_yaml_load: MagicMock, mock_yaml_dump: MagicMock, mock_template: MagicMock
 ) -> None:
     mock_yaml_load.return_value = []
+    mock_template.return_value = [{}]
+
+    with mock.patch("builtins.open", mock.mock_open()) as mock_open:
+        resp = fbc_onboarding.generate_and_save_base_templates(
+            "v1", "img", "/tmp", "/tmp"
+        )
+
+        mock_yaml_dump.assert_called_once()
+        assert resp == mock_template.return_value
+
+
+@patch("operatorcert.entrypoints.fbc_onboarding.get_base_template_from_catalog")
+@patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump_all")
+@patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_load_all")
+def test_generate_and_save_base_templates_no_content(
+    mock_yaml_load: MagicMock, mock_yaml_dump: MagicMock, mock_template: MagicMock
+) -> None:
+    mock_yaml_load.return_value = []
     mock_template.return_value = []
 
     with mock.patch("builtins.open", mock.mock_open()) as mock_open:
         fbc_onboarding.generate_and_save_base_templates("v1", "img", "/tmp", "/tmp")
 
-        mock_yaml_dump.assert_called_once()
+        mock_yaml_dump.assert_not_called()
 
 
 @patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump")

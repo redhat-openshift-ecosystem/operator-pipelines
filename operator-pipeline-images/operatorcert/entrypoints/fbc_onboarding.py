@@ -182,7 +182,7 @@ def create_catalog_template_dir_if_not_exists(operator: Any) -> str:
 
 def generate_and_save_base_templates(
     version: str, operator_name: str, cache_dir: str, template_dir: str
-) -> None:
+) -> List[Any]:
     """
     Generate and save basic templates for a given operator and version
 
@@ -191,16 +191,25 @@ def generate_and_save_base_templates(
         operator_name (str): Operator name
         cache_dir (str): A directory where the catalog cache is stored
         template_dir (str): A directory where the templates will be stored
+
+    Returns:
+        List[Any]: List of basic template items for a given operator
     """
     with open(os.path.join(cache_dir, f"{version}.yaml"), "r", encoding="utf8") as f:
         catalog = yaml.safe_load_all(f)
         basic_template = get_base_template_from_catalog(operator_name, catalog)
+    if not basic_template:
+        LOGGER.info(
+            "An operator %s not found in the catalog %s", operator_name, version
+        )
+        return basic_template
 
     template_path = os.path.join(template_dir, f"v{version}.yaml")
     with open(template_path, "w", encoding="utf8") as f:
         yaml.safe_dump_all(basic_template, f, explicit_start=True, indent=2)
 
     LOGGER.info("Template for %s saved to %s", version, template_path)
+    return basic_template
 
 
 def update_operator_config(operator: Operator) -> None:
@@ -288,12 +297,13 @@ def onboard_operator_to_fbc(
         LOGGER.info("Processing catalog: v%s", version)
 
         build_cache(version, image, cache_dir)
-        generate_and_save_base_templates(
+        template = generate_and_save_base_templates(
             version, operator_name, cache_dir, template_dir
         )
-
-        LOGGER.info("Rendering FBC from templates")
-        render_fbc_from_template(operator, version)
+        if template:
+            # Render a catalog only if basic template was generated
+            LOGGER.info("Rendering FBC from templates")
+            render_fbc_from_template(operator, version)
 
     LOGGER.info("Updating operator config")
     update_operator_config(operator)
