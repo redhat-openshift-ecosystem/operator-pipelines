@@ -127,11 +127,12 @@ def build_and_push_catalog_image(
 
         template_path = os.path.join(tmpdir, "template.yaml")
         channel_name = list(bundle.channels)[0] if bundle.channels else "stable"
+        default_channel = bundle.default_channel or channel_name
 
         generate_and_save_basic_template(
             template_path=template_path,
             package=bundle.metadata_operator_name,
-            default_channel=bundle.default_channel,
+            default_channel=default_channel,
             channel_name=channel_name,
             csv_name=bundle.csv["metadata"]["name"],
             bundle_pullspec=bundle_pullspec,
