@@ -46,12 +46,12 @@ RUN dnf update -y && \
 COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 
 # Install oc, opm and operator-sdk CLI
-RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.29.0/linux-${ARCH}-opm && \
+RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.46.0/linux-${ARCH}-opm && \
     chmod +x linux-${ARCH}-opm && \
     mv linux-${ARCH}-opm /usr/local/bin/opm && \
-    curl -LO https://mirror.openshift.com/pub/openshift-v4/${ARCH}/clients/ocp/stable-4.13/openshift-client-linux.tar.gz && \
+    curl -LO https://mirror.openshift.com/pub/openshift-v4/${ARCH}/clients/ocp/stable-4.14/openshift-client-linux.tar.gz && \
     tar xzvf openshift-client-linux.tar.gz -C /usr/local/bin oc && \
-    curl -LO https://github.com/operator-framework/operator-sdk/releases/download/v1.32.0/operator-sdk_linux_${ARCH} && \
+    curl -LO https://github.com/operator-framework/operator-sdk/releases/download/v1.36.1/operator-sdk_linux_${ARCH} && \
     chmod +x operator-sdk_linux_${ARCH} && \
     mv operator-sdk_linux_${ARCH} /usr/local/bin/operator-sdk
 
@@ -67,7 +67,7 @@ WORKDIR /home/user
 COPY ./operator-pipeline-images ./operator-pipeline-images
 
 # install PDM
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && pip3 install --no-cache-dir pdm
+RUN pip3 install --no-cache-dir pdm
 # install dependencies in virtual environment
 COPY ./pdm.lock ./pyproject.toml ./README.md ./
 RUN pdm venv create 3.11 && pdm install --no-lock --no-editable \

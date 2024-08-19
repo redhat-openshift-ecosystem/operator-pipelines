@@ -25,7 +25,7 @@ OPERATOR_CATALOG_TEMPLATE_DIR = ${PDW}/catalog-templates
 
 # A list of OCP versions to generate catalogs for
 # This list can be customized to include the versions that are relevant to the operator
-# DO NOT change this line (except for the versions) if you want to take advantage 
+# DO NOT change this line (except for the versions) if you want to take advantage
 # of the automated catalog promotion
 OCP_VERSIONS=$(shell echo "v4.12 v4.13 v4.14 v4.15 v4.16" )
 
@@ -95,7 +95,7 @@ OS=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(shell uname -m | sed 's/x86_64/amd64/')
 
 # Automatically download the opm binary
-OPM_VERSION ?= v1.40.0
+OPM_VERSION ?= v1.46.0
 ${BINDIR}/opm:
 	if [ ! -d ${BINDIR} ]; then mkdir -p ${BINDIR}; fi
 	curl -sLO https://github.com/operator-framework/operator-registry/releases/download/$(OPM_VERSION)/$(OS)-$(ARCH)-opm && chmod +x $(OS)-$(ARCH)-opm && mv $(OS)-$(ARCH)-opm ${BINDIR}/opm
