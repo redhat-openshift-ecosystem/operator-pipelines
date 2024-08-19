@@ -1,0 +1,65 @@
+---
+- name: Create Namespace
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ preflight_invalidation_namespace }}"
+
+- name: Create cert secret
+  no_log: true
+  kubernetes.core.k8s:
+    state: present
+    force: true
+    namespace: "{{ preflight_invalidation_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: operator-pipeline-certs
+        labels:
+          app: operator-pipeline
+      data:
+        pyxis-client.key: "{{ lookup('file', preflight_invalidation_private_key_local_path, rstrip=False) | b64encode }}"
+        pyxis-client.pem: "{{ lookup('file', preflight_invalidation_private_cert_local_path, rstrip=False) | b64encode }}"
+
+- name: Create invalidation CronJob
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ preflight_invalidation_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: CronJob
+      metadata:
+        name: preflight-invalidation-cronjob
+      spec:
+        schedule: "0 9 * * MON"  # At 09:00 on Monday
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: preflight-invalidator
+                    image: "{{ preflight_invalidation_image_pull_spec }}"
+                    args:
+                      - invalidate-preflight-versions
+                      - --pyxis-url
+                      - "{{ pyxis_url }}"
+                    volumeMounts:
+                      - name: operator-pipeline-certs
+                        mountPath: "/etc/pyxis-ssl"
+                    env:
+                      - name: PYXIS_CERT_PATH
+                        value: "/etc/pyxis-ssl/pyxis-client.pem"
+                      - name: PYXIS_KEY_PATH
+                        value: "/etc/pyxis-ssl/pyxis-client.key"
+                restartPolicy: OnFailure
+                volumes:
+                  - name: operator-pipeline-certs
+                    secret:
+                      secretName: operator-pipeline-certs
