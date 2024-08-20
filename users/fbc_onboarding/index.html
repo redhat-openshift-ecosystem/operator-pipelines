@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.31">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.32">
     
     
       
@@ -889,7 +889,7 @@
 
 <h1 id="file-based-catalog-onboarding">File Based Catalog onboarding</h1>
 <blockquote>
-<p><strong>Note</strong>: The FBC support is going to be released at the end of Q2 2024. Until that and until official announcement the steps below are not yet supported.</p>
+<p><strong>Note</strong>: The File Based Catalog support is now in an alpha phase. We welcome any feedback you have for this new feature.</p>
 </blockquote>
 <p>Operators in certified, marketplace, or community repositories are defined in a declarative way.
 This means a user provides all necessary information in advance about the operator bundle and how it
@@ -931,9 +931,8 @@ variable in the <code>Makefile</code> and include only versions supported by an 
 </blockquote>
 <p>The Makefile will execute following steps:
  - Download dependencies needed for the migration (opm, fbc-onboarding CLI)
- - Fetch a list of currently supported OCP catalogs
+ - Fetch a list of currently supported OCP catalogs (this might take a while when doing it for the first time)
  - Transform existing catalogs into a basic template
- - Generate a composite template for an operator
  - Generate an FBC catalog for a given operator
  - Update operator ci.yaml config</p>
 <p>After a script is finished you should see a template and generated fbc in the repository.</p>
@@ -1033,7 +1032,7 @@ More information about catalog templates can be found <a href="https://olm.opera
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      <script src="../../assets/javascripts/bundle.471ce7a9.min.js"></script>
       
     
   </body>
