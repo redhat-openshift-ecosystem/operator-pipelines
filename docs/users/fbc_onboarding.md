@@ -1,6 +1,6 @@
 # File Based Catalog onboarding
 
-> **Note**: The FBC support is going to be released at the end of Q2 2024. Until that and until official announcement the steps below are not yet supported.
+> **Note**: The File Based Catalog support is now in an alpha phase. We welcome any feedback you have for this new feature.
 
 Operators in certified, marketplace, or community repositories are defined in a declarative way.
 This means a user provides all necessary information in advance about the operator bundle and how it
@@ -51,9 +51,8 @@ $ make fbc-onboarding
 
 The Makefile will execute following steps:
  - Download dependencies needed for the migration (opm, fbc-onboarding CLI)
- - Fetch a list of currently supported OCP catalogs
+ - Fetch a list of currently supported OCP catalogs (this might take a while when doing it for the first time)
  - Transform existing catalogs into a basic template
- - Generate a composite template for an operator
  - Generate an FBC catalog for a given operator
  - Update operator ci.yaml config
 
