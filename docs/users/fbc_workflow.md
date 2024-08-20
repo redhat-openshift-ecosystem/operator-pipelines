@@ -1,10 +1,6 @@
 # FBC workflow
 
-The prerequisite for the File Based Catalog workflow is to convert the existing operator
-to FBC format. This can be done by following a [onboarding](./fbc_onboarding.md) documentation.
-
-After an existing operator is onboard or you introduce a brand new operator you can
-start the FBC workflow.
+If you already have an existing non-FBC operator please continue with the [onboarding](./fbc_onboarding.md) documentation to convert it to FBC. Once you have converted your operator, or you want to introduce a brand new operator, you can start with the FBC workflow.
 
 ### FBC operator config
 To indicate the operator is using fbc workflow an operator owner needs to indicate this
