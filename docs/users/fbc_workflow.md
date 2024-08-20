@@ -19,7 +19,7 @@ fbc:
 
 ## FBC templates
 File-based catalog templates serve as a simplified view of a catalog that can be updated
-by the user. The OPM currently supports 3 types of templates and it is up to the user which
+by the user. The OPM currently supports 2 types of templates and it is up to the user which
 template the operator will be using.
 
 * Basic template
@@ -94,6 +94,8 @@ in the catalog yet. To add the bundle to the catalog you need to update catalog 
 and add a bundle pullspec given by pull request comment and open a new pull request with catalog
 changes.
 
+![Release info](../img/release-info.png)
+
 #### SemVer
 For example if I want to add `v1.1.0` bundle into `Fast` channel of a specific catalog I'll
 add it as mentioned in the example below:
@@ -127,7 +129,7 @@ Stable:
   Bundles:
   - Image: quay.io/foo/olm:testoperator.v1.0.0
 ```
-Also see [opm doc](https://olm.operatorframework.io/docs/advanced-tasks/catalog-update-formulary/#fbc)
+Also see [opm doc](https://olm.operatorframework.io/docs/advanced-tasks/catalog-update-formulary/#semver)
 for automate-able step.
 
 #### Basic
@@ -139,29 +141,28 @@ add it as mentioned in the example below.
 
 ```yaml
 ---
-schema: olm.package
-name: example-operator
-defaultChannel: stable
-
----
-schema: olm.channel
-package: example-operator
-name: stable
+schema: olm.template.basic
 entries:
-- name: example-operator.v0.1.0
-- name: example-operator.v0.2.0 # <-- Add bundle into channel
-  replaces: example-operator.v0.1.0
+  - schema: olm.package
+    name: example-operator
+    defaultChannel: stable
 
----
-schema: olm.bundle
-image: docker.io/example/example-operator-bundle:0.1.0
+  - schema: olm.channel
+    package: example-operator
+    name: stable
+    entries:
+      - name: example-operator.v0.1.0
+      - name: example-operator.v0.2.0 # <-- Add bundle into channel
+        replaces: example-operator.v0.1.0
 
----
-schema: olm.bundle # <-- Add new bundle entry
-image: docker.io/example-operator-bundle:0.2.0
+  - schema: olm.bundle
+    image: docker.io/example/example-operator-bundle:0.1.0
+
+  - schema: olm.bundle # <-- Add new bundle entry
+    image: docker.io/example-operator-bundle:0.2.0
 ```
 
-Also see [opm doc](https://olm.operatorframework.io/docs/advanced-tasks/catalog-update-formulary/#semver)
+Also see [opm doc](https://olm.operatorframework.io/docs/advanced-tasks/catalog-update-formulary/#fbc)
 for automate-able step.
 
 ### Updating existing catalogs

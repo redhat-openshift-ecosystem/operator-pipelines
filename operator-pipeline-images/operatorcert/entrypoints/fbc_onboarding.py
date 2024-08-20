@@ -4,7 +4,7 @@ import argparse
 import logging
 import os
 import sys
-from typing import Any, List
+from typing import Any, Dict, Optional
 
 import requests
 import yaml
@@ -118,7 +118,9 @@ def build_cache(version: str, image: str, cache_dir: str) -> None:
         f.write(catalog)
 
 
-def get_base_template_from_catalog(operator_name: str, catalog: Any) -> List[Any]:
+def get_base_template_from_catalog(
+    operator_name: str, catalog: Any
+) -> Optional[Dict[str, Any]]:
     """
     Generate a basic template from file based catalog. The function filters
     out operator from a catalog and removes unnecessary fields and
@@ -129,33 +131,30 @@ def get_base_template_from_catalog(operator_name: str, catalog: Any) -> List[Any
         catalog (Any): A file based catalog with all operators
 
     Returns:
-        List[Any]: List of basic template items for a given operator
+        Optional[Dict[str, Any]]: A basic template for the operator.
+        In case an operator is not present in a catalog, None is returned
     """
     # Filter out the operator items from the catalog
     # Items can be identified by the name or package field
-    operator_items = list(
-        filter(
-            lambda x: x.get("name") == operator_name
-            or x.get("package") == operator_name,
-            catalog,
-        )
+    operator_items = (
+        item
+        for item in catalog
+        if item.get("name") == operator_name or item.get("package") == operator_name
     )
 
-    # Keep only the non-bundle items - packages, channels, etc.
-    non_bundles = list(
-        filter(lambda x: x.get("schema") != "olm.bundle", operator_items)
-    )
+    entries = []
 
-    bundles = list(filter(lambda x: x.get("schema") == "olm.bundle", operator_items))
-
-    # Keep only image and schema fields - rest can be extracted from the image
-    # when rendering the template
-    bundles = [
-        {"schema": bundle.get("schema"), "image": bundle.get("image")}
-        for bundle in bundles
-    ]
-
-    return non_bundles + bundles
+    for item in operator_items:
+        if item.get("schema") == "olm.bundle":
+            # Keep only image and schema fields - rest can be extracted from the image
+            # when rendering the template
+            entries.append({"schema": item["schema"], "image": item["image"]})
+        else:
+            # Keep only the non-bundle items - packages, channels, etc.
+            entries.append(item)
+    if not entries:
+        return None
+    return {"schema": "olm.template.basic", "entries": entries}
 
 
 def create_catalog_template_dir_if_not_exists(operator: Any) -> str:
@@ -182,7 +181,7 @@ def create_catalog_template_dir_if_not_exists(operator: Any) -> str:
 
 def generate_and_save_base_templates(
     version: str, operator_name: str, cache_dir: str, template_dir: str
-) -> List[Any]:
+) -> Optional[Dict[str, Any]]:
     """
     Generate and save basic templates for a given operator and version
 
@@ -193,7 +192,8 @@ def generate_and_save_base_templates(
         template_dir (str): A directory where the templates will be stored
 
     Returns:
-        List[Any]: List of basic template items for a given operator
+        Optional[Dict[str, Any]]: A basic template for the operator.
+        In case an operator is not present in a catalog, None is returned
     """
     with open(os.path.join(cache_dir, f"{version}.yaml"), "r", encoding="utf8") as f:
         catalog = yaml.safe_load_all(f)
@@ -206,7 +206,7 @@ def generate_and_save_base_templates(
 
     template_path = os.path.join(template_dir, f"v{version}.yaml")
     with open(template_path, "w", encoding="utf8") as f:
-        yaml.safe_dump_all(basic_template, f, explicit_start=True, indent=2)
+        yaml.safe_dump(basic_template, f, explicit_start=True, indent=2)
 
     LOGGER.info("Template for %s saved to %s", version, template_path)
     return basic_template
@@ -282,8 +282,9 @@ def onboard_operator_to_fbc(
     """
     organization = repository.config.get("organization")
     supported_catalogs = get_supported_catalogs(organization, stage)
-    supported_versions = [catalog.get("ocp_version") for catalog in supported_catalogs]
-
+    supported_versions = sorted(
+        [catalog.get("ocp_version") for catalog in supported_catalogs]
+    )
     LOGGER.info(
         "Generating FBC templates for following versions: %s", supported_versions
     )

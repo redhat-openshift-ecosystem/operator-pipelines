@@ -100,10 +100,16 @@ def test_get_base_template_from_catalog() -> None:
 
     result = fbc_onboarding.get_base_template_from_catalog("pkg1", catalog)
 
-    assert result == [
-        {"package": "pkg1", "schema": "olm.channel"},
-        {"schema": "olm.bundle", "image": "img1"},
-    ]
+    assert result == {
+        "schema": "olm.template.basic",
+        "entries": [
+            {"schema": "olm.bundle", "image": "img1"},
+            {"package": "pkg1", "schema": "olm.channel"},
+        ],
+    }
+
+    result = fbc_onboarding.get_base_template_from_catalog("pkg3", catalog)
+    assert result is None
 
 
 @patch("builtins.input")
@@ -128,13 +134,13 @@ def test_create_catalog_template_dir_if_not_exists(
 
 
 @patch("operatorcert.entrypoints.fbc_onboarding.get_base_template_from_catalog")
-@patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump_all")
+@patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump")
 @patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_load_all")
 def test_generate_and_save_base_templates(
     mock_yaml_load: MagicMock, mock_yaml_dump: MagicMock, mock_template: MagicMock
 ) -> None:
     mock_yaml_load.return_value = []
-    mock_template.return_value = [{}]
+    mock_template.return_value = {"schema": "olm.template.basic"}
 
     with mock.patch("builtins.open", mock.mock_open()) as mock_open:
         resp = fbc_onboarding.generate_and_save_base_templates(
@@ -146,7 +152,7 @@ def test_generate_and_save_base_templates(
 
 
 @patch("operatorcert.entrypoints.fbc_onboarding.get_base_template_from_catalog")
-@patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump_all")
+@patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump")
 @patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_load_all")
 def test_generate_and_save_base_templates_no_content(
     mock_yaml_load: MagicMock, mock_yaml_dump: MagicMock, mock_template: MagicMock

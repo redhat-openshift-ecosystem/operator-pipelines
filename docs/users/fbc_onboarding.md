@@ -30,7 +30,7 @@ wget https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipel
 Now we can convert existing operator into FBC. The initial run takes a while because
 a local cache is generated during a run.
 
-> [!NOTE]
+> **Note**
 > A user executing the conversion script needs to be authenticated to registries used by OLM catalog.
 > Use `podman login` to log in into all registries.
 
@@ -50,10 +50,10 @@ $ make fbc-onboarding
 > variable in the `Makefile` and include only versions supported by an operator.
 
 The Makefile will execute following steps:
+
  - Download dependencies needed for the migration (opm, fbc-onboarding CLI)
  - Fetch a list of currently supported OCP catalogs
  - Transform existing catalogs into a basic template
- - Generate a composite template for an operator
  - Generate an FBC catalog for a given operator
  - Update operator ci.yaml config
 
@@ -98,7 +98,7 @@ catalogs
 Artifacts generated in the previous step need to be added to a git and submitted via pull request. The operator pipeline validates the content of the catalogs and releases changes into ocp catalogs.
 
 ```bash
-$ git add operators/aqua/{catalog-templates,ci.yaml}
+$ git add operators/aqua/{catalog-templates,ci.yaml,Makefile}
 
 $ git add catalogs/{v4.12,v4.13,v4.14,v4.15,v4.16}/aqua
 
