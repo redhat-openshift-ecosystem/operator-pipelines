@@ -947,7 +947,7 @@ fbc:
 </code></pre>
 <h2 id="fbc-templates">FBC templates</h2>
 <p>File-based catalog templates serve as a simplified view of a catalog that can be updated
-by the user. The OPM currently supports 3 types of templates and it is up to the user which
+by the user. The OPM currently supports 2 types of templates and it is up to the user which
 template the operator will be using.</p>
 <ul>
 <li>Basic template</li>
@@ -1010,6 +1010,7 @@ tests, and releases the bundle into the registry. At this point, the operator is
 in the catalog yet. To add the bundle to the catalog you need to update catalog templates
 and add a bundle pullspec given by pull request comment and open a new pull request with catalog
 changes.</p>
+<p><img alt="Release info" src="../../img/release-info.png" /></p>
 <h4 id="semver">SemVer</h4>
 <p>For example if I want to add <code>v1.1.0</code> bundle into <code>Fast</code> channel of a specific catalog I'll
 add it as mentioned in the example below:</p>
@@ -1041,7 +1042,7 @@ Stable:
   Bundles:
   - Image: quay.io/foo/olm:testoperator.v1.0.0
 </code></pre>
-<p>Also see <a href="https://olm.operatorframework.io/docs/advanced-tasks/catalog-update-formulary/#fbc">opm doc</a>
+<p>Also see <a href="https://olm.operatorframework.io/docs/advanced-tasks/catalog-update-formulary/#semver">opm doc</a>
 for automate-able step.</p>
 <h4 id="basic">Basic</h4>
 <p>For example, if I want to add <code>v0.2.0</code> bundle into <code>stable</code> channel of specific catalog I'll
@@ -1051,28 +1052,27 @@ add it as mentioned in the example below.</p>
 <li>Add bundle into the <code>stable</code> channel</li>
 </ol>
 <pre><code class="language-yaml">---
-schema: olm.package
-name: example-operator
-defaultChannel: stable
-
----
-schema: olm.channel
-package: example-operator
-name: stable
+schema: olm.template.basic
 entries:
-- name: example-operator.v0.1.0
-- name: example-operator.v0.2.0 # &lt;-- Add bundle into channel
-  replaces: example-operator.v0.1.0
+  - schema: olm.package
+    name: example-operator
+    defaultChannel: stable
 
----
-schema: olm.bundle
-image: docker.io/example/example-operator-bundle:0.1.0
+  - schema: olm.channel
+    package: example-operator
+    name: stable
+    entries:
+      - name: example-operator.v0.1.0
+      - name: example-operator.v0.2.0 # &lt;-- Add bundle into channel
+        replaces: example-operator.v0.1.0
 
----
-schema: olm.bundle # &lt;-- Add new bundle entry
-image: docker.io/example-operator-bundle:0.2.0
+  - schema: olm.bundle
+    image: docker.io/example/example-operator-bundle:0.1.0
+
+  - schema: olm.bundle # &lt;-- Add new bundle entry
+    image: docker.io/example-operator-bundle:0.2.0
 </code></pre>
-<p>Also see <a href="https://olm.operatorframework.io/docs/advanced-tasks/catalog-update-formulary/#semver">opm doc</a>
+<p>Also see <a href="https://olm.operatorframework.io/docs/advanced-tasks/catalog-update-formulary/#fbc">opm doc</a>
 for automate-able step.</p>
 <h3 id="updating-existing-catalogs">Updating existing catalogs</h3>
 <p>A great benefit of FBC is that users can update operator update graphs independently
