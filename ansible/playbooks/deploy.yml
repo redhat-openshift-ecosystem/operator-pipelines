@@ -6,8 +6,6 @@
     - ../vaults/{{ env }}/ocp-token.yml
   roles:
     - operator-pipeline
-    - role: preflight-invalidation
-      when: env == 'prod' or env == 'stage'
   environment:
     K8S_AUTH_API_KEY: '{{ ocp_token }}'
     K8S_AUTH_HOST: '{{ ocp_host }}'
