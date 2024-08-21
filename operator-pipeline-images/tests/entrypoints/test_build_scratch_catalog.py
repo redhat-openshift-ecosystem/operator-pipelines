@@ -10,8 +10,8 @@ def test_setup_argparser() -> None:
     assert build_scratch_catalog.setup_argparser() is not None
 
 
-@patch("operatorcert.entrypoints.build_scratch_catalog.yaml.safe_dump_all")
-def test_generate_and_save_basic_template(mock_yaml_dump_all: MagicMock) -> None:
+@patch("operatorcert.entrypoints.build_scratch_catalog.yaml.safe_dump")
+def test_generate_and_save_basic_template(mock_yaml_dump: MagicMock) -> None:
     with patch(
         "operatorcert.entrypoints.build_scratch_catalog.open", mock.mock_open()
     ) as mock_open:
@@ -37,10 +37,14 @@ def test_generate_and_save_basic_template(mock_yaml_dump_all: MagicMock) -> None
     }
 
     bundles = {"schema": "olm.bundle", "image": "bundle_pullspec"}
+    template = {
+        "schema": "olm.template.basic",
+        "entries": [package_obj, channel, bundles],
+    }
 
     mock_open.assert_called_once_with("template.yaml", "w", encoding="utf-8")
-    mock_yaml_dump_all.assert_called_once_with(
-        [package_obj, channel, bundles],
+    mock_yaml_dump.assert_called_once_with(
+        template,
         mock_open.return_value,
         explicit_start=True,
         indent=2,
