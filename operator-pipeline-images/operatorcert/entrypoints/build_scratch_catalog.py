@@ -89,10 +89,14 @@ def generate_and_save_basic_template(  # pylint: disable=too-many-arguments
     }
 
     bundles = {"schema": "olm.bundle", "image": bundle_pullspec}
+    template = {
+        "schema": "olm.template.basic",
+        "entries": [package_obj, channel, bundles],
+    }
 
     with open(template_path, "w", encoding="utf-8") as f:
-        yaml.safe_dump_all(
-            [package_obj, channel, bundles],
+        yaml.safe_dump(
+            template,
             f,
             explicit_start=True,
             indent=2,
