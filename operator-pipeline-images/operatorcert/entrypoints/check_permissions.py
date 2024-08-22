@@ -368,8 +368,20 @@ def check_permissions(
     with open(args.changes_file, "r", encoding="utf8") as f:
         changes = json.load(f)
 
-    affected_operators = changes.get("affected_operators", [])
-    operators = {head_repo.operator(operator) for operator in affected_operators}
+    # Get added and modified operators from head repo
+    added_or_updated_operators = changes.get("added_operators", [])
+    added_or_updated_operators.extend(changes.get("modified_operators", []))
+    operators = {
+        head_repo.operator(operator) for operator in added_or_updated_operators
+    }
+
+    # Get deleted operators from base repo
+    operators = operators.union(
+        {
+            base_repo.operator(operator)
+            for operator in changes.get("deleted_operators", [])
+        }
+    )
 
     # In this step we need to map the affected catalog operators to the actual
     # operators. This needs to be done because the permission and reviewers

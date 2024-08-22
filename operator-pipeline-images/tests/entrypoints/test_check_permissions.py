@@ -326,19 +326,25 @@ def test_check_permissions(
     head_repo = MagicMock()
 
     mock_json_load.return_value = {
-        "affected_operators": ["operator1", "operator2"],
-        "added_catalog_operators": ["c1/operator3"],
-        "modified_catalog_operators": ["c2/operator4"],
-        "removed_catalog_operators": ["c3/operator5"],
+        "added_operators": ["operator1"],
+        "modified_operators": ["operator2"],
+        "deleted_operators": ["operator3"],
+        "added_catalog_operators": ["c1/operator4"],
+        "modified_catalog_operators": ["c2/operator5"],
+        "removed_catalog_operators": ["c3/operator6"],
     }
     head_repo.operator.side_effect = [
         MagicMock(name="operator1"),
         MagicMock(name="operator2"),
     ]
-    base_repo.operator.side_effect = [MagicMock(name="operator5")]
+    base_repo.operator.side_effect = [
+        MagicMock(name="operator3"),
+        MagicMock(name="operator6"),
+    ]
     mock_review.return_value.check_permissions.side_effect = [
         False,
         check_permissions.MaintainersReviewNeeded("error"),
+        True,
         True,
         True,
         True,
@@ -346,13 +352,13 @@ def test_check_permissions(
     mock_catalog_operators.side_effect = [
         set(
             [
-                MagicMock(name="operator3"),
                 MagicMock(name="operator4"),
+                MagicMock(name="operator5"),
             ]
         ),
         set(
             [
-                MagicMock(name="operator5"),
+                MagicMock(name="operator6"),
             ]
         ),
     ]
@@ -361,10 +367,11 @@ def test_check_permissions(
     assert not result
 
     head_repo.operator.assert_has_calls([call("operator1"), call("operator2")])
+    base_repo.operator.assert_has_calls([call("operator3")])
     mock_catalog_operators.assert_has_calls(
         [
-            call(head_repo, ["c1/operator3", "c2/operator4"]),
-            call(base_repo, ["c3/operator5"]),
+            call(head_repo, ["c1/operator4", "c2/operator5"]),
+            call(base_repo, ["c3/operator6"]),
         ]
     )
 
