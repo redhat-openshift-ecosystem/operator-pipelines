@@ -22,6 +22,8 @@ from operatorcert.parsed_file import (
 @pytest.mark.parametrize(
     # The tar file contains an operator repository with the following
     # commits (last to first):
+    # 8a40093 Add catalog template to operator-e2e
+    # 244d87b Add invalid catalog file
     # 1ca2aa1 Delete 4.15 catalog
     # 8500957 Remove operator-2 from v4.15
     # ff7cdcd Update operator-1 in 4.15 catalog
@@ -40,92 +42,51 @@ from operatorcert.parsed_file import (
     # db1a066 Empty repo
     "head_commit, base_commit, expected",
     [
-        (
+        pytest.param(
             "6a75661",
             # Add operator-e2e/0.0.100
             # Empty repo
             "db1a066",
             {
-                "extra_files": [],
                 "affected_operators": ["operator-e2e"],
                 "added_operators": ["operator-e2e"],
-                "modified_operators": [],
-                "deleted_operators": [],
                 "affected_bundles": ["operator-e2e/0.0.100"],
                 "added_bundles": ["operator-e2e/0.0.100"],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "added_or_modified_catalogs": [],
-                "deleted_catalogs": [],
-                "catalogs_with_added_or_modified_operators": [],
             },
+            id="Add new bundle for new operator",
         ),
-        (
+        pytest.param(
             "32e0f85",
             # Add operator-e2e/0.0.101
             # Add operator-e2e/0.0.100
             "6a75661",
             {
-                "extra_files": [],
                 "affected_operators": ["operator-e2e"],
-                "added_operators": [],
                 "modified_operators": ["operator-e2e"],
-                "deleted_operators": [],
                 "affected_bundles": ["operator-e2e/0.0.101"],
                 "added_bundles": ["operator-e2e/0.0.101"],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "added_or_modified_catalogs": [],
-                "deleted_catalogs": [],
-                "catalogs_with_added_or_modified_operators": [],
             },
+            id="Add new bundle for existing operator",
         ),
-        (
+        pytest.param(
             "6626c9a",
             # Add operator-clone-e2e/0.0.100
             # Add operator-e2e/0.0.101
             # Add operator-e2e/0.0.100
             "6a75661",
             {
-                "extra_files": [],
                 "affected_operators": ["operator-e2e", "operator-clone-e2e"],
                 "added_operators": ["operator-clone-e2e"],
                 "modified_operators": ["operator-e2e"],
-                "deleted_operators": [],
                 "affected_bundles": [
                     "operator-e2e/0.0.101",
                     "operator-clone-e2e/0.0.100",
                 ],
                 "added_bundles": ["operator-e2e/0.0.101", "operator-clone-e2e/0.0.100"],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "added_or_modified_catalogs": [],
-                "deleted_catalogs": [],
-                "catalogs_with_added_or_modified_operators": [],
             },
+            id="Add bundles for multiple operators",
         ),
-        (
+        pytest.param(
             "2d55a2e",
             # Add extra files
             # Modify operator-e2e/0.0.101
@@ -135,32 +96,19 @@ from operatorcert.parsed_file import (
             {
                 "extra_files": ["empty.txt", "operators/empty.txt"],
                 "affected_operators": ["operator-e2e", "operator-clone-e2e"],
-                "added_operators": [],
                 "modified_operators": ["operator-e2e", "operator-clone-e2e"],
-                "deleted_operators": [],
                 "affected_bundles": [
                     "operator-e2e/0.0.101",
                     "operator-clone-e2e/0.0.100",
                 ],
-                "added_bundles": [],
                 "modified_bundles": [
                     "operator-e2e/0.0.101",
                     "operator-clone-e2e/0.0.100",
                 ],
-                "deleted_bundles": [],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "added_or_modified_catalogs": [],
-                "deleted_catalogs": [],
-                "catalogs_with_added_or_modified_operators": [],
             },
+            id="Modify bundles for multiple operators and add extra files",
         ),
-        (
+        pytest.param(
             "2c06647",
             # Remove extra files
             # Remove operator-e2e/0.0.101
@@ -169,254 +117,142 @@ from operatorcert.parsed_file import (
             {
                 "extra_files": ["empty.txt", "operators/empty.txt"],
                 "affected_operators": ["operator-e2e"],
-                "added_operators": [],
                 "modified_operators": ["operator-e2e"],
-                "deleted_operators": [],
                 "affected_bundles": ["operator-e2e/0.0.101"],
-                "added_bundles": [],
-                "modified_bundles": [],
                 "deleted_bundles": ["operator-e2e/0.0.101"],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "added_or_modified_catalogs": [],
-                "deleted_catalogs": [],
-                "catalogs_with_added_or_modified_operators": [],
             },
+            id="Delete a bundle and remove extra files",
         ),
-        (
+        pytest.param(
             "a5501e2",
             # Add ci.yaml to operator-clone-e2e
             # Remove extra files
             "2c06647",
             {
-                "extra_files": [],
                 "affected_operators": ["operator-clone-e2e"],
-                "added_operators": [],
                 "modified_operators": ["operator-clone-e2e"],
-                "deleted_operators": [],
-                "affected_bundles": [],
-                "added_bundles": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "added_or_modified_catalogs": [],
-                "deleted_catalogs": [],
-                "catalogs_with_added_or_modified_operators": [],
             },
+            id="Add ci.yaml to an operator",
         ),
-        (
+        pytest.param(
             "2e9eae2",
             # Remove operator-clone-e2e
             # Add ci.yaml to operator-clone-e2e
             "a5501e2",
             {
-                "extra_files": [],
                 "affected_operators": ["operator-clone-e2e"],
-                "added_operators": [],
-                "modified_operators": [],
                 "deleted_operators": ["operator-clone-e2e"],
                 "affected_bundles": ["operator-clone-e2e/0.0.100"],
-                "added_bundles": [],
-                "modified_bundles": [],
                 "deleted_bundles": ["operator-clone-e2e/0.0.100"],
-                "affected_catalog_operators": [],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
-                "affected_catalogs": [],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "added_or_modified_catalogs": [],
-                "deleted_catalogs": [],
-                "catalogs_with_added_or_modified_operators": [],
             },
+            id="Delete an operator",
         ),
-        (
+        pytest.param(
             "c8d3509f",
             # Add v4.15/operator-1
             "2e9eae2",
             {
-                "extra_files": [],
-                "affected_operators": [],
-                "added_operators": [],
-                "modified_operators": [],
-                "deleted_operators": [],
-                "affected_bundles": [],
-                "added_bundles": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
                 "affected_catalog_operators": ["v4.15/operator-1"],
                 "added_catalog_operators": ["v4.15/operator-1"],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
                 "affected_catalogs": ["v4.15"],
                 "added_catalogs": ["v4.15"],
-                "modified_catalogs": [],
                 "added_or_modified_catalogs": ["v4.15"],
-                "deleted_catalogs": [],
                 "catalogs_with_added_or_modified_operators": ["v4.15"],
             },
+            id="Add new catalog with new operator",
         ),
-        (
+        pytest.param(
             "4db21de1",
             # Add v4.15/operator-2
             "c8d3509f",
             {
-                "extra_files": [],
-                "affected_operators": [],
-                "added_operators": [],
-                "modified_operators": [],
-                "deleted_operators": [],
-                "affected_bundles": [],
-                "added_bundles": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
                 "affected_catalog_operators": ["v4.15/operator-2"],
                 "added_catalog_operators": ["v4.15/operator-2"],
-                "modified_catalog_operators": [],
-                "deleted_catalog_operators": [],
                 "affected_catalogs": ["v4.15"],
-                "added_catalogs": [],
                 "modified_catalogs": ["v4.15"],
                 "added_or_modified_catalogs": ["v4.15"],
-                "deleted_catalogs": [],
                 "catalogs_with_added_or_modified_operators": ["v4.15"],
             },
+            id="Add new operator to existing catalog",
         ),
-        (
+        pytest.param(
             "ff7cdcd6",
             # Modify v4.15/operator-1
             "4db21de1",
             {
-                "extra_files": [],
-                "affected_operators": [],
-                "added_operators": [],
-                "modified_operators": [],
-                "deleted_operators": [],
-                "affected_bundles": [],
-                "added_bundles": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
                 "affected_catalog_operators": ["v4.15/operator-1"],
-                "added_catalog_operators": [],
                 "modified_catalog_operators": ["v4.15/operator-1"],
-                "deleted_catalog_operators": [],
                 "affected_catalogs": ["v4.15"],
-                "added_catalogs": [],
                 "modified_catalogs": ["v4.15"],
                 "added_or_modified_catalogs": ["v4.15"],
-                "deleted_catalogs": [],
                 "catalogs_with_added_or_modified_operators": ["v4.15"],
             },
+            id="Modify operator in existing catalog",
         ),
-        (
+        pytest.param(
             "85009570",
             # Delete v4.15/operator-2
             "ff7cdcd6",
             {
-                "extra_files": [],
-                "affected_operators": [],
-                "added_operators": [],
-                "modified_operators": [],
-                "deleted_operators": [],
-                "affected_bundles": [],
-                "added_bundles": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
                 "affected_catalog_operators": ["v4.15/operator-2"],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
                 "deleted_catalog_operators": ["v4.15/operator-2"],
                 "affected_catalogs": ["v4.15"],
-                "added_catalogs": [],
                 "modified_catalogs": ["v4.15"],
                 "added_or_modified_catalogs": ["v4.15"],
-                "deleted_catalogs": [],
-                "catalogs_with_added_or_modified_operators": [],
             },
+            id="Delete operator in existing catalog",
         ),
-        (
+        pytest.param(
             "1ca2aa12",
             # Delete v4.15 catalog
             "85009570",
             {
-                "extra_files": [],
-                "affected_operators": [],
-                "added_operators": [],
-                "modified_operators": [],
-                "deleted_operators": [],
-                "affected_bundles": [],
-                "added_bundles": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
                 "affected_catalog_operators": ["v4.15/operator-1"],
-                "added_catalog_operators": [],
-                "modified_catalog_operators": [],
                 "deleted_catalog_operators": ["v4.15/operator-1"],
                 "affected_catalogs": ["v4.15"],
-                "added_catalogs": [],
-                "modified_catalogs": [],
-                "added_or_modified_catalogs": [],
                 "deleted_catalogs": ["v4.15"],
-                "catalogs_with_added_or_modified_operators": [],
             },
+            id="Delete catalog",
         ),
-        (
+        pytest.param(
             "ff7cdcd",
             # Modify v4.15/operator-1
             # Add v4.15/operator-2
-            # Empty repo
             "c8d3509",
             {
-                "affected_operators": [],
-                "added_operators": [],
-                "modified_operators": [],
-                "deleted_operators": [],
-                "affected_bundles": [],
-                "added_bundles": [],
-                "modified_bundles": [],
-                "deleted_bundles": [],
                 "affected_catalogs": ["v4.15"],
-                "added_catalogs": [],
                 "modified_catalogs": ["v4.15"],
                 "added_or_modified_catalogs": ["v4.15"],
-                "deleted_catalogs": [],
                 "catalogs_with_added_or_modified_operators": ["v4.15"],
                 "affected_catalog_operators": ["v4.15/operator-1", "v4.15/operator-2"],
                 "added_catalog_operators": ["v4.15/operator-2"],
                 "modified_catalog_operators": ["v4.15/operator-1"],
-                "deleted_catalog_operators": [],
-                "extra_files": [],
             },
+            id="Modify operator in existing catalog and add new operator",
+        ),
+        pytest.param(
+            "244d87b",
+            # Delete v4.15 catalog
+            # Add invalid catalog file
+            "1ca2aa12",
+            {
+                "extra_files": ["catalogs/v4.11-invalid/foo.json"],
+            },
+            id="Add invalid catalog file",
+        ),
+        pytest.param(
+            "8a40093eff",
+            # Add catalog template to operator-e2e
+            # Add invalid catalog file
+            "244d87b92",
+            {
+                "affected_operators": ["operator-e2e"],
+                "modified_operators": ["operator-e2e"],
+            },
+            id="Add catalog template to operator-e2e",
         ),
     ],
     indirect=False,
-    ids=[
-        "Add new bundle for new operator",
-        "Add new bundle for existing operator",
-        "Add bundles for multiple operators",
-        "Modify bundles for multiple operators and add extra files",
-        "Delete a bundle and remove extra files",
-        "Add ci.yaml to an operator",
-        "Delete an operator",
-        "Add new catalog with new operator",
-        "Add new operator to existing catalog",
-        "Modify operator in existing catalog",
-        "Delete operator in existing catalog",
-        "Delete catalog",
-        "Modify operator in existing catalog and add new operator",
-    ],
 )
 @patch("operatorcert.entrypoints.detect_changed_operators.ParserResults.enrich_result")
 @patch("operatorcert.entrypoints.detect_changed_operators.github_pr_affected_files")
@@ -455,6 +291,29 @@ def test_detect_changes(
         Repo(before_dir),
         "https://example.com/foo/bar/pull/1",
     )
+
+    default_expected: dict[str, Any] = {
+        "extra_files": [],
+        "affected_operators": [],
+        "added_operators": [],
+        "modified_operators": [],
+        "deleted_operators": [],
+        "affected_bundles": [],
+        "added_bundles": [],
+        "modified_bundles": [],
+        "deleted_bundles": [],
+        "affected_catalog_operators": [],
+        "added_catalog_operators": [],
+        "modified_catalog_operators": [],
+        "deleted_catalog_operators": [],
+        "affected_catalogs": [],
+        "added_catalogs": [],
+        "modified_catalogs": [],
+        "added_or_modified_catalogs": [],
+        "deleted_catalogs": [],
+        "catalogs_with_added_or_modified_operators": [],
+    }
+    expected = {**default_expected, **expected}
 
     result_dict = result.to_dict()
 
