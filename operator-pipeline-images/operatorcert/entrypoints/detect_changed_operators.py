@@ -94,8 +94,68 @@ def github_pr_affected_files(pr_url: str) -> set[str]:
     return {x.filename for x in gh_pr.get_files()}
 
 
+def is_operator_bundle_dir(
+    operator_name: str,
+    bundle_version: str,
+    head_repo: OperatorRepo,
+    base_repo: OperatorRepo,
+) -> tuple[bool, bool]:
+    """
+    Check if provided operator and bundle exist in either the head or base repo
+
+    Returns a tuple of two booleans, the first indicating if the operator exists
+    and the second indicating if the bundle exists.
+
+    Args:
+        operator_name (str): Operator name given by the directory name
+        bundle_version (str): A bundle version given by the directory name
+        head_repo (OperatorRepo): Git repository with the head state
+        base_repo (OperatorRepo): Git repository with the base state
+
+    Returns:
+        tuple[bool, bool]: A tuple of two booleans indicating if the operator
+        and bundle exist in either the head or base repo
+    """
+    # Check if the operator and bundle exist in either the head or base repo
+    is_operator = False
+    is_bundle = False
+    for repo in [head_repo, base_repo]:
+        if repo.has(operator_name):
+            is_operator = True
+            if repo.operator(operator_name).has(bundle_version):
+                is_bundle = True
+    return is_operator, is_bundle
+
+
+def is_catalog_operator_dir(
+    catalog_name: str,
+    catalog_operator: str,
+    head_repo: OperatorRepo,
+    base_repo: OperatorRepo,
+) -> bool:
+    """
+    Check if provided catalog and operator exist in either the head or base repo
+
+    Args:
+        catalog_name (str): A catalog name given by the directory name
+        catalog_operator (str): A catalog operator given by the directory name
+        head_repo (OperatorRepo): Git repository with the head state
+        base_repo (OperatorRepo): Git repository with the base state
+
+    Returns:
+        bool: A boolean indicating if the catalog and operator exist in either
+        the head or base repo
+    """
+    # Check if the catalog and operator exist in either the head or base repo
+    for repo in [head_repo, base_repo]:
+        if repo.has_catalog(catalog_name):
+            if repo.catalog(catalog_name).has(catalog_operator):
+                return True
+    return False
+
+
 def _find_directory_owner(
-    path: str,
+    path: str, head_repo: OperatorRepo, base_repo: OperatorRepo
 ) -> tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
     """
     Given a relative file name within an operator repo, return a tuple
@@ -106,6 +166,8 @@ def _find_directory_owner(
     If the file is outside an operator or catalog directory, all returns will be None.
     Args:
         path: Path to the file
+        head_repo: OperatorRepo object representing the head state of the repo
+        base_repo: OperatorRepo object representing the base state of the repo
     Returns:
         (operator_name, bundle_version, catalog_name, catalog_operator)
         Operator/bundle, Catalog/operator the files belongs to
@@ -115,22 +177,26 @@ def _find_directory_owner(
     filename_parts = pathlib.Path(path).parts
     if len(filename_parts) >= 3 and filename_parts[0] == "operators":
         # inside an operator directory
-        _, detected_operator_name, detected_bundle_version, *rest = filename_parts
-        if len(rest) < 1:
-            # inside an operator but not in a bundle (i.e.: the ci.yaml file)
-            return detected_operator_name, None, None, None
-        return detected_operator_name, detected_bundle_version, None, None
+        is_operator, is_bundle = is_operator_bundle_dir(
+            filename_parts[1], filename_parts[2], head_repo, base_repo
+        )
+        if is_operator and is_bundle:
+            return filename_parts[1], filename_parts[2], None, None
+        if is_operator:
+            # path is inside an operator but outside a bundle
+            # (i.e.: ci.yaml, catalog-templates, Makefile)
+            return filename_parts[1], None, None, None
     if len(filename_parts) >= 3 and filename_parts[0] == "catalogs":
-        # inside a catalog directory
-        _, detected_catalog_name, catalog_operator, *rest = filename_parts
-        if len(rest) >= 1:
-            return None, None, detected_catalog_name, catalog_operator
+        if is_catalog_operator_dir(
+            filename_parts[1], filename_parts[2], head_repo, base_repo
+        ):
+            return None, None, filename_parts[1], filename_parts[2]
     # path is outside an operator or catalog directory
     return None, None, None, None
 
 
 def _affected_bundles_and_operators_from_files(
-    affected_files: set[str],
+    affected_files: set[str], head_repo: OperatorRepo, base_repo: OperatorRepo
 ) -> tuple[dict[str, set[Optional[str]]], dict[str, set[Optional[str]]], set[str]]:
     """
     Group a given set of file names depending on the operator, bundle,
@@ -138,6 +204,8 @@ def _affected_bundles_and_operators_from_files(
 
     Args:
         affected_files: set of files names to parse
+        head_repo: OperatorRepo object representing the head state of the repo
+        base_repo: OperatorRepo object representing the base state of the repo
 
     Returns:
         A tuple containing:
@@ -159,7 +227,7 @@ def _affected_bundles_and_operators_from_files(
             bundle_version,
             catalog_name,
             catalog_operator,
-        ) = _find_directory_owner(filename)
+        ) = _find_directory_owner(filename, head_repo, base_repo)
         if operator_name is None and catalog_name is None:
             extra_files.add(filename)
         elif operator_name is not None:
@@ -396,7 +464,7 @@ def detect_changes(
         all_affected_bundles,
         all_affected_catalog_operators,
         non_operator_files,
-    ) = _affected_bundles_and_operators_from_files(pr_files)
+    ) = _affected_bundles_and_operators_from_files(pr_files, head_repo, base_repo)
 
     operators = detect_changed_operators(head_repo, base_repo, all_affected_bundles)
     bundles = detect_changed_operator_bundles(
