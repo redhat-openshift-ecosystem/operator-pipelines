@@ -46,6 +46,7 @@
                 containers:
                   - name: preflight-invalidator
                     image: "{{ preflight_invalidation_image_pull_spec }}"
+                    imagePullPolicy: Always
                     args:
                       - invalidate-preflight-versions
                       - --pyxis-url
