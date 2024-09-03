@@ -11,17 +11,14 @@ spec:
       description: URL of the GitHub pull request.
     - name: git_head_commit
       description: SHA of the head of the branch to be merged.
-    - name: bundle_path
-      description: Path to the operator bundle affected by the pull request.
+    - name: operator_path
+      description: Path to the operator affected by the pull request.
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: token
-    - name: force_merge
-      description: The boolean which will indicate when to ignore the verification of ci.yaml file.
-      default: "false"
   workspaces:
     - name: source
   results:
@@ -33,34 +30,13 @@ spec:
       workingDir: $(workspaces.source.path)
       script: |
         set -xe
-        if [ "$(params.force_merge)" = "true" ]; then
-          echo -n true > "$(results.bool_merge.path)"
-        elif [[ "$(params.bundle_path)" == "" ]]; then
-          echo -n true > "$(results.bool_merge.path)"
+        if [[ -z "$(params.operator_path)" ]]; then
+          echo -n false > "$(results.bool_merge.path)"
         else
-          PKG_PATH=$(dirname $(realpath "$(params.bundle_path)"))
-          CI_FILE_PATH="$PKG_PATH/ci.yaml"
-          BOOL_MERGE=$(yq -r '.merge' < "$CI_FILE_PATH")
+          BOOL_MERGE=$(yq -r '.merge!=false' < "$(params.operator_path)/ci.yaml")
 
           echo -n "$BOOL_MERGE" > "$(results.bool_merge.path)"
         fi
-
-    - name: review-pull-request
-      image: "$(params.pipeline_image)"
-      env:
-        - name: GITHUB_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: $(params.github_token_secret_name)
-              key: $(params.github_token_secret_key)
-      script: |
-        #! /usr/bin/env bash
-        set -ex
-
-        gh pr review "$(params.git_pr_url)" --approve \
-            --body "Operator bundle PR has been approved!"
-
-        echo "Merge request has been approved!"
 
     - name: merge-pull-request
       image: "$(params.pipeline_image)"
@@ -80,6 +56,37 @@ spec:
           echo "merge explicitly set to false- not merging the Pull Request"
           echo -n "false" > "$(results.pr_merged.path)"
           exit 0
+        fi
+
+        # To avoid issuing too many GH API requests, fetch all PR info we need
+        # in a single call upfront and process the result later
+        gh pr view "$(params.git_pr_url)" --json isDraft,reviews >/tmp/pr.json
+
+        if [[ "$(jq -r ".isDraft" /tmp/pr.json)" == "true" ]] ; then
+            echo "Skipping merge: PR is set as draft"
+            echo -n "false" > "$(results.pr_merged.path)"
+            exit 0
+        fi
+
+        # Extract all reviews and return one line per reviewer containing three space separated fields:
+        #   $state $authorAssociation $author
+        # where
+        #   $state is the outcome of the most recent review by the author and can be APPROVED, CHANGES_REQUESTED,
+        #     DISMISSED, COMMENTED or PENDING
+        #   $authorAssociation is the role of the author in the repository; for possible values see
+        #     see https://docs.github.com/en/graphql/reference/enums#commentauthorassociation
+        #   $author is the GitHub handle of the reviewer
+        # Example:
+        #   APPROVED MEMBER rh-operator-bundle-bot
+        #   PENDING NONE randomuser
+        jq -r '[.reviews[]|{author:.author.login,authorAssociation,state,submittedAt}]|group_by(.author)|map(sort_by(.submittedAt)|.[-1]|"\(.state) \(.authorAssociation) \(.author)")[]' \
+          /tmp/pr.json | tee /tmp/reviews.txt
+
+        # Do not merge if we do not have approval from the bot or any other repo member
+        if ! grep "^APPROVED MEMBER " /tmp/reviews.txt ; then
+            echo "Skipping merge: PR is not approved."
+            echo -n "false" > "$(results.pr_merged.path)"
+            exit 0
         fi
 
         # Squash and merge only if the head commit sha has not changed since

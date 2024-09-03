@@ -1235,8 +1235,8 @@ spec:
           value: $(params.git_pr_url)
         - name: git_head_commit
           value: $(params.git_commit)
-        - name: bundle_path
-          value: "$(tasks.detect-changes.results.bundle_path)"
+        - name: operator_path
+          value: "$(tasks.detect-changes.results.operator_path)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
