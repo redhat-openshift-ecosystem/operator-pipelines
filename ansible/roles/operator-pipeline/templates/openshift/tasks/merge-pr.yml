@@ -74,7 +74,7 @@ spec:
         #   $state is the outcome of the most recent review by the author and can be APPROVED, CHANGES_REQUESTED,
         #     DISMISSED, COMMENTED or PENDING
         #   $authorAssociation is the role of the author in the repository; for possible values see
-        #     see https://docs.github.com/en/graphql/reference/enums#commentauthorassociation
+        #     https://docs.github.com/en/graphql/reference/enums#commentauthorassociation
         #   $author is the GitHub handle of the reviewer
         # Example:
         #   APPROVED MEMBER rh-operator-bundle-bot
