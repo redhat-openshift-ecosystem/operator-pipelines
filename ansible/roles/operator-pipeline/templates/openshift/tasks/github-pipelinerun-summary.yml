@@ -164,6 +164,13 @@ spec:
           fi
         fi
 
+
+        if [[ -f "$(workspaces.output.path)/merge_error.txt" ]]; then
+          MERGE_ERROR=$(cat "$(workspaces.output.path)/merge_error.txt")
+          echo -e "\n## ❌ Not merged\n" >> $PR_NAME/comment.md
+          echo -e "PR cannot be merged for the following reasons: \`$MERGE_ERROR\`" >> $PR_NAME/comment.md
+        fi
+
         echo -e "\n## Troubleshooting\n\nPlease refer to the [troubleshooting guide]($DOC_LINK)." >> $PR_NAME/comment.md
         echo -e "\nRun \`/pipeline restart $(params.pipeline_name)\` in case of pipeline failure to restart a pipeline." >> $PR_NAME/comment.md
 

@@ -27,7 +27,7 @@ spec:
   workspaces:
     - name: source
     - name: output
-      description: Scratch space and storage for the comment and related date
+      description: Scratch space and storage for the comment and related data
   steps:
     - name: read-config
       image: "$(params.pipeline_image)"

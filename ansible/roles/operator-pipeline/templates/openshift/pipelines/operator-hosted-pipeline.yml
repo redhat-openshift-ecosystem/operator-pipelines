@@ -1245,6 +1245,9 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: output
+          workspace: results
+          subPath: summary
 
     # link pull request details to test results
     - name: link-pull-request-with-merged-status
