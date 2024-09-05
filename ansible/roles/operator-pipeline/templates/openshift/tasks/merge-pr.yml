@@ -21,6 +21,8 @@ spec:
       default: token
   workspaces:
     - name: source
+    - name: output
+      description: Scratch space and storage for the comment and related data
   results:
     - name: bool_merge
     - name: pr_merged
@@ -62,12 +64,6 @@ spec:
         # in a single call upfront and process the result later
         gh pr view "$(params.git_pr_url)" --json isDraft,reviews >/tmp/pr.json
 
-        if [[ "$(jq -r ".isDraft" /tmp/pr.json)" == "true" ]] ; then
-            echo "Skipping merge: PR is set as draft"
-            echo -n "false" > "$(results.pr_merged.path)"
-            exit 0
-        fi
-
         # Extract all reviews and return one line per reviewer containing three space separated fields:
         #   $state $authorAssociation $author
         # where
@@ -84,21 +80,31 @@ spec:
 
         # Do not merge if we do not have approval from the bot or any other repo member
         if ! grep "^APPROVED MEMBER " /tmp/reviews.txt ; then
-            echo "Skipping merge: PR is not approved."
+            echo -n "Skipping merge: PR is not approved." | tee "$(workspaces.output.path)/merge_error.txt"
             echo -n "false" > "$(results.pr_merged.path)"
             exit 0
         fi
 
         # Squash and merge only if the head commit sha has not changed since
         # the start of the pipeline run
-        gh pr merge "$(params.git_pr_url)" --squash --auto \
-            --match-head-commit "$(params.git_head_commit)"
+        MERGE_STDERR=$(gh pr merge "$(params.git_pr_url)" --squash --auto --match-head-commit "$(params.git_head_commit)" 2>&1 >/dev/null)
+        MERGE_RESULT=$?
+        MERGE_ERROR=$(echo "$MERGE_STDERR" | grep -oP '(?<=GraphQL: ).*')
 
-        if [[ $? -eq 0 ]] ; then
+        if [[ $MERGE_RESULT -eq 0 ]] ; then
             echo "PR has been merged!"
             echo -n "true" > "$(results.pr_merged.path)"
         else
             echo "Cannot merge PR"
             echo -n "false" > "$(results.pr_merged.path)"
-            exit 1
+            # Pass details about merge error to summary comment task
+            echo -n $MERGE_ERROR | tee "$(workspaces.output.path)/merge_error.txt"
+            # Custom error message when other pipeline is running.
+            if [[ "$MERGE_ERROR" == "Head branch was modified. Review and try the merge again. (mergePullRequest)" ]] ; then
+              echo -n "Another pipeline is already in progress: please wait for the result of the new tests." | tee "$(workspaces.output.path)/merge_error.txt"
+            fi
+            # Fail pipeline if the error is not explicitly allowed.
+            if [[ "$MERGE_ERROR" != "Pull Request is still a draft (mergePullRequest)" && "$MERGE_ERROR" != "Head branch was modified. Review and try the merge again. (mergePullRequest)" ]] ; then
+              exit 1
+            fi
         fi
