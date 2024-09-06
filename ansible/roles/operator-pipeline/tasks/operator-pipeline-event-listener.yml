@@ -108,6 +108,7 @@
                           body.action == "labeled"
                           && body.label.name == "pipeline/trigger-release"
                           && body.pull_request.base.ref == "{{ branch }}"
+                          && body.pull_request.merged == true
                         )
                 bindings:
                   - ref: operator-release-pipeline-trigger-binding
