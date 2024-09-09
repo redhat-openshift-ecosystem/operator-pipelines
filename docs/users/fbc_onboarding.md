@@ -23,7 +23,7 @@ automates the migration process.
 
 ```bash
 # Go to the operator repo directory (certified-operators, marketplace-operators, community-operators-prod)
-cd <operator-repo>/operator/<operator-name>
+cd <operator-repo>/operators/<operator-name>
 wget https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipelines/main/fbc/Makefile
 ```
 
