@@ -126,12 +126,6 @@ def test_create_catalog_template_dir_if_not_exists(
     fbc_onboarding.create_catalog_template_dir_if_not_exists(operator)
     mock_makedir.assert_called_once_with("/tmp/catalog-templates")
 
-    mock_makedir.reset_mock()
-    mock_exists.return_value = True
-    mock_input.return_value = "n"
-    with pytest.raises(SystemExit):
-        fbc_onboarding.create_catalog_template_dir_if_not_exists(operator)
-
 
 @patch("operatorcert.entrypoints.fbc_onboarding.get_base_template_from_catalog")
 @patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump")

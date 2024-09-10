@@ -21,6 +21,10 @@ We want to help with this process and we prepared a tooling that helps with this
 As a prerequisite to this process, you need to download a `Makefile` that
 automates the migration process.
 
+An initial system requirement is to have following dependencies installed:
+ - [podman](https://podman.io/docs/installation)
+ - [make](https://www.gnu.org/software/make/)
+
 ```bash
 # Go to the operator repo directory (certified-operators, marketplace-operators, community-operators-prod)
 cd <operator-repo>/operators/<operator-name>
@@ -33,6 +37,8 @@ a local cache is generated during a run.
 > **Note**
 > A user executing the conversion script needs to be authenticated to registries used by OLM catalog.
 > Use `podman login` to log in into all registries.
+> A conversion script assumes you have `$(XDG_RUNTIME_DIR)/containers/auth.json` or `~/.docker/config.json` present
+> with valid registry tokens.
 
 To convert existing operator to `FBC` format you need to execute following command:
 
@@ -109,7 +115,7 @@ $ git commit --signoff -m "Add FBC resources for aqua operator"
 Catalog templates are used to simplify a view of a catalog and allow easier manipulation of catalogs. The automated conversion pre-generates a basic template that can be turned into full FBC using the following command:
 
 ```bash
-make catalog
+make catalogs
 ```
 
 Of course, you can choose any type of template that you prefer by modifying the Makefile target.

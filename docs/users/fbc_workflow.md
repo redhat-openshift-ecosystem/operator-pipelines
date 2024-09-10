@@ -51,7 +51,7 @@ The right place for the Makefile is in the operator's root directory
 
 ```
 
-You can modify the Makefile based on your needs and use it to generate catalogs by running `make catalog`.
+You can modify the Makefile based on your needs and use it to generate catalogs by running `make catalogs`.
 
 > [!IMPORTANT]
 > In case an operator isn't shipped to all OCP catalog versions manually update `OCP_VERSIONS`
@@ -167,5 +167,5 @@ of operator releases. This allows any post-release modification of the catalogs.
 If you want to change the order of updates, remove an invalid bundle, or do any other modification
 you are free to do that.
 
-After updating catalog templates don't forget to run `make catalog` to generate a catalog
+After updating catalog templates don't forget to run `make catalogs` to generate a catalog
 from templates and submit the resulting catalog using PR workflow.
