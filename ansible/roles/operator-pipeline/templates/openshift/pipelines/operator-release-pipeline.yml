@@ -226,8 +226,6 @@ spec:
           value: "$(params.pipeline_image)"
         - name: operator_path
           value: "$(tasks.detect-changes.results.operator_path)"
-        - name: catalog_operator_path
-          value: "$(tasks.detect-changes.results.affected_catalog_operators)"
       workspaces:
         - name: source
           workspace: repository
@@ -281,8 +279,6 @@ spec:
           value: "$(params.pipeline_image)"
         - name: operator_path
           value: "$(tasks.detect-changes.results.operator_path)"
-        - name: catalog_operator_path
-          value: "$(tasks.detect-changes.results.affected_catalog_operators)"
         - name: cert_project_required
           value: "$(params.cert_project_required)"
       workspaces:

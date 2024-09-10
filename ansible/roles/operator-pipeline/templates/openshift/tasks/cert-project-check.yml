@@ -8,8 +8,6 @@ spec:
     - name: pipeline_image
     - name: operator_path
       description: path indicating the location of the certified operator within the repository
-    - name: catalog_operator_path
-      description: path indicating the location of the catalog operator within the repository
       default: ""
     - name: cert_project_required
       description: A flag determines whether a cert project ID needs to be present
@@ -35,11 +33,7 @@ spec:
         fi
         if [ "$(params.operator_path)" != "" ]; then
           PKG_PATH="$(params.operator_path)"
-        elif [ "$(params.catalog_operator_path)" != "" ]; then
-          OPERATOR_NAME=$(echo $(params.catalog_operator_path) | cut -d ',' -f 1 | cut -d '/' -f 2)
-          PKG_PATH=operators/$OPERATOR_NAME
-        else
-          echo "Bundle path is missing."
+          echo "Operator path is missing."
           exit 1
         fi
 
