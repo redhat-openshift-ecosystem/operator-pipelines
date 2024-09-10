@@ -3,7 +3,6 @@
 import argparse
 import logging
 import os
-import sys
 from typing import Any, Dict, Optional
 
 import requests
@@ -168,11 +167,7 @@ def create_catalog_template_dir_if_not_exists(operator: Any) -> str:
         str: Path to the template directory
     """
     template_dir = os.path.join(operator.root, CATALOG_TEMPLATES_DIR)
-    if os.path.exists(template_dir):
-        LOGGER.info("FBC template directory already exists at %s", template_dir)
-        user_input = input("FBC template directory already exists. Overwrite? [y/n]: ")
-        if user_input.lower() != "y":
-            sys.exit(0)
+
     if not os.path.exists(template_dir):
         LOGGER.info("Creating template directory at %s", template_dir)
         os.makedirs(template_dir)
