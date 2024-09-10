@@ -9,6 +9,7 @@ import pytest
 from operatorcert import utils
 from operatorcert.utils import store_results
 from requests import HTTPError, Session
+from requests.adapters import HTTPAdapter
 
 
 def test_find_file(tmp_path: Path) -> None:
@@ -77,6 +78,10 @@ def test_add_session_retries() -> None:
         total=total,
         backoff_factor=backoff_factor,
         status_forcelist=status_forcelist,
+    )
+    # Check adapter types for HTTPAdapter to pass mypy
+    assert isinstance(session.adapters["http://"], HTTPAdapter) and isinstance(
+        session.adapters["https://"], HTTPAdapter
     )
     assert session.adapters["http://"].max_retries.total == total
     assert session.adapters["http://"].max_retries.backoff_factor == backoff_factor

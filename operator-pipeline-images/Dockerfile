@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:38
+FROM registry.fedoraproject.org/fedora:40
 
 LABEL description="Cli tools for operator certification pipeline"
 LABEL summary="This image contains tools required for operator bundle certification pipeline."
@@ -10,10 +10,10 @@ ARG ARCH=amd64
 
 USER root
 
+
 # setup certificates
 COPY operator-pipeline-images/certs/* /etc/pki/ca-trust/source/anchors/
 RUN /usr/bin/update-ca-trust
-
 # This is just a temporary workaround until we figure out how to
 # override CA bundle in OCP
 RUN cp /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/custom-ca-bundle.crt
@@ -70,7 +70,7 @@ COPY ./operator-pipeline-images ./operator-pipeline-images
 RUN pip3 install --no-cache-dir pdm
 # install dependencies in virtual environment
 COPY ./pdm.lock ./pyproject.toml ./README.md ./
-RUN pdm venv create 3.11 && pdm install --no-lock --no-editable \
+RUN pdm venv create 3.12 && pdm install --no-lock --no-editable \
         --group operatorcert-dev
 
 ENV VIRTUAL_ENV=/home/user/.venv
