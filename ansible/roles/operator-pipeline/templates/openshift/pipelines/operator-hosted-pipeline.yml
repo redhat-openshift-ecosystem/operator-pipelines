@@ -628,6 +628,7 @@ spec:
         name: reserve-operator-name
       when:
         - *certProjectExists
+        - *bundleAdded
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
