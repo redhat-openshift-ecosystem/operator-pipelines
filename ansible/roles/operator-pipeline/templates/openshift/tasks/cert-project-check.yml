@@ -31,13 +31,13 @@ spec:
           echo -n "" | tee $(results.certification_project_id.path)
           exit 0
         fi
-        if [ "$(params.operator_path)" != "" ]; then
-          PKG_PATH="$(params.operator_path)"
+
+        if [ -z "$(params.operator_path)" ]; then
           echo "Operator path is missing."
           exit 1
         fi
 
-        CI_FILE_PATH="$PKG_PATH/ci.yaml"
+        CI_FILE_PATH="$(params.operator_path)/ci.yaml"
 
         CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id | select (.!=null)')
 
