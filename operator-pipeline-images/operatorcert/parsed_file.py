@@ -187,15 +187,24 @@ class ParserResults:
         Args:
             result: Dictionary with the detected changes
         """
-        if len(added_bundles := result.get("added_bundles", [])) == 1:
-            operator_name, bundle_version = added_bundles[0].split("/")
-        elif len(affected_operators := result.get("affected_operators", [])) == 1:
-            # no bundle was added (i.e.: only ci.yaml was added/modified/deleted)
+
+        operator_name = ""
+        bundle_version = ""
+
+        affected_operators = result.get("affected_operators", [])
+        affected_bundles = result.get("affected_bundles", [])
+        affected_catalog_operators = result.get("affected_catalog_operators", [])
+
+        if affected_operators:
             operator_name = affected_operators[0]
-            bundle_version = ""
-        else:
-            operator_name = ""
-            bundle_version = ""
+
+        if affected_bundles:
+            _, bundle_version = affected_bundles[0].split("/")
+
+        if affected_catalog_operators and operator_name == "":
+            # Even if the change affects only files in catalogs/ we still need to know
+            # what operator is affected by the change when accessing info in the operator's ci.yaml
+            operator_name = affected_catalog_operators[0][1]
 
         result["operator_name"] = operator_name
         result["bundle_version"] = bundle_version

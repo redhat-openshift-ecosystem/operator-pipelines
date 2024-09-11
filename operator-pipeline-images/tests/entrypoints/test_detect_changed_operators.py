@@ -732,11 +732,11 @@ def test_ParserRules_validate_removal_fbc_fail(
     [
         pytest.param(
             {
-                "added_bundles": ["operator-e2e/0.0.101"],
+                "affected_bundles": ["operator-e2e/0.0.101"],
                 "affected_operators": ["operator-e2e"],
             },
             {
-                "added_bundles": ["operator-e2e/0.0.101"],
+                "affected_bundles": ["operator-e2e/0.0.101"],
                 "affected_operators": ["operator-e2e"],
                 "operator_name": "operator-e2e",
                 "bundle_version": "0.0.101",
@@ -747,11 +747,11 @@ def test_ParserRules_validate_removal_fbc_fail(
         ),
         pytest.param(
             {
-                "added_bundles": [],
+                "affected_bundles": [],
                 "affected_operators": ["operator-e2e"],
             },
             {
-                "added_bundles": [],
+                "affected_bundles": [],
                 "affected_operators": ["operator-e2e"],
                 "operator_name": "operator-e2e",
                 "bundle_version": "",
@@ -762,11 +762,11 @@ def test_ParserRules_validate_removal_fbc_fail(
         ),
         pytest.param(
             {
-                "added_bundles": [],
+                "affected_bundles": [],
                 "affected_operators": [],
             },
             {
-                "added_bundles": [],
+                "affected_bundles": [],
                 "affected_operators": [],
                 "operator_name": "",
                 "bundle_version": "",
@@ -774,6 +774,23 @@ def test_ParserRules_validate_removal_fbc_fail(
                 "bundle_path": "",
             },
             id="No bundle added or operator affected",
+        ),
+        pytest.param(
+            {
+                "affected_bundles": [],
+                "affected_operators": [],
+                "affected_catalog_operators": [("v4.16", "operator-e2e")],
+            },
+            {
+                "affected_bundles": [],
+                "affected_operators": [],
+                "affected_catalog_operators": [("v4.16", "operator-e2e")],
+                "operator_name": "operator-e2e",
+                "bundle_version": "",
+                "operator_path": "operators/operator-e2e",
+                "bundle_path": "",
+            },
+            id="Catalog operator affected",
         ),
     ],
 )
