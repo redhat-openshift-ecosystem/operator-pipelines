@@ -52,6 +52,9 @@ spec:
     - name: build-fbc-catalog
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
+      env:
+        - name: STORAGE_DRIVER
+          value: vfs
       securityContext:
         privileged: true
       script: |

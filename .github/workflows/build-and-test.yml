@@ -1,19 +1,88 @@
 ---
-name: Integration Tests
+name: Build and test
 
 on:  # yamllint disable-line rule:truthy
-  workflow_run:
-    workflows:
-      - Build
+  push:
     branches:
       - main
-    types:
-      - completed
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
 
 jobs:
+  tox:
+    name: Run unit tests and linters
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install non-python dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y libkrb5-dev
+
+      - name: Install Hadolint via Brew
+        run: |
+          NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          /home/linuxbrew/.linuxbrew/bin/brew install hadolint
+          sudo ln -s /home/linuxbrew/.linuxbrew/bin/hadolint /usr/bin/
+
+      - name: Install Python dependencies
+        run: |
+          pdm sync -dG tox
+          python3 -m pip install ansible-lint
+
+      - name: Run Tests
+        run: |
+          pdm run -v tox
+
+  build:
+    name: Build and push image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set variables
+        id: set-vars
+        run: |
+          if [[ $GITHUB_REF_NAME == 'main' ]]; then
+            echo "tags=latest ${{ github.sha }}" >> $GITHUB_OUTPUT
+          else
+            echo "tags=${{ github.sha }}">> $GITHUB_OUTPUT
+          fi
+      - uses: actions/checkout@v4
+
+      - name: Build Image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: operator-pipelines-images
+          tags: ${{ steps.set-vars.outputs.tags }}
+          dockerfiles: |
+            ./operator-pipeline-images/Dockerfile
+
+      - name: Push To quay.io
+        id: push-to-quay
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: quay.io/redhat-isv
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Print image url
+        run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
+
   integration-tests:
+    needs: [build]
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.label.name == 'ready-for-testing'
+    timeout-minutes: 90
     strategy:
       matrix:
         test_type:
@@ -74,7 +143,7 @@ jobs:
           options: |
             -e "test_type=${{ matrix.test_type }}"
             -e "oc_namespace=int-tests-${{ matrix.test_type }}-${{ github.run_number }}-${{ github.run_attempt }}"
-            -e "integration_tests_operator_bundle_version=0.1.${{ github.run_number }}-${{ github.run_attempt }}"
+            -e "integration_tests_operator_bundle_version=0.2.${{ github.run_number }}-${{ github.run_attempt }}"
             -e "operator_pipeline_image_tag=${{ github.sha }}"
             -e "suffix=${{ steps.prepare.outputs.suffix }}"
             --skip-tags=signing-pipeline
