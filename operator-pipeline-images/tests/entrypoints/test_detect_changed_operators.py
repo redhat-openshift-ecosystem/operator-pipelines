@@ -779,12 +779,12 @@ def test_ParserRules_validate_removal_fbc_fail(
             {
                 "affected_bundles": [],
                 "affected_operators": [],
-                "affected_catalog_operators": [("v4.16", "operator-e2e")],
+                "affected_catalog_operators": ["v4.16/operator-e2e"],
             },
             {
                 "affected_bundles": [],
                 "affected_operators": [],
-                "affected_catalog_operators": [("v4.16", "operator-e2e")],
+                "affected_catalog_operators": ["v4.16/operator-e2e"],
                 "operator_name": "operator-e2e",
                 "bundle_version": "",
                 "operator_path": "operators/operator-e2e",
