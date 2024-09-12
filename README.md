@@ -219,7 +219,20 @@ make build-and-test-isv
 
 # or
 make build-and-test-community
+# or
+make build-and-test-isv-fbc-bundle
+# or
+make build-and-test-isv-fbc-catalog
 ```
+
+### Running test in PR workflow
+A repository is configured to automatically run all integration tests on pull request.
+This makes sure a code change doesn't break existing workflow. Since a tests are
+running OCP cluster and requires some resources a tests are execute only when
+`ready-for-testing` label is added to a PR. Adding this label executes additional
+workflow.
+
+All PRs should pass a tests before merging.
 ## Additional Documentation
 
 - [OpenShift cluster configuration](docs/cluster-config.md)
