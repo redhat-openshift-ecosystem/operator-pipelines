@@ -204,7 +204,7 @@ class ParserResults:
         if affected_catalog_operators and operator_name == "":
             # Even if the change affects only files in catalogs/ we still need to know
             # what operator is affected by the change when accessing info in the operator's ci.yaml
-            operator_name = affected_catalog_operators[0][1]
+            _, operator_name = affected_catalog_operators[0].split("/", 1)
 
         result["operator_name"] = operator_name
         result["bundle_version"] = bundle_version

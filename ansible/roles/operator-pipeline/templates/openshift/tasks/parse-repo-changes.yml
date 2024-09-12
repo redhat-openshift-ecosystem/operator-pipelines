@@ -70,6 +70,8 @@ spec:
           --output-file changes.json \
           --verbose
 
+        cat changes.json
+
         operator_name="$(jq -r '.operator_name' < changes.json)"
         echo -n $operator_name > "$(results.added_operator.path)"
 
