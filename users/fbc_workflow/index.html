@@ -975,7 +975,7 @@ wget https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipel
 └── Makefile
 
 </code></pre>
-<p>You can modify the Makefile based on your needs and use it to generate catalogs by running <code>make catalog</code>.</p>
+<p>You can modify the Makefile based on your needs and use it to generate catalogs by running <code>make catalogs</code>.</p>
 <blockquote>
 <p>[!IMPORTANT]
 In case an operator isn't shipped to all OCP catalog versions manually update <code>OCP_VERSIONS</code>
@@ -1079,7 +1079,7 @@ for automate-able step.</p>
 of operator releases. This allows any post-release modification of the catalogs.
 If you want to change the order of updates, remove an invalid bundle, or do any other modification
 you are free to do that.</p>
-<p>After updating catalog templates don't forget to run <code>make catalog</code> to generate a catalog
+<p>After updating catalog templates don't forget to run <code>make catalogs</code> to generate a catalog
 from templates and submit the resulting catalog using PR workflow.</p>
 
 

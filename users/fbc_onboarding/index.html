@@ -905,6 +905,9 @@ existing operator into FBC format.</p>
 <h2 id="convert-existing-operator-to-fbc">Convert existing operator to FBC</h2>
 <p>As a prerequisite to this process, you need to download a <code>Makefile</code> that
 automates the migration process.</p>
+<p>An initial system requirement is to have following dependencies installed:
+ - <a href="https://podman.io/docs/installation">podman</a>
+ - <a href="https://www.gnu.org/software/make/">make</a></p>
 <pre><code class="language-bash"># Go to the operator repo directory (certified-operators, marketplace-operators, community-operators-prod)
 cd &lt;operator-repo&gt;/operators/&lt;operator-name&gt;
 wget https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipelines/main/fbc/Makefile
@@ -914,7 +917,9 @@ a local cache is generated during a run.</p>
 <blockquote>
 <p><strong>Note</strong>
 A user executing the conversion script needs to be authenticated to registries used by OLM catalog.
-Use <code>podman login</code> to log in into all registries.</p>
+Use <code>podman login</code> to log in into all registries.
+A conversion script assumes you have <code>$(XDG_RUNTIME_DIR)/containers/auth.json</code> or <code>~/.docker/config.json</code> present
+with valid registry tokens.</p>
 </blockquote>
 <p>To convert existing operator to <code>FBC</code> format you need to execute following command:</p>
 <pre><code class="language-bash">$ make fbc-onboarding
@@ -981,7 +986,7 @@ $ git commit --signoff -m &quot;Add FBC resources for aqua operator&quot;
 </code></pre>
 <h2 id="generating-catalogs-from-templates">Generating catalogs from templates</h2>
 <p>Catalog templates are used to simplify a view of a catalog and allow easier manipulation of catalogs. The automated conversion pre-generates a basic template that can be turned into full FBC using the following command:</p>
-<pre><code class="language-bash">make catalog
+<pre><code class="language-bash">make catalogs
 </code></pre>
 <p>Of course, you can choose any type of template that you prefer by modifying the Makefile target.
 More information about catalog templates can be found <a href="https://olm.operatorframework.io/docs/reference/catalog-templates/">here</a></p>
