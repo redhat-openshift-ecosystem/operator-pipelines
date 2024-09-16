@@ -1066,7 +1066,7 @@ Choose the preparation process according to your Linux version.</p>
 <h4 id="preparation-on-rpm-based-linux">Preparation on RPM-based Linux</h4>
 <pre><code class="language-bash">sudo dnf -y install hadolint
 python3 -m pip install pdm
-pdm venv create 3.11
+pdm venv create 3.12
 pdm install
 source .venv/bin/activate
 python3 -m pip install ansible-lint
@@ -1075,7 +1075,7 @@ python3 -m pip install ansible-lint
 <p>Before starting, make sure you have installed the <a href="https://brew.sh/">Brew</a> package manager.</p>
 <pre><code class="language-bash">brew install hadolint
 python3 -m pip install pdm
-pdm venv create 3.11
+pdm venv create 3.12
 pdm install
 source .venv/bin/activate
 python3 -m pip install ansible-lint
@@ -1086,7 +1086,7 @@ python3 -m pip install ansible-lint
 </code></pre>
 <h3 id="local-development">Local development</h3>
 <p>Setup python virtual environment using pdm.</p>
-<pre><code class="language-shell">pdm venv create 3.11
+<pre><code class="language-shell">pdm venv create 3.12
 pdm install
 source .venv/bin/activate
 </code></pre>
