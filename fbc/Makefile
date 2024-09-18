@@ -97,7 +97,9 @@ semver: ${BINDIR}/opm clean
 # all FBC must pass opm validation in order to be able to be used in a catalog
 .PHONY: validate-catalogs
 validate-catalogs: ${BINDIR}/opm
-	${BINDIR}/opm validate $(CATALOG_DIR) && echo "catalog validation passed" || echo "catalog validation failed"
+	for version in $(OCP_VERSIONS); do \
+		${BINDIR}/opm validate $(CATALOG_DIR)/$${version}/${OPERATOR_NAME} && echo "$${version} catalog validation passed" || echo "$${version} catalog validation failed"; \
+	done
 
 .PHONY: create-catalog-dir
 create-catalog-dir:
