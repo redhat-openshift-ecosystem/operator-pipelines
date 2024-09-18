@@ -47,7 +47,7 @@ $ make fbc-onboarding
 
 2024-04-24 15:53:05,537 [operator-cert] INFO Generating FBC templates for the following versions: ['4.12', '4.13', '4.14', '4.15', '4.16']
 2024-04-24 15:53:07,632 [operator-cert] INFO Processing catalog: v4.12
-2024-04-24 15:53:07,633 [operator-cert] DEBUG Building cache for registry.stage.redhat.io/redhat/community-operator-index:v4.12
+2024-04-24 15:53:07,633 [operator-cert] DEBUG Building cache for registry.redhat.io/redhat/community-operator-index:v4.12
 ...
 ```
 
