@@ -13,7 +13,7 @@
           - "suffix={{ suffix }}"
       register: pipeline_run
       until: pipeline_run.resources | length > 0
-      retries: 5
+      retries: 10
       delay: 5
       failed_when: pipeline_run.resources | length == 0
 
@@ -21,25 +21,35 @@
       ansible.builtin.debug:
         var: pipeline_run.resources[0].metadata.name
 
+    - name: "Wait for the run of {{ pipeline_name }}"
+      ansible.builtin.shell: |
+        ./wait_for_pipelinerun.sh \
+          {{ pipeline_run.resources[0].metadata.name }} \
+          {{ oc_namespace }}
+      args:
+        executable: /bin/bash
+        chdir: "{{ temp_tools_dir.path }}"
+      register: pipeline_run_wait
+      failed_when: false
+      timeout: 5400  # 90 minutes
+      changed_when: false
 
-    - name: "Follow the run logs of {{ pipeline_name }}"
+    - name: "Get pipelinerun logs - {{ pipeline_name }}"
       ansible.builtin.shell: |
         ./tkn pipeline logs \
           {{ pipeline_name }} \
           {{ pipeline_run.resources[0].metadata.name }} \
-          --namespace {{ oc_namespace }} \
-          --follow
+          --namespace {{ oc_namespace }}
       args:
         executable: /bin/bash
         chdir: "{{ temp_tools_dir.path }}"
-      register: pipeline_run_log
-      retries: 5
-      until: pipeline_run_log.rc == 0
+      no_log: true
+      register: pipeline_run_logs
       changed_when: false
 
-    - name: Output the run logs of {{ pipeline_name }}
+    - name: "Print pipelinerun logs - {{ pipeline_name }}"
       ansible.builtin.debug:
-        msg: "{{ pipeline_run_log.stdout_lines }}"
+        var: pipeline_run_logs.stdout_lines
 
     - name: Verify successful run of {{ pipeline_name }}
       kubernetes.core.k8s_info:
