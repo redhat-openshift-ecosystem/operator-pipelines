@@ -62,19 +62,35 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
+        MAX_RETRIES=3
+        RETRY_DELAY=5 # Initial delay
+
         echo "Requesting signing from RADAS"
-        request-signature \
-          --manifest-digest "$(params.manifest_digest)" \
-          --output signing_response.json \
-          --reference "$(params.reference)" \
-          --requester "$(params.requester)" \
-          --sig-key-id "$(params.sig_key_id)" \
-          --sig-key-name "$(params.sig_key_name)" \
-          --umb-client-name "$(params.umb_client_name)" \
-          --umb-listen-topic "$(params.umb_listen_topic)" \
-          --umb-publish-topic "$(params.umb_publish_topic)" \
-          --umb-url "$(params.umb_url)" \
-          --verbose
+        for ((i=1; i<=MAX_RETRIES; i++)); do
+          if request-signature \
+            --manifest-digest "$(params.manifest_digest)" \
+            --output signing_response.json \
+            --reference "$(params.reference)" \
+            --requester "$(params.requester)" \
+            --sig-key-id "$(params.sig_key_id)" \
+            --sig-key-name "$(params.sig_key_name)" \
+            --umb-client-name "$(params.umb_client_name)" \
+            --umb-listen-topic "$(params.umb_listen_topic)" \
+            --umb-publish-topic "$(params.umb_publish_topic)" \
+            --umb-url "$(params.umb_url)" \
+            --verbose
+          then
+            echo "request-signature command succeeded."
+            break
+          elif [ $i -eq $MAX_RETRIES ]; then
+            echo "Max retries reached. Exiting."
+            exit 1
+          else
+            echo "Attempt $i failed. Retrying in $RETRY_DELAY seconds..."
+            sleep $RETRY_DELAY
+            RETRY_DELAY=$((RETRY_DELAY * 2))  # Exponential backoff
+          fi
+        done
 
         SIG_DATA=$(cat signing_response.json)
         echo "Signed claims and their metadata: "
