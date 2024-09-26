@@ -4,7 +4,7 @@ name: Build signing bundle
 on:  # yamllint disable-line rule:truthy
   workflow_run:
     workflows:
-      - validation
+      - Build and test
     branches:
       - main
     types:
