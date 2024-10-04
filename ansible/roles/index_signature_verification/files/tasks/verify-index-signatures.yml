@@ -73,7 +73,7 @@ spec:
         for image in $(cat image-tags.txt); do
           dest=$(echo -n $image | base64)
           echo "Inspecting $image"
-          skopeo inspect --raw docker://$image > $dest.json
+          skopeo inspect --retry-times 5 --raw docker://$image > $dest.json
         done
 
     - name: get-digest-pull-specs

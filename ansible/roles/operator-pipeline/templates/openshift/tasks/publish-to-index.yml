@@ -122,6 +122,7 @@ spec:
           # Add version tag to an index
           skopeo \
             --command-timeout 300s copy \
+            --retry-times 5 \
             --format v2s2 --all \
             --src-no-creds \
             --dest-creds $QUAY_USER:$QUAY_TOKEN \
@@ -131,6 +132,7 @@ spec:
           # Add permanent tag to an index
           skopeo \
             --command-timeout 300s copy \
+            --retry-times 5 \
             --format v2s2 --all \
             --src-no-creds \
             --dest-creds $QUAY_USER:$QUAY_TOKEN \

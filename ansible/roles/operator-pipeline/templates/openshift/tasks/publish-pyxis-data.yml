@@ -77,6 +77,7 @@ spec:
         IMAGE_PULL_SPEC="$(params.internal_registry)/$(params.internal_repository)@$(params.container_digest)"
 
         skopeo inspect \
+          --retry-times 5 \
           --no-tags \
           --authfile $(workspaces.registry-credentials.path)/.dockerconfigjson \
           docker://$IMAGE_PULL_SPEC > $(workspaces.image-data.path)/skopeo-inspect.json

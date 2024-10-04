@@ -278,6 +278,8 @@ def copy_tag(
     cmd = [
         "skopeo",
         "copy",
+        "--retry-times",
+        "5",
         f"docker://{QUAY_HOST}/{src_namespace}/{src_repo}:{src_tag}",
         f"docker://{QUAY_HOST}/{dest_namespace}/{dest_repo}:{dest_tag}",
         "--all",
