@@ -160,6 +160,8 @@ def test_copy_images_to_destination(mock_subprocess: MagicMock) -> None:
         [
             "skopeo",
             "copy",
+            "--retry-times",
+            "5",
             "docker://quay.io/qwe/asd@sha256:1234",
             "docker://quay.io/foo/bar:v4.12-foo",
             "--authfile",

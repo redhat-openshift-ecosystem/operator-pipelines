@@ -46,7 +46,7 @@ spec:
 
             DIGEST=$(echo $i | awk -F '+' '{print $2}')
 
-            MANIFEST_LIST=$(skopeo inspect --raw docker://$DIGEST)
+            MANIFEST_LIST=$(skopeo inspect --retry-times 5 --raw docker://$DIGEST)
             MANIFEST_LIST=$(echo $MANIFEST_LIST | jq -r '.manifests[].digest')
 
             # create comma separated index images that match each digest

@@ -28,6 +28,7 @@ spec:
 
         for tag in "${TAGS[@]}" ; do
             skopeo copy \
+              --retry-times 5 \
               --authfile "${AUTHFILE}" \
               "docker://${REF}" \
               "docker://${UNTAGGED_REF}:${tag}"

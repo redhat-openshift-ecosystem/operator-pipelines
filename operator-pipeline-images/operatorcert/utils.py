@@ -216,6 +216,8 @@ def copy_images_to_destination(
         cmd = [
             "skopeo",
             "copy",
+            "--retry-times",
+            "5",
             f"docker://{response.get('index_image_resolved')}",
             f"docker://{destination}:{version}{tag_suffix}",
         ]
