@@ -154,9 +154,9 @@ def test_pr_numbers_from_csv(
     delimiter: str,
     column: int,
     result: list[int | Exception] | type,
-    tmpdir: Path,
+    tmp_path: Path,
 ) -> None:
-    csv_file = tmpdir / "test.csv"
+    csv_file = tmp_path / "test.csv"
     if body:
         csv_file.write_text(body, encoding="utf-8")
     if isinstance(result, type):
