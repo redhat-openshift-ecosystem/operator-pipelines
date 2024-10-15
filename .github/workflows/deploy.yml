@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          pip install --user openshift
+          pip install --break-system-packages --user openshift
       - name: Deploy dev environment
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          pip install --user openshift
+          pip install --break-system-packages --user openshift
       - name: Deploy qa environment
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          pip install --user openshift
+          pip install --break-system-packages --user openshift
       - name: Deploy stage environment
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -113,7 +113,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          pip install --user openshift
+          pip install --break-system-packages --user openshift
       - name: Deploy prod environment
         uses: dawidd6/action-ansible-playbook@v2
         with:
