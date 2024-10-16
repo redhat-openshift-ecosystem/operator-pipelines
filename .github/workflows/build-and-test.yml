@@ -104,7 +104,7 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python dependencies
-          pip install --break-system-packages --user openshift pygithub
+          pip install --break-system-packages --user openshift pygithub jmespath
 
           # Add certificates to trusted list
           sudo cp  operator-pipeline-images/certs/* /usr/local/share/ca-certificates
