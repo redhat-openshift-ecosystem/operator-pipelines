@@ -6,6 +6,7 @@
     - name: Install python requirements
       ansible.builtin.pip:
         name: jmespath
+        break_system_packages: true
 
     - name: Find the run of {{ pipeline_name }}
       kubernetes.core.k8s_info:
