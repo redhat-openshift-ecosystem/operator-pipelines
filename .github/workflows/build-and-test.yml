@@ -103,6 +103,9 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Install python packages needed from ansible
+          pipx inject ansible-core jmespath
+
           # Install python dependencies
           pip install --break-system-packages --user openshift pygithub
 

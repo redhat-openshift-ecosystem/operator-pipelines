@@ -3,10 +3,6 @@
   tags:
     - verify-pipeline
   block:
-    - name: Install python requirements
-      community.general.pipx:
-        name: jmespath
-
     - name: Find the run of {{ pipeline_name }}
       kubernetes.core.k8s_info:
         api_version: tekton.dev/v1
