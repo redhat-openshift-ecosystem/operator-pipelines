@@ -3,6 +3,10 @@
   tags:
     - verify-pipeline
   block:
+    - name: Show python interpreter in use
+      ansible.builtin.debug:
+        var: ansible_python_interpreter
+
     - name: Install python requirements
       ansible.builtin.pip:
         name: jmespath
