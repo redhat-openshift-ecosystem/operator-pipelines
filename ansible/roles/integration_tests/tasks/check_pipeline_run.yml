@@ -3,14 +3,9 @@
   tags:
     - verify-pipeline
   block:
-    - name: Show python interpreter in use
-      ansible.builtin.debug:
-        var: ansible_python_interpreter
-
     - name: Install python requirements
-      ansible.builtin.pip:
+      community.general.pipx:
         name: jmespath
-        break_system_packages: true
 
     - name: Find the run of {{ pipeline_name }}
       kubernetes.core.k8s_info:
