@@ -103,8 +103,11 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Install system packages
+          sudo apt-get update && sudo apt-get install -y python3-jmespath
+
           # Install python dependencies
-          pip install --break-system-packages --user openshift pygithub jmespath
+          pip install --break-system-packages --user openshift pygithub
 
           # Add certificates to trusted list
           sudo cp  operator-pipeline-images/certs/* /usr/local/share/ca-certificates
