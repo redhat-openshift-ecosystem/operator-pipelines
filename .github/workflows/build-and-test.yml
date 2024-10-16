@@ -105,7 +105,9 @@ jobs:
         run: |
           # Install python packages needed from ansible
           echo $PATH
-          pipx list --include-injected
+          which ansible-playbook
+          which ansible-vault
+          pipx environment
           pipx inject ansible-core jmespath openshift kubernetes pygithub
           pipx list --include-injected
 
@@ -149,5 +151,6 @@ jobs:
             -e "integration_tests_operator_bundle_version=0.2.${{ github.run_number }}-${{ github.run_attempt }}"
             -e "operator_pipeline_image_tag=${{ github.sha }}"
             -e "suffix=${{ steps.prepare.outputs.suffix }}"
+            -e "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
             --skip-tags=signing-pipeline
             -v
