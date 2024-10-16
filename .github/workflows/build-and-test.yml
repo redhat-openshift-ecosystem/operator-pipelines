@@ -104,10 +104,7 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          pipx inject ansible-core jmespath
-
-          # Install python dependencies
-          pip install --break-system-packages --user openshift pygithub
+          pipx inject ansible-core jmespath openshift pygithub
 
           # Add certificates to trusted list
           sudo cp  operator-pipeline-images/certs/* /usr/local/share/ca-certificates
