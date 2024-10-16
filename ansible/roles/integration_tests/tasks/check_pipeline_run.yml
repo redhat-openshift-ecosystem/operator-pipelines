@@ -31,7 +31,7 @@
       until: >
         pipeline_run_wait.resources[0] | community.general.json_query("contains(['False', 'True'], status.conditions[?type == 'Succeeded']|[-1].status)")
       # This is way too verbose
-      no_log: true
+      # no_log: true
       retries: 90
       delay: 60
 
