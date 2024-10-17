@@ -36,7 +36,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pdm sync -dG tox
-          python3 -m pip install ansible-lint
+          pipx install ansible-lint
 
       - name: Run Tests
         run: |
@@ -104,12 +104,7 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          echo $PATH
-          which ansible-playbook
-          which ansible-vault
-          pipx environment
-          pipx inject ansible-core jmespath openshift kubernetes pygithub
-          pipx list --include-injected
+          pipx inject ansible-core jmespath openshift pygithub
 
           # Add certificates to trusted list
           sudo cp  operator-pipeline-images/certs/* /usr/local/share/ca-certificates
