@@ -36,7 +36,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pdm sync -dG tox
-          python3 -m pip install ansible-lint
+          pipx install ansible-lint
 
       - name: Run Tests
         run: |
@@ -103,8 +103,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Install python dependencies
-          pip install --user openshift pygithub
+          # Install python packages needed from ansible
+          pipx inject ansible-core jmespath openshift pygithub
 
           # Add certificates to trusted list
           sudo cp  operator-pipeline-images/certs/* /usr/local/share/ca-certificates
@@ -146,5 +146,6 @@ jobs:
             -e "integration_tests_operator_bundle_version=0.2.${{ github.run_number }}-${{ github.run_attempt }}"
             -e "operator_pipeline_image_tag=${{ github.sha }}"
             -e "suffix=${{ steps.prepare.outputs.suffix }}"
+            -e "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
             --skip-tags=signing-pipeline
             -v

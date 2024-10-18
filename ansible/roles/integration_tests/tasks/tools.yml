@@ -23,12 +23,3 @@
         remote_src: true
         include:
           - opm
-
-    - name: Copy a local scripts to the host
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: "{{ temp_tools_dir.path }}"
-        mode: a+x
-
-      with_items:
-        - "files/wait_for_pipelinerun.sh"

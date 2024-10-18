@@ -3,4 +3,4 @@ collections:
   - name: kubernetes.core
     version: 2.4.0
   - name: community.general
-    version: 7.5.0
+    version: 9.5.0

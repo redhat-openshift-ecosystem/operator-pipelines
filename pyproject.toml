@@ -89,6 +89,7 @@ upload-signature = "operatorcert.entrypoints.upload_signature:main"
 validate-catalog-format = "operatorcert.entrypoints.validate_catalog_format:main"
 verify-changed-dirs = "operatorcert.entrypoints.verify_changed_dirs:main"
 invalidate-preflight-versions = "operatorcert.entrypoints.invalidate_preflight_versions:main"
+bulk-retrigger = "operatorcert.entrypoints.bulk_retrigger:main"
 
 
 [build-system]

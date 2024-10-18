@@ -34,7 +34,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          pip install --user openshift
+          # Install python packages needed from ansible
+          pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy dev environment
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -43,7 +44,10 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}} env=dev"
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }}"
+            --extra-vars "suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --extra-vars "env=dev"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
             --skip-tags ci,import-index-images
             --verbose
 
@@ -60,7 +64,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          pip install --user openshift
+          # Install python packages needed from ansible
+          pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy qa environment
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -69,7 +74,10 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}} env=qa"
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }}"
+            --extra-vars "suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --extra-vars "env=qa"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
             --skip-tags ci,import-index-images
             --verbose
 
@@ -87,7 +95,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          pip install --user openshift
+          # Install python packages needed from ansible
+          pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy stage environment
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -96,7 +105,10 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD}}
           options: |
-            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}} env=stage"
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }}"
+            --extra-vars "suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --extra-vars "env=stage"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
             --skip-tags ci,import-index-images
             --verbose
 
@@ -113,7 +125,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          pip install --user openshift
+          # Install python packages needed from ansible
+          pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy prod environment
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -122,7 +135,10 @@ jobs:
           requirements: playbooks/requirements.yml
           vault_password: ${{secrets.VAULT_PASSWORD_PROD}}
           options: |
-            --extra-vars "operator_pipeline_image_tag=${{ github.sha }} suffix=${{needs.prepare-env.outputs.short_sha}} env=prod"
+            --extra-vars "operator_pipeline_image_tag=${{ github.sha }}"
+            --extra-vars "suffix=${{needs.prepare-env.outputs.short_sha}}"
+            --extra-vars "env=prod"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
             --skip-tags ci,import-index-images
             --verbose
 

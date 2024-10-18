@@ -15,7 +15,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate docs
         run: |
-          pip install mkdocs \
+          pipx install mkdocs
+          pipx inject mkdocs \
             mkdocs-material \
             pymdown-extensions \
             mkdocs-mermaid2-plugin

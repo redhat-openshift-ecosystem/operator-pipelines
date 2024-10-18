@@ -67,6 +67,8 @@ Based on which pipeline fails one of these command can be used to re-trigger it 
 
 After a pipeline is re-triggered using the command a few labels will be added and removed from the PR. First a new labels `pipeline/trigger-hosted` or `pipeline/trigger-release` is added. This label kick in the pipeline and pipeline itself start adding a labels based on the pipeline status.
 
+A script called `bulk-retrigger` is provided in the operator-pipeline container image to help re-triggering a pipeline on multiple PRs: it takes the repository name, a CSV file containing a list of PRs to process and automates the re-triggering of the pipeline one PR at a time. See the help text for details on how to run it.
+
 ### Pipeline logs
 Pipelines interacts with user using a Github Pull request interface. There are a slight differences between ISV and community repositories, but overall concept is the same.
 
