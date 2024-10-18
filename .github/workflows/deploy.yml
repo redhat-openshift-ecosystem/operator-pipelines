@@ -47,6 +47,7 @@ jobs:
             --extra-vars "operator_pipeline_image_tag=${{ github.sha }}"
             --extra-vars "suffix=${{needs.prepare-env.outputs.short_sha}}"
             --extra-vars "env=dev"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
             --skip-tags ci,import-index-images
             --verbose
 

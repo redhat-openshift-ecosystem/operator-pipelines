@@ -30,8 +30,6 @@
       register: pipeline_run_wait
       until: >
         pipeline_run_wait.resources[0] | community.general.json_query("contains(['False', 'True'], status.conditions[?type == 'Succeeded']|[-1].status)")
-      failed_when: >
-        pipeline_run_wait.resources[0] | community.general.json_query("!contains(['False', 'True'], status.conditions[?type == 'Succeeded']|[-1].status)")
       retries: 90
       delay: 60
 
