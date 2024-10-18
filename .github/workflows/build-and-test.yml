@@ -13,7 +13,7 @@ on:  # yamllint disable-line rule:truthy
 jobs:
   tox:
     name: Run unit tests and linters
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
 
   build:
     name: Build and push image
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Set variables
@@ -92,7 +92,7 @@ jobs:
           - isv-fbc-catalog
 
       fail-fast: false
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
