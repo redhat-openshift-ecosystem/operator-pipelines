@@ -15,6 +15,7 @@ from operatorcert.static_tests.community.bundle import (
     check_api_version_constraints,
     check_replaces_availability,
     check_upgrade_graph_loop,
+    check_using_fbc,
     ocp_to_k8s_ver,
 )
 from semver import Version
@@ -673,3 +674,43 @@ def test_check_replaces_availability(
     errors = list(check_replaces_availability(bundle))
 
     assert set(errors) == expected
+
+
+@pytest.mark.parametrize(
+    "files, bundle_to_check, expected",
+    [
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+            ],
+            ("hello", "0.0.1"),
+            "It is recommended for new operators to start directly with FBC",
+            id="New bundle warning",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                bundle_files("hello", "0.0.2"),
+            ],
+            ("hello", "0.0.2"),
+            "Consider migrating to FBC for better maintainability",
+            id="Updating existing operator",
+        ),
+    ],
+)
+def test_using_fbc(
+    tmp_path: Path,
+    files: list[dict[str, Any]],
+    bundle_to_check: tuple[str, str],
+    expected: str,
+) -> None:
+    create_files(tmp_path, *files)
+    repo = Repo(tmp_path)
+    operator_name, bundle_version = bundle_to_check
+    operator = repo.operator(operator_name)
+    bundle = operator.bundle(bundle_version)
+
+    results = list(check_using_fbc(bundle))
+
+    assert len(results) == 1
+    assert expected in results[0].reason

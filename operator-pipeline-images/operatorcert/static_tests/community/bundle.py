@@ -441,3 +441,36 @@ def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
         f"`{replaces_bundle}` - `{replaces_ocp_version_str}`"
     )
     yield from []
+
+
+NON_FBC_SUGGESTION = (
+    "This operator does not use File Based Catalog (FBC). "
+    "Consider migrating to FBC for better maintainability: "
+    "https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_onboarding/"
+)
+NON_FBC_WARNING = (
+    "This operator does not use File Based Catalog (FBC). "
+    "It is recommended for new operators to start directly with FBC: "
+    "https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_workflow/ "
+    "The use of FBC will be mandatory for new operators from February 2025."
+)
+
+
+@skip_fbc
+def check_using_fbc(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    This check is used only for non-FBC bundles and suggests
+    using the File Based Catalog for new Operators
+    or recommends migrating existing Operators to FBC.
+
+    Args:
+        bundle (Bundle): Tested operator bundle
+    """
+    all_bundles = set(bundle.operator.all_bundles())
+    other_bundles = all_bundles - {bundle}
+    if other_bundles:
+        # not a first bundle, existing operator
+        yield Warn(NON_FBC_SUGGESTION)
+    else:
+        # TODO: change to Fail when FBC mandatory for new operators
+        yield Warn(NON_FBC_WARNING)
