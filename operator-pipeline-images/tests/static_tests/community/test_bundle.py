@@ -684,7 +684,7 @@ def test_check_replaces_availability(
                 bundle_files("hello", "0.0.1"),
             ],
             ("hello", "0.0.1"),
-            "It is recommended for new operators to start directly with FBC",
+            "is recommended for new operators",
             id="New bundle warning",
         ),
         pytest.param(
@@ -693,7 +693,7 @@ def test_check_replaces_availability(
                 bundle_files("hello", "0.0.2"),
             ],
             ("hello", "0.0.2"),
-            "Consider migrating to FBC for better maintainability",
+            "This operator does not use FBC. Consider",
             id="Updating existing operator",
         ),
     ],
