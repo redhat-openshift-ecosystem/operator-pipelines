@@ -445,7 +445,8 @@ def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
 
 NON_FBC_SUGGESTION = (
     "[File Based Catalog (FBC)]"
-    "(https://github.com/redhat-openshift-ecosystem/community-operators-prod/discussions/5031#discussion-7097441) "
+    "(https://github.com/redhat-openshift-ecosystem/community-operators-prod/"
+    "discussions/5031#discussion-7097441) "
     "is a new way to manage operator metadata. "
     "This operator does not use FBC. Consider [migrating]"
     "(https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_onboarding/) "
@@ -453,9 +454,11 @@ NON_FBC_SUGGESTION = (
 )
 NON_FBC_WARNING = (
     "[File Based Catalog (FBC)]"
-    "(https://github.com/redhat-openshift-ecosystem/community-operators-prod/discussions/5031#discussion-7097441) "
+    "(https://github.com/redhat-openshift-ecosystem/community-operators-prod/"
+    "discussions/5031#discussion-7097441) "
     "is a new way to manage operator metadata. "
-    "This operator does not use FBC and it is recommended for new operators to [start directly with FBC]"
+    "This operator does not use FBC and it is recommended for new operators to "
+    "[start directly with FBC]"
     "(https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_workflow/). "
     "The use of FBC will be mandatory for new operators from February 2025."
 )
