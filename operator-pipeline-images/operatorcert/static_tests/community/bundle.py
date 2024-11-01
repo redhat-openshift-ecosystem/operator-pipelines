@@ -459,8 +459,7 @@ NON_FBC_WARNING = (
     "is a new way to manage operator metadata. "
     "This operator does not use FBC and it is recommended for new operators to "
     "[start directly with FBC]"
-    "(https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_workflow/). "
-    "The use of FBC will be mandatory for new operators from February 2025."
+    "(https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_workflow/)."
 )
 
 
