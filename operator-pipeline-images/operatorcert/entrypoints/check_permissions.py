@@ -167,6 +167,34 @@ class OperatorReview:
         """
         return urllib.parse.urlparse(self.pull_request_url).path.split("/")[1]
 
+    @property
+    def github_repo_name(self) -> str:
+        """
+        The name of the github repo the pull request belongs to
+
+        Returns:
+            str: the github repo name in the form "organization_name/repo_name"
+        """
+        return "/".join(
+            urllib.parse.urlparse(self.pull_request_url).path.split("/")[1:3]
+        )
+
+    @property
+    def pr_labels(self) -> set[str]:
+        """
+        The set of labels applied to the pull request
+
+        Returns:
+            set[str]: the labels applied to the pull request
+        """
+        github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN") or "")
+        github = Github(auth=github_auth)
+        pr_no = int(urllib.parse.urlparse(self.pull_request_url).path.split("/")[-1])
+        return {
+            x.name
+            for x in github.get_repo(self.github_repo_name).get_pull(pr_no).get_labels()
+        }
+
     def check_permissions(self) -> bool:
         """
         Check if the pull request owner has permissions to submit a PR for the operator
@@ -271,20 +299,27 @@ class OperatorReview:
                 f"{self.operator} does not have any reviewers in the base repository "
                 "or is brand new."
             )
-        if self.pr_owner not in self.reviewers:
+
+        if self.pr_owner in self.reviewers:
             LOGGER.info(
-                "Pull request owner %s is not in the list of reviewers %s",
+                "Pull request owner %s can submit PR for operator %s",
                 self.pr_owner,
-                self.reviewers,
+                self.operator.operator_name,
             )
-            self.request_review_from_owners()
-            return False
+            return True
+
+        LOGGER.info("Checking if the pull request is approved by a reviewer")
+        if "approved" in self.pr_labels:
+            LOGGER.info("Pull request is approved by a reviewer")
+            return True
+
         LOGGER.info(
-            "Pull request owner %s can submit PR for operator %s",
+            "Pull request owner %s is not in the list of reviewers %s",
             self.pr_owner,
-            self.operator.operator_name,
+            self.reviewers,
         )
-        return True
+        self.request_review_from_owners()
+        return False
 
     def request_review_from_maintainers(self) -> None:
         """
@@ -313,10 +348,11 @@ class OperatorReview:
         reviewers_with_at = ", ".join(map(lambda x: f"@{x}", self.reviewers))
         comment_text = (
             "Author of the PR is not listed as one of the reviewers in ci.yaml.\n"
-            "Please review the PR and approve it with \`/lgtm\` comment.\n"  # pylint: disable=anomalous-backslash-in-string
+            "Please review the PR and approve it with an \`/approve\` comment.\n"  # pylint: disable=anomalous-backslash-in-string
             f"{reviewers_with_at} \n\n"
-            "Consider adding author of the PR to the ci.yaml file if you want automated "
-            "approval for a followup submissions."
+            "Consider adding the author of the PR to the list of reviewers in"
+            "the ci.yaml file if you want automated merge without explicit"
+            "approval."
         )
 
         run_command(
