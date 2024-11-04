@@ -347,11 +347,11 @@ class OperatorReview:
         """
         reviewers_with_at = ", ".join(map(lambda x: f"@{x}", self.reviewers))
         comment_text = (
-            "Author of the PR is not listed as one of the reviewers in ci.yaml.\n"
-            "Please review the PR and approve it with an \`/approve\` comment.\n"  # pylint: disable=anomalous-backslash-in-string
-            f"{reviewers_with_at} \n\n"
-            "Consider adding the author of the PR to the list of reviewers in"
-            "the ci.yaml file if you want automated merge without explicit"
+            "The author of the PR is not listed as one of the reviewers in ci.yaml.\n"
+            f"{reviewers_with_at}: please review the PR and approve it with an "
+            "`/approve` comment.\n\n"
+            "Consider adding the author of the PR to the list of reviewers in "
+            "the ci.yaml file if you want automated merge without explicit "
             "approval."
         )
 

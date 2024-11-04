@@ -352,11 +352,10 @@ def test_OperatorReview_request_review_from_owners(
             "comment",
             review_community.pull_request_url,
             "--body",
-            "Author of the PR is not listed as one of the reviewers in ci.yaml.\n"
-            "Please review the PR and approve it with an \\`/approve\\` comment.\n"
-            "@user1, @user2 \n\n"
-            "Consider adding the author of the PR to the list of reviewers in"
-            "the ci.yaml file if you want automated merge without explicit"
+            "The author of the PR is not listed as one of the reviewers in ci.yaml.\n"
+            "@user1, @user2: please review the PR and approve it with an `/approve` comment.\n\n"
+            "Consider adding the author of the PR to the list of reviewers in "
+            "the ci.yaml file if you want automated merge without explicit "
             "approval.",
         ]
     )
