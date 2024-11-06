@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
@@ -103,6 +103,33 @@ def test_OperatorReview_github_repo_org(
     review_community: check_permissions.OperatorReview,
 ) -> None:
     assert review_community.github_repo_org == "my-org"
+
+
+def test_OperatorReview_github_repo_name(
+    review_community: check_permissions.OperatorReview,
+) -> None:
+    assert review_community.github_repo_name == "my-org/repo-123"
+
+
+@patch("operatorcert.entrypoints.check_permissions.Github")
+@patch("operatorcert.entrypoints.check_permissions.Auth.Token")
+def test_OperatorReview_pr_labels(
+    mock_token: MagicMock,
+    mock_github: MagicMock,
+    review_community: check_permissions.OperatorReview,
+) -> None:
+    repo = MagicMock()
+    pull = MagicMock()
+
+    def _mock_label(name: str) -> MagicMock:
+        m = MagicMock()
+        m.name = name
+        return m
+
+    pull.get_labels.return_value = [_mock_label("foo"), _mock_label("bar")]
+    repo.get_pull.return_value = pull
+    mock_github.return_value.get_repo.return_value = repo
+    assert review_community.pr_labels == {"foo", "bar"}
 
 
 @pytest.mark.parametrize(
@@ -225,6 +252,39 @@ def test_OperatorReview_check_permission_for_partner(
             review_partner.check_permission_for_partner()
 
 
+@pytest.mark.parametrize(
+    ["reviewers", "labels", "owners_review", "result"],
+    [
+        pytest.param(
+            [],
+            set(),
+            False,
+            check_permissions.MaintainersReviewNeeded,
+            id="No reviewers",
+        ),
+        pytest.param(
+            ["owner", "foo"],
+            set(),
+            False,
+            True,
+            id="author is reviewer",
+        ),
+        pytest.param(
+            ["foo", "bar"],
+            set(),
+            True,
+            False,
+            id="author is not reviewer",
+        ),
+        pytest.param(
+            ["bar", "baz"],
+            {"approved"},
+            False,
+            True,
+            id="author is not reviewer, PR approved",
+        ),
+    ],
+)
 @patch(
     "operatorcert.entrypoints.check_permissions.OperatorReview.request_review_from_owners"
 )
@@ -232,24 +292,33 @@ def test_OperatorReview_check_permission_for_partner(
     "operatorcert.entrypoints.check_permissions.OperatorReview.reviewers",
     new_callable=mock.PropertyMock,
 )
+@patch(
+    "operatorcert.entrypoints.check_permissions.OperatorReview.pr_labels",
+    new_callable=mock.PropertyMock,
+)
 def test_OperatorReview_check_permission_for_community(
+    mock_labels: MagicMock,
     mock_reviewers: MagicMock,
     mock_review_from_owners: MagicMock,
     review_community: check_permissions.OperatorReview,
+    reviewers: list[str],
+    labels: set[str],
+    owners_review: bool,
+    result: bool | type,
 ) -> None:
-    mock_reviewers.return_value = []
-    with pytest.raises(check_permissions.MaintainersReviewNeeded):
-        review_community.check_permission_for_community()
+    mock_reviewers.return_value = reviewers
+    mock_labels.return_value = labels
 
-    mock_reviewers.return_value = ["user1", "user2"]
+    if isinstance(result, bool):
+        assert review_community.check_permission_for_community() == result
+    else:
+        with pytest.raises(result):
+            review_community.check_permission_for_community()
 
-    assert review_community.check_permission_for_community() == False
-    mock_review_from_owners.assert_called_once()
-
-    mock_review_from_owners.reset_mock()
-    mock_reviewers.return_value = ["owner"]
-    assert review_community.check_permission_for_community() == True
-    mock_review_from_owners.assert_not_called()
+    if owners_review:
+        mock_review_from_owners.assert_called_once()
+    else:
+        mock_review_from_owners.assert_not_called()
 
 
 @patch("operatorcert.entrypoints.check_permissions.run_command")
@@ -283,10 +352,11 @@ def test_OperatorReview_request_review_from_owners(
             "comment",
             review_community.pull_request_url,
             "--body",
-            "Author of the PR is not listed as one of the reviewers in ci.yaml.\n"
-            "Please review the PR and approve it with \\`/lgtm\\` comment.\n"
-            "@user1, @user2 \n\nConsider adding author of the PR to the ci.yaml "
-            "file if you want automated approval for a followup submissions.",
+            "The author of the PR is not listed as one of the reviewers in ci.yaml.\n"
+            "@user1, @user2: please review the PR and approve it with an `/approve` comment.\n\n"
+            "Consider adding the author of the PR to the list of reviewers in "
+            "the ci.yaml file if you want automated merge without explicit "
+            "approval.",
         ]
     )
 
