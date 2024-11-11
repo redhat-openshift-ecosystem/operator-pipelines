@@ -525,6 +525,24 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fbcenabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      fbc.enabled
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fbcversion_promotion_strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      fbc.version_promotion_strategy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#example_1" class="md-nav__link">
     <span class="md-ellipsis">
       Example
@@ -579,6 +597,30 @@
   <a href="#example_2" class="md-nav__link">
     <span class="md-ellipsis">
       Example
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#certification-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      Certification project
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Certification project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cert_project_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      cert_project_id
     </span>
   </a>
   
@@ -969,7 +1011,8 @@
 
 
 <h1 id="operator-publishing-review-settings">Operator Publishing / Review settings</h1>
-<p>Each operator might have <code>ci.yaml</code> configuration file to be present in an operator directory (for example <code>operators/aqua/ci.yaml</code>). This configuration file is used by <a href="https://github.com/redhat-openshift-ecosystem/community-operators-prod">community-operators</a> pipeline to setup various features like <code>reviewers</code>, <code>fbc</code> mode or <code>operator versioning</code>.</p>
+<p>Each operator might have <code>ci.yaml</code> configuration file to be present in an operator directory (for example <code>operators/aqua/ci.yaml</code>). This configuration file is used by the pipeline automation to control a way how the operator will be published and reviewed.</p>
+<p>A content of the file depends on the operator source type. There are a different set of options for community operators and certified operators.</p>
 <blockquote>
 <p><strong>Note:</strong>
     One can create or modify <code>ci.yaml</code> file with a new operator version. This operation can be done in the same PR with other operator changes.</p>
@@ -996,11 +1039,15 @@ reviewers:
 
 </code></pre>
 <h2 id="fbc-mode">FBC mode</h2>
+<h3 id="fbcenabled"><code>fbc.enabled</code></h3>
 <p>The <code>fbc.enabled</code> flag enables the <a href="../fbc_workflow/">File-Based catalog</a> feature. It is highly recommended to use the FBC mode in order to have better control over the operator's catalog.</p>
-<p>The <code>fbc.version_promotion_strategy</code> option defines the strategy for promoting the operator into a next OCP version. When a new OCP version becomes available an automated process will promote the operator from a version N to a version N+1. The <code>fbc.version_promotion_strategy</code> option can have the following values:
-- <code>never</code> - the operator will not be promoted to the next OCP version automatically
-- <code>always</code> - the operator will be promoted to the next OCP version automatically
-- <code>review-needed</code> - the operator will be promoted to the next OCP version automatically, but the PR will be created and the reviewers will be asked to review the changes</p>
+<h3 id="fbcversion_promotion_strategy"><code>fbc.version_promotion_strategy</code></h3>
+<p>The <code>fbc.version_promotion_strategy</code> option defines the strategy for promoting the operator into a next OCP version. When a new OCP version becomes available an automated process will promote the operator from a version N to a version N+1. The <code>fbc.version_promotion_strategy</code> option can have the following values:</p>
+<ul>
+<li><code>never</code> - the operator will not be promoted to the next OCP version automatically</li>
+<li><code>always</code> - the operator will be promoted to the next OCP version automatically</li>
+<li><code>review-needed</code> - the operator will be promoted to the next OCP version automatically, but the PR will be created and the reviewers will be asked to review the changes</li>
+</ul>
 <h3 id="example_1">Example</h3>
 <pre><code class="language-yaml">---
 fbc:
@@ -1024,6 +1071,9 @@ fbc:
 # Use `replaces-mode` or `semver-mode`.
 updateGraph: replaces-mode
 </code></pre>
+<h2 id="certification-project">Certification project</h2>
+<h3 id="cert_project_id"><code>cert_project_id</code></h3>
+<p>The <code>cert_project_id</code> option is required for certified and marketplace operators. It is used to link the operator to the certification project in Red Hat Connect.</p>
 <h2 id="kubernetes-max-version-in-csv">Kubernetes max version in CSV</h2>
 <p>Starting from kubernetes 1.22 some old APIs were deprecated (<a href="https://kubernetes.io/docs/reference/using-api/deprecation-guide/#v1-22">Deprecated API Migration Guide from v1.22</a>. Users can set <code>operatorhub.io/ui-metadata-max-k8s-version: "&lt;version&gt;"</code> in its CSV file to inform its maximum supported Kubernetes version. The following example will inform that operator can handle <code>1.21</code> as maximum Kubernetes version</p>
 <pre><code>$ cat &lt;path-to-operators&gt;/&lt;name&gt;/&lt;version&gt;/.../my.clusterserviceversion.yaml
