@@ -8,8 +8,8 @@ To submit an operator one has to do these steps
     - operators
 1. Configure `ci.yaml` file. [More info](./operator-ci-yaml.md)
     - Setup reviewers
-    - Operator versioning strategy
-1. Make a pull request
+    - Enable FBC mode
+1. Make a pull request with a new operator bundle or catalog changes
 1. Verify tests and fix problems, if possible
 1. Ask for help in the PR in case of problems
 
@@ -33,8 +33,8 @@ In case of failures, please have a look at the logs of specific tests. If an err
 ## Useful commands interacting with the pipeline
 You can post the following comment/command:
 
-Command | Functionality |
---- | --- |
-`/pipeline restart operator-hosted-pipeline` | The hosted pipeline will be re-triggered and PR will be merged if possible. |
-`/pipeline restart operator-release-pipeline` | The release pipeline will be re-triggered.
-`/test skip {test_case_name}` | *test_case_name* test will be skipped. Please consider that only a subset of tests (*currently only pruned graph test*) can be skipped.
+| Command                                       | Functionality                                                                                                                           |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `/pipeline restart operator-hosted-pipeline`  | The hosted pipeline will be re-triggered and PR will be merged if possible. The command only works if a previous pipeline failed.       |
+| `/pipeline restart operator-release-pipeline` | The release pipeline will be re-triggered. The command only works if a previous pipeline failed.                                        |
+| `/test skip {test_case_name}`                 | *test_case_name* test will be skipped. Please consider that only a subset of tests (*currently only pruned graph test*) can be skipped. |

@@ -1,6 +1,9 @@
 # Operator Publishing / Review settings
 
-Each operator might have `ci.yaml` configuration file to be present in an operator directory (for example `operators/aqua/ci.yaml`). This configuration file is used by [community-operators](https://github.com/redhat-openshift-ecosystem/community-operators-prod) pipeline to setup various features like `reviewers` or `operator versioning`.
+Each operator might have `ci.yaml` configuration file to be present in an operator directory (for example `operators/aqua/ci.yaml`). This configuration file is used by the pipeline automation to control a way how the operator will be published and reviewed.
+
+A content of the file depends on the operator source type. There are a different set of options for community operators and certified operators.
+
 
 > **Note:**
     One can create or modify `ci.yaml` file with a new operator version. This operation can be done in the same PR with other operator changes.
@@ -21,7 +24,7 @@ If you want to accelerate publishing your changes, consider adding yourself and 
 For this to work, it is required to setup reviewers in `ci.yaml` file. It can be done by adding `reviewers` tag with a list of GitHub usernames. For example
 
 ### Example
-```
+```yaml
 $ cat <path-to-operator>/ci.yaml
 ---
 reviewers:
@@ -30,7 +33,30 @@ reviewers:
 
 ```
 
+## FBC mode
+
+### `fbc.enabled`
+The `fbc.enabled` flag enables the [File-Based catalog](./fbc_workflow.md) feature. It is highly recommended to use the FBC mode in order to have better control over the operator's catalog.
+
+### `fbc.version_promotion_strategy`
+The `fbc.version_promotion_strategy` option defines the strategy for promoting the operator into a next OCP version. When a new OCP version becomes available an automated process will promote the operator from a version N to a version N+1. The `fbc.version_promotion_strategy` option can have the following values:
+
+- `never` - the operator will not be promoted to the next OCP version automatically (default)
+- `always` - the operator will be promoted to the next OCP version automatically
+- `review-needed` - the operator will be promoted to the next OCP version automatically, but the PR will be created and the reviewers will be asked to review the changes
+
+### Example
+```yaml
+---
+fbc:
+    enabled: true
+    version_promotion_strategy: never
+```
+
+
 ## Operator versioning
+> **_NOTE:_** This option is only available for the non-FBC operators where user doesn't have a direct control over the catalog.
+
 Operators have multiple versions. When a new version is released, OLM can update an operator automatically. There are 2 update strategies possible, which are defined in `ci.yaml` at the operator top level.
 
 ### replaces-mode
@@ -49,6 +75,11 @@ $ cat <path-to-operator>/ci.yaml
 # Use `replaces-mode` or `semver-mode`.
 updateGraph: replaces-mode
 ```
+
+## Certification project
+
+### `cert_project_id`
+The `cert_project_id` option is required for certified and marketplace operators. It is used to link the operator to the certification project in Red Hat Connect.
 
 ## Kubernetes max version in CSV
 
