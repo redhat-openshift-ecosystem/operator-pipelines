@@ -85,12 +85,16 @@ catalogs
 ### Adding new bundle to Catalog
 To add a bundle to the catalog you need to first submit the new version of the operator
 using traditional [PR workflow](./contributing-via-pr.md). The operator pipeline builds,
-tests, and releases the bundle into the registry. At this point, the operator is not available
-in the catalog yet. To add the bundle to the catalog you need to update catalog templates
+tests, and releases the bundle into the registry. **At this point, the operator is not available
+in the catalog yet.** To add the bundle to the catalog you need to update catalog templates
 and add a bundle pullspec given by pull request comment and open a new pull request with catalog
 changes.
 
 ![Release info](../img/release-info.png)
+
+> [!NOTE]
+> Currently a workflow requires a 2-step process to release a new bundle into the catalog. In the first step, the operator bundle is released and in the second step, the catalog is updated with the new bundle.
+> We are working on a solution to automate this process and make it a single step. However, this will require a usage of `SemVer` catalog template. In case you would like to use this feature once available please consider using `SemVer` template.
 
 #### SemVer
 For example if I want to add `v1.1.0` bundle into `Fast` channel of a specific catalog I'll
