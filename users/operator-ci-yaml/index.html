@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.41">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
     
     
       
@@ -515,6 +515,30 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fbc-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      FBC mode
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FBC mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#operator-versioning" class="md-nav__link">
     <span class="md-ellipsis">
       Operator versioning
@@ -552,7 +576,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#example_1" class="md-nav__link">
+  <a href="#example_2" class="md-nav__link">
     <span class="md-ellipsis">
       Example
     </span>
@@ -945,7 +969,7 @@
 
 
 <h1 id="operator-publishing-review-settings">Operator Publishing / Review settings</h1>
-<p>Each operator might have <code>ci.yaml</code> configuration file to be present in an operator directory (for example <code>operators/aqua/ci.yaml</code>). This configuration file is used by <a href="https://github.com/redhat-openshift-ecosystem/community-operators-prod">community-operators</a> pipeline to setup various features like <code>reviewers</code> or <code>operator versioning</code>.</p>
+<p>Each operator might have <code>ci.yaml</code> configuration file to be present in an operator directory (for example <code>operators/aqua/ci.yaml</code>). This configuration file is used by <a href="https://github.com/redhat-openshift-ecosystem/community-operators-prod">community-operators</a> pipeline to setup various features like <code>reviewers</code>, <code>fbc</code> mode or <code>operator versioning</code>.</p>
 <blockquote>
 <p><strong>Note:</strong>
     One can create or modify <code>ci.yaml</code> file with a new operator version. This operation can be done in the same PR with other operator changes.</p>
@@ -964,14 +988,29 @@
 </blockquote>
 <p>For this to work, it is required to setup reviewers in <code>ci.yaml</code> file. It can be done by adding <code>reviewers</code> tag with a list of GitHub usernames. For example</p>
 <h3 id="example">Example</h3>
-<pre><code>$ cat &lt;path-to-operator&gt;/ci.yaml
+<pre><code class="language-yaml">$ cat &lt;path-to-operator&gt;/ci.yaml
 ---
 reviewers:
   - user1
   - user2
 
 </code></pre>
+<h2 id="fbc-mode">FBC mode</h2>
+<p>The <code>fbc.enabled</code> flag enables the <a href="../fbc_workflow/">File-Based catalog</a> feature. It is highly recommended to use the FBC mode in order to have better control over the operator's catalog.</p>
+<p>The <code>fbc.version_promotion_strategy</code> option defines the strategy for promoting the operator into a next OCP version. When a new OCP version becomes available an automated process will promote the operator from a version N to a version N+1. The <code>fbc.version_promotion_strategy</code> option can have the following values:
+- <code>never</code> - the operator will not be promoted to the next OCP version automatically
+- <code>always</code> - the operator will be promoted to the next OCP version automatically
+- <code>review-needed</code> - the operator will be promoted to the next OCP version automatically, but the PR will be created and the reviewers will be asked to review the changes</p>
+<h3 id="example_1">Example</h3>
+<pre><code class="language-yaml">---
+fbc:
+    enabled: true
+    version_promotion_strategy: never
+</code></pre>
 <h2 id="operator-versioning">Operator versioning</h2>
+<blockquote>
+<p><strong><em>NOTE:</em></strong> This option is only available for the non-FBC operators where user doesn't have a direct control over the catalog.</p>
+</blockquote>
 <p>Operators have multiple versions. When a new version is released, OLM can update an operator automatically. There are 2 update strategies possible, which are defined in <code>ci.yaml</code> at the operator top level.</p>
 <h3 id="replaces-mode">replaces-mode</h3>
 <p>Every next version defines which version will be replaced using <code>replaces</code> key in the CSV file. It means, that there is a possibility to omit some versions from the <em>update graph</em>. The best practice is to put them in a separate channel then.</p>
@@ -979,7 +1018,7 @@ reviewers:
 <p>Every version will be replaced by the next higher version according to semantic versioning.</p>
 <h3 id="restrictions">Restrictions</h3>
 <p>A contributor can decide if <code>semver-mode</code> or <code>replaces-mode</code> mode will be used for a specific operator. By default, <code>replaces-mode</code> is activated, when <code>ci.yaml</code> file is present and contains <code>updateGraph: replaces-mode</code>. When a contributor decides to switch and use <code>semver-mode</code>, it will be specified in <code>ci.yaml</code> file or the key <code>updateGraph</code> will be missing.</p>
-<h3 id="example_1">Example</h3>
+<h3 id="example_2">Example</h3>
 <pre><code>$ cat &lt;path-to-operator&gt;/ci.yaml
 ---
 # Use `replaces-mode` or `semver-mode`.

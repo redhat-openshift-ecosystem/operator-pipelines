@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.41">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
     
     
       
@@ -916,10 +916,10 @@
 </li>
 <li>Configure <code>ci.yaml</code> file. <a href="../operator-ci-yaml/">More info</a><ul>
 <li>Setup reviewers</li>
-<li>Operator versioning strategy</li>
+<li>Enable FBC mode</li>
 </ul>
 </li>
-<li>Make a pull request</li>
+<li>Make a pull request with a new operator bundle or catalog changes</li>
 <li>Verify tests and fix problems, if possible</li>
 <li>Ask for help in the PR in case of problems</li>
 </ol>
@@ -944,11 +944,11 @@
 <tbody>
 <tr>
 <td><code>/pipeline restart operator-hosted-pipeline</code></td>
-<td>The hosted pipeline will be re-triggered and PR will be merged if possible.</td>
+<td>The hosted pipeline will be re-triggered and PR will be merged if possible. The command only works if a previous pipeline failed.</td>
 </tr>
 <tr>
 <td><code>/pipeline restart operator-release-pipeline</code></td>
-<td>The release pipeline will be re-triggered.</td>
+<td>The release pipeline will be re-triggered. The command only works if a previous pipeline failed.</td>
 </tr>
 <tr>
 <td><code>/test skip {test_case_name}</code></td>

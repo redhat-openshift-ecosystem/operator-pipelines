@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.41">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
     
     
       
@@ -1006,11 +1006,16 @@ catalogs
 <h3 id="adding-new-bundle-to-catalog">Adding new bundle to Catalog</h3>
 <p>To add a bundle to the catalog you need to first submit the new version of the operator
 using traditional <a href="../contributing-via-pr/">PR workflow</a>. The operator pipeline builds,
-tests, and releases the bundle into the registry. At this point, the operator is not available
-in the catalog yet. To add the bundle to the catalog you need to update catalog templates
+tests, and releases the bundle into the registry. <strong>At this point, the operator is not available
+in the catalog yet.</strong> To add the bundle to the catalog you need to update catalog templates
 and add a bundle pullspec given by pull request comment and open a new pull request with catalog
 changes.</p>
 <p><img alt="Release info" src="../../img/release-info.png" /></p>
+<blockquote>
+<p>[!NOTE]
+Currently a workflow requires a 2-step process to release a new bundle into the catalog. In the first step, the operator bundle is released and in the second step, the catalog is updated with the new bundle.
+We are working on a solution to automate this process and make it a single step. However, this will require a usage of <code>SemVer</code> catalog template. In case you would like to use this feature once available please consider using <code>SemVer</code> template.</p>
+</blockquote>
 <h4 id="semver">SemVer</h4>
 <p>For example if I want to add <code>v1.1.0</code> bundle into <code>Fast</code> channel of a specific catalog I'll
 add it as mentioned in the example below:</p>
