@@ -1044,7 +1044,7 @@ reviewers:
 <h3 id="fbcversion_promotion_strategy"><code>fbc.version_promotion_strategy</code></h3>
 <p>The <code>fbc.version_promotion_strategy</code> option defines the strategy for promoting the operator into a next OCP version. When a new OCP version becomes available an automated process will promote the operator from a version N to a version N+1. The <code>fbc.version_promotion_strategy</code> option can have the following values:</p>
 <ul>
-<li><code>never</code> - the operator will not be promoted to the next OCP version automatically</li>
+<li><code>never</code> - the operator will not be promoted to the next OCP version automatically (default)</li>
 <li><code>always</code> - the operator will be promoted to the next OCP version automatically</li>
 <li><code>review-needed</code> - the operator will be promoted to the next OCP version automatically, but the PR will be created and the reviewers will be asked to review the changes</li>
 </ul>
