@@ -20,6 +20,7 @@
     - chat
   ansible.builtin.include_vars:
     file: ../../vaults/pipelinerun-listener/secret-vars.yml
+  no_log: true
 
 - name: Include Chat trigger
   tags:

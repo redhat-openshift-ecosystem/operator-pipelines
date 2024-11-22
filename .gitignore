@@ -149,3 +149,4 @@ ansible/vault-password*
 
 .pdm-python
 
+integration-tests-config.yaml
