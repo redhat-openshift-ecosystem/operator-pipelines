@@ -1,0 +1,22 @@
+---
+
+operator_repository:
+    # The GitHub repository hosting the operators for integration tests
+    url: https://github.com/foo/operators-integration-tests
+    token: secret123
+contributor_repository:
+    # The GitHub repository hosting where to fork the integration tests repo and submit the PR from
+    url: https://github.com/bar/operators-integration-tests-fork
+    token: secret456
+    ssh_key: ~/.ssh/id_rsa_alt
+bundle_registry: &quay
+    # The container registry where the bundle and index images will be pushed to
+    base_ref: quay.io/foo
+    username: foo
+    password: secret789
+test_registry: *quay
+    # The container registry where to push the operator-pipeline image
+iib:
+    # The iib instance to use to manipulate indices
+    url: https://iib.stage.engineering.redhat.com
+    keytab: /tmp/keytab
