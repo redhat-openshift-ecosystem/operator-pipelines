@@ -61,8 +61,30 @@ spec:
           MAX_TITLE_LEN=256
 
           TITLE_BEGINNING="Catalog update ["
-          TITLE_MIDDLE="$(params.affected_catalog_operators)"
           TITLE_ENDING="] [$(params.affected_catalogs)]"
+
+          # Catalog Operators are in the following format:
+          # catalogVersion1/operator1,catalogVersion2/operator1,...
+          # We need to trim Catalog version from all operators in 5 steps:
+          # Step 1: split operators
+          IFS=',' read -ra RAW_OPERATOR_ARR <<< "$(params.affected_catalog_operators)"
+          unset IFS
+          OPERATOR_ARR=()
+
+          # Step 2: Remove everything before the first '/' in each operator
+          for OPERATOR in "${RAW_OPERATOR_ARR[@]}"; do
+            OPERATOR_ARR+=("${OPERATOR#*/}")
+          done
+
+          # Step 3: dedup the array
+          IFS=' ' read -ra OPERATOR_ARR <<< "$(echo "${OPERATOR_ARR[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+          unset IFS
+
+          # Step 4: Join operator names back
+          TITLE_MIDDLE=$(printf ",%s" "${OPERATOR_ARR[@]}")
+
+          # Step 5: Remove the heading ','
+          TITLE_MIDDLE="${TITLE_MIDDLE:1}"
 
           FREE_CAPACITY=$(( "${MAX_TITLE_LEN}" - $(echo "${TITLE_BEGINNING}" | wc -m) - $( echo "${TITLE_ENDING}" | wc -m) ))
 
