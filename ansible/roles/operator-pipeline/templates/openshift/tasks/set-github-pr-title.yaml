@@ -56,10 +56,10 @@ spec:
 
         elif [[ "$(params.affected_catalogs)" != "" ]]; then
           # Update of catalogs only, can get quite long
-          
+
           # Limit that is shown by GH API
           MAX_TITLE_LEN=256
-        
+
           TITLE_BEGINNING="Catalog update ["
           TITLE_MIDDLE="$(params.affected_catalog_operators)"
           TITLE_ENDING="] [$(params.affected_catalogs)]"
