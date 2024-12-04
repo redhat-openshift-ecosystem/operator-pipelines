@@ -20,6 +20,9 @@ spec:
     - name: affected_catalogs
       description: Comma separated list of updated catalogs
 
+    - name: affected_catalog_operators
+      description: Comma separated list of operators inside all catalogs
+
     - name: github_token_secret_name
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github
@@ -52,8 +55,23 @@ spec:
           TITLE="operator $(params.operator_name) ($(params.bundle_version))"
 
         elif [[ "$(params.affected_catalogs)" != "" ]]; then
-          # Update of catalogs only
-          TITLE="Catalog update [$(params.affected_catalogs)]"
+          # Update of catalogs only, can get quite long
+          
+          # Limit that is shown by GH API
+          MAX_TITLE_LEN=256
+        
+          TITLE_BEGINNING="Catalog update ["
+          TITLE_MIDDLE="$(params.affected_catalog_operators)"
+          TITLE_ENDING="] [$(params.affected_catalogs)]"
+
+          FREE_CAPACITY=$(( "${MAX_TITLE_LEN}" - $(echo "${TITLE_BEGINNING}" | wc -m) - $( echo "${TITLE_ENDING}" | wc -m) ))
+
+          # Shorten the middle part if it is too long
+          if [[ $(echo "${TITLE_MIDDLE}" | wc -m) -gt "${FREE_CAPACITY}" ]]; then
+            CUT_TO_LENGTH=$(( "${FREE_CAPACITY}" - 3 ))
+            TITLE_MIDDLE="${TITLE_MIDDLE::${CUT_TO_LENGTH}}..."
+          fi
+          TITLE="${TITLE_BEGINNING}${TITLE_MIDDLE}${TITLE_ENDING}"
 
         else
           echo "No bundles nor catalogs have been added/updated"
