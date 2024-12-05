@@ -385,6 +385,8 @@ spec:
           value: "$(tasks.detect-changes.results.added_bundle)"
         - name: affected_catalogs
           value: "$(tasks.detect-changes.results.affected_catalogs)"
+        - name: affected_catalog_operators
+          value: "$(tasks.detect-changes.results.affected_catalog_operators)"
         - name: github_token_secret_name
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
