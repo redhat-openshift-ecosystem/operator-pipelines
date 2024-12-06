@@ -19,6 +19,9 @@ spec:
     - name: bundle_version
       description: Version of the bundle under test.
 
+    - name: affected_catalog_operators
+      description: All catalog operators affected with the change.
+
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: token
@@ -60,8 +63,8 @@ spec:
         #!/usr/bin/env bash
         set -xe
 
-        if [ -z "$(params.bundle_path)" ]; then
-          echo "No bundle added or changed, skipping tests"
+        if [ -z "$(params.bundle_path)" ] && [ -z "$(params.affected_catalog_operators)" ]; then
+          echo "No bundle or catalog added/changed, skipping tests"
           echo -n "" | tee $(results.messages_count.path)
           echo -n "" | tee $(results.failures_count.path)
           exit 0
@@ -86,7 +89,8 @@ spec:
           --output-file "$JSON_RESULTS_FILE" \
           --repo-path "$(workspaces.source.path)" \
           --suites "$(params.test_suites)" $EXTRA_ARGS \
-          "$(params.operator_name)" "$(params.bundle_version)"
+          "$(params.operator_name)" "$(params.bundle_version)" \
+          "$(params.affected_catalog_operators)"
 
         jq . <$JSON_RESULTS_FILE
         jq -r '(.outputs//[])|length' <$JSON_RESULTS_FILE \
