@@ -62,6 +62,8 @@ def create_files(path: Union[str, Path], *contents: Dict[str, Any]) -> None:
             For files, the dictionary should have a single key-value pair where the key is
             the filename and the value is the content of the file. For directories, the
             dictionary should have a single key with a value of None.
+            To create a multi-document yaml file, the content value should be a tuple.
+            Each value of the tuple will be a separate document in the resulting yaml file.
 
     Returns:
         None
@@ -72,11 +74,13 @@ def create_files(path: Union[str, Path], *contents: Dict[str, Any]) -> None:
             {"file1.txt": "Hello, World!"},
             {"subfolder": None},
             {"config.yaml": {"key": "value"}},
+            {"catalog.yaml": ({"foo": "bar"}, {"baz": "qux"})}
         )
 
     In this example, the function will create a file "file1.txt" with content "Hello, World!"
-    in the "/my_folder" directory, create an empty subdirectory "subfolder", and create a
-    file "config.yaml" with the specified YAML content.
+    in the "/my_folder" directory, create an empty subdirectory "subfolder", create
+    a file "config.yaml" with the specified YAML content and create a multi-document YAML
+    file "catalog.yaml" with two documents.
     """
     root = Path(path)
     for element in contents:
@@ -88,8 +92,52 @@ def create_files(path: Union[str, Path], *contents: Dict[str, Any]) -> None:
                 full_path.parent.mkdir(parents=True, exist_ok=True)
                 if isinstance(content, (str, bytes)):
                     full_path.write_text(content)  # type: ignore
+                elif isinstance(content, tuple):
+                    full_path.write_text(yaml.safe_dump_all(content))
                 else:
                     full_path.write_text(yaml.safe_dump(content))
+
+
+def catalog_files(
+    catalog_name: str,
+    operator: str,
+    other_files: Optional[dict[str, Any]] = None,
+    content: Optional[tuple[Any, ...]] = None,
+) -> dict[str, Any]:
+    """
+    Create a catalog file as a multi-document yaml file.
+
+    Args:
+        catalog_name (str): The name of the catalog.
+        operator (str): The name of the operator.
+        other_files (dict, optional): Additional files to be created.
+            Defaults to None.
+        content (tuple, optional): The content of the catalog.yaml file.
+            Needs to be a tuple, as the create_files() expects a tuple
+            to create multi-document yaml file. Defaults to example catalog
+            content.
+
+    Returns:
+        dict: A dictionary representing the catalog files, merged with other files.
+    """
+    default_content = (
+        {"defaultChannel": "stable", "name": operator, "schema": "olm.package"},
+        {"name": "alpha", "package": operator, "schema": "olm.channel"},
+        {
+            "name": f"{operator}.v1.0.0",
+            "package": operator,
+            "image": f"quay.io/org/{operator}@sha256:123",
+            "schema": "olm.bundle",
+        },
+    )
+    operator_path = f"catalogs/{catalog_name}/{operator}"
+    catalog_content = content or default_content
+    return merge(
+        {
+            f"{operator_path}/catalog.yaml": catalog_content,
+        },
+        other_files or {},
+    )
 
 
 def bundle_files(

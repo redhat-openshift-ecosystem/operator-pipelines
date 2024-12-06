@@ -5,7 +5,7 @@
 groups = ["default", "operatorcert-dev", "tox"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:8f3906cdfe663c1fbbc6abf923f0049260a1ee22de8da2ad2dc80241b85a8429"
+content_hash = "sha256:da696d325013f45e9ec5a216d77e1009b37da5eed8e9f49e5b5d94c3445e1129"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -1043,11 +1043,11 @@ files = [
 
 [[package]]
 name = "operator-repo"
-version = "0.4.3"
+version = "0.4.8"
 requires_python = ">=3.9"
 git = "https://github.com/mporrato/operator-repo.git"
-ref = "v0.4.3"
-revision = "01d7095a0c5c0a40466839454c005b6a95c20f74"
+ref = "v0.4.8"
+revision = "b2c9553db8f1516350ab8b51084884e262290e9e"
 summary = "Library and utilities to handle repositories of kubernetes operators"
 groups = ["default"]
 dependencies = [

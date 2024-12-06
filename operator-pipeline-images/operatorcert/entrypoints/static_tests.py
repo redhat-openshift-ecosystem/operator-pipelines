@@ -5,7 +5,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from operator_repo import Repo
+from operator_repo import Repo, OperatorCatalog, OperatorCatalogList
 from operator_repo.checks import Fail, run_suite
 from operatorcert.logger import setup_logger
 from operatorcert.utils import SplitArgs
@@ -49,19 +49,21 @@ def setup_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     parser.add_argument("operator")
     parser.add_argument("bundle")
+    parser.add_argument("affected_catalogs")
 
     return parser
 
 
-def check_bundle(
+def execute_checks(  # pylint: disable=too-many-arguments
     repo_path: str,
     operator_name: str,
     bundle_version: str,
+    affected_catalogs: str,
     suite_names: List[str],
     skip_tests: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
-    Run a check suite against the given bundle and return warnings and
+    Run a check suite against the given target and return warnings and
     failures in a format inspired by the operator-sdk bundle validate
     tool's JSON output format
 
@@ -69,6 +71,7 @@ def check_bundle(
         repo_path (str): path to the root of the operator repository
         operator_name (str): name of the operator
         bundle_version (str): version of the bundle to check
+        affected_catalogs (str): Coma separated list of affected catalogs
         suite_name (str): name of the suite to use
         skip_tests (Optional[List]): List of checks to skip
 
@@ -77,13 +80,24 @@ def check_bundle(
     """
     repo = Repo(repo_path)
     operator = repo.operator(operator_name)
-    bundle = operator.bundle(bundle_version)
+    bundle = operator.bundle(bundle_version) if bundle_version else None
+    operator_catalogs = OperatorCatalogList(
+        [
+            OperatorCatalog(repo.catalog_path(catalog))
+            for catalog in affected_catalogs.split(",")
+        ]
+    )
 
     outputs = []
     passed = True
 
     for suite_name in suite_names:
-        for result in run_suite([bundle, operator], suite_name, skip_tests=skip_tests):
+        for result in run_suite(
+            # do only catalog checks if bundle is not provided
+            [bundle, operator] if bundle else [operator_catalogs, operator],
+            suite_name,
+            skip_tests=skip_tests,
+        ):
             if isinstance(result, Fail):
                 passed = False
             item = {
@@ -113,8 +127,13 @@ def main() -> None:
     setup_logger(level=log_level)
 
     # Logic
-    result = check_bundle(
-        args.repo_path, args.operator, args.bundle, args.suites, args.skip_tests
+    result = execute_checks(
+        args.repo_path,
+        args.operator,
+        args.bundle,
+        args.affected_catalogs,
+        args.suites,
+        args.skip_tests,
     )
 
     if args.output_file:
