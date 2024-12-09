@@ -101,6 +101,7 @@ operatorcert-dev = [
     "jmespath>=1.0.1",
     "kubernetes>=31.0.0",
     "ansible-lint>=24.10.0",
+    "colorama>=0.4.6",
 ]
 tox = ["tox>=4.16.0", "tox-pdm>=0.7.2"]
 
