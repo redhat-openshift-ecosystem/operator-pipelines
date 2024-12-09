@@ -36,20 +36,21 @@ def check_bundle_images_in_fbc(
 ) -> Iterator[CheckResult]:
     """Validate if bundle image reference in fbc is in allowed registry"""
 
-    allowed_registries = None
+    allowed_registries = (
+        operator_catalogs[0].repo.config.get("allowed_bundle_registries", [])
+        if operator_catalogs
+        else []
+    )
+    if not allowed_registries:
+        return
+
     for catalog in operator_catalogs:
-        if not isinstance(allowed_registries, list):
-            # get config only once
-            allowed_registries = catalog.repo.config.get(
-                "allowed_bundle_registries", []
-            )
-        if not allowed_registries:
-            # nothing to check if no registry restriction is defined
-            break
         bundle_images = _get_bundle_registries_from_catalog(catalog)
         invalid_images = _filter_invalid_images(bundle_images, allowed_registries)
         if invalid_images:
             yield Fail(
                 f"Invalid bundle image(s) found in {str(catalog)}: "
-                f"{', '.join(invalid_images)}"
+                f"{', '.join(invalid_images)}. "
+                "Only these registries are allowed for bundle images: "
+                f"{', '.join(allowed_registries)}."
             )

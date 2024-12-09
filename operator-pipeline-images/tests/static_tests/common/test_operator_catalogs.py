@@ -4,7 +4,9 @@ from typing import Any
 import pytest
 
 from operator_repo import OperatorCatalogList, Repo
-from operatorcert.static_tests.common.catalog import check_bundle_images_in_fbc
+from operatorcert.static_tests.common.operator_catalogs import (
+    check_bundle_images_in_fbc,
+)
 from tests.utils import bundle_files, catalog_files, create_files
 
 
@@ -26,8 +28,10 @@ from tests.utils import bundle_files, catalog_files, create_files
                 "allowed_bundle_registries": ["quay.io/org-foo/"],
             },
             {
-                "Invalid bundle image(s) found in OperatorCatalog(v4.14/fake-operator)"
-                ": quay.io/org-bar/registry/bundle@sha256:123"
+                "Invalid bundle image(s) found in OperatorCatalog(v4.14/fake-operator): "
+                "quay.io/org-bar/registry/bundle@sha256:123. "
+                "Only these registries are allowed for bundle images: "
+                "quay.io/org-foo/.",
             },
         ),
     ],

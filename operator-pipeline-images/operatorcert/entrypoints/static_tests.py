@@ -5,7 +5,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from operator_repo import Repo, OperatorCatalogList
+from operator_repo import Repo, OperatorCatalog, OperatorCatalogList
 from operator_repo.checks import Fail, run_suite
 from operatorcert.logger import setup_logger
 from operatorcert.utils import SplitArgs
@@ -81,11 +81,10 @@ def execute_checks(  # pylint: disable=too-many-arguments
     repo = Repo(repo_path)
     operator = repo.operator(operator_name)
     bundle = operator.bundle(bundle_version) if bundle_version else None
-    catalogs = OperatorCatalogList(
+    operator_catalogs = OperatorCatalogList(
         [
-            catalog
-            for catalog in operator.all_operator_catalogs()
-            if catalog in affected_catalogs.split(",")
+            OperatorCatalog(repo.catalog_path(catalog))
+            for catalog in affected_catalogs.split(",")
         ]
     )
 
@@ -95,7 +94,7 @@ def execute_checks(  # pylint: disable=too-many-arguments
     for suite_name in suite_names:
         for result in run_suite(
             # do only catalog checks if bundle is not provided
-            [bundle, operator] if bundle else [catalogs],
+            [bundle, operator] if bundle else [operator_catalogs, operator],
             suite_name,
             skip_tests=skip_tests,
         ):
