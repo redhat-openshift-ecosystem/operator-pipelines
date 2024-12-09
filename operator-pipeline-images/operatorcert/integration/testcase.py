@@ -78,7 +78,7 @@ def integration_test_case(test_class: _T) -> _T:
 
 
 def run_tests(config: Config) -> int:
-    """ "
+    """
     Executes all the test cases that have been registered using the
     `integration_test_case` decorator
 
