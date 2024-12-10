@@ -86,6 +86,8 @@ def execute_checks(  # pylint: disable=too-many-arguments
             OperatorCatalog(repo.catalog_path(catalog))
             for catalog in affected_catalogs.split(",")
         ]
+        if affected_catalogs
+        else []
     )
 
     outputs = []
@@ -93,8 +95,7 @@ def execute_checks(  # pylint: disable=too-many-arguments
 
     for suite_name in suite_names:
         for result in run_suite(
-            # do only catalog checks if bundle is not provided
-            [bundle, operator] if bundle else [operator_catalogs, operator],
+            [obj for obj in (bundle, operator, operator_catalogs) if obj],
             suite_name,
             skip_tests=skip_tests,
         ):
