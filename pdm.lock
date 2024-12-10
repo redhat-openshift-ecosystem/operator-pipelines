@@ -5,7 +5,7 @@
 groups = ["default", "operatorcert-dev", "tox"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:da696d325013f45e9ec5a216d77e1009b37da5eed8e9f49e5b5d94c3445e1129"
+content_hash = "sha256:f2b617d672914eab5d9fbe7e291d50ee23a1256edfb23a11c429684ff3568059"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
