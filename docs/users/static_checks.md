@@ -127,6 +127,12 @@ name in the CSV definition. The source of these values are:
 
  - `operators.operatorframework.io.bundle.package.v1` (`metadata/annotation.yaml`)
  - `csv.metadata.name` - the name without a version (`manifests/.*.clusterserviceversion.yaml`)
+
+#### check_bundle_images_in_fbc
+This check will ensure that all bundle images in the file based catalog for given
+operator catalog(s) use allowed image registry. Allowed registries are configured
+in `(repo_root)/config.yaml` under the key `allowed_bundle_registries`.
+
 ## Running tests locally
 
 ```bash
@@ -134,13 +140,14 @@ name in the CSV definition. The source of these values are:
 $ pip install git+https://github.com/redhat-openshift-ecosystem/operator-pipelines.git
 
 # Execute a test suite
-# In this example tests are executed for aqua operator with 2022.4.15 version
+# In this example tests are executed for aqua operator
+# with 2022.4.15 version and two operator catalogs (v4.17/aqua and v4.18/aqua)
 $ python static-tests \
     --repo-path ~/community-operators-prod \
     --suites operatorcert.static_tests.community \
     --output-file /tmp/operator-test.json \
-    --verbose
-    aqua 2022.4.15
+    --verbose \
+    aqua 2022.4.15 v4.17/aqua,v4.18/aqua
 
 ```
 ```javascript
@@ -232,6 +239,13 @@ $ cat /tmp/operator-test.json | jq
       "message": "Warning: Value : The \"operatorhub\" validator is deprecated; for equivalent validation use \"operatorhub/v2\", \"standardcapabilities\" and \"standardcategories\" validators",
       "test_suite": "operatorcert.static_tests.community",
       "check": "check_osdk_bundle_validate_operatorhub"
+    },
+    {
+      "type": "error",
+      "message": "Invalid bundle image(s) found in OperatorCatalog(v4.17/aqua):
+      quay.io/invalid-repository/aqua@sha256:123. Only these registries are allowed for bundle images: quay.io/allowed-repository/, registry.connect.redhat.com/.",
+      "test_suite": "operatorcert.static_tests.common",
+      "check": "check_bundle_images_in_fbc"
     }
   ]
 }
