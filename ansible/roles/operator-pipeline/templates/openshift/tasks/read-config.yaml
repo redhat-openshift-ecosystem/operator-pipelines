@@ -41,7 +41,13 @@ spec:
 
         CONFIG_PATH="$PKG_PATH/ci.yaml"
 
-        if [[ ! -f "$CONFIG_PATH" ]]; then
+        if [[ ! -d "$PKG_PATH" ]]; then
+            echo "Operator directory is removed."
+            echo -n "" | tee $(results.upgrade-graph-mode.path)
+            echo -n "true" | tee $(results.fbc-enabled.path)
+            echo -n "true" | tee "$(workspaces.output.path)/fbc_enabled"
+            exit 0
+        elif [[ ! -f "$CONFIG_PATH" ]]; then
             echo "Config file $CONFIG_PATH does not exist or no bundle affected."
             echo -n "replaces" | tee $(results.upgrade-graph-mode.path)
             echo -n "false" | tee $(results.fbc-enabled.path)

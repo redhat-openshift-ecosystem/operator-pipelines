@@ -49,9 +49,11 @@ from operatorcert.parsed_file import (
             "db1a066",
             {
                 "affected_operators": ["operator-e2e"],
+                "added_or_modified_operators": ["operator-e2e"],
                 "added_operators": ["operator-e2e"],
                 "affected_bundles": ["operator-e2e/0.0.100"],
                 "added_bundles": ["operator-e2e/0.0.100"],
+                "added_or_modified_bundles": ["operator-e2e/0.0.100"],
             },
             id="Add new bundle for new operator",
         ),
@@ -62,9 +64,11 @@ from operatorcert.parsed_file import (
             "6a75661",
             {
                 "affected_operators": ["operator-e2e"],
+                "added_or_modified_operators": ["operator-e2e"],
                 "modified_operators": ["operator-e2e"],
                 "affected_bundles": ["operator-e2e/0.0.101"],
                 "added_bundles": ["operator-e2e/0.0.101"],
+                "added_or_modified_bundles": ["operator-e2e/0.0.101"],
             },
             id="Add new bundle for existing operator",
         ),
@@ -76,6 +80,7 @@ from operatorcert.parsed_file import (
             "6a75661",
             {
                 "affected_operators": ["operator-e2e", "operator-clone-e2e"],
+                "added_or_modified_operators": ["operator-e2e", "operator-clone-e2e"],
                 "added_operators": ["operator-clone-e2e"],
                 "modified_operators": ["operator-e2e"],
                 "affected_bundles": [
@@ -83,6 +88,10 @@ from operatorcert.parsed_file import (
                     "operator-clone-e2e/0.0.100",
                 ],
                 "added_bundles": ["operator-e2e/0.0.101", "operator-clone-e2e/0.0.100"],
+                "added_or_modified_bundles": [
+                    "operator-e2e/0.0.101",
+                    "operator-clone-e2e/0.0.100",
+                ],
             },
             id="Add bundles for multiple operators",
         ),
@@ -96,12 +105,17 @@ from operatorcert.parsed_file import (
             {
                 "extra_files": ["empty.txt", "operators/empty.txt"],
                 "affected_operators": ["operator-e2e", "operator-clone-e2e"],
+                "added_or_modified_operators": ["operator-e2e", "operator-clone-e2e"],
                 "modified_operators": ["operator-e2e", "operator-clone-e2e"],
                 "affected_bundles": [
                     "operator-e2e/0.0.101",
                     "operator-clone-e2e/0.0.100",
                 ],
                 "modified_bundles": [
+                    "operator-e2e/0.0.101",
+                    "operator-clone-e2e/0.0.100",
+                ],
+                "added_or_modified_bundles": [
                     "operator-e2e/0.0.101",
                     "operator-clone-e2e/0.0.100",
                 ],
@@ -117,6 +131,7 @@ from operatorcert.parsed_file import (
             {
                 "extra_files": ["empty.txt", "operators/empty.txt"],
                 "affected_operators": ["operator-e2e"],
+                "added_or_modified_operators": ["operator-e2e"],
                 "modified_operators": ["operator-e2e"],
                 "affected_bundles": ["operator-e2e/0.0.101"],
                 "deleted_bundles": ["operator-e2e/0.0.101"],
@@ -130,6 +145,7 @@ from operatorcert.parsed_file import (
             "2c06647",
             {
                 "affected_operators": ["operator-clone-e2e"],
+                "added_or_modified_operators": ["operator-clone-e2e"],
                 "modified_operators": ["operator-clone-e2e"],
             },
             id="Add ci.yaml to an operator",
@@ -247,6 +263,7 @@ from operatorcert.parsed_file import (
             "244d87b92",
             {
                 "affected_operators": ["operator-e2e"],
+                "added_or_modified_operators": ["operator-e2e"],
                 "modified_operators": ["operator-e2e"],
             },
             id="Add catalog template to operator-e2e",
@@ -295,10 +312,12 @@ def test_detect_changes(
     default_expected: dict[str, Any] = {
         "extra_files": [],
         "affected_operators": [],
+        "added_or_modified_operators": [],
         "added_operators": [],
         "modified_operators": [],
         "deleted_operators": [],
         "affected_bundles": [],
+        "added_or_modified_bundles": [],
         "added_bundles": [],
         "modified_bundles": [],
         "deleted_bundles": [],
@@ -734,10 +753,14 @@ def test_ParserRules_validate_removal_fbc_fail(
             {
                 "affected_bundles": ["operator-e2e/0.0.101"],
                 "affected_operators": ["operator-e2e"],
+                "added_or_modified_operators": ["operator-e2e"],
+                "added_or_modified_bundles": ["operator-e2e/0.0.101"],
             },
             {
                 "affected_bundles": ["operator-e2e/0.0.101"],
                 "affected_operators": ["operator-e2e"],
+                "added_or_modified_operators": ["operator-e2e"],
+                "added_or_modified_bundles": ["operator-e2e/0.0.101"],
                 "operator_name": "operator-e2e",
                 "bundle_version": "0.0.101",
                 "operator_path": "operators/operator-e2e",
