@@ -175,7 +175,9 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: args
-          value: ["-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}", "$(params.bundle_path)"]
+          value: "-d {extends: default, rules: {line-length: {max: 180, level: warning}, indentation: {indent-sequences: whatever}}}"
+        - name: path
+          value: "$(params.bundle_path)"
       workspaces:
         - name: shared-workspace
           workspace: pipeline

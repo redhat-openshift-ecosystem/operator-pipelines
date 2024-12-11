@@ -87,7 +87,6 @@
                             && body.action == "closed"
                             && body.pull_request.base.ref == "{{ branch }}"
                             && body.pull_request.merged == true
-                            && body.sender.login == "rh-operator-bundle-bot"
                           )
                 bindings:
                   - ref: operator-release-pipeline-trigger-binding

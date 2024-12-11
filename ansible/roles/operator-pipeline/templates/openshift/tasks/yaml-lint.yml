@@ -4,7 +4,7 @@ kind: Task
 metadata:
   name: yaml-lint
   labels:
-    app.kubernetes.io/version: "0.1"
+    app.kubernetes.io/version: "0.2"
   annotations:
     tekton.dev/pipelines.minVersion: "0.12.1"
     tekton.dev/categories: Code Quality
@@ -19,14 +19,23 @@ spec:
   params:
     - name: pipeline_image
     - name: args
-      type: array
+      type: string
       description: extra args needs to append
-      default: ["--help"]
+      default: "--help"
+    - name: path
+      type: string
+      description: path to the directory containing the YAML files
   steps:
     - name: lint-yaml-files
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.shared-workspace.path)
-      command:
-        - yamllint
-      args:
-        - $(params.args)
+      script: |
+        #!/usr/bin/env bash
+        set -xe
+
+        # Check if a path exists and skip the linting if it does not
+        if [ ! -e "$(params.path)" ]; then
+          echo "A path $(params.path) does not exist. Nothing to check..."
+          exit 0
+        fi
+        yamllint "$(params.path)" "$(params.args)"

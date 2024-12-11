@@ -46,6 +46,9 @@ class AffectedBundleCollection:
             "added_bundles": [f"{x}/{y}" for x, y in self.added],
             "modified_bundles": [f"{x}/{y}" for x, y in self.modified],
             "deleted_bundles": [f"{x}/{y}" for x, y in self.deleted],
+            "added_or_modified_bundles": [
+                f"{x}/{y}" for x, y in self.added | self.modified
+            ],
         }
 
 
@@ -74,6 +77,7 @@ class AffectedOperatorCollection:
             "added_operators": list(self.added),
             "modified_operators": list(self.modified),
             "deleted_operators": list(self.deleted),
+            "added_or_modified_operators": list(self.added | self.modified),
         }
 
 
@@ -192,14 +196,14 @@ class ParserResults:
         bundle_version = ""
 
         affected_operators = result.get("affected_operators", [])
-        affected_bundles = result.get("affected_bundles", [])
+        added_or_modified_bundles = result.get("added_or_modified_bundles", [])
         affected_catalog_operators = result.get("affected_catalog_operators", [])
 
         if affected_operators:
             operator_name = affected_operators[0]
 
-        if affected_bundles:
-            _, bundle_version = affected_bundles[0].split("/")
+        if added_or_modified_bundles:
+            _, bundle_version = added_or_modified_bundles[0].split("/")
 
         if affected_catalog_operators and operator_name == "":
             # Even if the change affects only files in catalogs/ we still need to know
