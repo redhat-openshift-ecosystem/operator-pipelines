@@ -36,7 +36,7 @@ spec:
       description: Comma separated list of catalogs with added or modified operator
     - name: affected_catalog_operators
       description: |
-        Comma separated list of operators added/updater/deleted inside
+        Comma separated list of operators added/updated/deleted inside
         a catalogs directory structure
     - name: deleted_catalog_operators
       description: |
