@@ -183,3 +183,49 @@ def test_remove_labels_from_pull_request() -> None:
     mock_pull_request.remove_from_labels.assert_has_calls(
         [call("label1"), call("label2")]
     )
+
+
+def test_open_pull_request() -> None:
+    mock_client = MagicMock()
+    mock_repo = MagicMock()
+    mock_pull_request = MagicMock()
+
+    mock_client.get_repo.return_value = mock_repo
+    mock_repo.create_pull.return_value = mock_pull_request
+
+    resp = github.open_pull_request(
+        mock_client, "repo_name", "title", "body", "branch", "base"
+    )
+
+    mock_client.get_repo.assert_called_once_with("repo_name")
+    mock_repo.create_pull.assert_called_once_with(
+        title="title", body="body", head="branch", base="base"
+    )
+
+    assert resp == mock_pull_request
+
+
+def test_get_pull_request_by_number() -> None:
+    mock_client = MagicMock()
+    mock_repo = MagicMock()
+    mock_pull_request = MagicMock()
+
+    mock_client.get_repo.return_value = mock_repo
+    mock_repo.get_pull.return_value = mock_pull_request
+
+    resp = github.get_pull_request_by_number(mock_client, "repo_name", 1)
+
+    mock_client.get_repo.assert_called_once_with("repo_name")
+    mock_repo.get_pull.assert_called_once_with(1)
+
+    assert resp == mock_pull_request
+
+
+def test_close_pull_request() -> None:
+    mock_pull_request = MagicMock()
+
+    resp = github.close_pull_request(mock_pull_request)
+
+    mock_pull_request.edit.assert_called_once_with(state="closed")
+
+    assert resp == mock_pull_request

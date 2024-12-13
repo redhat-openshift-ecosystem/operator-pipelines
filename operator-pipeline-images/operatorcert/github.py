@@ -272,3 +272,67 @@ def add_or_remove_labels(  # pylint: disable=too-many-locals
 
     add_labels_to_pull_request(pull_request, labels_to_add)
     remove_labels_from_pull_request(pull_request, labels_to_remove)
+
+
+def open_pull_request(  # pylint: disable=too-many-arguments
+    github_client: Github,
+    repository_name: str,
+    title: str,
+    body: str,
+    head: str,
+    base: str,
+) -> PullRequest.PullRequest:
+    """Open a new Github pull request in the given repository.
+
+    Args:
+        github_client (Github): A Github API client
+        repository_name (str): A repository name in the format "organization/repository"
+        title (str): A title for the pull request
+        body (str): A body text for the pull request
+        head (str): A git reference for the PR head (e.g. a branch name)
+        base (str): A git reference for the PR base (e.g. a branch name)
+
+    Returns:
+        PullRequest.PullRequest: A Github pull request object
+    """
+    repository = github_client.get_repo(repository_name)
+    pull_request = repository.create_pull(title=title, body=body, head=head, base=base)
+    return pull_request
+
+
+def get_pull_request_by_number(
+    github_client: Github,
+    repository_name: str,
+    pr_number: int,
+) -> PullRequest.PullRequest:
+    """
+    Get a Github pull request by number and repository name.
+
+    Args:
+        github_client (Github): A Github API client
+        repository_name (str): A repository name in the format "organization/repository"
+        pr_number (int): A pull request number
+
+    Returns:
+        PullRequest.PullRequest: A Github pull request object
+    """
+    repository = github_client.get_repo(repository_name)
+    pull_request = repository.get_pull(pr_number)
+    return pull_request
+
+
+def close_pull_request(
+    pull_request: PullRequest.PullRequest,
+) -> PullRequest.PullRequest:
+    """
+    Close a Github pull request.
+
+    Args:
+        pull_request (PullRequest.PullRequest): A Github pull request object
+        that should be closed
+
+    Returns:
+        PullRequest: A Github pull request object after closing
+    """
+    pull_request.edit(state="closed")
+    return pull_request
