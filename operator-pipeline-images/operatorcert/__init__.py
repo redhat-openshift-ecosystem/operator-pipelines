@@ -12,7 +12,7 @@ from urllib.parse import urljoin
 
 import yaml
 from dateutil.parser import isoparse
-from operatorcert import github, pyxis
+from operatorcert import pyxis
 from operatorcert.utils import find_file
 
 # Bundle annotations
