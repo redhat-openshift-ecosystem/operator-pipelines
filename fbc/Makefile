@@ -10,8 +10,8 @@
 # - basic: generates a basic catalog
 # - semver: generates a catalog with semver versioning
 
-PDW=$(shell pwd)
-OPERATOR_NAME=$(shell basename $(PDW))
+PWD=$(shell pwd)
+OPERATOR_NAME=$(shell basename $(PWD))
 TOPDIR=$(abspath $(dir $(PWD))/../)
 BINDIR=${TOPDIR}/bin
 
@@ -21,7 +21,7 @@ export PATH := $(BINDIR):$(PATH)
 CATALOG_DIR=${TOPDIR}/catalogs
 
 # A place to store the operator catalog templates
-OPERATOR_CATALOG_TEMPLATE_DIR = ${PDW}/catalog-templates
+OPERATOR_CATALOG_TEMPLATE_DIR = ${PWD}/catalog-templates
 
 # The operator pipeline image to use for the fbc-onboarding target
 OPERATOR_PIPELINE_IMAGE ?= quay.io/redhat-isv/operator-pipelines-images:released
