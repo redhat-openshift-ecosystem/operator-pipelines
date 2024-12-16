@@ -70,7 +70,7 @@ COPY ./operator-pipeline-images ./operator-pipeline-images
 RUN pip3 install --no-cache-dir pdm
 # install dependencies in virtual environment
 COPY ./pdm.lock ./pyproject.toml ./README.md ./
-RUN pdm venv create 3.12 && pdm install --no-lock --no-editable \
+RUN pdm venv create 3.12 && pdm install --frozen-lockfile --no-editable \
         --group operatorcert-dev
 
 ENV VIRTUAL_ENV=/home/user/.venv
