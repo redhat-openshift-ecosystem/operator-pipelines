@@ -9,6 +9,7 @@ nav:
       - "ISV operators": "users/isv_pipelines.md"
       - "Contributing via PR": "users/contributing-via-pr.md"
       - "Operator CI yaml": "users/operator-ci-yaml.md"
+      - "Troubleshooting for Community Operators": "users/community-operators-troubleshooting.md"
   - "Tests":
       - "Static checks": "users/static_checks.md"
       - "Dynamic checks": "users/dynamic_checks.md"
