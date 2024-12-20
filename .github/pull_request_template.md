@@ -10,4 +10,4 @@
     - [ ] Unit tests
     - [ ] Integration tests
 - [ ] Code is reviewed by at least 1 team member
-- [ ] Pull request is tagged with "risk/good-to-go" label
+- [ ] Pull request is tagged with "risk/good-to-go" label for minor changes
