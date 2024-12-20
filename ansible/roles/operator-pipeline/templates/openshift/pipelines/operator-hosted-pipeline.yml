@@ -763,6 +763,8 @@ spec:
           value: "$(tasks.digest-pinning.results.dirty_flag)"
         - name: related_images_flag
           value: "$(tasks.digest-pinning.results.related_images_flag)"
+        - name: related_images_message
+          value: "$(tasks.digest-pinning.results.related_images_message)"
 
     # Build images- bundle and index and push them to registry.
     # Those steps are also a part of the CI pipeline.
