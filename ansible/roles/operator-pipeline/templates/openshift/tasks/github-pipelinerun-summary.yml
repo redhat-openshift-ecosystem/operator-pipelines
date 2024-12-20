@@ -128,7 +128,7 @@ spec:
 
         if [[ "$ORGANIZATION" == "community-operators" ]]
         then
-          DOC_LINK="https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/contributing-prerequisites/"
+          DOC_LINK="https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/community-operators-troubleshooting/"
         else
           DOC_LINK="https://github.com/redhat-openshift-ecosystem/certification-releases/blob/main/4.9/ga/troubleshooting.md"
         fi
