@@ -79,15 +79,12 @@ Failures at this stage are rare. To diagnose the issue, review the pipeline logs
 
 ### <a id="detect-changes"></a>detect-changes
 The pipeline may fail at this stage due to the following reasons:
-1.	<b>Changing Only Non-Operator Files:</b> If the PR attempts to modify files like ci.yaml without making changes to operator files, the pipeline will fail.
+1.	<b>Changing Non-Operator Files:</b> If the PR attempts to modify external files outside of targeted operator, the pipeline will fail.
 1.	<b>Affecting Multiple Operators:</b> If the PR impacts more than one operator, it will result in a failure.
 1.	<b>Modifying Existing Bundles:</b> Changes to existing bundles in the PR are not allowed at this stage.
 1.	<b>Deleting Existing Bundles:</b> Deleting bundles is only permissible for FBC-enabled operators.
 
 Other Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.
-
-#### <a id="pr-title"></a>Pull Request Title
-Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.
 
 ### <a id="yaml-lint"></a>yaml-lint
 
@@ -132,7 +129,7 @@ If the static tests fail, a summary will be posted as a comment on the Pull Requ
 To proceed:
 1.	Review the comment for the detailed reasons behind the failed static tests.
 1.	Fix all the reported issues.
-1.	Re-trigger the hosted pipeline using the command: `/pipeline restart operator-hosted-pipeline`
+1.	Commit the changes with a fix to the PR and it will Re-trigger the hosted pipeline.
 
 For more information about static tests, refer to the [documentation](../users/static_checks.md).
 
@@ -196,7 +193,7 @@ Failures at this stage are rare. To diagnose the issue, review the pipeline logs
 ### <a id="merge-pr"></a>merge-pr
 If operator hosted pipeline fails at this task with the error message: `Pull request Auto merge is not allowed for this repository (enablePullRequestAutoMerge)` then re-trigger the pipeline by running command `/pipeline restart operator-hosted-pipeline`.  
 
-Another Failure at this step may happen if the pull request is a draft, convert the draft to a pull request and then retry. If this problem persists at this step, contact Red Hat Support.
+Another Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.
 
 ### <a id="link-pull-request-with-merged-status"></a>link-pull-request-with-merged-status
 Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.
