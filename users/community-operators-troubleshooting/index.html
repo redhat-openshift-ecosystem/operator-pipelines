@@ -1,0 +1,1562 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../operator-ci-yaml/">
+      
+      
+        <link rel="next" href="../static_checks/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.49">
+    
+    
+      
+        <title>Troubleshooting for Community Operators - Red Hat OpenShift Operators</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#troubleshooting-the-community-operator-pipeline" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Red Hat OpenShift Operators" class="md-header__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Red Hat OpenShift Operators
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Troubleshooting for Community Operators
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/redhat-openshift-ecosystem/operator-pipelines" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    operator-pipelines
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../pipelines_overview/" class="md-tabs__link">
+          
+  
+  Operator pipelines
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../static_checks/" class="md-tabs__link">
+          
+  
+  Tests
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../contributing-prerequisites/" class="md-tabs__link">
+          
+  
+  Operators
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../pipeline-admin-guide/" class="md-tabs__link">
+          
+  
+  Admin
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Red Hat OpenShift Operators" class="md-nav__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Red Hat OpenShift Operators
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/redhat-openshift-ecosystem/operator-pipelines" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    operator-pipelines
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Operator pipelines
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Operator pipelines
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pipelines_overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../isv_pipelines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ISV operators
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing-via-pr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing via PR
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-ci-yaml/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Operator CI yaml
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Troubleshooting for Community Operators
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting for Community Operators
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table of Contents
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Table of Contents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operator-pipeline-tasks-troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operator Pipeline Tasks Troubleshooting
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fbc-related-operator-pipeline-tasks-troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      FBC-Related Operator Pipeline Tasks Troubleshooting
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operator-pipeline-tasks-troubleshooting_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operator Pipeline Tasks Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Operator Pipeline Tasks Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-pr-number" class="md-nav__link">
+    <span class="md-ellipsis">
+      get-pr-number
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acquire-lease" class="md-nav__link">
+    <span class="md-ellipsis">
+      acquire-lease
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-github-started-label" class="md-nav__link">
+    <span class="md-ellipsis">
+      set-github-started-label
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-github-status-pending" class="md-nav__link">
+    <span class="md-ellipsis">
+      set-github-status-pending
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-env" class="md-nav__link">
+    <span class="md-ellipsis">
+      set-env
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clone-repository-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      clone-repository-base
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clone-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      clone-repository
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#detect-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      detect-changes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yaml-lint" class="md-nav__link">
+    <span class="md-ellipsis">
+      yaml-lint
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      check-permissions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-github-pr-title" class="md-nav__link">
+    <span class="md-ellipsis">
+      set-github-pr-title
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      read-config
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resolve-pr-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      resolve-pr-type
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-test-waivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      apply-test-waivers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#content-hash" class="md-nav__link">
+    <span class="md-ellipsis">
+      content-hash
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#certification-project-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      certification-project-check
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      get-organization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-pyxis-certification-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      get-pyxis-certification-data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#static-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      static-tests
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#static-tests-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      static-tests-results
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge-registry-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      merge-registry-credentials
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#digest-pinning" class="md-nav__link">
+    <span class="md-ellipsis">
+      digest-pinning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify-pinned-digest" class="md-nav__link">
+    <span class="md-ellipsis">
+      verify-pinned-digest
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dockerfile-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      dockerfile-creation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-bundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      build-bundle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#make-bundle-repo-public" class="md-nav__link">
+    <span class="md-ellipsis">
+      make-bundle-repo-public
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-supported-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      get-supported-versions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-bundle-to-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      add-bundle-to-index
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#make-index-repo-public" class="md-nav__link">
+    <span class="md-ellipsis">
+      make-index-repo-public
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-ci-results-attempt" class="md-nav__link">
+    <span class="md-ellipsis">
+      get-ci-results-attempt
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preflight-trigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      preflight-trigger
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evaluate-preflight-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      evaluate-preflight-result
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-ci-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      get-ci-results
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#link-pull-request-with-open-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      link-pull-request-with-open-status
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      merge-pr
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#link-pull-request-with-merged-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      link-pull-request-with-merged-status
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#copy-bundle-image-to-released-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      copy-bundle-image-to-released-registry
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decide-index-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      decide-index-paths
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-manifest-digests" class="md-nav__link">
+    <span class="md-ellipsis">
+      get-manifest-digests
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-signature" class="md-nav__link">
+    <span class="md-ellipsis">
+      request-signature
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upload-signature" class="md-nav__link">
+    <span class="md-ellipsis">
+      upload-signature
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-to-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      publish-to-index
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fbc-related-operator-pipeline-tasks-troubleshooting_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      FBC-Related Operator Pipeline Tasks Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FBC-Related Operator Pipeline Tasks Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#build-fbc-index-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      build-fbc-index-images
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-fbc-scratch-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      build-fbc-scratch-catalog
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tests
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Tests
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../static_checks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Static checks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dynamic_checks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dynamic checks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Operators
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Operators
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing-prerequisites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Before submitting your Operator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing-where-to/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Where to place operator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../best-practices/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Best practices
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fbc_onboarding/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    File base catalog onboarding
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fbc_workflow/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    File base catalog workflow
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../packaging-required-criteria-ocp/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    OKD/OpenShift Catalogs criteria and options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Admin
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Admin
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-admin-guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Admin guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="troubleshooting-the-community-operator-pipeline">Troubleshooting the Community Operator Pipeline</h1>
+<p>This document provides troubleshooting steps for each Tekton task in the Operator Hosted Pipeline and Operator Release Pipeline, including tasks for FBC-enabled operators in the <a href="https://github.com/redhat-openshift-ecosystem/community-operators-prod.git">community-operators-prod</a> repository.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<h3 id="operator-pipeline-tasks-troubleshooting"><a href="#tasks">Operator Pipeline Tasks Troubleshooting</a></h3>
+<ul>
+<li><a href="#get-pr-number">get-pr-number</a></li>
+<li><a href="#acquire-lease">acquire-lease</a></li>
+<li><a href="#set-github-started-label">set-github-started-label</a></li>
+<li><a href="#set-github-status-pending">set-github-status-pending</a></li>
+<li><a href="#set-env">set-env</a></li>
+<li><a href="#clone-repository-base">clone-repository-base</a></li>
+<li><a href="#clone-repository">clone-repository</a></li>
+<li><a href="#detect-changes">detect-changes</a></li>
+<li><a href="#yaml-lint">yaml-lint</a></li>
+<li><a href="#check-permissions">check-permissions</a></li>
+<li><a href="#set-github-pr-title">set-github-pr-title</a></li>
+<li><a href="#read-config">read-config</a></li>
+<li><a href="#resolve-pr-type">resolve-pr-type</a></li>
+<li><a href="#apply-test-waivers">apply-test-waivers</a></li>
+<li><a href="#content-hash">content-hash</a></li>
+<li><a href="#certification-project-check">certification-project-check</a></li>
+<li><a href="#get-organization">get-organization</a></li>
+<li><a href="#get-pyxis-certification-data">get-pyxis-certification-data</a></li>
+<li><a href="#static-tests">static-tests</a></li>
+<li><a href="#static-tests-results">static-tests-results</a></li>
+<li><a href="#merge-registry-credentials">merge-registry-credentials</a></li>
+<li><a href="#digest-pinning">digest-pinning</a></li>
+<li><a href="#verify-pinned-digest">verify-pinned-digest</a></li>
+<li><a href="#dockerfile-creation">dockerfile-creation</a></li>
+<li><a href="#build-bundle">build-bundle</a></li>
+<li><a href="#make-bundle-repo-public">make-bundle-repo-public</a></li>
+<li><a href="#get-supported-versions">get-supported-versions</a></li>
+<li><a href="#add-bundle-to-index">add-bundle-to-index</a></li>
+<li><a href="#make-index-repo-public">make-index-repo-public</a></li>
+<li><a href="#get-ci-results-attempt">get-ci-results-attempt</a></li>
+<li><a href="#preflight-trigger">preflight-trigger</a></li>
+<li><a href="#evaluate-preflight-result">evaluate-preflight-result</a></li>
+<li><a href="#get-ci-results">get-ci-results</a></li>
+<li><a href="#link-pull-request-with-open-status">link-pull-request-with-open-status</a></li>
+<li><a href="#merge-pr">merge-pr</a></li>
+<li><a href="#link-pull-request-with-merged-status">link-pull-request-with-merged-status</a></li>
+<li><a href="#copy-bundle-image-to-released-registry">copy-bundle-image-to-released-registry</a></li>
+<li><a href="#decide-index-paths">decide-index-paths</a></li>
+<li><a href="#get-manifest-digests">get-manifest-digests</a></li>
+<li><a href="#request-signature">request-signature</a></li>
+<li><a href="#upload-signature">upload-signature</a></li>
+<li><a href="#publish-to-index">publish-to-index</a></li>
+</ul>
+<h3 id="fbc-related-operator-pipeline-tasks-troubleshooting"><a href="#fbc-tasks">FBC-Related Operator Pipeline Tasks Troubleshooting</a></h3>
+<ul>
+<li><a href="#build-fbc-index-images">build-fbc-index-images</a></li>
+<li><a href="#build-fbc-scratch-catalog">build-fbc-scratch-catalog</a></li>
+</ul>
+<h2 id="operator-pipeline-tasks-troubleshooting_1"><a id="tasks"></a>Operator Pipeline Tasks Troubleshooting</h2>
+<h3 id="get-pr-number"><a id="get-pr-number"></a>get-pr-number</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="acquire-lease"><a id="acquire-lease"></a>acquire-lease</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="set-github-started-label"><a id="set-github-started-label"></a>set-github-started-label</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="set-github-status-pending"><a id="set-github-status-pending"></a>set-github-status-pending</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="set-env"><a id="set-env"></a>set-env</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="clone-repository-base"><a id="clone-repository-base"></a>clone-repository-base</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="clone-repository"><a id="clone-repository"></a>clone-repository</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="detect-changes"><a id="detect-changes"></a>detect-changes</h3>
+<p>The pipeline may fail at this stage due to the following reasons:
+1.  <b>Changing Non-Operator Files:</b> If the PR attempts to modify external files outside of targeted operator, the pipeline will fail.
+1.  <b>Affecting Multiple Operators:</b> If the PR impacts more than one operator, it will result in a failure.
+1.  <b>Modifying Existing Bundles:</b> Changes to existing bundles in the PR are not allowed at this stage.
+1.  <b>Deleting Existing Bundles:</b> Deleting bundles is only permissible for FBC-enabled operators.</p>
+<p>Other Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="yaml-lint"><a id="yaml-lint"></a>yaml-lint</h3>
+<p><strong>Warnings</strong> at this step should be addressed if possible but won't result in a failure.<br />
+<strong>Errors</strong> at this step will need to be addressed.  Often errors center around <i>unexpected whitespace</i> at the end of lines or <i>missing newlines</i> at the end of your <code>yaml</code> files. </p>
+<h3 id="check-permissions"><a id="check-permissions"></a>check-permissions</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="set-github-pr-title"><a id="set-github-pr-title"></a>set-github-pr-title</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="read-config"><a id="read-config"></a>read-config</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="resolve-pr-type"><a id="resolve-pr-type"></a>resolve-pr-type</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="apply-test-waivers"><a id="apply-test-waivers"></a>apply-test-waivers</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="content-hash"><a id="content-hash"></a>content-hash</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="certification-project-check"><a id="certification-project-check"></a>certification-project-check</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="get-organization"><a id="get-organization"></a>get-organization</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="get-pyxis-certification-data"><a id="get-pyxis-certification-data"></a>get-pyxis-certification-data</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="static-tests"><a id="static-tests"></a>static-tests</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="static-tests-results"><a id="static-tests-results"></a>static-tests-results</h3>
+<p>If the static tests fail, a summary will be posted as a comment on the Pull Request, providing detailed reasons for the failure. The summary of test results will look like as shown below:</p>
+<p><img alt="Preflight test run logs example" src="../../img/static_tests_example.png" /></p>
+<p>To proceed:
+1.  Review the comment for the detailed reasons behind the failed static tests.
+1.  Fix all the reported issues.
+1.  Commit the changes with a fix to the PR and it will Re-trigger the hosted pipeline.</p>
+<p>For more information about static tests, refer to the <a href="../static_checks/">documentation</a>.</p>
+<h3 id="merge-registry-credentials"><a id="merge-registry-credentials"></a>merge-registry-credentials</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="digest-pinning"><a id="digest-pinning"></a>digest-pinning</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="verify-pinned-digest"><a id="verify-pinned-digest"></a>verify-pinned-digest</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="dockerfile-creation"><a id="dockerfile-creation"></a>dockerfile-creation</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="build-bundle"><a id="build-bundle"></a>build-bundle</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="make-bundle-repo-public"><a id="make-bundle-repo-public"></a>make-bundle-repo-public</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="get-supported-versions"><a id="get-supported-versions"></a>get-supported-versions</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="add-bundle-to-index"><a id="add-bundle-to-index"></a>add-bundle-to-index</h3>
+<p>Failures at this stage are rare and often due to transient issues. Start by reviewing the pipeline logs linked in the PipelineRun summary within the PR.</p>
+<p>As an initial step, re-trigger the pipeline by adding the appropriate command in the PR comment:
+1.  <code>/pipeline restart operator-hosted-pipeline</code> for the hosted pipeline.
+1.  <code>/pipeline restart operator-release-pipeline</code> for the release pipeline.</p>
+<p>If the PR fails again after two consecutive attempts, feel free to request assistance in the PR comments. Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="make-index-repo-public"><a id="make-index-repo-public"></a>make-index-repo-public</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="get-ci-results-attempt"><a id="get-ci-results-attempt"></a>get-ci-results-attempt</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="preflight-trigger"><a id="preflight-trigger"></a>preflight-trigger</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="evaluate-preflight-result"><a id="evaluate-preflight-result"></a>evaluate-preflight-result</h3>
+<p>At this step, the pipeline will primarily fail if the <a href="../dynamic_checks/">dynamic tests</a> do not pass completely. A link to the test artifacts will be posted as a comment on the PR, as shown below. </p>
+<p><img alt="Preflight test run logs example" src="../../img/preflight_run_logs_example.png" /></p>
+<p>Please review this link, as it will provide detailed error information.
+Failures at this stage are uncommon. To diagnose the issue:
+1.  Review the pipeline logs linked in the PipelineRun summary within the PR.
+1.  Examine the test artifacts for detailed error information.</p>
+<p>If the logs and artifacts do not clarify the issue, feel free to ask for assistance in the PR comments. Maintainers will help identify and resolve the problem.</p>
+<h3 id="get-ci-results"><a id="get-ci-results"></a>get-ci-results</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="link-pull-request-with-open-status"><a id="link-pull-request-with-open-status"></a>link-pull-request-with-open-status</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="merge-pr"><a id="merge-pr"></a>merge-pr</h3>
+<p>If operator hosted pipeline fails at this task with the error message: <code>Pull request Auto merge is not allowed for this repository (enablePullRequestAutoMerge)</code> then re-trigger the pipeline by running command <code>/pipeline restart operator-hosted-pipeline</code>.  </p>
+<p>Another Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="link-pull-request-with-merged-status"><a id="link-pull-request-with-merged-status"></a>link-pull-request-with-merged-status</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="copy-bundle-image-to-released-registry"><a id="copy-bundle-image-to-released-registry"></a>copy-bundle-image-to-released-registry</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="decide-index-paths"><a id="decide-index-paths"></a>decide-index-paths</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="get-manifest-digests"><a id="get-manifest-digests"></a>get-manifest-digests</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="request-signature"><a id="request-signature"></a>request-signature</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="upload-signature"><a id="upload-signature"></a>upload-signature</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="publish-to-index"><a id="publish-to-index"></a>publish-to-index</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h2 id="fbc-related-operator-pipeline-tasks-troubleshooting_1"><a id="fbc-tasks"></a>FBC-Related Operator Pipeline Tasks Troubleshooting</h2>
+<h3 id="build-fbc-index-images"><a id="build-fbc-index-images"></a>build-fbc-index-images</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+<h3 id="build-fbc-scratch-catalog"><a id="build-fbc-scratch-catalog"></a>build-fbc-scratch-catalog</h3>
+<p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.88dd0f4e.min.js"></script>
+      
+    
+  </body>
+</html>
