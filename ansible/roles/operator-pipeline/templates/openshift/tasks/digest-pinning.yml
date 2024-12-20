@@ -15,6 +15,7 @@ spec:
   results:
     - name: dirty_flag
     - name: related_images_flag
+    - name: related_images_message
   workspaces:
     - name: source
     - name: registry-credentials
@@ -117,13 +118,13 @@ spec:
         set -xe
 
         if [ -z "$(params.bundle_path)" ]; then
-          echo "No bundle added or changed"
+          echo -n "No bundle added or changed" | tee $(results.related_images_message.path)
           echo -n "true" | tee $(results.related_images_flag.path)
           exit 0
         fi
 
         if [ "$(params.enabled)" != "true" ]; then
-          echo "Digest pinning is not enabled"
+          echo -n "Digest pinning is not enabled" | tee $(results.related_images_message.path)
           echo -n "true" | tee $(results.related_images_flag.path)
           exit 0
         fi
@@ -135,9 +136,12 @@ spec:
         RELATED_IMAGE_COUNT=$(yq -e '.spec.relatedImages | length' $CSVFILE)
 
         if [[ $RELATED_IMAGE_COUNT -ge $REFERENCE_COUNT ]]; then
-          echo "Related images section exists."
+          echo -n "Related images section exists." | tee $(results.related_images_message.path)
           echo -n "true" | tee $(results.related_images_flag.path)
+        elif [[ $RELATED_IMAGE_COUNT -lt $REFERENCE_COUNT && $RELATED_IMAGE_COUNT -gt 0 ]]; then
+          echo -n "The relatedImages section in your CSV covers only $RELATED_IMAGE_COUNT of the $REFERENCE_COUNT images detected in your CSV." | tee $(results.related_images_message.path)
+          echo -n "false" | tee $(results.related_images_flag.path)
         else
-          echo "The relatedImages section does not exist or is missing images."
+          echo -n "The relatedImages section is missing from the CSV" | tee $(results.related_images_message.path)
           echo -n "false" | tee $(results.related_images_flag.path)
         fi
