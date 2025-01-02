@@ -46,7 +46,7 @@ def review_community(tmp_path: Path) -> check_permissions.OperatorReview:
             "0.0.1",
             other_files={
                 "operators/test-operator/ci.yaml": {
-                    "reviewers": ["user1", "user2"],
+                    "reviewers": ["User1", "user2"],
                 },
                 "config.yaml": {"maintainers": ["maintainer1", "maintainer2"]},
             },

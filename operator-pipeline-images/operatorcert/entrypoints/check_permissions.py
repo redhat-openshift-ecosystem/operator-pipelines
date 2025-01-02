@@ -143,9 +143,14 @@ class OperatorReview:
         Operator reviewers from the operator config file
 
         Returns:
-            list[str]: A list of github users who are reviewers for the operator
+            list[str]: A list of github users who are reviewers for the
+            operator in lowercase format
         """
-        return self.base_repo_operator_config.get("reviewers") or []
+        reviewers = self.base_repo_operator_config.get("reviewers") or []
+
+        # Github supports case-insensitive usernames - convert all usernames to lowercase
+        # to avoid issues with case sensitivity
+        return [user.lower() for user in reviewers]
 
     @property
     def maintainers(self) -> list[str]:
@@ -300,7 +305,7 @@ class OperatorReview:
                 "or is brand new."
             )
 
-        if self.pr_owner in self.reviewers:
+        if self.pr_owner.lower() in self.reviewers:
             LOGGER.info(
                 "Pull request owner %s can submit PR for operator %s",
                 self.pr_owner,
