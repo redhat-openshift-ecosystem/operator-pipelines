@@ -67,7 +67,7 @@ class OperatorReview:
     A class represents a pull request review and permissions check
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         operator: Operator,
         pr_owner: str,

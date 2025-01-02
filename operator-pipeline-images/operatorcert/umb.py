@@ -18,7 +18,7 @@ class UmbClient:
     A UMB client for sending and receiving messages from the UMB.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         hostnames: List[tuple[str, int]],
         cert_file: str,

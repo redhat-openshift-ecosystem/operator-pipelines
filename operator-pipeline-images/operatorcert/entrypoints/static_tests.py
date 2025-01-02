@@ -54,7 +54,7 @@ def setup_argparser() -> argparse.ArgumentParser:
     return parser
 
 
-def execute_checks(  # pylint: disable=too-many-arguments
+def execute_checks(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     repo_path: str,
     operator_name: str,
     bundle_version: str,

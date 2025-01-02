@@ -151,7 +151,7 @@ class ParserResults:
     Data class to store the results of the detect_changes function
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         affected_operators: AffectedOperatorCollection,
         affected_bundles: AffectedBundleCollection,
