@@ -53,7 +53,7 @@ def setup_argparser() -> argparse.ArgumentParser:
     return parser
 
 
-def generate_and_save_basic_template(  # pylint: disable=too-many-arguments
+def generate_and_save_basic_template(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     template_path: str,
     package: str,
     default_channel: str,

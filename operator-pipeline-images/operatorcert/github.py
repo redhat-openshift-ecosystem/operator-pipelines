@@ -274,7 +274,7 @@ def add_or_remove_labels(  # pylint: disable=too-many-locals
     remove_labels_from_pull_request(pull_request, labels_to_remove)
 
 
-def open_pull_request(  # pylint: disable=too-many-arguments
+def open_pull_request(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     github_client: Github,
     repository_name: str,
     title: str,

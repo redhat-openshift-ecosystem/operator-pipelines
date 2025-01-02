@@ -69,7 +69,7 @@ def setup_argparser() -> Any:  # pragma: no cover
     return parser
 
 
-def open_pr(  # pylint: disable=too-many-arguments
+def open_pr(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     github_api_url: str,
     repo_name: str,
     head: str,
