@@ -22,6 +22,7 @@ nav:
       - "OKD/OpenShift Catalogs criteria and options": "users/packaging-required-criteria-ocp.md"
   - "Admin":
       - "Admin guide": "pipeline-admin-guide.md"
+      - "Catalog image browser": "catalog_image_browser.md"
 theme:
   name: material
   features:
