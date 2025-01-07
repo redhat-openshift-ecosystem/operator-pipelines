@@ -12,19 +12,19 @@
           ansible.builtin.file:
             path: "{{ tmp_folder }}"
             state: directory
-            mode: 0777
+            mode: "0777"
 
         - name: Create directory for registry credentials
           ansible.builtin.file:
             path: "{{ tmp_folder }}/registry_certs/"
             state: directory
-            mode: 0777
+            mode: "0777"
 
         - name: Save credentials to file
           no_log: true
           ansible.builtin.copy:
             dest: "{{ tmp_folder }}/registry_certs/config.json"
-            mode: 0777
+            mode: "0777"
             content: |
               {
                   "auths": {

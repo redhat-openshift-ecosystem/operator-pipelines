@@ -8,7 +8,7 @@
   ansible.builtin.template:
     src: ci.yaml.j2
     dest: "{{ git_temp_dir.path }}/ci.yaml"
-    mode: 0644
+    mode: "0644"
   changed_when: true
 
 - name: Prepare ci.yaml in target branch
