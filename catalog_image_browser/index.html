@@ -9,6 +9,8 @@
       
       
       
+        <link rel="prev" href="../pipeline-admin-guide/">
+      
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -16,7 +18,7 @@
     
     
       
-        <title>Preflight invalidation CronJob - Red Hat OpenShift Operators</title>
+        <title>Catalog image browser - Red Hat OpenShift Operators</title>
       
     
     
@@ -58,7 +60,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#preflight-invalidation-cronjob" class="md-skip">
+        <a href="#catalog-image-browser" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Preflight invalidation CronJob
+              Catalog image browser
             
           </span>
         </div>
@@ -242,10 +244,12 @@
         
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../pipeline-admin-guide/" class="md-tabs__link">
           
   
@@ -748,27 +752,30 @@
       
   
   
+    
   
   
+  
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -779,7 +786,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Admin
@@ -811,10 +818,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../catalog_image_browser/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Catalog image browser
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -823,6 +850,68 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#list" class="md-nav__link">
+    <span class="md-ellipsis">
+      List
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#show" class="md-nav__link">
+    <span class="md-ellipsis">
+      Show
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -853,17 +942,105 @@
   
 
 
-<h1 id="preflight-invalidation-cronjob">Preflight invalidation CronJob</h1>
-<p>The repository contains a CronJob that updates enabled preflight versions
-weekly. https://issues.redhat.com/browse/ISV-4964</p>
-<p>After changes, the CronJob can be deployed using Ansible.</p>
-<pre><code class="language-bash">ansible-playbook \
-    -i ansible/inventory/clusters \
-    -e &quot;clusters=prod-cluster&quot; \
-    -e &quot;ocp_token=[TOKEN]&quot; \
-    -e &quot;env=prod&quot; \
-    --vault-password-file [PWD_FILE] \
-    playbooks/preflight-invalidation.yml
+<h1 id="catalog-image-browser">Catalog image browser</h1>
+<p>Working with catalog images locally might be a tricky task since it requires a lot of manual work.
+To make it easier for maintainers and contributors, we have created a simple catalog image
+browser CLI tool that allows you to browse and search for images in the catalog locally
+in your terminal.</p>
+<h2 id="installation">Installation</h2>
+<p>To install the catalog browser, you will need a Python 3.10+ environment.</p>
+<p>Then, you can install the tool using pip:</p>
+<pre><code class="language-bash">$ pip install git+https://github.com/redhat-openshift-ecosystem/operator-pipelines.git
+</code></pre>
+<p>Once installed you can run the tool using the following command:</p>
+<pre><code class="language-bash">$ catalog-browser --help
+
+usage: catalog-browser [-h] [--image IMAGE] [--rendered RENDERED] {list,show} ...
+
+Browse and query index image content.
+
+positional arguments:
+  {list,show}          Commands
+    list               List content in the index image.
+    show               Show details of specific content.
+
+options:
+  -h, --help           show this help message and exit
+  --image IMAGE        Path to the index image.
+  --rendered RENDERED  Path to the rendered index image content.
+
+</code></pre>
+<h2 id="usage">Usage</h2>
+<p>The browser requires one of 2 argument inputs: <code>--image</code> or <code>--rendered</code>. Using <code>--image</code> argument
+the tool will pull the image and extract the content to a temporary directory. Based on catalog image
+size the extraction might take a while. You can also render a catalog
+in advance using <code>opm render</code> and then using <code>--rendered</code> argument to browse the content.</p>
+<pre><code class="language-bash">$ catalog-browser --image registry.redhat.io/redhat/community-operator-index:v4.16 list packages
+
+# or
+$ opm render -o yaml registry.redhat.io/redhat/community-operator-index:v4.16 &gt; /tmp/v.4.16.yaml
+
+$ catalog-browser --rendered /tmp/v.4.16.yaml list bundles
+</code></pre>
+<p>The browser supports 2 commands: <code>list</code> and <code>show</code>.</p>
+<h3 id="list">List</h3>
+<p>The <code>list</code> command will list all packages, bundles or channels</p>
+<pre><code class="language-bash">$ catalog-browser --image registry.redhat.io/redhat/community-operator-index:v4.16 list packages
+3scale-community-operator
+ack-acm-controller
+ack-acmpca-controller
+ack-apigateway-controller
+ack-apigatewayv2-controller
+ack-applicationautoscaling-controller
+ack-athena-controller
+...
+</code></pre>
+<pre><code class="language-bash">$ catalog-browser --rendered /tmp/v.4.16.yaml list bundles
+3scale-community-operator.v0.10.1
+3scale-community-operator.v0.8.2
+3scale-community-operator.v0.9.0
+ack-acm-controller.v0.0.1
+ack-acm-controller.v0.0.10
+ack-acm-controller.v0.0.12
+ack-acm-controller.v0.0.16
+ack-acm-controller.v0.0.17
+ack-acm-controller.v0.0.18
+...
+</code></pre>
+<h3 id="show">Show</h3>
+<p>The <code>show</code> command will show details of a specific package, bundle or channel in
+human readable format.</p>
+<p>To show details of a package:</p>
+<pre><code class="language-bash">$ catalog-browser --rendered /tmp/v.4.16.yaml show package tempo-operator
+Package: tempo-operator
+Channels:
+ - tempo-operator/alpha
+Bundles:
+ - tempo-operator.v0.1.0
+ - tempo-operator.v0.10.0
+ - tempo-operator.v0.11.0
+ - tempo-operator.v0.11.1
+ - tempo-operator.v0.12.0
+ - tempo-operator.v0.13.0
+ - tempo-operator.v0.14.0
+ - tempo-operator.v0.14.1
+ - tempo-operator.v0.14.2
+ - tempo-operator.v0.2.0
+ - tempo-operator.v0.3.0
+ - tempo-operator.v0.4.0
+ - tempo-operator.v0.5.0
+ - tempo-operator.v0.6.0
+ - tempo-operator.v0.7.0
+ - tempo-operator.v0.8.0
+ - tempo-operator.v0.9.0
+</code></pre>
+<p>To show details of a bundle:</p>
+<pre><code class="language-bash">$ catalog-browser --rendered /tmp/v.4.16.yaml show bundle snyk-operator.v1.90.2
+Bundle: snyk-operator.v1.90.2
+Package: snyk-operator
+Image: quay.io/openshift-community-operators/snyk-operator@sha256:daf143ff1e9fbcf9bbbb350f8aab8593a1a35f693b0118c06a6b84c89a474397
+Channels:
+ - snyk-operator/stable
 </code></pre>
 
 
