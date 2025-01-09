@@ -35,9 +35,11 @@ dependencies = [
     "urllib3>=2.2.2",
     "openshift-client>=2.0.4",
     "pydantic>=2.10.0",
+    "ruamel-yaml>=0.18.10",
 ]
 
 [project.scripts]
+add-bundle-to-fbc = "operatorcert.entrypoints.add_bundle_to_fbc:main"
 add-fbc-fragments-to-index = "operatorcert.entrypoints.add_fbc_fragments_to_index:main"
 apply-test-waivers = "operatorcert.entrypoints.apply_test_waivers:main"
 build-fragment-images = "operatorcert.entrypoints.build_fragment_images:main"
