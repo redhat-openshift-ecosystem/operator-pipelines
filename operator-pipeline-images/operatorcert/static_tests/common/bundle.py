@@ -96,3 +96,68 @@ def check_operator_name(bundle: Bundle) -> Iterator[CheckResult]:
             f" does not match the operator's directory name ({bundle.operator_name})"
         )
         yield Warn(msg) if other_bundles else Fail(msg)
+
+
+def _check_semver_allowed_channels(
+    template_in_mapping: dict[str, Any], release_config_template: dict[str, Any]
+) -> Iterator[CheckResult]:
+    """
+    Check if the channels in the semver catalog template are allowed.
+    The semver is very strict about the allowed channels. The only allowed
+    channels are: Fast, Candidate, Stable.
+
+    Args:
+        template_in_mapping (dict[str, Any]): A catalog template from the ci.yaml file
+        release_config_template (dict[str, Any]): A release config for a bundle
+
+    Yields:
+        Iterator[CheckResult]: A check result if the channels are not allowed
+    """
+    if template_in_mapping["type"] != "olm.semver":
+        return
+    allowed_channels_in_semver = ["Fast", "Candidate", "Stable"]
+    if set(release_config_template["channels"]).issubset(
+        set(allowed_channels_in_semver)
+    ):
+        return
+    yield Fail(
+        "Bundle's 'release-config.yaml' contains a semver catalog template "
+        f"'{release_config_template['template_name']}' with invalid channels: "
+        f"{release_config_template['channels']}. "
+        f"Allowed channels are: {allowed_channels_in_semver}. "
+        "Follow olm [documentation](https://olm.operatorframework.io/docs/"
+        "reference/catalog-templates/#specification) to see more details "
+        "about semver template."
+    )
+
+
+def check_bundle_release_config(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Check if the bundle release config is in a right format and consistent
+    with the ci.yaml file
+    """
+    if not bundle.release_config:
+        return
+    ci_file = bundle.operator.config
+    fbc_enabled = ci_file.get("fbc", {}).get("enabled", False)
+    if not fbc_enabled:
+        yield Fail(
+            "Bundle's 'release-config.yaml' is used but FBC is not enabled "
+            "for the operator. Update the 'fbc.enabled' field in the ci.yaml file."
+        )
+        return
+    catalog_mapping = ci_file.get("fbc", {}).get("catalog_mapping", [])
+    template_names_in_mapping = {
+        template["template_name"]: template for template in catalog_mapping
+    }
+    for template in bundle.release_config["catalog_templates"]:
+        if template["template_name"] not in template_names_in_mapping:
+            yield Fail(
+                "Bundle's 'release-config.yaml' contains a catalog template "
+                f"'{template['template_name']}' that is not defined in the ci.yaml file "
+                "under 'catalog_mapping'. Add the template to the 'catalog_mapping."
+            )
+        else:
+            yield from _check_semver_allowed_channels(
+                template_names_in_mapping[template["template_name"]], template
+            )
