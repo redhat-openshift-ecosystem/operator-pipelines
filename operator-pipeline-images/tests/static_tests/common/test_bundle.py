@@ -3,7 +3,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from operator_repo import Repo
 from operator_repo.checks import Fail, Warn
-from operatorcert.static_tests.common.bundle import check_operator_name
+from operatorcert.static_tests.common.bundle import (
+    check_operator_name,
+    check_bundle_release_config,
+)
 from tests.utils import bundle_files, create_files
 
 from typing import Any
@@ -314,4 +317,162 @@ def test_operator_name(
     bundle = operator.bundle(bundle_version)
     assert {
         (x.__class__, x.reason) for x in check_operator_name(bundle)
+    } == expected_results
+
+
+@pytest.mark.parametrize(
+    "files, bundle_to_check, expected_results",
+    [
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+            ],
+            ("hello", "0.0.1"),
+            set(),
+            id="No release config",
+        ),
+        pytest.param(
+            [
+                bundle_files(
+                    "hello",
+                    "0.0.1",
+                ),
+                {"operators/hello/0.0.1/release-config.yaml": {"key": "value"}},
+            ],
+            ("hello", "0.0.1"),
+            {
+                (
+                    Fail,
+                    "Bundle's 'release-config.yaml' is used but FBC is not enabled "
+                    "for the operator. Update the 'fbc.enabled' field in the ci.yaml file.",
+                ),
+            },
+            id="Release config without FBC",
+        ),
+        pytest.param(
+            [
+                bundle_files(
+                    "hello",
+                    "0.0.1",
+                ),
+                {
+                    "operators/hello/0.0.1/release-config.yaml": {
+                        "catalog_templates": [
+                            {"template_name": "template1.yaml"},
+                            {"template_name": "template2.yaml"},
+                            {"template_name": "template3.yaml"},
+                        ]
+                    }
+                },
+                {
+                    "operators/hello/ci.yaml": {
+                        "fbc": {
+                            "enabled": True,
+                            "catalog_mapping": [
+                                {
+                                    "template_name": "template1.yaml",
+                                    "type": "olm.template.basic",
+                                }
+                            ],
+                        }
+                    }
+                },
+            ],
+            ("hello", "0.0.1"),
+            {
+                (
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains a catalog template "
+                    "'template2.yaml' that is not defined in the ci.yaml file "
+                    "under 'catalog_mapping'. Add the template to the 'catalog_mapping.",
+                ),
+                (
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains a catalog template "
+                    "'template3.yaml' that is not defined in the ci.yaml file "
+                    "under 'catalog_mapping'. Add the template to the 'catalog_mapping.",
+                ),
+            },
+            id="Missing template in mapping",
+        ),
+        pytest.param(
+            [
+                bundle_files(
+                    "hello",
+                    "0.0.1",
+                ),
+                {
+                    "operators/hello/0.0.1/release-config.yaml": {
+                        "catalog_templates": [
+                            {
+                                "template_name": "template1.yaml",
+                                "channels": ["Fast", "Candidate", "Stable"],
+                            },
+                            {
+                                "template_name": "template2.yaml",
+                                "channels": ["Fast", "Candidate"],
+                            },
+                            {
+                                "template_name": "template3.yaml",
+                                "channels": ["Fast", "Custom"],
+                            },
+                            {"template_name": "template4.yaml", "channels": ["Custom"]},
+                        ]
+                    }
+                },
+                {
+                    "operators/hello/ci.yaml": {
+                        "fbc": {
+                            "enabled": True,
+                            "catalog_mapping": [
+                                {
+                                    "template_name": "template1.yaml",
+                                    "type": "olm.semver",
+                                },
+                                {
+                                    "template_name": "template2.yaml",
+                                    "type": "olm.semver",
+                                },
+                                {
+                                    "template_name": "template3.yaml",
+                                    "type": "olm.semver",
+                                },
+                                {
+                                    "template_name": "template4.yaml",
+                                    "type": "olm.template.basic",
+                                },
+                            ],
+                        }
+                    }
+                },
+            ],
+            ("hello", "0.0.1"),
+            {
+                (
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains a semver catalog template "
+                    "'template3.yaml' with invalid channels: ['Fast', 'Custom']. Allowed "
+                    "channels are: ['Fast', 'Candidate', 'Stable']. Follow olm "
+                    "[documentation](https://olm.operatorframework.io/docs/reference/catalog-templates/#specification) "
+                    "to see more details about semver template.",
+                ),
+            },
+            id="Invalid semver channels",
+        ),
+    ],
+    indirect=False,
+)
+def test_check_bundle_release_config(
+    tmp_path: Path,
+    files: list[dict[str, Any]],
+    bundle_to_check: tuple[str, str],
+    expected_results: set[tuple[type, str]],
+) -> None:
+    create_files(tmp_path, *files)
+    repo = Repo(tmp_path)
+    operator_name, bundle_version = bundle_to_check
+    operator = repo.operator(operator_name)
+    bundle = operator.bundle(bundle_version)
+    assert {
+        (x.__class__, x.reason) for x in check_bundle_release_config(bundle)
     } == expected_results

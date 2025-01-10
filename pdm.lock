@@ -5,7 +5,7 @@
 groups = ["default", "operatorcert-dev", "tox"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:d28c068483a863359d6edfc8e584c7e17359fa7f874c67940411729bf8b9e04f"
+content_hash = "sha256:2c516ee6e786f2dfffd3f271d0fb7ffbc9e265d138b3f33bfdecb74b976e1e5e"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -1217,16 +1217,16 @@ files = [
 
 [[package]]
 name = "operator-repo"
-version = "0.4.9"
+version = "0.4.11"
 requires_python = ">=3.9"
 git = "https://github.com/mporrato/operator-repo.git"
-ref = "v0.4.9"
-revision = "95c4a55f46c905cb2f9ff4fb0d9a0aef2754d308"
+ref = "v0.4.11"
+revision = "a8f91489019730024df156b8403c6506e826cb6d"
 summary = "Library and utilities to handle repositories of kubernetes operators"
 groups = ["default"]
 dependencies = [
     "pyyaml>=6.0.1",
-    "semver>=3.0.1",
+    "semantic-version>=2.10.0",
 ]
 
 [[package]]
@@ -2038,6 +2038,17 @@ files = [
     {file = "ruamel.yaml.clib-0.2.12-cp313-cp313-win32.whl", hash = "sha256:6442cb36270b3afb1b4951f060eccca1ce49f3d087ca1ca4563a6eb479cb3de6"},
     {file = "ruamel.yaml.clib-0.2.12-cp313-cp313-win_amd64.whl", hash = "sha256:e5b8daf27af0b90da7bb903a876477a9e6d7270be6146906b276605997c7e9a3"},
     {file = "ruamel.yaml.clib-0.2.12.tar.gz", hash = "sha256:6c8fbb13ec503f99a91901ab46e0b07ae7941cd527393187039aec586fdfd36f"},
+]
+
+[[package]]
+name = "semantic-version"
+version = "2.10.0"
+requires_python = ">=2.7"
+summary = "A library implementing the 'SemVer' scheme."
+groups = ["default"]
+files = [
+    {file = "semantic_version-2.10.0-py2.py3-none-any.whl", hash = "sha256:de78a3b8e0feda74cabc54aab2da702113e33ac9d9eb9d2389bcf1f58b7d9177"},
+    {file = "semantic_version-2.10.0.tar.gz", hash = "sha256:bdabb6d336998cbb378d4b9db3a4b56a1e3235701dc05ea2690d9a997ed5041c"},
 ]
 
 [[package]]
