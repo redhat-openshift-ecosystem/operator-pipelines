@@ -21,6 +21,7 @@ def check_operator_name_unique(operator: Operator) -> Iterator[CheckResult]:
         yield Fail(f"Bundles use multiple operator names: {names}")
 
 
+@skip_fbc
 def check_ci_upgrade_graph(operator: Operator) -> Iterator[CheckResult]:
     """Ensure the operator has a valid upgrade graph for ci.yaml"""
     upgrade_graph = operator.config.get("updateGraph")

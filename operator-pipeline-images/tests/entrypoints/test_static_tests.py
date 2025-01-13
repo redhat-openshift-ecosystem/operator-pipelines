@@ -9,26 +9,31 @@ from tests.utils import bundle_files, catalog_files, create_files
 
 
 @pytest.mark.parametrize(
-    "check_results, bundle, expected",
+    "check_results, bundle, catalog_operators, expected",
     [
-        (
+        pytest.param(
             [],
             "0.0.1",
+            "v4.14/test-operator",
             {"passed": True, "outputs": []},
+            id="No failures or warnings",
         ),
-        (
+        pytest.param(
             [Warn("foo")],
             "0.0.1",
+            "v4.14/test-operator",
             {
                 "passed": True,
                 "outputs": [
                     {"type": "warning", "message": "foo", "test_suite": "dummy_suite"}
                 ],
             },
+            id="One warning",
         ),
-        (
+        pytest.param(
             [Fail("bar", check="baz")],
-            "",
+            "0.0.1",
+            "v4.14/test-operator",
             {
                 "passed": False,
                 "outputs": [
@@ -40,10 +45,12 @@ from tests.utils import bundle_files, catalog_files, create_files
                     }
                 ],
             },
+            id="One failure",
         ),
-        (
+        pytest.param(
             [Warn("foo"), Fail("bar")],
             "0.0.1",
+            "v4.14/test-operator",
             {
                 "passed": False,
                 "outputs": [
@@ -51,32 +58,62 @@ from tests.utils import bundle_files, catalog_files, create_files
                     {"type": "error", "message": "bar", "test_suite": "dummy_suite"},
                 ],
             },
+            id="One warning and one failure",
+        ),
+        pytest.param(
+            [],
+            "",
+            "",
+            {
+                "passed": True,
+                "outputs": [],
+            },
+            id="Removed operator",
+        ),
+        pytest.param(
+            [],
+            "0.0.1",
+            "v4.12/test-operator",
+            {
+                "passed": True,
+                "outputs": [],
+            },
+            id="Unknown catalog operator",
         ),
     ],
     indirect=False,
-    ids=[
-        "No failures or warnings",
-        "One warning",
-        "One failure",
-        "One warning and one failure",
-    ],
 )
 @patch("operatorcert.entrypoints.static_tests.run_suite")
 def test_execute_checks(
     mock_run_suite: MagicMock,
     tmp_path: Any,
     bundle: str,
+    catalog_operators: str,
     check_results: Any,
     expected: Any,
 ) -> None:
     operator_name = "test-operator"
     bundle_version = bundle
     affected_catalogs = "v4.14/test-operator"
+
+    # Always create a an operator and catalog directory to have a valid repo
     create_files(
         tmp_path,
-        bundle_files(operator_name, "0.0.1"),
-        catalog_files("v4.14", "test-operator"),
+        bundle_files("operator_1", "0.0.1"),
+        catalog_files("v4.15", "operator_1"),
     )
+
+    if bundle:
+        create_files(
+            tmp_path,
+            bundle_files(operator_name, "0.0.1"),
+        )
+    if catalog_operators:
+        catalog, catalog_operator = catalog_operators.split("/")
+        create_files(
+            tmp_path,
+            catalog_files(catalog, catalog_operator),
+        )
 
     repo = Repo(tmp_path)
 
