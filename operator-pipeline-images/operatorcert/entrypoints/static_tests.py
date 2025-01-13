@@ -54,6 +54,61 @@ def setup_argparser() -> argparse.ArgumentParser:
     return parser
 
 
+def get_objects_to_test(
+    repo: Repo, operator_name: str, bundle_version: str, affected_catalogs: str
+) -> List[Any]:
+    """
+    Get a list of objects to test based on whether they exist in the repository.
+
+    Args:
+        repo (Repo): A repository object
+        operator_name (str): A name of the operator that should be tested
+        bundle_version (str): A version of the bundle that should be tested
+        affected_catalogs (str): A list of affected catalogs separated by commas
+        that should be tested
+
+    Returns:
+        List[Any]: List of objects to test
+    """
+    test_objects = []
+
+    # In case any of the resources is being removed in the pull request
+    # We need to skip the test for that resource
+
+    # Check if the operator and bundle exist in the repository
+    # and add them to the list of objects to test
+    if repo.has(operator_name):
+        operator = repo.operator(operator_name)
+        test_objects.append(operator)
+        if operator.has(bundle_version):
+            test_objects.append(operator.bundle(bundle_version))
+    else:
+        LOGGER.warning("Operator %s not found in the repository", operator_name)
+
+    # Check if the affected catalogs and catalog operators exist in the repository
+    # and add them to the list of objects to test
+    operator_catalogs = []
+
+    # Remove empty strings from the list
+    affected_catalogs_list = [item for item in affected_catalogs.split(",") if item]
+
+    for operator_catalog_path in affected_catalogs_list:
+        catalog_name, operator_name = operator_catalog_path.split("/")
+        if not repo.has_catalog(catalog_name) or not repo.catalog(catalog_name).has(
+            operator_name
+        ):
+            LOGGER.warning(
+                "Catalog %s not found in the repository", operator_catalog_path
+            )
+            continue
+        catalog = repo.catalog(catalog_name)
+        operator_catalog = catalog.operator_catalog(operator_name)
+        operator_catalogs.append(operator_catalog)
+
+    test_objects.append(OperatorCatalogList(operator_catalogs))
+    return test_objects
+
+
 def execute_checks(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     repo_path: str,
     operator_name: str,
@@ -79,17 +134,8 @@ def execute_checks(  # pylint: disable=too-many-arguments,too-many-positional-ar
         The results of the checks in the suite applied to the given bundle
     """
     repo = Repo(repo_path)
-    operator = repo.operator(operator_name)
-    bundle = operator.bundle(bundle_version) if bundle_version else None
-    # use operator-operator_catalogs edge to filter out deleted catalogs
-    operator_catalogs = OperatorCatalogList(
-        [
-            catalog
-            for catalog in operator.all_operator_catalogs()
-            if catalog in affected_catalogs.split(",")
-        ]
-        if affected_catalogs
-        else []
+    test_objects = get_objects_to_test(
+        repo, operator_name, bundle_version, affected_catalogs
     )
 
     outputs = []
@@ -97,7 +143,7 @@ def execute_checks(  # pylint: disable=too-many-arguments,too-many-positional-ar
 
     for suite_name in suite_names:
         for result in run_suite(
-            [obj for obj in (bundle, operator, operator_catalogs) if obj],
+            test_objects,
             suite_name,
             skip_tests=skip_tests,
         ):
