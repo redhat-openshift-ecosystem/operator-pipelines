@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 from os import PathLike
 from pathlib import Path
-from typing import Mapping, Optional, Sequence, TypeAlias
+from typing import Mapping, Optional, Sequence, TypeAlias, IO
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -118,18 +118,13 @@ class Ansible:
             run(*command, cwd=self.path)
 
 
-class Podman:
+class RegistryAuthMixin:
     """
-    Utility class to interact with Podman.
+    Mixin class to help running the tools in the podman family (podman, buildah, skopeo)
+    with a given set of authentication credentials for the container registries
     """
 
     def __init__(self, auth: Optional[Mapping[str, tuple[str, str]]] = None):
-        """
-        Initialize the Podman instance
-
-        Args:
-            auth: The authentication credentials for registries
-        """
         self._auth = {
             "auths": {
                 registry: {
@@ -142,26 +137,52 @@ class Podman:
             }
         }
 
-    def _run(self, *args: CommandArg) -> None:
+    def save_auth(self, dest_file: IO[str]) -> None:
+        """
+        Dump the auth credentials to a json file
+        Args:
+            dest_file: destination json file
+        """
+        json.dump(self._auth, dest_file)
+
+    def run(self, *command: CommandArg) -> None:
+        """
+        Run the given command with the REGISTRY_AUTH_FILE environment variable pointing
+        to a temporary file containing a json representation of the credentials in a format
+        compatible with podman, buildah and skopeo
+        Args:
+            *command: command line to execute
+        """
+
+        if self._auth["auths"]:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                suffix=".json",
+                delete=True,
+                delete_on_close=False,
+            ) as tmp:
+                self.save_auth(tmp)
+                tmp.close()
+                LOGGER.debug("Using auth file: %s", tmp.name)
+                run(*command, env={"REGISTRY_AUTH_FILE": tmp.name})
+        else:
+            run(*command)
+
+
+class Podman(RegistryAuthMixin):
+    """
+    Utility class to interact with Podman.
+    """
+
+    def run(self, *args: CommandArg) -> None:
         """
         Run a podman subcommand
 
         Args:
             *args: The podman subcommand and its arguments
         """
-        command: list[CommandArg] = ["podman"]
-        command.extend(args)
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            suffix=".json",
-            delete=True,
-            delete_on_close=False,
-        ) as tmp:
-            json.dump(self._auth, tmp)
-            tmp.close()
-            LOGGER.debug("Using podman auth file: %s", tmp.name)
-            run(*command, env={"REGISTRY_AUTH_FILE": tmp.name})
+        super().run("podman", *args)
 
     def build(
         self,
@@ -185,7 +206,7 @@ class Podman:
             command.extend(["-f", containerfile])
         if extra_args:
             command.extend(extra_args)
-        self._run(*command)
+        self.run(*command)
 
     def push(self, image: str) -> None:
         """
@@ -194,4 +215,52 @@ class Podman:
         Args:
             image: The name of the image to push.
         """
-        self._run("push", image)
+        self.run("push", image)
+
+
+class Skopeo(RegistryAuthMixin):
+    """
+    Utility class to interact with Skopeo.
+    """
+
+    def run(self, *args: CommandArg) -> None:
+        """
+        Run a skopeo subcommand
+
+        Args:
+            *args: The skopeo subcommand and its arguments
+        """
+        super().run("skopeo", *args)
+
+    def copy(
+        self,
+        from_image: str,
+        to_image: str,
+        extra_args: Optional[Sequence[CommandArg]] = None,
+    ) -> None:
+        """
+        Copy a container image
+
+        Args:
+            from_image: source container image ref
+            to_image: destination image ref
+            extra_args: optional args to add to the skopeo command line
+        """
+
+        command: list[CommandArg] = ["copy", from_image, to_image]
+        if extra_args:
+            command.extend(extra_args)
+        self.run(*command)
+
+    def delete(
+        self,
+        image: str,
+    ) -> None:
+        """
+        Delete a container image
+
+        Args:
+            image: container image ref
+        """
+
+        self.run("delete", image)

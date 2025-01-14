@@ -1,9 +1,9 @@
 import subprocess
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from operatorcert.integration.external_tools import Ansible, Podman, Secret, run
+from operatorcert.integration.external_tools import Ansible, Podman, Secret, Skopeo, run
 
 
 def test_Secret() -> None:
@@ -81,7 +81,6 @@ def test_Podman_build(mock_run: MagicMock) -> None:
         "-f",
         Path("/foo/Dockerfile"),
         "-q",
-        env=ANY,
     )
 
 
@@ -92,3 +91,29 @@ def test_Podman_push(mock_run: MagicMock) -> None:
     mock_run.assert_called_once()
     assert mock_run.mock_calls[0].args == ("podman", "push", "quay.io/foo/bar")
     assert "REGISTRY_AUTH_FILE" in mock_run.mock_calls[0].kwargs["env"]
+
+
+@patch("operatorcert.integration.external_tools.run")
+def test_Skopeo_copy(mock_run: MagicMock) -> None:
+    skopeo = Skopeo()
+    skopeo.copy(
+        "docker://quay.io/foo/bar:abc", "docker://quay.io/foo/baz:latest", ["-q"]
+    )
+    mock_run.assert_called_once_with(
+        "skopeo",
+        "copy",
+        "docker://quay.io/foo/bar:abc",
+        "docker://quay.io/foo/baz:latest",
+        "-q",
+    )
+
+
+@patch("operatorcert.integration.external_tools.run")
+def test_Skopeo_delete(mock_run: MagicMock) -> None:
+    skopeo = Skopeo()
+    skopeo.delete("docker://quay.io/foo/bar:abc")
+    mock_run.assert_called_once_with(
+        "skopeo",
+        "delete",
+        "docker://quay.io/foo/bar:abc",
+    )
