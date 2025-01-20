@@ -15,10 +15,10 @@ spec:
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
     - name: podman_image
       description: Podman image
-      default: "registry.redhat.io/ubi9/podman:9.1.0"
+      default: "registry.redhat.io/ubi9/podman:9.5"
     - name: skopeo_image
       description: Skopeo image
-      default: "registry.redhat.io/ubi9/skopeo:9.1.0"
+      default: "registry.redhat.io/ubi9/skopeo:9.5"
     - name: indices_api
       description: Pyxis API endpoint for Operator index images
       default: https://catalog.redhat.com/api/containers/v1/operators/indices
