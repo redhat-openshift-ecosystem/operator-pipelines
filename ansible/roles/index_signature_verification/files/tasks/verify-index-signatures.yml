@@ -103,6 +103,21 @@ spec:
 
         cp /etc/containers/policy.json /tmp/
         podman image trust set --policypath=/tmp/policy.json -f /mnt/keys/pub.gpg registry.redhat.io
+
+        max_retries=5
+
         for pull_spec in $(cat image-digests.txt); do
-            podman pull --signature-policy=/tmp/policy.json $pull_spec
+            wait_time=1
+            for ((i=1; i<=max_retries; i++)); do
+                podman pull --retry 0 --signature-policy=/tmp/policy.json $pull_spec
+                if [ $? -eq 0 ]; then
+                    break
+                fi
+
+                sleep $wait_time
+                wait_time=$((wait_time * 2))
+            done
+
+            echo "ERROR: Podman pull failed."
+            exit 1
         done
