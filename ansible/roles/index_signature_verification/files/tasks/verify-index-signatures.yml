@@ -116,8 +116,10 @@ spec:
 
                 sleep $wait_time
                 wait_time=$((wait_time * 2))
-            done
 
-            echo "ERROR: Podman pull failed."
-            exit 1
+                if [ $i -eq $max_retries ]; then
+                    echo "ERROR: Podman pull failed after $max_retries attempts."
+                    exit 1
+                fi
+            done
         done
