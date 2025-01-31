@@ -1,0 +1,54 @@
+{
+  "title": "release-config.yaml schema",
+  "description": "json schema for release-config.yaml",
+  "type": "object",
+  "properties": {
+    "merge": {
+      "description": "whether the PR should be auto-merged (optional, default=true)",
+      "type": "boolean"
+    },
+    "catalog_templates": {
+      "description": "catalog templates (required)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "template_name": {
+            "description": "name of the catalog template (required)",
+            "type": "string"
+          },
+          "channels": {
+            "description": "catalog channels (required)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "replaces": {
+            "description": "operator version which this PR replaces (optional)",
+            "type": "string"
+          },
+          "skips": {
+            "description": "operator version(s) which this PR skips (optional)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "skipRange": {
+            "description": "range of operator versions which this PR skips (optional)",
+            "type": "string"
+          }
+        },
+        "required": [ "template_name", "channels" ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "required": [ "catalog_templates" ]
+}

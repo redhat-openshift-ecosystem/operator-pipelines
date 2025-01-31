@@ -1,0 +1,58 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: schema-validate-release-config
+spec:
+  params:
+    - name: pipeline_image
+      description: A docker image of operator-pipeline-images for the steps to run in.
+    - name: operator_path
+      description: |
+        Path to an operator within the git repository where the config is expected.
+  results:
+    - name: valid-release-config
+      description: "release-config.yaml validation status (Valid | Invalid)"
+  workspaces:
+    - name: source
+  steps:
+    - name: read-config
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -ex
+
+        if [ "$(params.operator_path)" != "" ]; then
+          PKG_PATH="$(params.operator_path)"
+        else
+          echo "Operator path is missing."
+          exit 1
+        fi
+
+        CONFIG_PATH="$PKG_PATH/release-config.yaml"
+
+        # verify the release config file exists
+        if [[ ! -f "$CONFIG_PATH" ]]; then
+            echo "Release Config file $CONFIG_PATH cannot be found."
+            exit 1
+        fi
+
+        cat $CONFIG_PATH
+
+        # validate the config file against the json schema
+        SCHEMA_PATH = ./schemas/release-config-schema.json
+        echo "Validating release config: $CONFIG_PATH with schema: $SCHEMA_PATH
+        VALIDATION = `pajv validate -s $SCHEMA_PATH -d $CONFIG_PATH`
+        # expected:  "$CONFIG_PATH valid"
+
+        if [ "$VALIDATION" == "$CONFIG_PATH valid" ]; then
+            echo "Schema validation for release-config.yaml passed."
+            VALIDATION_RESULT = "Valid"
+        else
+            echo "Schema validation for release-config.yaml failed."
+            VALIDATION_RESULT = "Invalid"
+            exit 1
+        fi
+
+        echo -n $VALIDATION_RESULT | tee $(results.valid-release-config.path)
