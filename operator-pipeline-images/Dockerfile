@@ -28,6 +28,7 @@ RUN dnf update -y && \
     gh \
     gnupg2 \
     jq \
+    nodejs-npm \
     cargo \
     libffi-devel \
     redhat-rpm-config \
@@ -55,6 +56,9 @@ RUN curl -LO https://github.com/operator-framework/operator-registry/releases/do
     chmod +x operator-sdk_linux_${ARCH} && \
     mv operator-sdk_linux_${ARCH} /usr/local/bin/operator-sdk
 
+# Install Polyglottal JSON Schema Validator (pajv)
+RUN npm install -g pajv
+COPY ./schemas ./schemas
 
 RUN useradd -lms /bin/bash -u "${USER_UID}" user
 RUN useradd -lu "${PODMAN_USER_UID}" podman; \
