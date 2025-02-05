@@ -174,12 +174,10 @@ def validate_schema_bundle_release_config(bundle: Bundle) -> Iterator[CheckResul
     if not bundle.release_config:
         # missing release config (this is assumed to be ok)
         return
-    # (assumes json schema lives in same dir as this python script)
     path_me = os.path.dirname(os.path.abspath(__file__))
-    path_schema = os.path.join(path_me, "release-config-schema.json")
+    path_schema = os.path.join(path_me, "../schemas/release-config-schema.json")
     with open(path_schema, "r", encoding="utf-8") as file_schema:
-        json_schema = file_schema.read()
-    dict_schema = json.loads(json_schema)
+        dict_schema = json.load(file_schema)
     # validate the release config against the json schema
     # use iter_errors() to collect and return all validation errors
     validator = Draft202012Validator(dict_schema)
