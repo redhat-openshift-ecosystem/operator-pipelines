@@ -175,7 +175,7 @@ def validate_schema_bundle_release_config(bundle: Bundle) -> Iterator[CheckResul
         # missing release config (this is assumed to be ok)
         return
     path_me = os.path.dirname(os.path.abspath(__file__))
-    path_schema = os.path.join(path_me, "../schemas/release-config-schema.json")
+    path_schema = os.path.join(path_me, "../../schemas/release-config-schema.json")
     with open(path_schema, "r", encoding="utf-8") as file_schema:
         dict_schema = json.load(file_schema)
     # validate the release config against the json schema
