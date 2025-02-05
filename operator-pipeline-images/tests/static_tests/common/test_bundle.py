@@ -509,15 +509,19 @@ def test_check_bundle_release_config(
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
-                {"operators/hello/0.0.1/release-config.yaml": {"catalog_templates": "hello"}},
+                {
+                    "operators/hello/0.0.1/release-config.yaml": {
+                        "catalog_templates": "hello"
+                    }
+                },
             ],
             ("hello", "0.0.1"),
             {
                 (
-                        Fail,
-                        "Bundle's 'release-config.yaml' contains invalid data "
-                        "which does not comply with the schema: "
-                        "'hello' is not of type 'array'",
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains invalid data "
+                    "which does not comply with the schema: "
+                    "'hello' is not of type 'array'",
                 ),
             },
             id="fail: release config without proper catalog_templates content",
@@ -525,21 +529,25 @@ def test_check_bundle_release_config(
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
-                {"operators/hello/0.0.1/release-config.yaml": {"catalog_templates": [{"hello": ""}]}},
+                {
+                    "operators/hello/0.0.1/release-config.yaml": {
+                        "catalog_templates": [{"hello": ""}]
+                    }
+                },
             ],
             ("hello", "0.0.1"),
             {
                 (
-                        Fail,
-                        "Bundle's 'release-config.yaml' contains invalid data "
-                        "which does not comply with the schema: "
-                        "'channels' is a required property",
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains invalid data "
+                    "which does not comply with the schema: "
+                    "'channels' is a required property",
                 ),
                 (
-                        Fail,
-                        "Bundle's 'release-config.yaml' contains invalid data "
-                        "which does not comply with the schema: "
-                        "'template_name' is a required property",
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains invalid data "
+                    "which does not comply with the schema: "
+                    "'template_name' is a required property",
                 ),
             },
             id="fail: release config has catalog_templates no array content",
@@ -547,21 +555,25 @@ def test_check_bundle_release_config(
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
-                {"operators/hello/0.0.1/release-config.yaml": {"catalog_templates": [{"hello": ""}]}},
+                {
+                    "operators/hello/0.0.1/release-config.yaml": {
+                        "catalog_templates": [{"hello": ""}]
+                    }
+                },
             ],
             ("hello", "0.0.1"),
             {
                 (
-                        Fail,
-                        "Bundle's 'release-config.yaml' contains invalid data "
-                        "which does not comply with the schema: "
-                        "'channels' is a required property",
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains invalid data "
+                    "which does not comply with the schema: "
+                    "'channels' is a required property",
                 ),
                 (
-                        Fail,
-                        "Bundle's 'release-config.yaml' contains invalid data "
-                        "which does not comply with the schema: "
-                        "'template_name' is a required property",
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains invalid data "
+                    "which does not comply with the schema: "
+                    "'template_name' is a required property",
                 ),
             },
             id="fail: release config has catalog_templates missing all required",
@@ -569,16 +581,19 @@ def test_check_bundle_release_config(
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
-                {"operators/hello/0.0.1/release-config.yaml":
-                     {"catalog_templates": [{"channels": ["foo", "bar"]}]}},
+                {
+                    "operators/hello/0.0.1/release-config.yaml": {
+                        "catalog_templates": [{"channels": ["foo", "bar"]}]
+                    }
+                },
             ],
             ("hello", "0.0.1"),
             {
                 (
-                        Fail,
-                        "Bundle's 'release-config.yaml' contains invalid data "
-                        "which does not comply with the schema: "
-                        "'template_name' is a required property",
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains invalid data "
+                    "which does not comply with the schema: "
+                    "'template_name' is a required property",
                 ),
             },
             id="fail: release config has catalog_templates missing template_name",
@@ -586,16 +601,19 @@ def test_check_bundle_release_config(
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
-                {"operators/hello/0.0.1/release-config.yaml":
-                     {"catalog_templates": [{"template_name": "foo"}]}},
+                {
+                    "operators/hello/0.0.1/release-config.yaml": {
+                        "catalog_templates": [{"template_name": "foo"}]
+                    }
+                },
             ],
             ("hello", "0.0.1"),
             {
                 (
-                        Fail,
-                        "Bundle's 'release-config.yaml' contains invalid data "
-                        "which does not comply with the schema: "
-                        "'channels' is a required property",
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains invalid data "
+                    "which does not comply with the schema: "
+                    "'channels' is a required property",
                 ),
             },
             id="fail: release config has catalog_templates missing channels",
@@ -603,12 +621,13 @@ def test_check_bundle_release_config(
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
-                {"operators/hello/0.0.1/release-config.yaml": {
-                    "catalog_templates": [{
-                        "template_name": "foo",
-                        "channels": ["foo", "bar"]
-                    }]
-                }},
+                {
+                    "operators/hello/0.0.1/release-config.yaml": {
+                        "catalog_templates": [
+                            {"template_name": "foo", "channels": ["foo", "bar"]}
+                        ]
+                    }
+                },
             ],
             ("hello", "0.0.1"),
             set(),
