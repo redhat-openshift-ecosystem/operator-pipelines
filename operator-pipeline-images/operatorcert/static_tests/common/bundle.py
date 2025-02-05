@@ -1,6 +1,10 @@
 """A common test suite for operator bundles"""
+import json
+import os
 
 from collections.abc import Iterator
+from jsonschema.exceptions import ValidationError
+from jsonschema.validators import Draft202012Validator
 from typing import Any
 
 from operator_repo import Bundle
@@ -160,4 +164,35 @@ def check_bundle_release_config(bundle: Bundle) -> Iterator[CheckResult]:
         else:
             yield from _check_semver_allowed_channels(
                 template_names_in_mapping[template["template_name"]], template
+            )
+
+
+def validate_schema_bundle_release_config(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Validate the bundle release config against the json schema
+    """
+    if not bundle.release_config:
+        # missing release config (this is assumed to be ok)
+        return
+    else:
+        try:
+            # (assumes json schema lives in same dir as this python script)
+            path_me = os.path.dirname(os.path.abspath(__file__))
+            path_schema = os.path.join(path_me, "release-config-schema.json")
+            with open(path_schema, 'r') as file_schema:
+                json_schema = file_schema.read()
+            dict_schema = json.loads(json_schema)
+            # validate the release config against the json schema
+            # use iter_errors() to collect and return all validation errors
+            validator = Draft202012Validator(dict_schema)
+            for ve in sorted(validator.iter_errors(bundle.release_config),
+                             key=str):
+                yield Fail(
+                    "Bundle's 'release-config.yaml' contains invalid data "
+                    f"which does not comply with the schema: {ve.message}"
+                )
+        except ValidationError as ve:
+            yield Fail(
+                "Bundle's 'release-config.yaml' contains invalid data "
+                f"which caused unexpected error: {ve.message}"
             )
