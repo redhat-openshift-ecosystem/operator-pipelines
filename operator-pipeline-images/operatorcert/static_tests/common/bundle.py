@@ -1,7 +1,11 @@
 """A common test suite for operator bundles"""
 
-from collections.abc import Iterator
+import json
+import os
 from typing import Any
+
+from collections.abc import Iterator
+from jsonschema.validators import Draft202012Validator
 
 from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
@@ -161,3 +165,24 @@ def check_bundle_release_config(bundle: Bundle) -> Iterator[CheckResult]:
             yield from _check_semver_allowed_channels(
                 template_names_in_mapping[template["template_name"]], template
             )
+
+
+def validate_schema_bundle_release_config(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Validate the bundle release config against the json schema
+    """
+    if not bundle.release_config:
+        # missing release config (this is assumed to be ok)
+        return
+    path_me = os.path.dirname(os.path.abspath(__file__))
+    path_schema = os.path.join(path_me, "../../schemas/release-config-schema.json")
+    with open(path_schema, "r", encoding="utf-8") as file_schema:
+        dict_schema = json.load(file_schema)
+    # validate the release config against the json schema
+    # use iter_errors() to collect and return all validation errors
+    validator = Draft202012Validator(dict_schema)
+    for ve in sorted(validator.iter_errors(bundle.release_config), key=str):
+        yield Fail(
+            "Bundle's 'release-config.yaml' contains invalid data "
+            f"which does not comply with the schema: {ve.message}"
+        )
