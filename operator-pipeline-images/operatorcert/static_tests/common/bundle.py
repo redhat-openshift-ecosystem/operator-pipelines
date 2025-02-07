@@ -167,7 +167,9 @@ def check_bundle_release_config(bundle: Bundle) -> Iterator[CheckResult]:
             )
 
 
-def validate_schema_bundle_release_config(bundle: Bundle) -> Iterator[CheckResult]:
+def check_validate_schema_bundle_release_config(
+    bundle: Bundle,
+) -> Iterator[CheckResult]:
     """
     Validate the bundle release config against the json schema
     """
