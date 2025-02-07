@@ -6,7 +6,7 @@ from operator_repo.checks import Fail, Warn
 from operatorcert.static_tests.common.bundle import (
     check_operator_name,
     check_bundle_release_config,
-    validate_schema_bundle_release_config,
+    check_validate_schema_bundle_release_config,
 )
 from tests.utils import bundle_files, create_files
 
@@ -636,7 +636,7 @@ def test_check_bundle_release_config(
     ],
     indirect=False,
 )
-def test_validate_schema_bundle_release_config(
+def test_check_validate_schema_bundle_release_config(
     tmp_path: Path,
     files: list[dict[str, Any]],
     bundle_to_check: tuple[str, str],
@@ -648,5 +648,6 @@ def test_validate_schema_bundle_release_config(
     operator = repo.operator(operator_name)
     bundle = operator.bundle(bundle_version)
     assert {
-        (x.__class__, x.reason) for x in validate_schema_bundle_release_config(bundle)
+        (x.__class__, x.reason)
+        for x in check_validate_schema_bundle_release_config(bundle)
     } == expected_results
