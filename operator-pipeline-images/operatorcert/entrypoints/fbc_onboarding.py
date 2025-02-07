@@ -207,16 +207,21 @@ def generate_and_save_base_templates(
     return basic_template
 
 
-def update_operator_config(operator: Operator) -> None:
+def update_operator_config(
+    operator: Operator, catalog_mapping: list[dict[str, Any]]
+) -> None:
     """
     Switch operator config to FBC
 
     Args:
         operator (Operator): Operator object
+        catalog_mapping (list[dict[str, Any]]): A list of catalog template
+        to catalog mappings
     """
     config = operator.config
     config["fbc"] = {
         "enabled": True,
+        "catalog_mapping": catalog_mapping,
     }
     # Update graph is not needed anymore for FBC
     config.pop("updateGraph", None)
@@ -287,6 +292,8 @@ def onboard_operator_to_fbc(
     operator = repository.operator(operator_name)
     template_dir = create_catalog_template_dir_if_not_exists(operator)
 
+    catalog_mapping = []
+
     for catalog in supported_catalogs:
         version = catalog.get("ocp_version")
         image = catalog.get("path")
@@ -300,9 +307,16 @@ def onboard_operator_to_fbc(
             # Render a catalog only if basic template was generated
             LOGGER.info("Rendering FBC from templates")
             render_fbc_from_template(operator, version)
+            catalog_mapping.append(
+                {
+                    "template_name": f"v{version}.yaml",
+                    "catalog_names": [f"v{version}"],
+                    "type": "olm.template.basic",
+                }
+            )
 
     LOGGER.info("Updating operator config")
-    update_operator_config(operator)
+    update_operator_config(operator, catalog_mapping)
 
 
 def main() -> None:  # pragma: no cover

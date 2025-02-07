@@ -165,9 +165,29 @@ def test_update_operator_config(mock_yaml_dump: MagicMock) -> None:
     operator = MagicMock()
     operator.config = {"updateGraph": "semver-mode"}
     with mock.patch("builtins.open", mock.mock_open()) as mock_open:
-        fbc_onboarding.update_operator_config(operator)
+        fbc_onboarding.update_operator_config(
+            operator,
+            [
+                {
+                    "template_name": "basic.yaml",
+                    "catalog_names": ["v4.15"],
+                    "type": "olm.template.basic",
+                }
+            ],
+        )
 
-    expected_config = {"fbc": {"enabled": True}}
+    expected_config = {
+        "fbc": {
+            "enabled": True,
+            "catalog_mapping": [
+                {
+                    "template_name": "basic.yaml",
+                    "catalog_names": ["v4.15"],
+                    "type": "olm.template.basic",
+                }
+            ],
+        }
+    }
     mock_yaml_dump.assert_called_once_with(
         expected_config, mock.ANY, explicit_start=True
     )
@@ -243,4 +263,18 @@ def test_onboard_operator_to_fbc(
 
     mock_render.assert_has_calls([mock.call(operator, "1"), mock.call(operator, "2")])
 
-    mock_config.assert_called_once_with(operator)
+    mock_config.assert_called_once_with(
+        operator,
+        [
+            {
+                "template_name": "v1.yaml",
+                "catalog_names": ["v1"],
+                "type": "olm.template.basic",
+            },
+            {
+                "template_name": "v2.yaml",
+                "catalog_names": ["v2"],
+                "type": "olm.template.basic",
+            },
+        ],
+    )
