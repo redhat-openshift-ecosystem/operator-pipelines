@@ -15,6 +15,7 @@ Once you have forked the upstream repo, you will require to add your Operator Bu
 │       │   │   └── tools.opdev.io_demoresources.yaml
 │       │   ├── metadata
 │       │   │   └── annotations.yaml
+│       │   ├── release-config.yaml
 │       │   └── tests
 │       │       └── scorecard
 │       │           └── config.yaml

@@ -17,8 +17,9 @@ nav:
       - "Before submitting your Operator": "users/contributing-prerequisites.md"
       - "Where to place operator": "users/contributing-where-to.md"
       - "Best practices": "users/best-practices.md"
-      - "File base catalog onboarding": "users/fbc_onboarding.md"
-      - "File base catalog workflow": "users/fbc_workflow.md"
+      - "File based catalog onboarding": "users/fbc_onboarding.md"
+      - "File based catalog workflow": "users/fbc_workflow.md"
+      - "File based catalog auto-release": "users/fbc_autorelease.md"
       - "OKD/OpenShift Catalogs criteria and options": "users/packaging-required-criteria-ocp.md"
   - "Admin":
       - "Admin guide": "pipeline-admin-guide.md"
