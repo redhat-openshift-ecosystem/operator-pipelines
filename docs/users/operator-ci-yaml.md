@@ -45,12 +45,29 @@ The `fbc.version_promotion_strategy` option defines the strategy for promoting t
 - `always` - the operator will be promoted to the next OCP version automatically
 - `review-needed` - the operator will be promoted to the next OCP version automatically, but the PR will be created and the reviewers will be asked to review the changes
 
+### `fbc.catalog_mapping`
+The mapping serves as a link between catalog templates within the `./catalog-templates` directory and catalogs within the `./catalogs` directory.
+
+For more details and structure visit the [FBC workflow page](./fbc_workflow.md#fbc-template-mapping).
+
 ### Example
 ```yaml
 ---
 fbc:
-    enabled: true
-    version_promotion_strategy: never
+  enabled: true
+  version_promotion_strategy: never
+  catalog_mapping:
+    - template_name: my-custom-semver-template.yaml # The name of the file inside ./catalog-templates directory
+        catalogs_names: # a list of catalogs within the /catalogs directory
+          - "v4.15"
+          - "v4.16"
+          - "v4.17"
+        type: olm.semver
+    - template_name: my-custom-basic-template.yaml # The name of the file inside catalog-templates directory
+        catalogs_names:
+          - "v4.12"
+          - "v4.13"
+        type: olm.template.basic
 ```
 
 

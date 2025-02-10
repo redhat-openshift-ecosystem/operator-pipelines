@@ -52,15 +52,15 @@ The test is based on `operator-sdk bundle validate` command with `name=operatorh
 The test is based on `operator-sdk bundle validate` command with `suite=operatorframework` test suite [(link)](https://sdk.operatorframework.io/docs/cli/operator-sdk_bundle_validate/#operator-sdk-bundle-validate).
 
 #### check_required_fields
-| Field name | Validation | Description |
-|------------|------------|------|
-| `spec.displayName` | `.{3,50}` | A string with 3 - 50 characters |
-| `spec.description` | `.{20,}` | A bundle description with at least 20 characters |
-| `spec.icon` | `media` | A valid base64 content with a supported media type (`{"base64data": <b64 content>, "mediatype": enum["image/png", "image/jpeg", "image/gif", "image/svg+xml"]}`) |
-| `spec.version` | `SemVer` | Valid semantic version |
-| `spec.maintainers` |  | At least 1 maintainer contacts. Example: `{"name": "User 123", "email": "user@redhat.com"}` |
-| `spec.provider.name` | `.{3,}` | A string with at least 3 characters |
-| `spec.links` |  | At least 1 link. Example: `{"name": "Documentation", "url": "https://redhat.com"}` |
+| Field name           | Validation | Description                                                                                                                                                      |
+| -------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec.displayName`   | `.{3,50}`  | A string with 3 - 50 characters                                                                                                                                  |
+| `spec.description`   | `.{20,}`   | A bundle description with at least 20 characters                                                                                                                 |
+| `spec.icon`          | `media`    | A valid base64 content with a supported media type (`{"base64data": <b64 content>, "mediatype": enum["image/png", "image/jpeg", "image/gif", "image/svg+xml"]}`) |
+| `spec.version`       | `SemVer`   | Valid semantic version                                                                                                                                           |
+| `spec.maintainers`   |            | At least 1 maintainer contacts. Example: `{"name": "User 123", "email": "user@redhat.com"}`                                                                      |
+| `spec.provider.name` | `.{3,}`    | A string with at least 3 characters                                                                                                                              |
+| `spec.links`         |            | At least 1 link. Example: `{"name": "Documentation", "url": "https://redhat.com"}`                                                                               |
 
 #### check_dangling_bundles
 The test prevents from releasing an operator and keeping any previous bundle dangling.
@@ -132,6 +132,10 @@ name in the CSV definition. The source of these values are:
 This check will ensure that all bundle images in the file based catalog for given
 operator catalog(s) use allowed image registry. Allowed registries are configured
 in `(repo_root)/config.yaml` under the key `allowed_bundle_registries`.
+
+#### check_schema_bundle_release_config
+The test validates the `release-config.yaml` file against the schema. The schema
+the file including the schema is described [here](./fbc_autorelease.md#release-configyaml).
 
 ## Running tests locally
 

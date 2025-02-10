@@ -18,12 +18,58 @@ File-based catalog templates serve as a simplified view of a catalog that can be
 by the user. The OPM currently supports 2 types of templates and it is up to the user which
 template the operator will be using.
 
-* Basic template
-* SemVer template
+* Basic template - `olm.template.basic`
+* SemVer template - `olm.semver`
 
 More information about each template can be found at [opm doc](https://olm.operatorframework.io/docs/reference/catalog-templates/).
 
 The recommended template from the maintainability point of view is `SemVer`.
+
+### FBC template mapping
+To be able to generate a catalog from templates a user needs to provide a mapping between
+template and catalog. The mapping is stored in the `ci.yaml` file. Based on your preference
+you can map a template to a catalog version with 1:N mapping or 1:1 mapping.
+
+Here is an example of the `ci.yaml` file with single template rendering multiple catalogs (`1:N`):
+
+```yaml
+---
+fbc:
+  enabled: true
+  catalog_mapping:
+    - template_name: my-custom-semver-template.yaml # The name of the file inside ./catalog-templates directory
+      catalogs_names: # a list of catalogs within the /catalogs directory
+        - "v4.15"
+        - "v4.16"
+        - "v4.17"
+      type: olm.semver
+    - template_name: my-custom-basic-template.yaml # The name of the file inside catalog-templates directory
+      catalogs_names:
+        - "v4.12"
+        - "v4.13"
+      type: olm.template.basic
+```
+
+And here is an example of the `ci.yaml` file with a single template rendering a single catalog (`1:1`):
+
+```yaml
+---
+fbc:
+  enabled: true
+  catalog_mapping:
+  - template_name: v4.14.yaml
+    catalog_names: ["v4.14"]
+    type: olm.template.basic
+  - template_name: v4.15.yaml
+    catalog_names: ["v4.15"]
+    type: olm.template.basic
+  - template_name: v4.16.yaml
+    catalog_names: ["v4.16"]
+    type: olm.template.basic
+  - template_name: v4.17.yaml
+    catalog_names: ["v4.17"]
+    type: olm.template.basic
+```
 
 ## Generate catalogs using templates
 To generate a final catalog for an operator a user needs to execute different `opm`
@@ -43,6 +89,7 @@ The right place for the Makefile is in the operator's root directory
 ```
 .
 ├── 0.0.1
+|   ├── release-config.yaml
 │   ├── manifests
 │   └── metadata
 ├── catalog-templates
@@ -50,8 +97,6 @@ The right place for the Makefile is in the operator's root directory
 └── Makefile
 
 ```
-
-You can modify the Makefile based on your needs and use it to generate catalogs by running `make catalogs`.
 
 > [!IMPORTANT]
 > In case an operator isn't shipped to all OCP catalog versions manually update `OCP_VERSIONS`
@@ -83,6 +128,15 @@ catalogs
 ```
 
 ### Adding new bundle to Catalog
+A new bundle can be added automatically to your templates and catalogs if you use
+the automated release feature. The process is described in the
+[fbc auto-release](./fbc_autorelease.md) documentation.
+
+It is **highly recommended to use the automated release feature** as it simplifies the process
+from the user perspective.
+
+However if you want to manually add a new bundle to the catalog follow the steps below.
+
 To add a bundle to the catalog you need to first submit the new version of the operator
 using traditional [PR workflow](./contributing-via-pr.md). The operator pipeline builds,
 tests, and releases the bundle into the registry. **At this point, the operator is not available

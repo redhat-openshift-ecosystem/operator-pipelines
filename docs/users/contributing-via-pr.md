@@ -4,14 +4,16 @@
 To submit an operator one has to do these steps
 
 1. Fork project based on desired [Operator Repository](./pipelines_overview.md#operator-repositories)
-1. Place the operator in the target directory. [More info](./contributing-where-to.md)
+2. Place the operator in the target directory. [More info](./contributing-where-to.md)
     - operators
-1. Configure `ci.yaml` file. [More info](./operator-ci-yaml.md)
+3. Configure `ci.yaml` file. [More info](./operator-ci-yaml.md)
     - Setup reviewers
     - Enable FBC mode
-1. Make a pull request with a new operator bundle or catalog changes
-1. Verify tests and fix problems, if possible
-1. Ask for help in the PR in case of problems
+    - Add template to catalog mapping
+4. Configure the `release-config.yaml` file if you want to automatically release the operator to the OCP catalogs. [More info](./fbc_autorelease.md#release-configyaml)
+5. Make a pull request with a new operator bundle or catalog changes
+6. Verify tests and fix problems, if possible
+7. Ask for help in the PR in case of problems
 
 
 ## Pull request
