@@ -526,34 +526,10 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Table of Contents">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#operator-pipeline-tasks-troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      Operator Pipeline Tasks Troubleshooting
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fbc-related-operator-pipeline-tasks-troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      FBC-Related Operator Pipeline Tasks Troubleshooting
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
-  <a href="#operator-pipeline-tasks-troubleshooting_1" class="md-nav__link">
+  <a href="#operator-pipeline-tasks-troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       Operator Pipeline Tasks Troubleshooting
     </span>
@@ -946,7 +922,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fbc-related-operator-pipeline-tasks-troubleshooting_1" class="md-nav__link">
+  <a href="#fbc-related-operator-pipeline-tasks-troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       FBC-Related Operator Pipeline Tasks Troubleshooting
     </span>
@@ -1408,15 +1384,10 @@
 <h1 id="troubleshooting-the-community-operator-pipeline">Troubleshooting the Community Operator Pipeline</h1>
 <p>This document provides troubleshooting steps for each Tekton task in the Operator Hosted Pipeline and Operator Release Pipeline, including tasks for FBC-enabled operators in the <a href="https://github.com/redhat-openshift-ecosystem/community-operators-prod.git">community-operators-prod</a> repository.</p>
 <h2 id="table-of-contents">Table of Contents</h2>
-<h3 id="operator-pipeline-tasks-troubleshooting"><a href="#tasks">Operator Pipeline Tasks Troubleshooting</a></h3>
 <ul>
 <li><a href="#troubleshooting-the-community-operator-pipeline">Troubleshooting the Community Operator Pipeline</a></li>
-<li><a href="#table-of-contents">Table of Contents</a><ul>
-<li><a href="#operator-pipeline-tasks-troubleshooting">Operator Pipeline Tasks Troubleshooting</a></li>
-<li><a href="#fbc-related-operator-pipeline-tasks-troubleshooting">FBC-Related Operator Pipeline Tasks Troubleshooting</a></li>
-</ul>
-</li>
-<li><a href="#operator-pipeline-tasks-troubleshooting-1">Operator Pipeline Tasks Troubleshooting</a><ul>
+<li><a href="#table-of-contents">Table of Contents</a></li>
+<li><a href="#operator-pipeline-tasks-troubleshooting">Operator Pipeline Tasks Troubleshooting</a><ul>
 <li><a href="#get-pr-number">get-pr-number</a></li>
 <li><a href="#acquire-lease">acquire-lease</a></li>
 <li><a href="#set-github-started-label">set-github-started-label</a></li>
@@ -1461,33 +1432,28 @@
 <li><a href="#publish-to-index">publish-to-index</a></li>
 </ul>
 </li>
-<li><a href="#fbc-related-operator-pipeline-tasks-troubleshooting-1">FBC-Related Operator Pipeline Tasks Troubleshooting</a><ul>
+<li><a href="#fbc-related-operator-pipeline-tasks-troubleshooting">FBC-Related Operator Pipeline Tasks Troubleshooting</a><ul>
 <li><a href="#build-fbc-index-images">build-fbc-index-images</a></li>
 <li><a href="#build-fbc-scratch-catalog">build-fbc-scratch-catalog</a></li>
 </ul>
 </li>
 </ul>
-<h3 id="fbc-related-operator-pipeline-tasks-troubleshooting"><a href="#fbc-tasks">FBC-Related Operator Pipeline Tasks Troubleshooting</a></h3>
-<ul>
-<li><a href="#build-fbc-index-images">build-fbc-index-images</a></li>
-<li><a href="#build-fbc-scratch-catalog">build-fbc-scratch-catalog</a></li>
-</ul>
-<h2 id="operator-pipeline-tasks-troubleshooting_1"><a id="tasks"></a>Operator Pipeline Tasks Troubleshooting</h2>
-<h3 id="get-pr-number"><a id="get-pr-number"></a>get-pr-number</h3>
+<h2 id="operator-pipeline-tasks-troubleshooting">Operator Pipeline Tasks Troubleshooting</h2>
+<h3 id="get-pr-number">get-pr-number</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="acquire-lease"><a id="acquire-lease"></a>acquire-lease</h3>
+<h3 id="acquire-lease">acquire-lease</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="set-github-started-label"><a id="set-github-started-label"></a>set-github-started-label</h3>
+<h3 id="set-github-started-label">set-github-started-label</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="set-github-status-pending"><a id="set-github-status-pending"></a>set-github-status-pending</h3>
+<h3 id="set-github-status-pending">set-github-status-pending</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="set-env"><a id="set-env"></a>set-env</h3>
+<h3 id="set-env">set-env</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="clone-repository-base"><a id="clone-repository-base"></a>clone-repository-base</h3>
+<h3 id="clone-repository-base">clone-repository-base</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="clone-repository"><a id="clone-repository"></a>clone-repository</h3>
+<h3 id="clone-repository">clone-repository</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="detect-changes"><a id="detect-changes"></a>detect-changes</h3>
+<h3 id="detect-changes">detect-changes</h3>
 <p>The pipeline may fail at this stage due to the following reasons:</p>
 <ol>
 <li><b>Changing Non-Operator Files:</b> If the PR attempts to modify external files outside of targeted operator, the pipeline will fail.</li>
@@ -1496,30 +1462,30 @@
 <li><b>Deleting Existing Bundles:</b> Deleting bundles is only permissible for FBC-enabled operators.</li>
 </ol>
 <p>Other Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="yaml-lint"><a id="yaml-lint"></a>yaml-lint</h3>
+<h3 id="yaml-lint">yaml-lint</h3>
 <p><strong>Warnings</strong> at this step should be addressed if possible but won't result in a failure.
 <strong>Errors</strong> at this step will need to be addressed.  Often errors center around <i>unexpected whitespace</i> at the end of lines or <i>missing newlines</i> at the end of your <code>yaml</code> files.</p>
-<h3 id="check-permissions"><a id="check-permissions"></a>check-permissions</h3>
+<h3 id="check-permissions">check-permissions</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="set-github-pr-title"><a id="set-github-pr-title"></a>set-github-pr-title</h3>
+<h3 id="set-github-pr-title">set-github-pr-title</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="read-config"><a id="read-config"></a>read-config</h3>
+<h3 id="read-config">read-config</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="resolve-pr-type"><a id="resolve-pr-type"></a>resolve-pr-type</h3>
+<h3 id="resolve-pr-type">resolve-pr-type</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="apply-test-waivers"><a id="apply-test-waivers"></a>apply-test-waivers</h3>
+<h3 id="apply-test-waivers">apply-test-waivers</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="content-hash"><a id="content-hash"></a>content-hash</h3>
+<h3 id="content-hash">content-hash</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="certification-project-check"><a id="certification-project-check"></a>certification-project-check</h3>
+<h3 id="certification-project-check">certification-project-check</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="get-organization"><a id="get-organization"></a>get-organization</h3>
+<h3 id="get-organization">get-organization</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="get-pyxis-certification-data"><a id="get-pyxis-certification-data"></a>get-pyxis-certification-data</h3>
+<h3 id="get-pyxis-certification-data">get-pyxis-certification-data</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="static-tests"><a id="static-tests"></a>static-tests</h3>
+<h3 id="static-tests">static-tests</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="static-tests-results"><a id="static-tests-results"></a>static-tests-results</h3>
+<h3 id="static-tests-results">static-tests-results</h3>
 <p>If the static tests fail, a summary will be posted as a comment on the Pull Request, providing detailed reasons for the failure. The summary of test results will look like as shown below:</p>
 <p><img alt="Preflight test run logs example" src="../../img/static_tests_example.png" /></p>
 <p>To proceed:</p>
@@ -1529,21 +1495,21 @@
 <li>Commit the changes with a fix to the PR and it will Re-trigger the hosted pipeline.</li>
 </ol>
 <p>For more information about static tests, refer to the <a href="../static_checks/">documentation</a>.</p>
-<h3 id="merge-registry-credentials"><a id="merge-registry-credentials"></a>merge-registry-credentials</h3>
+<h3 id="merge-registry-credentials">merge-registry-credentials</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="digest-pinning"><a id="digest-pinning"></a>digest-pinning</h3>
+<h3 id="digest-pinning">digest-pinning</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="verify-pinned-digest"><a id="verify-pinned-digest"></a>verify-pinned-digest</h3>
+<h3 id="verify-pinned-digest">verify-pinned-digest</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="dockerfile-creation"><a id="dockerfile-creation"></a>dockerfile-creation</h3>
+<h3 id="dockerfile-creation">dockerfile-creation</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="build-bundle"><a id="build-bundle"></a>build-bundle</h3>
+<h3 id="build-bundle">build-bundle</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="make-bundle-repo-public"><a id="make-bundle-repo-public"></a>make-bundle-repo-public</h3>
+<h3 id="make-bundle-repo-public">make-bundle-repo-public</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="get-supported-versions"><a id="get-supported-versions"></a>get-supported-versions</h3>
+<h3 id="get-supported-versions">get-supported-versions</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="add-bundle-to-index"><a id="add-bundle-to-index"></a>add-bundle-to-index</h3>
+<h3 id="add-bundle-to-index">add-bundle-to-index</h3>
 <p>Failures at this stage are rare and often due to transient issues. Start by reviewing the pipeline logs linked in the PipelineRun summary within the PR.</p>
 <p>As an initial step, re-trigger the pipeline by adding the appropriate command in the PR comment:</p>
 <ol>
@@ -1551,13 +1517,13 @@
 <li><code>/pipeline restart operator-release-pipeline</code> for the release pipeline.</li>
 </ol>
 <p>If the PR fails again after two consecutive attempts, feel free to request assistance in the PR comments. Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="make-index-repo-public"><a id="make-index-repo-public"></a>make-index-repo-public</h3>
+<h3 id="make-index-repo-public">make-index-repo-public</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="get-ci-results-attempt"><a id="get-ci-results-attempt"></a>get-ci-results-attempt</h3>
+<h3 id="get-ci-results-attempt">get-ci-results-attempt</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="preflight-trigger"><a id="preflight-trigger"></a>preflight-trigger</h3>
+<h3 id="preflight-trigger">preflight-trigger</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="evaluate-preflight-result"><a id="evaluate-preflight-result"></a>evaluate-preflight-result</h3>
+<h3 id="evaluate-preflight-result">evaluate-preflight-result</h3>
 <p>At this step, the pipeline will primarily fail if the <a href="../dynamic_checks/">dynamic tests</a> do not pass completely. A link to the test artifacts will be posted as a comment on the PR, as shown below.</p>
 <p><img alt="Preflight test run logs example" src="../../img/preflight_run_logs_example.png" /></p>
 <p>Please review this link, as it will provide detailed error information.
@@ -1567,31 +1533,31 @@ Failures at this stage are uncommon. To diagnose the issue:</p>
 <li>Examine the test artifacts for detailed error information.</li>
 </ol>
 <p>If the logs and artifacts do not clarify the issue, feel free to ask for assistance in the PR comments. Maintainers will help identify and resolve the problem.</p>
-<h3 id="get-ci-results"><a id="get-ci-results"></a>get-ci-results</h3>
+<h3 id="get-ci-results">get-ci-results</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="link-pull-request-with-open-status"><a id="link-pull-request-with-open-status"></a>link-pull-request-with-open-status</h3>
+<h3 id="link-pull-request-with-open-status">link-pull-request-with-open-status</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="merge-pr"><a id="merge-pr"></a>merge-pr</h3>
+<h3 id="merge-pr">merge-pr</h3>
 <p>If operator hosted pipeline fails at this task with the error message: <code>Pull request Auto merge is not allowed for this repository (enablePullRequestAutoMerge)</code> then re-trigger the pipeline by running command <code>/pipeline restart operator-hosted-pipeline</code>.</p>
 <p>Another Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="link-pull-request-with-merged-status"><a id="link-pull-request-with-merged-status"></a>link-pull-request-with-merged-status</h3>
+<h3 id="link-pull-request-with-merged-status">link-pull-request-with-merged-status</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="copy-bundle-image-to-released-registry"><a id="copy-bundle-image-to-released-registry"></a>copy-bundle-image-to-released-registry</h3>
+<h3 id="copy-bundle-image-to-released-registry">copy-bundle-image-to-released-registry</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="decide-index-paths"><a id="decide-index-paths"></a>decide-index-paths</h3>
+<h3 id="decide-index-paths">decide-index-paths</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="get-manifest-digests"><a id="get-manifest-digests"></a>get-manifest-digests</h3>
+<h3 id="get-manifest-digests">get-manifest-digests</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="request-signature"><a id="request-signature"></a>request-signature</h3>
+<h3 id="request-signature">request-signature</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="upload-signature"><a id="upload-signature"></a>upload-signature</h3>
+<h3 id="upload-signature">upload-signature</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="publish-to-index"><a id="publish-to-index"></a>publish-to-index</h3>
+<h3 id="publish-to-index">publish-to-index</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h2 id="fbc-related-operator-pipeline-tasks-troubleshooting_1"><a id="fbc-tasks"></a>FBC-Related Operator Pipeline Tasks Troubleshooting</h2>
-<h3 id="build-fbc-index-images"><a id="build-fbc-index-images"></a>build-fbc-index-images</h3>
+<h2 id="fbc-related-operator-pipeline-tasks-troubleshooting">FBC-Related Operator Pipeline Tasks Troubleshooting</h2>
+<h3 id="build-fbc-index-images">build-fbc-index-images</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
-<h3 id="build-fbc-scratch-catalog"><a id="build-fbc-scratch-catalog"></a>build-fbc-scratch-catalog</h3>
+<h3 id="build-fbc-scratch-catalog">build-fbc-scratch-catalog</h3>
 <p>Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.</p>
 
 
