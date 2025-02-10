@@ -134,7 +134,7 @@ jobs:
             ansible/vaults/integration-tests/ci-pipeline-github-ssh-key
 
       - name: Run the integration tests ansible playbook
-        uses: dawidd6/action-ansible-playbook@v2
+        uses: dawidd6/action-ansible-playbook@v3
         with:
           playbook: playbooks/operator-pipeline-integration-tests.yml
           directory: ./ansible
