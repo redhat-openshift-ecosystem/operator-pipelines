@@ -1029,7 +1029,7 @@ The schema is validated automatically in the pipeline and the PR will fail with 
 <p>Here is a summary of the file structure:</p>
 <ul>
 <li>The top-level key is <code>catalog_templates</code> which is a list of objects.</li>
-<li>Each object has the following keys:</li>
+<li>Each object has the following keys:<ul>
 <li><code>template_name</code> - the name of the catalog template file in the <code>catalog-templates</code> directory.</li>
 <li><code>channels</code> - a list of channels where the bundle should be released.<ul>
 <li>In case of using <code>SemVer</code> a user can pick from allowed values: <code>Fast</code>, <code>Stable</code> and <code>Candidate</code>.</li>
@@ -1038,6 +1038,8 @@ The schema is validated automatically in the pipeline and the PR will fail with 
 <li><code>replaces</code> - the bundle that the new bundle replaces in the update graph. (<strong>Optional</strong>, only for the basic templates)</li>
 <li><code>skips</code> - a list of bundles that should be skipped in the update graph. (<strong>Optional</strong>, only for the basic templates)</li>
 <li><code>skipRange</code> - a range of bundles that should be skipped in the update graph. (<strong>Optional</strong>, only for the basic templates)</li>
+</ul>
+</li>
 </ul>
 
 
