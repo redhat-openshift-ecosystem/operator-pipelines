@@ -730,7 +730,7 @@ def test_check_validate_schema_bundle_release_config(
                 bundle_files("hello", "0.0.1"),
                 {
                     "operators/hello/ci.yaml": {
-                        "fbc": {"enabled":True, "catalog_mapping": [{"hello": ""}]}
+                        "fbc": {"enabled": True, "catalog_mapping": [{"hello": ""}]}
                     }
                 },
             ],
@@ -763,7 +763,7 @@ def test_check_validate_schema_bundle_release_config(
                 {
                     "operators/hello/ci.yaml": {
                         "fbc": {
-                            "enabled":True,
+                            "enabled": True,
                             "catalog_mapping": [{"type": "demo.type"}],
                         }
                     }
@@ -792,7 +792,7 @@ def test_check_validate_schema_bundle_release_config(
                 {
                     "operators/hello/ci.yaml": {
                         "fbc": {
-                            "enabled":True,
+                            "enabled": True,
                             "catalog_mapping": [
                                 {
                                     "template_name": "foo",
