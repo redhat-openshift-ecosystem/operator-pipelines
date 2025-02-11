@@ -19,6 +19,7 @@ spec:
     - name: skopeo-copy
       image: "$(params.pipeline_image)"
       script: |
+        #! /usr/bin/env bash
         set -xe
 
         REF="$(params.image)"

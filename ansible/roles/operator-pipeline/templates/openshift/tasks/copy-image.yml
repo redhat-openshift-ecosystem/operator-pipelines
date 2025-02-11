@@ -32,6 +32,7 @@ spec:
     - name: skopeo-copy
       image: "$(params.pipeline_image)"
       script: |
+        #! /usr/bin/env bash
         set -xe
 
         if [[ "$(params.dest_image_tag)" == "" ]]; then

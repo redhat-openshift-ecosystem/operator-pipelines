@@ -9,10 +9,6 @@ spec:
     - name: base_image
       default: quay.io/redhat-isv/preflight-test@sha256:2d57b1bc66de91470886762be5dfa14e48c64e3174c5c80b2c45b05906ad4c1e
       description: Preflight image used
-    - name: package_name
-      description: Package name for the Operator under test
-    - name: bundle_version
-      description: Version of the bundle under test
     - name: bundle_index_image
       description: The Operator index image which includes the bundle
     - name: bundle_image

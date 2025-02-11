@@ -6,10 +6,6 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-    - name: head_commit
-      description: Commit ID of the head of the PR
-    - name: base_commit
-      description: Commit ID of the base of the PR
     - name: request_url
       description: URL of the GitHub pull request we want to check
       type: string

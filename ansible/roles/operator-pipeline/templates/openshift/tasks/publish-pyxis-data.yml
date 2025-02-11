@@ -28,12 +28,6 @@ spec:
     - name: cert_project_id
       description: Identifier of certification project from Red Hat Connect
 
-    - name: public_registry
-      description: External hostname of the registry
-
-    - name: public_repository
-      description: External repository name (namespace/name)
-
     - name: docker_config_file_name
       description: Path to the file containing the registry credentials in json format
 
@@ -72,6 +66,7 @@ spec:
     - name: skopeo-inspect
       image: "$(params.skopeo_image)"
       script: |
+        #! /usr/bin/env bash
         set -xe
 
         IMAGE_PULL_SPEC="$(params.internal_registry)/$(params.internal_repository)@$(params.container_digest)"

@@ -2,8 +2,8 @@
 ssh-secret.yml
 registry-secret.yml
 kubeconfig
-# results 
-test_results.json 
+# results
+test_results.json
 results_exists
 test_logs_id
 test_result_id
@@ -55,6 +55,7 @@ htmlcov/
 .nox/
 .coverage
 .coverage.*
+coverage.*
 .cache
 nosetests.xml
 coverage.xml
@@ -150,3 +151,7 @@ ansible/vault-password*
 .pdm-python
 
 integration-tests-config.yaml
+
+node_modules/
+package-lock.json
+package.json

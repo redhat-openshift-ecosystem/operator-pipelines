@@ -1,0 +1,8 @@
+---
+globs:
+  - ansible/roles/operator-pipeline/templates/openshift/tasks/*
+  - ansible/roles/operator-pipeline/templates/openshift/pipelines/*
+rules:
+  # Due to a historical reasons, the pipeline uses snake_case for the
+  # Tekton resources. This rule is disabled to avoid false positives.
+  prefer-kebab-case: off

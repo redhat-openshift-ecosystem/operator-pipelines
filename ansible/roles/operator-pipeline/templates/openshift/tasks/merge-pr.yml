@@ -31,6 +31,7 @@ spec:
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
       script: |
+        #! /usr/bin/env bash
         set -xe
         if [[ -z "$(params.operator_path)" ]]; then
           echo -n false > "$(results.bool_merge.path)"

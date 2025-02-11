@@ -57,6 +57,7 @@ spec:
       name: build
       computeResources: {}
       script: |
+        #! /usr/bin/env bash
         set -xe
 
         if [ -z "$(params.CONTEXT)" ]; then

@@ -197,10 +197,6 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: head_commit
-          value: "$(params.git_commit)"
-        - name: base_commit
-          value: "$(params.git_commit_base)"
         - name: request_url
           value: "$(params.git_pr_url)"
         - name: github_token_secret_name
@@ -387,10 +383,6 @@ spec:
           value: "$(tasks.detect-changes.results.added_bundle)"
         - name: cert_project_id
           value: "$(tasks.certification-project-check.results.certification_project_id)"
-        - name: public_registry
-          value: "$(params.dest_registry)"
-        - name: public_repository
-          value: "$(tasks.get-pyxis-certification-data.results.vendor_label)/$(tasks.get-pyxis-certification-data.results.repo_name)"
         - name: docker_config_file_name
           value: ".dockerconfigjson"
         - name: pyxis_url
