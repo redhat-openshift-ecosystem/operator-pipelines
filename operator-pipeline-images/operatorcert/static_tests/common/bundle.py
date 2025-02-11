@@ -166,6 +166,7 @@ def check_bundle_release_config(bundle: Bundle) -> Iterator[CheckResult]:
                 template_names_in_mapping[template["template_name"]], template
             )
 
+
 def check_validate_schema_ci_config(
     bundle: Bundle,
 ) -> Iterator[CheckResult]:
