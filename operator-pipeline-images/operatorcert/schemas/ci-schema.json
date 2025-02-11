@@ -1,0 +1,48 @@
+{
+    "title": "ci.yaml validation schema",
+    "description": "json schema validating the ci.yaml",
+    "type": "object",
+    "additionaProperties": true,
+    "properties": {
+        "fbc": {
+            "description": "Config set for FBC-enabled operator bundles",
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "description": "Whether the operator already have FBC support or not",
+                    "type": "boolean"
+                },
+                "catalog_mapping": {
+                    "description": "Catalog Mapping accoering to provided templates types",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "template_name": {
+                                "description": "Name of the catalog template file (required)",
+                                "type": "string"
+                            },
+                            "catalog_names": {
+                                "description": "List of the catalogs",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 1
+                            },
+                            "type": {
+                                "description": "Type of template schema",
+                                "type": "string"
+                            }
+                        },
+                        "required": [ "template_name", "type", "catalog_names" ]
+
+                    }
+                }
+            },
+            "minItems": 1,
+            "required": [ "catalog_mapping" ]
+        }
+    },
+    "required": [ "fbc" ]
+}
