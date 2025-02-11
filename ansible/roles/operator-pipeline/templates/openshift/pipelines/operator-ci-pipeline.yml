@@ -342,10 +342,6 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: bundle_version
-          value: "$(tasks.bundle-path-validation.results.bundle_version)"
-        - name: package_name
-          value: "$(tasks.bundle-path-validation.results.package_name)"
         - name: bundle_index_image
           value: *bundleIndexImage
         - name: bundle_image

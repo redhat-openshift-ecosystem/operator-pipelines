@@ -20,3 +20,4 @@ ignore:
   - .tox/
   - ansible/vaults/
   - .venv
+  - node_modules/

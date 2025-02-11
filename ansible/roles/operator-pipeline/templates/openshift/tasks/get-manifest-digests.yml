@@ -23,6 +23,7 @@ spec:
     - name: podman-manifest-inspect
       image: "$(params.pipeline_image)"
       script: |
+        #! /usr/bin/env bash
         set -xe
 
         ENV=$(params.environment)

@@ -20,6 +20,7 @@ spec:
     - name: create-lease
       image: "$(params.pipeline_image)"
       script: |
+        #! /usr/bin/env bash
         set -xe
 
         calculate_duration_in_seconds() {

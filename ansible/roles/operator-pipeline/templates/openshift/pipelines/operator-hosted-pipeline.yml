@@ -292,10 +292,6 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: head_commit
-          value: "$(params.git_commit)"
-        - name: base_commit
-          value: "$(params.git_commit_base)"
         - name: request_url
           value: "$(params.git_pr_url)"
         - name: github_token_secret_name
@@ -935,8 +931,6 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: fbc_enabled
-          value: "$(tasks.read-config.results.fbc-enabled)"
         - name: ocp_version
           value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
         - name: bundle_pullspec
