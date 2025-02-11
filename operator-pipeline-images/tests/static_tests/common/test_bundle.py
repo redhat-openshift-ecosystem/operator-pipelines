@@ -676,11 +676,7 @@ def test_check_validate_schema_bundle_release_config(
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
-                {
-                    "operators/hello/ci.yaml": {
-                        "fbc": "hello"
-                    }
-                },
+                {"operators/hello/ci.yaml": {"fbc": "hello"}},
             ],
             ("hello", "0.0.1"),
             {
@@ -696,13 +692,7 @@ def test_check_validate_schema_bundle_release_config(
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
-                {
-                    "operators/hello/ci.yaml": {
-                        "fbc": {
-                            "enabled": True
-                        }
-                    }
-                },
+                {"operators/hello/ci.yaml": {"fbc": {"enabled": True}}},
             ],
             ("hello", "0.0.1"),
             {
@@ -711,7 +701,7 @@ def test_check_validate_schema_bundle_release_config(
                     "Bundle's 'ci.yaml' contains invalid data "
                     "which does not comply with the schema: "
                     "'catalog_mapping' is a required property",
-                )
+                ),
             },
             id="Testing the validation for missing catalog_mapping field",
         ),
@@ -720,10 +710,7 @@ def test_check_validate_schema_bundle_release_config(
                 bundle_files("hello", "0.0.1"),
                 {
                     "operators/hello/ci.yaml": {
-                        "fbc": {
-                            "enabled": True,
-                            "catalog_mapping": "hello"
-                        }
+                        "fbc": {"enabled": True, "catalog_mapping": "hello"}
                     }
                 },
             ],
@@ -734,7 +721,7 @@ def test_check_validate_schema_bundle_release_config(
                     "Bundle's 'ci.yaml' contains invalid data "
                     "which does not comply with the schema: "
                     "'hello' is not of type 'array'",
-                )
+                ),
             },
             id="Testing the validation for invalid catalog_mapping array data",
         ),
@@ -743,10 +730,7 @@ def test_check_validate_schema_bundle_release_config(
                 bundle_files("hello", "0.0.1"),
                 {
                     "operators/hello/ci.yaml": {
-                        "fbc": {
-                            "enabled":True,
-                            "catalog_mapping": [{"hello": ""}]
-                        }
+                        "fbc": {"enabled":True, "catalog_mapping": [{"hello": ""}]}
                     }
                 },
             ],
@@ -780,9 +764,7 @@ def test_check_validate_schema_bundle_release_config(
                     "operators/hello/ci.yaml": {
                         "fbc": {
                             "enabled":True,
-                            "catalog_mapping": [
-                                {"type": "demo.type"}
-                            ]
+                            "catalog_mapping": [{"type": "demo.type"}],
                         }
                     }
                 },
@@ -808,18 +790,16 @@ def test_check_validate_schema_bundle_release_config(
             [
                 bundle_files("hello", "0.0.1"),
                 {
-                    
                     "operators/hello/ci.yaml": {
                         "fbc": {
                             "enabled":True,
                             "catalog_mapping": [
                                 {
                                     "template_name": "foo",
-                                    "catalog_names": ["1.0","2.0"],
+                                    "catalog_names": ["1.0", "2.0"],
                                     "type": "demo.type",
-                                    
                                 }
-                            ]
+                            ],
                         }
                     }
                 },
@@ -843,6 +823,5 @@ def test_check_validate_schema_ci_config(
     operator = repo.operator(operator_name)
     bundle = operator.bundle(bundle_version)
     assert {
-        (x.__class__, x.reason)
-        for x in check_validate_schema_ci_config(bundle)
+        (x.__class__, x.reason) for x in check_validate_schema_ci_config(bundle)
     } == expected_results
