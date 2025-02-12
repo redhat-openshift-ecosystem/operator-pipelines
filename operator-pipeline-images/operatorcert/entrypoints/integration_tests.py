@@ -9,6 +9,7 @@ from pathlib import Path
 
 from operatorcert.integration.runner import run_integration_tests
 
+
 LOGGER = logging.getLogger("operator-cert")
 
 

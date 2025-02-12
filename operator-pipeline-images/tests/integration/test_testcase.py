@@ -23,7 +23,7 @@ def test_basetestcase(
     t = BaseTestCase(MagicMock(), MagicMock())
 
     # happy path
-    t.run()
+    t.run("20240315143022")
     mock_setup.assert_called_once()
     mock_watch.assert_called_once()
     mock_validate.assert_called_once()
@@ -35,7 +35,7 @@ def test_basetestcase(
 
     mock_watch.side_effect = Exception()
     with pytest.raises(Exception):
-        t.run()
+        t.run("20240315143023")
     mock_setup.assert_called_once()
     mock_watch.assert_called_once()
     mock_validate.assert_not_called()
@@ -61,4 +61,4 @@ class BadTest(BaseTestCase):
 @patch("operatorcert.integration.testcase._test_cases", [GoodTest, BadTest, GoodTest])
 def test_run() -> None:
     fake_config = MagicMock(spec=Config)
-    assert run_tests(fake_config) == 1
+    assert run_tests(fake_config, "20240315143025") == 1

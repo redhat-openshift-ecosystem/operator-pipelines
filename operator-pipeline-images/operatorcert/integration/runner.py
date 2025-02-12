@@ -12,6 +12,7 @@ import openshift_client as oc
 
 from operatorcert.integration.config import Config
 from operatorcert.integration.external_tools import Ansible, Podman, Secret
+from operatorcert.integration.testcase import run_tests
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -98,14 +99,14 @@ def run_integration_tests(
         return 1
     LOGGER.debug("Connected to %s", oc_context.strip())
     cfg = Config.from_yaml(config_path)
-    test_id = datetime.now().strftime("%Y%m%d%H%M%S")
-    namespace = f"inttest-{test_id}"
+    run_id = datetime.now().strftime("%Y%m%d%H%M%S")
+    namespace = f"inttest-{run_id}"
     try:
         if image:
             tagged_image_name = image
         else:
             image_name = f"{cfg.test_registry.base_ref}/operator-pipeline-images"
-            tagged_image_name = f"{image_name}:{test_id}"
+            tagged_image_name = f"{image_name}:{run_id}"
             auth = (
                 {image_name: (cfg.test_registry.username, cfg.test_registry.password)}
                 if cfg.test_registry.username and cfg.test_registry.password
@@ -117,6 +118,7 @@ def run_integration_tests(
                 auth=auth,
             )
         _deploy_pipelines(project_dir, namespace, tagged_image_name)
+        run_tests(cfg, run_id)
     except subprocess.CalledProcessError as e:
         LOGGER.error("Command %s failed:", e.cmd)
         for line in e.stdout.decode("utf-8").splitlines():
