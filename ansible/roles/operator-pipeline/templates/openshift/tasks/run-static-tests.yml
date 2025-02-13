@@ -22,6 +22,11 @@ spec:
     - name: affected_catalog_operators
       description: All catalog operators affected with the change.
 
+    - name: github_host_url
+      description: |
+        The GitHub host, adjust this if you run a GitHub enterprise.
+      default: "https://api.github.com"
+
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: token
@@ -97,3 +102,68 @@ spec:
           | tr -d '\r\n' >$(results.messages_count.path)
         jq -r '[(.outputs//[])[]|select(.type=="error")]|length' <$JSON_RESULTS_FILE \
           | tr -d '\r\n' >$(results.failures_count.path)
+
+    - name: build-and-post-comment
+      image: "$(params.pipeline_image)"
+      workingDir: "$(workspaces.output.path)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: "$(params.github_token_secret_name)"
+              key: "$(params.github_token_secret_key)"
+      script: |
+        #!/usr/bin/env bash
+        set -xe
+
+        MESSAGE_COUNT=$(cat $(results.messages_count.path))
+
+        # If there are no messages, exit
+        [ -z "$MESSAGE_COUNT" ] || [ "$MESSAGE_COUNT" -eq 0 ] && exit 0
+
+        JSON_RESULTS_FILE="$(workspaces.output.path)/static-test-results.json"
+        MESSAGE_FILE="$(workspaces.output.path)/static-test-results.md"
+
+        echo '# Static test results' >$MESSAGE_FILE
+        echo >>$MESSAGE_FILE
+        echo '|Status|Check|Message|' >>$MESSAGE_FILE
+        echo '|:----:|:----|:------|' >>$MESSAGE_FILE
+
+        jq -r '(.outputs//[])[]|"|\(.type)|\(.check)|\(.message|gsub("\n";" "))|"' \
+          <$JSON_RESULTS_FILE >>$MESSAGE_FILE
+        echo >>$MESSAGE_FILE
+
+        # Replace status words with corresponding symbols
+        sed -ie 's/^|warning|/|:warning:|/g;s/^|error|/|:x:|/g' "$MESSAGE_FILE"
+
+        echo "Posting GitHub comment to issue (or PR) $(params.pull_request_url)"
+
+        github-add-comment \
+          --github-host-url "$(params.github_host_url)" \
+          --request-url "$(params.pull_request_url)" \
+          --comment-file "$(workspaces.output.path)/static-test-results.md"
+
+    - name: check-for-failures
+      image: "$(params.pipeline_image)"
+      workingDir: "$(workspaces.output.path)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: "$(params.github_token_secret_name)"
+              key: "$(params.github_token_secret_key)"
+      script: |
+        #!/usr/bin/env bash
+        set -xe
+
+        FAILURE_COUNT=$(cat $(results.failures_count.path))
+
+        if [ -z "$FAILURE_COUNT" ] || [ "$FAILURE_COUNT" -eq 0 ] ; then
+          github-labels --pull-request-url "$(params.pull_request_url)" \
+            --remove-labels validation-failed
+        else
+          github-labels --pull-request-url "$(params.pull_request_url)" \
+            --add-labels validation-failed
+          echo "Static tests failed! A summary was added to the PR."
+          exit 1
+        fi

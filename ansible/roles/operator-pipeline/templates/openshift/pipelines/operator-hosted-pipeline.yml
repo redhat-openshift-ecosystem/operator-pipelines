@@ -680,29 +680,6 @@ spec:
           workspace: results
           subPath: summary
 
-    - name: static-tests-results
-      taskRef:
-        name: report-static-tests-results
-        kind: Task
-      runAfter:
-        - static-tests
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: messages_count
-          value: "$(tasks.static-tests.results.messages_count)"
-        - name: failures_count
-          value: "$(tasks.static-tests.results.failures_count)"
-        - name: request_url
-          value: "$(params.git_pr_url)"
-        - name: github_token_secret_name
-          value: "$(params.github_token_secret_name)"
-        - name: github_token_secret_key
-          value: "$(params.github_token_secret_key)"
-      workspaces:
-        - name: output
-          workspace: results
-          subPath: summary
 
     # Merge user's registry tokens with service account credentials
     # used elsewhere by this pipeline.
@@ -713,7 +690,7 @@ spec:
     # our credentials for that registry will be omitted.
     - name: merge-registry-credentials
       runAfter:
-        - static-tests-results
+        - static-tests
       taskRef:
         name: merge-registry-credentials
       params:
