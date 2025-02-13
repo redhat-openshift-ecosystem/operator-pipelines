@@ -9,6 +9,7 @@ from jsonschema.validators import Draft202012Validator
 from operator_repo import Operator
 from operator_repo.checks import CheckResult, Fail
 
+
 def check_validate_schema_ci_config(
     operator: Operator,
 ) -> Iterator[CheckResult]:
