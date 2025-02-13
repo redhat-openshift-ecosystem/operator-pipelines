@@ -4,30 +4,30 @@
     "type": "object",
     "additionaProperties": true,
     "properties": {
+        "updateGraph": {
+            "description": "Name of the update strategy for the operator",
+            "type": "string"
+        },
+        "reviewers": {
+            "description": "List of authorized GitHub usernames",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "minItems": 1
+        },
+        "merge": {
+            "description": "Flag that determines whether the PR is set to auto-merge",
+            "type": "boolean"
+        },
+        "cert_project_id": {
+            "description": "Certification Project ID linked with the operator",
+            "type": "string"
+        },
         "fbc": {
             "description": "Config set for FBC-enabled operator bundles",
             "type": "object",
             "properties": {
-                "updateGraph": {
-                    "description": "Name of the update strategy for the operator",
-                    "type": "string"
-                },
-                "reviewers": {
-                    "description": "List of authorized GitHub usernames",
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "minItems": 1
-                    }
-                },
-                "merge": {
-                    "description": "Flag that determines whether the PR is set to auto-merge",
-                    "type": "boolean"
-                },
-                "cert_project_id": {
-                    "description": "Certification Project ID linked with the operator",
-                    "type": "string"
-                },
                 "enabled": {
                     "description": "Flag that determines whether the operator uses FBC delivery method",
                     "type": "boolean"
@@ -57,12 +57,10 @@
                             }
                         },
                         "required": [ "template_name", "type", "catalog_names" ]
-
                     }
-                }
-            },
-            "minItems": 1,
-            "required": [ "catalog_mapping" ]
+                },
+                "minItems": 1
+            }
         }
     }
 }

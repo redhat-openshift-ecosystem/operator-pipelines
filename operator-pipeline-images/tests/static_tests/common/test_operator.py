@@ -32,22 +32,6 @@ from typing import Any
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
-                {"operators/hello/ci.yaml": {"fbc": {"enabled": True}}},
-            ],
-            ("hello", "0.0.1"),
-            {
-                (
-                    Fail,
-                    "Operator's 'ci.yaml' contains invalid data "
-                    "which does not comply with the schema: "
-                    "'catalog_mapping' is a required property",
-                ),
-            },
-            id="Testing the validation for missing catalog_mapping field",
-        ),
-        pytest.param(
-            [
-                bundle_files("hello", "0.0.1"),
                 {
                     "operators/hello/ci.yaml": {
                         "fbc": {"enabled": True, "catalog_mapping": "hello"}
