@@ -3,7 +3,8 @@ import pytest
 from operator_repo import Repo
 from operator_repo.checks import Fail
 from operatorcert.static_tests.common.operator import (
-    check_validate_schema_ci_config,
+    check_catalog_usage_ci_config,
+    check_schema_operator_ci_config,
 )
 from tests.utils import bundle_files, create_files
 
@@ -11,14 +12,14 @@ from typing import Any
 
 
 @pytest.mark.parametrize(
-    "files, bundle_to_check, expected_results",
+    "files, operator_to_check, expected_results",
     [
         pytest.param(
             [
                 bundle_files("hello", "0.0.1"),
                 {"operators/hello/ci.yaml": {"fbc": "hello"}},
             ],
-            ("hello", "0.0.1"),
+            "hello",
             {
                 (
                     Fail,
@@ -38,7 +39,7 @@ from typing import Any
                     }
                 },
             ],
-            ("hello", "0.0.1"),
+            "hello",
             {
                 (
                     Fail,
@@ -58,7 +59,7 @@ from typing import Any
                     }
                 },
             ],
-            ("hello", "0.0.1"),
+            "hello",
             {
                 (
                     Fail,
@@ -93,7 +94,7 @@ from typing import Any
                     }
                 },
             ],
-            ("hello", "0.0.1"),
+            "hello",
             {
                 (
                     Fail,
@@ -126,6 +127,34 @@ from typing import Any
                             "catalog_mapping": [
                                 {
                                     "template_name": "foo",
+                                    "catalog_names": ["1.0", "1.0"],
+                                    "type": "olm.template.basic",
+                                }
+                            ],
+                        }
+                    }
+                },
+            ],
+            "hello",
+            {
+                (
+                    Fail,
+                    "Operator's 'ci.yaml' contains invalid data which does not comply with "
+                    "the schema: ['1.0', '1.0'] has non-unique elements",
+                )
+            },
+            id="Testing duplicated items in catalog_names.",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                {
+                    "operators/hello/ci.yaml": {
+                        "fbc": {
+                            "enabled": True,
+                            "catalog_mapping": [
+                                {
+                                    "template_name": "foo",
                                     "catalog_names": ["1.0", "2.0"],
                                     "type": "olm.template.basic",
                                 }
@@ -134,23 +163,115 @@ from typing import Any
                     }
                 },
             ],
-            ("hello", "0.0.1"),
+            "hello",
             set(),
             id="Testing with all valid fields with required data for ci.yaml schema.",
         ),
     ],
     indirect=False,
 )
-def test_check_validate_schema_ci_config(
+def test_check_schema_operator_ci_config(
     tmp_path: Path,
     files: list[dict[str, Any]],
-    bundle_to_check: tuple[str, str],
+    operator_to_check: tuple[str, str],
     expected_results: set[tuple[type, str]],
 ) -> None:
     create_files(tmp_path, *files)
     repo = Repo(tmp_path)
-    operator_name, bundle_version = bundle_to_check
-    operator = repo.operator(operator_name)
+    operator = repo.operator(operator_to_check)
     assert {
-        (x.__class__, x.reason) for x in check_validate_schema_ci_config(operator)
+        (x.__class__, x.reason) for x in check_schema_operator_ci_config(operator)
+    } == expected_results
+
+
+@pytest.mark.parametrize(
+    "files, operator_to_check, expected_results",
+    [
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                {"operators/hello/ci.yaml": {"fbc": {}}},
+            ],
+            "hello",
+            set(),
+            id="No catalog mapping in ci.yaml",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                {
+                    "operators/hello/ci.yaml": {
+                        "fbc": {
+                            "catalog_mapping": [
+                                {
+                                    "template_name": "foo",
+                                    "catalog_names": ["1.0", "2.0", "3.0"],
+                                    "type": "olm.template.basic",
+                                },
+                                {
+                                    "template_name": "bar",
+                                    "catalog_names": ["2.0", "3.0", "4.0"],
+                                    "type": "olm.template.basic",
+                                },
+                            ]
+                        }
+                    }
+                },
+            ],
+            "hello",
+            {
+                (
+                    Fail,
+                    "Operator's 'ci.yaml' contains multiple templates '['foo', 'bar']' "
+                    "for the same catalog '2.0'.",
+                ),
+                (
+                    Fail,
+                    "Operator's 'ci.yaml' contains multiple templates '['foo', 'bar']' "
+                    "for the same catalog '3.0'.",
+                ),
+            },
+            id="Operator with multiple templates for the same catalog",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                {
+                    "operators/hello/ci.yaml": {
+                        "fbc": {
+                            "catalog_mapping": [
+                                {
+                                    "template_name": "foo",
+                                    "catalog_names": ["1.0", "2.0"],
+                                    "type": "olm.template.basic",
+                                },
+                                {
+                                    "template_name": "bar",
+                                    "catalog_names": ["3.0", "4.0"],
+                                    "type": "olm.template.basic",
+                                },
+                            ]
+                        }
+                    }
+                },
+            ],
+            "hello",
+            set(),
+            id="Operator with no intersection in catalog names",
+        ),
+    ],
+    indirect=False,
+)
+def test_check_catalog_usage_ci_config(
+    tmp_path: Path,
+    files: list[dict[str, Any]],
+    operator_to_check: tuple[str, str],
+    expected_results: set[tuple[type, str]],
+) -> None:
+    create_files(tmp_path, *files)
+    repo = Repo(tmp_path)
+
+    operator = repo.operator(operator_to_check)
+    assert {
+        (x.__class__, x.reason) for x in check_catalog_usage_ci_config(operator)
     } == expected_results
