@@ -164,8 +164,8 @@ def main() -> None:  # pragma: no cover
         args.title,
         pr_body,
     )
-    url = response.get("url")
-    LOGGER.info("Pull request URL: %s", url)
+    pr_url = response.get("html_url")
+    LOGGER.info("Pull request URL: %s", pr_url)
 
 
 if __name__ == "__main__":  # pragma: no cover
