@@ -1,66 +1,79 @@
 {
-    "title": "ci.yaml validation schema",
-    "description": "json schema validating the ci.yaml",
-    "type": "object",
-    "additionaProperties": true,
-    "properties": {
-        "updateGraph": {
-            "description": "Name of the update strategy for the operator",
-            "type": "string"
+  "title": "ci.yaml validation schema",
+  "description": "json schema validating the ci.yaml",
+  "type": "object",
+  "additionaProperties": true,
+  "properties": {
+    "updateGraph": {
+      "description": "Name of the update strategy for the operator",
+      "type": "string",
+      "enum": [
+        "replaces-mode",
+        "semver-mode"
+      ]
+    },
+    "reviewers": {
+      "description": "List of authorized GitHub usernames who can approve the PR in community repository",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "merge": {
+      "description": "Flag that determines whether the PR is set to auto-merge. Valid only for Red Hat ISVs.",
+      "type": "boolean"
+    },
+    "cert_project_id": {
+      "description": "Certification Project ID linked with the operator.  Valid only for Red Hat ISVs.",
+      "type": "string"
+    },
+    "fbc": {
+      "description": "Config set for FBC-enabled operator bundles",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "Flag that determines whether the operator uses FBC delivery method",
+          "type": "boolean"
         },
-        "reviewers": {
-            "description": "List of authorized GitHub usernames",
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-            "minItems": 1
-        },
-        "merge": {
-            "description": "Flag that determines whether the PR is set to auto-merge",
-            "type": "boolean"
-        },
-        "cert_project_id": {
-            "description": "Certification Project ID linked with the operator",
-            "type": "string"
-        },
-        "fbc": {
-            "description": "Config set for FBC-enabled operator bundles",
+        "catalog_mapping": {
+          "description": "Catalog Mapping according to provided templates types",
+          "type": "array",
+          "items": {
             "type": "object",
             "properties": {
-                "enabled": {
-                    "description": "Flag that determines whether the operator uses FBC delivery method",
-                    "type": "boolean"
-                },
-                "catalog_mapping": {
-                    "description": "Catalog Mapping accoering to provided templates types",
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "template_name": {
-                                "description": "Name of the catalog template file",
-                                "type": "string"
-                            },
-                            "catalog_names": {
-                                "description": "List of the catalogs",
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "minItems": 1
-                            },
-                            "type": {
-                                "description": "Type of template schema",
-                                "type": "string",
-                                "enum": ["olm.template.basic", "olm.semver"]
-                            }
-                        },
-                        "required": [ "template_name", "type", "catalog_names" ]
-                    }
+              "template_name": {
+                "description": "Name of the catalog template file within the ./catalog-templates directory",
+                "type": "string"
+              },
+              "catalog_names": {
+                "description": "List of the catalogs as defined in /catalogs directory",
+                "uniqueItems": true,
+                "type": "array",
+                "items": {
+                  "type": "string"
                 },
                 "minItems": 1
-            }
+              },
+              "type": {
+                "description": "Type of olm template schema",
+                "type": "string",
+                "enum": [
+                  "olm.template.basic",
+                  "olm.semver"
+                ]
+              }
+            },
+            "required": [
+              "template_name",
+              "type",
+              "catalog_names"
+            ]
+          }
         }
+      }
     }
+  }
 }
+

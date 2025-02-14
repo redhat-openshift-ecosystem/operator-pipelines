@@ -31,7 +31,7 @@ dependencies = [
     "PyGithub<2.0,>=1.59.0",
     "GitPython>=3.1.37",
     "semver>=3.0.1",
-    "operator-repo @ git+https://github.com/mporrato/operator-repo.git@v0.4.11",
+    "operator-repo @ git+https://github.com/mporrato/operator-repo.git@v0.4.12",
     "urllib3>=2.2.2",
     "openshift-client>=2.0.4",
     "pydantic>=2.10.0",

@@ -134,9 +134,32 @@ operator catalog(s) use allowed image registry. Allowed registries are configure
 in `(repo_root)/config.yaml` under the key `allowed_bundle_registries`.
 
 #### check_schema_bundle_release_config
-The test validates the `release-config.yaml` file against the schema. The schema
-the file including the schema is described [here](./fbc_autorelease.md#release-configyaml).
+The test validates the `release-config.yaml` file against the schema. The file description
+including the schema definition can be found [here](./fbc_autorelease.md#release-configyaml).
 
+#### check_schema_operator_ci_config
+The test validates the `ci.yaml` file against the schema. The schema definition can
+be found[here](https://github.com/redhat-openshift-ecosystem/operator-pipelines/blob/main/operator-pipeline-images/operatorcert/schemas/ci-schema.json).
+
+#### check_catalog_usage_ci_config
+The test makes sure the `fbc.catalog_mapping` in `ci.yaml` file is not mapping a single
+catalog to multiple catalog templates. The test will fail if the same catalog is used
+in multiple templates.
+
+Example of the `ci.yaml` file where `v4.14` catalog is used in two different templates.
+```yaml
+---
+fbc:
+  enabled: true
+
+  catalog_mapping:
+    - template_name: basic.yaml
+      catalog_names: ["v4.14", "v4.15", "v4.16"]
+      type: olm.template.basic
+    - template_name: semver.yaml
+      catalog_names: ["v4.13", "v4.14"] # The 4.14 is already used in the basic.yaml template
+      type: olm.semver
+```
 ## Running tests locally
 
 ```bash
