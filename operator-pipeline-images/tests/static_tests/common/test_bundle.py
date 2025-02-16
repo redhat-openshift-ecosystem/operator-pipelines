@@ -503,6 +503,12 @@ def test_check_bundle_release_config(
                     "which does not comply with the schema: "
                     "'catalog_templates' is a required property",
                 ),
+                (
+                    Fail,
+                    "Bundle's 'release-config.yaml' contains invalid data which does not "
+                    "comply with the schema: Additional properties are not allowed ('key' "
+                    "was unexpected)",
+                ),
             },
             id="fail: release config without catalog_templates",
         ),

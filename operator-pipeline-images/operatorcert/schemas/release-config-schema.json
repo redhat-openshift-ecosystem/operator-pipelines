@@ -1,6 +1,7 @@
 {
   "title": "release-config.yaml schema",
   "description": "json schema for release-config.yaml",
+  "additionalProperties": false,
   "type": "object",
   "properties": {
     "merge": {
@@ -44,11 +45,17 @@
             "type": "string"
           }
         },
-        "required": [ "template_name", "channels" ]
+        "required": [
+          "template_name",
+          "channels"
+        ]
       },
       "minItems": 1,
       "uniqueItems": true
     }
   },
-  "required": [ "catalog_templates" ]
+  "required": [
+    "catalog_templates"
+  ]
 }
+
