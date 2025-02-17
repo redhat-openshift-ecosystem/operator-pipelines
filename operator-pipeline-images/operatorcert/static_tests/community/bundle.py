@@ -105,12 +105,6 @@ def ocp_to_k8s_ver(ocp_ver: str) -> str:
         return f"{k8s.major}.{k8s.minor}"
 
 
-class GraphLoopException(Exception):
-    """
-    Exception raised when a loop is detected in the update graph
-    """
-
-
 def run_operator_sdk_bundle_validate(
     bundle: Bundle, test_suite_selector: str
 ) -> Iterator[CheckResult]:
