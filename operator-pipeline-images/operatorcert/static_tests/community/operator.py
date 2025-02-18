@@ -73,7 +73,7 @@ def check_upgrade_graph_loop(operator: Operator) -> Iterator[CheckResult]:
 
 def has_cycle(graph: Dict[Bundle, set[Bundle]]) -> Optional[tuple[Bundle, Bundle]]:
     """
-    Detects cycles in an update graph using regular BFS
+    Detects cycles in an update graph using regular DFS
 
     Args:
         graph: Upgrade graph
