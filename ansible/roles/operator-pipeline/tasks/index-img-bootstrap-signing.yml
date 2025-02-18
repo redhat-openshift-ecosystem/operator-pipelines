@@ -1,0 +1,133 @@
+---
+
+- name: Configure signing namespace
+  tags:
+    - namespace
+  kubernetes.core.k8s:
+    state: "{{ namespace_state }}"
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ oc_index_bootstrap_namespace }}"
+        annotations:
+          operator.tekton.dev/prune.keep: "{{ tekton_pruner_keep | int }}"
+
+- name: Create Tekton access role
+  tags:
+    - tekton-role
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_index_bootstrap_namespace }}"
+    definition: "{{ lookup('template', '../templates/openshift/tekton-access-role.yml') }}"
+
+- name: Create bootstrapping SA
+  tags:
+    - signing-sa
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_index_bootstrap_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: "{{ item }}"
+        namespace: "{{ oc_index_bootstrap_namespace }}"
+        labels: "{{ index_img_bootstrap_labels }}"
+  with_items: "{{ index_img_bootstrap_service_accounts }}"
+
+- name: Create SA token secret
+  tags:
+    - signing-sa
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_index_bootstrap_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "{{ item }}-token"
+        namespace: "{{ oc_index_bootstrap_namespace }}"
+        annotations:
+          kubernetes.io/service-account.name: "{{ item }}"
+        labels: "{{ index_img_bootstrap_labels }}"
+      type: kubernetes.io/service-account-token
+  with_items: "{{ index_img_bootstrap_service_accounts }}"
+
+- name: Grant SA view access to the namespace
+  tags:
+    - signing-sa
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_index_bootstrap_namespace }}"
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: view
+        namespace: "{{ oc_index_bootstrap_namespace }}"
+        labels: "{{ index_img_bootstrap_labels }}"
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: view
+      subjects:
+        - kind: ServiceAccount
+          name: "{{ item }}"
+          namespace: "{{ oc_index_bootstrap_namespace }}"
+  with_items: "{{ index_img_bootstrap_service_accounts }}"
+
+- name: Create Tekton access role binding
+  tags:
+    - signing-sa
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_index_bootstrap_namespace }}"
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: tekton-pipeline-executor-binding
+        namespace: "{{ oc_index_bootstrap_namespace }}"
+        labels: "{{ index_img_bootstrap_labels }}"
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: tekton-pipeline-executor
+      subjects:
+        - kind: ServiceAccount
+          name: "{{ item}}"
+          namespace: "{{ oc_index_bootstrap_namespace }}"
+  with_items: "{{ index_img_bootstrap_service_accounts }}"
+
+- name: Include signing secrets
+  ansible.builtin.include_tasks: tasks/index-img-bootstrap-signing-secrets.yml
+
+- name: Deploy pipeline tasks
+  tags:
+    - tekton-task
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_index_bootstrap_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/tasks/set-env.yml
+    - ../templates/openshift/tasks/index-signing-image-check.yml
+
+- name: Deploy signing pipeline
+  tags:
+    - tekton-pipeline
+    - signing
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_index_bootstrap_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipelines/index-img-bootstrap-signing-pipeline.yml

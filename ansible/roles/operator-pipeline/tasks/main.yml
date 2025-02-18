@@ -74,5 +74,11 @@
   tags:
     - signing-pipeline
 
+- name: Import index image bootstrap signing task
+  ansible.builtin.import_tasks: tasks/index-img-bootstrap-signing.yml
+  tags:
+    - signing-pipeline
+    - bootstrap-signing
+
 - name: Import operator release webhooks
   ansible.builtin.import_tasks: tasks/operator-pipeline-webhooks.yml
