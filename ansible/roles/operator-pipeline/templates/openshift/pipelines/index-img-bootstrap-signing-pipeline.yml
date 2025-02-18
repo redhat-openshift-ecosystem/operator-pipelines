@@ -1,0 +1,145 @@
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: index-img-bootstrap-signing-pipeline
+spec:
+  description: |
+    This pipeline is used to sign the index image for the certified, marketplace
+    and community operators after a new OCP version/index is bootstrapped.
+
+    The pipeline will fail if the image is already marked as GA in Pyxis.
+
+  params:
+    - name: env
+      description: Which environment to run in. Can be one of [dev, qa, stage, prod]
+      default: "dev"
+
+    - name: pipeline_image
+      description: An image of operator-pipeline-images.
+      default: "quay.io/redhat-isv/operator-pipelines-images:released"
+
+    - name: image_pullspec
+      description: The pullspec for the image to be signed in the format registry/image:tag
+
+    - name: requester
+      description: Name of the user or service account that requested the signing, for auditing purposes
+
+    - name: ssl_cert_secret_name
+      default: index-img-signing-pipeline-certs
+
+    - name: ssl_cert_secret_key
+      default: index-img-signing-pipeline.pem
+
+    - name: ssl_key_secret_key
+      default: index-img-signing-pipeline.key
+
+    - name: signing_pub_secret_name
+      description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
+      default: signing-pub-key
+
+    - name: signing_pub_secret_key
+      description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
+      default: sig-key.pub
+
+  workspaces:
+    - name: pipeline
+
+  tasks:
+    - name: set-env
+      taskRef:
+        name: set-env
+        kind: Task
+      params:
+        - name: env
+          value: $(params.env)
+        - name: access_type
+          value: "internal"
+
+    - name: index-signing-image-check
+      taskRef:
+        name: index-signing-image-check
+        kind: Task
+      runAfter:
+        - set-env
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: image_pullspec
+          value: "$(params.image_pullspec)"
+        - name: pyxis_env
+          value: "$(params.env)"
+
+    - name: request-signature
+      taskRef:
+        resolver: bundles
+        params:
+          - name: bundle
+            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
+          - name: name
+            value: request-signature
+          - name: kind
+            value: Task
+      runAfter:
+        - index-signing-image-check
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: manifest_digest
+          value: "$(tasks.index-signing-image-check.results.manifest_digests)"
+        - name: reference
+          value: "$(tasks.index-signing-image-check.results.docker_references)"
+        - name: requester
+          value: "$(params.requester)"
+        - name: sig_key_id
+          value: "$(tasks.set-env.results.sig_key_id)"
+        - name: sig_key_name
+          value: "$(tasks.set-env.results.sig_key_name)"
+        - name: umb_ssl_secret_name
+          value: "$(params.ssl_cert_secret_name)"
+        - name: umb_ssl_cert_secret_key
+          value: "$(params.ssl_cert_secret_key)"
+        - name: umb_ssl_key_secret_key
+          value: "$(params.ssl_key_secret_key)"
+        - name: umb_client_name
+          value: "$(tasks.set-env.results.umb_client_name_signing)"
+        - name: umb_url
+          value: "$(tasks.set-env.results.umb_url)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: signing
+
+    - name: upload-signature
+      taskRef:
+        resolver: bundles
+        params:
+          - name: bundle
+            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
+          - name: name
+            value: upload-signature
+          - name: kind
+            value: Task
+      runAfter:
+        - request-signature
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: signature_data_file
+          value: "$(tasks.request-signature.results.signature_data_file)"
+        - name: pyxis_ssl_secret_name
+          value: "$(params.ssl_cert_secret_name)"
+        - name: pyxis_ssl_cert_secret_key
+          value: "$(params.ssl_cert_secret_key)"
+        - name: pyxis_ssl_key_secret_key
+          value: "$(params.ssl_key_secret_key)"
+        - name: pyxis_url
+          value: "$(tasks.set-env.results.pyxis_url)"
+        - name: signing_pub_secret_name
+          value: "$(params.signing_pub_secret_name)"
+        - name: signing_pub_secret_key
+          value: "$(params.signing_pub_secret_key)"
+      workspaces:
+        - name: source
+          workspace: pipeline
+          subPath: signing

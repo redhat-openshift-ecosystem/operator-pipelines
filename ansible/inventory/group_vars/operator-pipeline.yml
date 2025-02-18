@@ -4,6 +4,7 @@ ansible_connection: local
 env: unset
 oc_namespace: "operator-pipeline-{{ env }}"
 oc_signing_namespace: "signing-pipeline-{{ env }}"
+oc_index_bootstrap_namespace: "index-bootstrap-{{ env }}"
 service_account_name: operator-pipeline-admin
 branch: "{{ env }}"
 preflight_trigger_environment: preprod
@@ -50,6 +51,8 @@ kerberos_keytab_community_pending: ../../vaults/common/nonprod-community-operato
 
 index_img_signing_pipeline_private_key_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.key
 index_img_signing_pipeline_private_cert_local_path: ../../vaults/{{ env }}/community-operator-signing-pipeline.pem
+
+index_img_bootstrap_signing_pipeline_registry_auth_path: ../../vaults/common/nonprod-index-bootstrap-signing-pipeline.json
 
 
 community_operator_hosted_pipeline_registry_auth_path: ../../vaults/{{ env }}/registry-auth/community-hosted-pipeline.json

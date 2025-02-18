@@ -30,3 +30,6 @@ tekton_pruner_keep: 50
 # Settings for importing index imagestreams
 certified_operator_index: registry.redhat.io/redhat/certified-operator-index
 redhat_marketplace_index: registry.redhat.io/redhat/redhat-marketplace-index
+
+# Settings for the index image bootstrap signing pipeline
+index_img_bootstrap_signing_pipeline_registry_auth_path: ../../vaults/common/index-bootstrap-signing-pipeline.json
