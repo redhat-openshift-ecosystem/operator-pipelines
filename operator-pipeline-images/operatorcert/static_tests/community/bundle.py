@@ -12,7 +12,6 @@ import logging
 import re
 import subprocess
 from collections.abc import Iterator
-from typing import Any, List
 
 from operator_repo import Bundle
 from operator_repo.checks import CheckResult, Fail, Warn
@@ -104,12 +103,6 @@ def ocp_to_k8s_ver(ocp_ver: str) -> str:
         )
         k8s = OCP_TO_K8S_SEMVER[closest_ocp]
         return f"{k8s.major}.{k8s.minor}"
-
-
-class GraphLoopException(Exception):
-    """
-    Exception raised when a loop is detected in the update graph
-    """
 
 
 def run_operator_sdk_bundle_validate(
@@ -325,68 +318,6 @@ def check_api_version_constraints(bundle: Bundle) -> Iterator[CheckResult]:
             f"OCP version(s) {conflicting_str} conflict with "
             f"minKubeVersion={k8s_version_min}"
         )
-
-
-@skip_fbc
-def check_upgrade_graph_loop(bundle: Bundle) -> Iterator[CheckResult]:
-    """
-    Detect loops in the upgrade graph
-
-    Example:
-
-    Channel beta: A -> B -> C -> B
-
-    Args:
-        bundle (Bundle): Operator bundle
-
-    Yields:
-        Iterator[CheckResult]: Failure if a loop is detected
-    """
-    all_channels: set[str] = set(bundle.channels)
-    if bundle.default_channel is not None:
-        all_channels.add(bundle.default_channel)
-    operator = bundle.operator
-    for channel in sorted(all_channels):
-        visited: List[Bundle] = []
-        try:
-            channel_bundles = operator.channel_bundles(channel)
-            try:
-                graph = operator.update_graph(channel)
-            except (NotImplementedError, ValueError) as exc:
-                yield Fail(str(exc))
-                return
-            follow_graph(graph, channel_bundles[0], visited)
-        except GraphLoopException as exc:
-            yield Fail(str(exc))
-
-
-def follow_graph(graph: Any, bundle: Bundle, visited: List[Bundle]) -> List[Bundle]:
-    """
-    Follow operator upgrade graph and raise exception if loop is detected
-
-    Args:
-        graph (Any): Operator update graph
-        bundle (Bundle): Current bundle that started the graph traversal
-        visited (List[Bundle]): List of bundles visited so far
-
-    Raises:
-        GraphLoopException: Graph loop detected
-
-    Returns:
-        List[Bundle]: List of bundles visited so far
-    """
-    if bundle in visited:
-        visited.append(bundle)
-        raise GraphLoopException(f"Upgrade graph loop detected for bundle: {visited}")
-    if bundle not in graph:
-        return visited
-
-    visited.append(bundle)
-    next_bundles = graph[bundle]
-    for next_bundle in next_bundles:
-        visited_copy = visited.copy()
-        follow_graph(graph, next_bundle, visited_copy)
-    return visited
 
 
 @skip_fbc

@@ -31,8 +31,7 @@ def skip_fbc(func: Callable[..., Any]) -> Callable[..., Any]:
         config = operator.config if operator else {}
         if not config.get("fbc", {}).get("enabled", False):
             yield from func(*args, **kwargs)
-
-        if operator:
+        else:
             LOGGER.info(
                 "Skipping %s for FBC enabled operator %s",
                 func.__name__,

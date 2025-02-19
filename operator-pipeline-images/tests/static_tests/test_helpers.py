@@ -46,13 +46,17 @@ def test_skip__fbc(
         ]
     )
 
+    mock_logger.reset_mock()
     operator.config = {"fbc": {"enabled": False}}
     assert list(check_bundle(bundle)) == ["processed"]
     assert list(check_operator(operator)) == ["processed"]
+    mock_logger.assert_not_called()
 
+    mock_logger.reset_mock()
     operator.config = {}
     assert list(check_bundle(bundle)) == ["processed"]
     assert list(check_operator(operator)) == ["processed"]
+    mock_logger.assert_not_called()
 
     # if no operator provided wrapped func is executed
     assert list(check_unknown(None)) == ["processed"]
