@@ -4,3 +4,12 @@
 ## General settings
 namespace_state: present    # noqa: var-naming[no-role-prefix]
 github_webhook_state: present    # noqa: var-naming[no-role-prefix]
+
+## Index image signing pipeline settings
+index_img_bootstrap_service_accounts:
+  - index-img-bootstrap-sa
+
+index_img_bootstrap_labels:
+  app: index-img-bootstrap
+  suffix: "{{ suffix }}"
+  env: "{{ env }}"
