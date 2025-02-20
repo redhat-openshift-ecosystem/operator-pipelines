@@ -1,7 +1,10 @@
 from typing import Any, List
 from unittest.mock import ANY, MagicMock, call, patch
+import base64
 
 import pytest
+from github import GithubException
+from github.InputGitTreeElement import InputGitTreeElement
 from operatorcert import github
 from requests import HTTPError, Response
 
@@ -231,72 +234,122 @@ def test_close_pull_request() -> None:
     assert resp == mock_pull_request
 
 
-def test_copy_branch_creates_new_branch() -> None:
+def test_copy_branch_success() -> None:
     mock_client = MagicMock()
-    mock_src_repo = MagicMock()
-    dest_repo = MagicMock()
+    src_repo = mock_client.get_repo.return_value
+    dest_repo = mock_client.get_repo.return_value
 
-    mock_client.get_repo.side_effect = [mock_src_repo, dest_repo]
+    src_branch_ref = MagicMock()
+    src_branch_ref.commit.sha = "abc123"
+    src_repo.get_branch.return_value = src_branch_ref
 
-    src_branch = MagicMock()
-    src_branch.commit.sha = "123abc"
-    mock_src_repo.get_branch.return_value = src_branch
+    dest_branch_ref = MagicMock()
+    dest_branch_ref.commit.sha = "def456"
+    dest_branch_ref.commit.commit.tree = MagicMock()
+    dest_repo.get_branch.return_value = dest_branch_ref
 
-    dest_repo.get_branches.return_value = []
+    dest_repo.create_git_ref.return_value = MagicMock()
+
+    mock_file = MagicMock()
+    mock_file.path = "test.txt"
+    mock_file.type = "file"
+    mock_file.decoded_content = b"new content"
+
+    src_repo.get_contents.side_effect = lambda path, ref: (
+        [mock_file] if path == "" else mock_file
+    )
+
+    dest_repo.create_git_tree.return_value = MagicMock()
+    dest_repo.create_git_commit.return_value = MagicMock(sha="new_commit_sha")
+
+    ref_mock = MagicMock()
+    dest_repo.get_git_ref.return_value = ref_mock
 
     github.copy_branch(
         mock_client,
         "org/source-repo",
-        "feature-branch",
-        "org/destination-repo",
-        "new-feature-branch",
+        "main",
+        "org/dest-repo",
+        "copied-branch",
     )
 
     dest_repo.create_git_ref.assert_called_once_with(
-        ref="refs/heads/new-feature-branch", sha="123abc"
+        ref="refs/heads/copied-branch", sha="def456"
     )
+    dest_repo.create_git_tree.assert_called()
+    dest_repo.create_git_commit.assert_called()
+    ref_mock.edit.assert_called_once_with("new_commit_sha")
 
 
-def test_copy_branch_updates_existing_branch() -> None:
+def test_copy_branch_with_nested_files() -> None:
     mock_client = MagicMock()
-    mock_src_repo = MagicMock()
-    dest_repo = MagicMock()
+    src_repo = mock_client.get_repo.return_value
+    dest_repo = mock_client.get_repo.return_value
 
-    mock_client.get_repo.side_effect = [mock_src_repo, dest_repo]
-
-    src_branch = MagicMock()
-    src_branch.commit.sha = "123abc"
-    mock_src_repo.get_branch.return_value = src_branch
-
-    demo_branch = MagicMock()
-    demo_branch.name = "demo"
-    dest_branch = MagicMock()
-    dest_branch.name = "dest_existing_branch"
-    dest_repo.get_branches.return_value = [dest_branch, demo_branch]
+    src_branch_ref = MagicMock()
+    src_branch_ref.commit.sha = "abc123"
+    src_repo.get_branch.return_value = src_branch_ref
 
     dest_branch_ref = MagicMock()
-    dest_repo.get_git_ref.return_value = dest_branch_ref
+    dest_branch_ref.commit.sha = "def456"
+    dest_branch_ref.commit.commit.tree = MagicMock()
+    dest_repo.get_branch.return_value = dest_branch_ref
+
+    dest_repo.create_git_ref.return_value = MagicMock()
+
+    mock_dir = MagicMock()
+    mock_dir.path = "dir1"
+    mock_dir.type = "dir"
+
+    mock_file = MagicMock()
+    mock_file.path = "dir1/test.txt"
+    mock_file.type = "file"
+    mock_file.decoded_content = b"nested content"
+
+    src_repo.get_contents.side_effect = lambda path, ref: (
+        [mock_dir] if path == "" else [mock_file] if path == "dir1" else mock_file
+    )
+
+    dest_repo.create_git_tree.return_value = MagicMock()
+    dest_repo.create_git_commit.return_value = MagicMock(sha="new_commit_sha")
+
+    ref_mock = MagicMock()
+    dest_repo.get_git_ref.return_value = ref_mock
 
     github.copy_branch(
         mock_client,
         "org/source-repo",
-        "feature-branch",
-        "org/destination-repo",
-        "dest_existing_branch",
+        "main",
+        "org/dest-repo",
+        "copied-branch",
     )
 
-    dest_repo.get_git_ref.assert_called_once_with("heads/dest_existing_branch")
-    dest_branch_ref.edit.assert_called_once_with(sha="123abc", force=True)
+    dest_repo.create_git_ref.assert_called_once_with(
+        ref="refs/heads/copied-branch", sha="def456"
+    )
+    dest_repo.create_git_tree.assert_called()
+    dest_repo.create_git_commit.assert_called()
+    ref_mock.edit.assert_called_once_with("new_commit_sha")
+
+
+def test_copy_branch_handles_github_exception() -> None:
+    mock_client = MagicMock()
+    mock_client.get_repo.side_effect = GithubException(500, "Internal Server Error", {})
+
+    with pytest.raises(GithubException):
+        github.copy_branch(
+            mock_client,
+            "org/source-repo",
+            "main",
+            "org/dest-repo",
+            "copied-branch",
+        )
 
 
 def test_delete_branch_success() -> None:
     mock_client = MagicMock()
     mock_repo = MagicMock()
     mock_client.get_repo.return_value = mock_repo
-
-    target_branch = MagicMock()
-    target_branch.name = "old-feature-branch"
-    mock_repo.get_branches.return_value = [target_branch]
 
     branch_ref = MagicMock()
     mock_repo.get_git_ref.return_value = branch_ref
@@ -310,10 +363,10 @@ def test_delete_branch_success() -> None:
 def test_delete_branch_when_branch_does_not_exist() -> None:
     mock_client = MagicMock()
     mock_repo = MagicMock()
+    mock_get_git_ref = MagicMock()
     mock_client.get_repo.return_value = mock_repo
+    mock_repo.get_git_ref.return_value = mock_get_git_ref
+    mock_get_git_ref.delete.side_effect = GithubException(0, "err", None)
 
-    mock_repo.get_branches.return_value = []
-
-    github.delete_branch(mock_client, "org/repo-name", "non-existent-branch")
-
-    mock_repo.get_git_ref.assert_not_called()
+    with pytest.raises(GithubException):
+        github.delete_branch(mock_client, "org/repo-name", "non-existent-branch")

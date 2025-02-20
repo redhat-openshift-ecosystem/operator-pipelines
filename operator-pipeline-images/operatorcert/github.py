@@ -8,7 +8,14 @@ import urllib.parse
 from typing import Any, Dict, List, Optional
 
 import requests
-from github import Github, Label, PaginatedList, PullRequest
+from github import (
+    Github,
+    Label,
+    PaginatedList,
+    PullRequest,
+    GithubException,
+    InputGitTreeElement,
+)
 from operatorcert.utils import add_session_retries
 
 LOGGER = logging.getLogger("operator-cert")
@@ -355,29 +362,54 @@ def copy_branch(
         dest_repo_name(str): The destination repository name in the format "organization/repository"
         dest_branch_name(str): The name of the destination branch
     """
-    src_repository = github_client.get_repo(src_repo_name)
-    dest_repository = github_client.get_repo(dest_repo_name)
 
-    src_branch_ref = src_repository.get_branch(src_branch_name)
-    latest_commit_sha = src_branch_ref.commit.sha
+    try:
+        src_repository = github_client.get_repo(src_repo_name)
+        dest_repository = github_client.get_repo(dest_repo_name)
 
-    dest_branch_exists = any(
-        branch.name == dest_branch_name for branch in dest_repository.get_branches()
-    )
+        base_dest_branch = dest_repository.get_branch("main")
+        base_dest_commit_sha = base_dest_branch.commit.sha
 
-    if dest_branch_exists:
-        dest_branch_ref = dest_repository.get_git_ref(f"heads/{dest_branch_name}")
-        dest_branch_ref.edit(sha=latest_commit_sha, force=True)
-        LOGGER.debug(
-            "Branch '%s' in '%s' updated to match '%s' from '%s' successfully.",
-            dest_branch_name,
-            dest_repo_name,
-            src_branch_name,
-            src_repo_name,
-        )
-    else:
         ref = f"refs/heads/{dest_branch_name}"
-        dest_repository.create_git_ref(ref=ref, sha=latest_commit_sha)
+        dest_repository.create_git_ref(ref=ref, sha=base_dest_commit_sha)
+
+        tree_elements = []
+
+        def collect_files_recursive(path: str = "") -> None:
+            """
+            Recursively fetch and prepare files from the source repo.
+            Args:
+                path (str): Content file path
+            """
+            contents = src_repository.get_contents(path, ref=src_branch_name)
+
+            if isinstance(contents, list):
+                for content in contents:
+                    collect_files_recursive(content.path)
+            else:
+                file_data = contents.decoded_content
+                element = InputGitTreeElement(
+                    path=contents.path,
+                    mode="100644",
+                    type="blob",
+                    content=file_data.decode("utf-8"),
+                )
+                tree_elements.append(element)
+
+        collect_files_recursive()
+
+        new_tree = dest_repository.create_git_tree(
+            tree_elements, base_dest_branch.commit.commit.tree
+        )
+
+        commit_message = f"Copy from {src_branch_name} into {dest_branch_name}."
+        new_commit = dest_repository.create_git_commit(
+            commit_message, new_tree, [base_dest_branch.commit.commit]
+        )
+
+        ref = f"heads/{dest_branch_name}"
+        dest_repository.get_git_ref(ref).edit(new_commit.sha)
+
         LOGGER.debug(
             "Branch '%s' from '%s' copied to '%s' in '%s' successfully.",
             src_branch_name,
@@ -385,6 +417,16 @@ def copy_branch(
             dest_branch_name,
             dest_repo_name,
         )
+
+    except GithubException:
+        LOGGER.exception(
+            "Error while copying branch '%s' from '%s' to '%s' in '%s'.",
+            src_branch_name,
+            src_repo_name,
+            dest_branch_name,
+            dest_repo_name,
+        )
+        raise
 
 
 def delete_branch(
@@ -400,17 +442,18 @@ def delete_branch(
         repository_name (str): A repository name in the format "organization/repository"
         branch_name (str): The name of the branch to delete
     """
-    repository = github_client.get_repo(repository_name)
-    branch_ref = f"heads/{branch_name}"
+    try:
+        repository = github_client.get_repo(repository_name)
+        branch_ref = f"heads/{branch_name}"
 
-    branch_exists = any(
-        branch.name == branch_name for branch in repository.get_branches()
-    )
-    if branch_exists:
         repository.get_git_ref(branch_ref).delete()
 
         LOGGER.debug(
-            "Branch '%s' deleted from '%s' successfully.",
-            branch_name,
-            repository_name,
+            "Branch '%s' deleted from '%s' successfully.", branch_name, repository_name
         )
+
+    except GithubException:
+        LOGGER.exception(
+            "Error while deleting the '%s' from '%s'.", branch_name, repository_name
+        )
+        raise
