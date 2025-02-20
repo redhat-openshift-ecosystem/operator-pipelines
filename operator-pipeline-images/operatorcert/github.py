@@ -8,7 +8,14 @@ import urllib.parse
 from typing import Any, Dict, List, Optional
 
 import requests
-from github import Github, Label, PaginatedList, PullRequest
+from github import (
+    Github,
+    Label,
+    PaginatedList,
+    PullRequest,
+    GithubException,
+    InputGitTreeElement,
+)
 from operatorcert.utils import add_session_retries
 
 LOGGER = logging.getLogger("operator-cert")
@@ -336,3 +343,125 @@ def close_pull_request(
     """
     pull_request.edit(state="closed")
     return pull_request
+
+
+def copy_branch(
+    github_client: Github,
+    src_repo_name: str,
+    src_branch_name: str,
+    dest_repo_name: str,
+    dest_branch_name: str,
+) -> None:
+    """
+    Copy a branch from Source Repository to Destination Repository.
+
+    Limitations:
+    - This method does not handle symbolic links or non-regular files.
+    - Binary files that cannot be decoded as UTF-8 text will not be copied correctly.
+    - A proper fix would require cloning the source
+      repository locally and pushing it to the destination.
+    - While this approach has limitations, it may be sufficient for short-term needs,
+      and improvements can be made in the future.
+
+    Args:
+        github_client (Github): A Github API client
+        src_repo_name (str): The source repository name in the format "organization/repository"
+        src_branch_name(str): The name of the branch to copy
+        dest_repo_name(str): The destination repository name in the format "organization/repository"
+        dest_branch_name(str): The name of the destination branch
+    """
+
+    try:
+        src_repository = github_client.get_repo(src_repo_name)
+        dest_repository = github_client.get_repo(dest_repo_name)
+
+        base_dest_branch = dest_repository.get_branch("main")
+        base_dest_commit_sha = base_dest_branch.commit.sha
+
+        ref = f"refs/heads/{dest_branch_name}"
+        dest_repository.create_git_ref(ref=ref, sha=base_dest_commit_sha)
+
+        tree_elements = []
+
+        def collect_files_recursive(path: str = "") -> None:
+            """
+            Recursively fetch and prepare files from the source repo.
+            Args:
+                path (str): Content file path
+            """
+            contents = src_repository.get_contents(path, ref=src_branch_name)
+
+            if isinstance(contents, list):
+                for content in contents:
+                    collect_files_recursive(content.path)
+            else:
+                file_data = contents.decoded_content
+                element = InputGitTreeElement(
+                    path=contents.path,
+                    mode="100644",
+                    type="blob",
+                    content=file_data.decode("utf-8"),
+                )
+                tree_elements.append(element)
+
+        collect_files_recursive()
+
+        new_tree = dest_repository.create_git_tree(
+            tree_elements, base_dest_branch.commit.commit.tree
+        )
+
+        commit_message = f"Copy from {src_branch_name} into {dest_branch_name}."
+        new_commit = dest_repository.create_git_commit(
+            commit_message, new_tree, [base_dest_branch.commit.commit]
+        )
+
+        ref = f"heads/{dest_branch_name}"
+        dest_repository.get_git_ref(ref).edit(new_commit.sha)
+
+        LOGGER.debug(
+            "Branch '%s' from '%s' copied to '%s' in '%s' successfully.",
+            src_branch_name,
+            src_repo_name,
+            dest_branch_name,
+            dest_repo_name,
+        )
+
+    except GithubException:
+        LOGGER.exception(
+            "Error while copying branch '%s' from '%s' to '%s' in '%s'.",
+            src_branch_name,
+            src_repo_name,
+            dest_branch_name,
+            dest_repo_name,
+        )
+        raise
+
+
+def delete_branch(
+    github_client: Github,
+    repository_name: str,
+    branch_name: str,
+) -> None:
+    """
+    Delete a branch from a Github repository.
+
+    Args:
+        github_client (Github): A Github API client
+        repository_name (str): A repository name in the format "organization/repository"
+        branch_name (str): The name of the branch to delete
+    """
+    try:
+        repository = github_client.get_repo(repository_name)
+        branch_ref = f"heads/{branch_name}"
+
+        repository.get_git_ref(branch_ref).delete()
+
+        LOGGER.debug(
+            "Branch '%s' deleted from '%s' successfully.", branch_name, repository_name
+        )
+
+    except GithubException:
+        LOGGER.exception(
+            "Error while deleting the '%s' from '%s'.", branch_name, repository_name
+        )
+        raise
