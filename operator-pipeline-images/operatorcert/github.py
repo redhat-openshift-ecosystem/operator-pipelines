@@ -355,6 +355,14 @@ def copy_branch(
     """
     Copy a branch from Source Repository to Destination Repository.
 
+    Limitations:
+    - This method does not handle symbolic links or non-regular files.
+    - Binary files that cannot be decoded as UTF-8 text will not be copied correctly.
+    - A proper fix would require cloning the source
+      repository locally and pushing it to the destination.
+    - While this approach has limitations, it may be sufficient for short-term needs,
+      and improvements can be made in the future.
+
     Args:
         github_client (Github): A Github API client
         src_repo_name (str): The source repository name in the format "organization/repository"
