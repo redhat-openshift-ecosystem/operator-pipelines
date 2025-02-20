@@ -712,6 +712,9 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: output
+          workspace: results
+          subPath: summary
         - name: ssh-directory
           workspace: ssh-dir
 

@@ -1229,6 +1229,9 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: output
+          workspace: results
+          subPath: summary
 
     # merge PR
     - name: merge-pr
