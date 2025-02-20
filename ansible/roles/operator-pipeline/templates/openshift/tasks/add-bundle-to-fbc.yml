@@ -53,6 +53,8 @@ spec:
 
   workspaces:
     - name: source
+    - name: output
+      description: Scratch space and storage for the comment and related data
     - name: ssh-directory
       optional: true
 
@@ -154,9 +156,12 @@ spec:
         If you have any questions or need modifications, please let us know!
         EOL
 
+        mkdir -p "$(workspaces.output.path)/release_info"
         # A new pull request is created with FBC addition
         gh pr create \
           --base "$(params.git_base_branch)" \
           --head $FBC_UPDATE_BRANCH \
           --title "Auto FBC release $(params.operator_name) $(params.operator_version)" \
-          --body-file pr_comment.md
+          --body-file pr_comment.md > "$(workspaces.output.path)/release_info/fbc_pr_url.txt"
+
+        echo "FBC PR created: $(cat "$(workspaces.output.path)/release_info/fbc_pr_url.txt")"
