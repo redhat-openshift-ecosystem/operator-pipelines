@@ -160,7 +160,18 @@ spec:
           # Add info how to update catalog for FBC bundles
           if [[ "$fbc_enabled" == "true" && -f "$RELEASE_INFO_DIR_PATH/released_bundle.txt" ]]; then
             echo -e "\n## Catalog update\n" >> "$PR_NAME/comment.md"
-            echo -e "Operator bundle using FBC mode has been released.\nTo add bundle to FBC templates, follow [this guide](https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_workflow/#adding-new-bundle-to-catalog) to create a new PR with catalog changes." >> "$PR_NAME/comment.md"
+            if [[ -f "$RELEASE_INFO_DIR_PATH/fbc_pr_url.txt" ]]; then
+              PR_URL=$(cat "$RELEASE_INFO_DIR_PATH/fbc_pr_url.txt")
+
+              cat >> "$PR_NAME/comment.md" <<EOF
+        Automated release to the File-Based Catalog has been enabled for this bundle
+
+        A new pull request has been created to update the catalog with the new bundle. You can find the PR here: $PR_URL.
+        EOF
+
+            else
+              echo -e "Operator bundle using FBC mode has been released.\nTo add bundle to FBC templates, follow [this guide](https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/fbc_workflow/#adding-new-bundle-to-catalog) to create a new PR with catalog changes." >> "$PR_NAME/comment.md"
+            fi
           fi
         fi
 
