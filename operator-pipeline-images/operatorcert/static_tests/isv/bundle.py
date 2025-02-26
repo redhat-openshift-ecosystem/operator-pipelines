@@ -32,6 +32,9 @@ def check_pruned_graph(bundle: Bundle) -> Iterator[CheckResult]:
 
     if skip_range and not replaces:
         channels = bundle.channels
+        if bundle.default_channel:
+            channels.add(bundle.default_channel)
+
         operator = bundle.operator
 
         for channel in channels:
