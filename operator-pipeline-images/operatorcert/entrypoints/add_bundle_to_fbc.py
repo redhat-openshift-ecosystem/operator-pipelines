@@ -256,6 +256,31 @@ class BasicTemplate(CatalogTemplate):
             }
         )
 
+    def add_channels_if_not_present(self, release_config: dict[str, Any]) -> None:
+        """
+        Add channels to the template if they are not present.
+        A channel is added as a placeholder for a new bundle.
+
+        Args:
+            release_config (dict[str, Any]): A release configuration for the bundle.
+        """
+        current_channels = [
+            item["name"]
+            for item in self.template["entries"]
+            if item["schema"] == "olm.channel"
+        ]
+        for channel in release_config["channels"]:
+            if channel in current_channels:
+                continue
+            self.template["entries"].append(
+                {
+                    "schema": "olm.channel",
+                    "name": channel,
+                    "package": self.operator.operator_name,
+                    "entries": [],
+                }
+            )
+
     def amend(
         self, release_config: dict[str, Any], bundle_pullspec: str, bundle: Bundle
     ) -> None:
@@ -268,6 +293,7 @@ class BasicTemplate(CatalogTemplate):
             bundle (Bundle): A bundle object to be added to the template.
         """
         LOGGER.info("Amending basic template %s", self.template_name)
+        self.add_channels_if_not_present(release_config)
         self.add_bundle_if_not_present(self.template, bundle_pullspec)
         channels_names = release_config["channels"]
         for item in self.template["entries"]:

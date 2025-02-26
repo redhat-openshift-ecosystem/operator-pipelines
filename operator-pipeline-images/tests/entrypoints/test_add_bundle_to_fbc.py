@@ -113,7 +113,7 @@ def test_BasicCatalogTemplate_amend(
     basic_catalog_template: add_bundle_to_fbc.BasicTemplate,
 ) -> None:
     release_config = {
-        "channels": ["alpha"],
+        "channels": ["alpha", "beta"],
         "replaces": "fake-replaces",
         "skipRange": "fake-range",
         "skips": "fake-skips",
@@ -173,6 +173,22 @@ def test_BasicCatalogTemplate_amend(
             {
                 "image": "quay.io/fake-bundle:1",
                 "schema": "olm.bundle",
+            },
+            {
+                "entries": [
+                    {
+                        "name": "fake-bundle-2",
+                        # Values below don't make sense
+                        # in the context of the catalog graph but it covers the
+                        # usecase of adding a bundle to new channel
+                        "replaces": "fake-replaces",
+                        "skipRange": "fake-range",
+                        "skips": "fake-skips",
+                    },
+                ],
+                "name": "beta",
+                "package": "fake-operator",
+                "schema": "olm.channel",
             },
             {
                 "image": "quay.io/fake-bundle:2",
