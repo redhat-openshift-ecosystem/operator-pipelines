@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
 import yaml
-from operator_repo import OperatorCatalog
-from operator_repo import Repo as OperatorRepo
+from operatorcert.operator_repo import OperatorCatalog
+from operatorcert.operator_repo import Repo as OperatorRepo
 
 
 class ValidationError(Exception):

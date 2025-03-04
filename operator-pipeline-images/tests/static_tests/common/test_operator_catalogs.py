@@ -2,8 +2,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
-from operator_repo import OperatorCatalogList, Repo
+from operatorcert.operator_repo import OperatorCatalogList, Repo
 from operatorcert.static_tests.common.operator_catalogs import (
     check_bundle_images_in_fbc,
 )

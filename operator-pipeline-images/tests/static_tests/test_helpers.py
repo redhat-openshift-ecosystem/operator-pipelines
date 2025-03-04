@@ -1,8 +1,8 @@
-from typing import Any, Iterator
+from typing import Iterator
+from unittest.mock import MagicMock, call, patch
 
+from operatorcert.operator_repo import Bundle, Operator
 from operatorcert.static_tests.helpers import skip_fbc
-from operator_repo import Operator, Bundle
-from unittest.mock import call, MagicMock, patch
 
 
 @patch("operatorcert.static_tests.helpers.LOGGER")

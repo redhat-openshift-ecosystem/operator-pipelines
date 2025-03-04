@@ -2,8 +2,8 @@
 
 from collections.abc import Iterator
 
-from operator_repo import OperatorCatalog, OperatorCatalogList
-from operator_repo.checks import CheckResult, Fail
+from operatorcert.operator_repo import OperatorCatalog, OperatorCatalogList
+from operatorcert.operator_repo.checks import CheckResult, Fail
 
 
 def _get_bundle_registries_from_catalog(catalog: OperatorCatalog) -> list[str]:
