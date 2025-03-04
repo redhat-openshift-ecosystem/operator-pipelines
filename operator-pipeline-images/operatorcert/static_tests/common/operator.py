@@ -6,8 +6,8 @@ from collections import defaultdict
 from collections.abc import Iterator
 
 from jsonschema.validators import Draft202012Validator
-from operator_repo import Operator
-from operator_repo.checks import CheckResult, Fail
+from operatorcert.operator_repo import Operator
+from operatorcert.operator_repo.checks import CheckResult, Fail
 
 
 def check_schema_operator_ci_config(

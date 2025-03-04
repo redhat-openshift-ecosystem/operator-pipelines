@@ -8,10 +8,10 @@ import urllib
 from typing import Any
 
 from github import Auth, Github, UnknownObjectException
-from operator_repo import Operator
-from operator_repo import Repo as OperatorRepo
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
+from operatorcert.operator_repo import Operator
+from operatorcert.operator_repo import Repo as OperatorRepo
 from operatorcert.utils import run_command
 
 LOGGER = logging.getLogger("operator-cert")
@@ -380,9 +380,9 @@ def extract_operators_from_catalog(
     """
     operators = set()
     for catalog_operator in catalog_operators:
-        catalog, operator = catalog_operator.split("/")
+        catalog, operator_name = catalog_operator.split("/")
         # We need to get the operator from the catalog to get the actual operator
-        operator = head_repo.catalog(catalog).operator_catalog(operator).operator
+        operator = head_repo.catalog(catalog).operator_catalog(operator_name).operator
         operators.add(operator)
     return operators
 

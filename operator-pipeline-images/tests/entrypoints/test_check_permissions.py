@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, call, patch
 import operatorcert.entrypoints.check_permissions as check_permissions
 import pytest
 from github import UnknownObjectException
-from operator_repo import Repo as OperatorRepo
-from tests.utils import bundle_files, create_files
+from operatorcert.operator_repo import Repo as OperatorRepo
+from tests.operator_repo import bundle_files, create_files
 
 
 @pytest.fixture

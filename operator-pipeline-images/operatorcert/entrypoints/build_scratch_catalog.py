@@ -7,9 +7,9 @@ import tempfile
 from typing import Any
 
 import yaml
-from operator_repo import Repo, Bundle
 from operatorcert import buildah, opm
 from operatorcert.logger import setup_logger
+from operatorcert.operator_repo import Bundle, Repo
 
 LOGGER = logging.getLogger("operator-cert")
 

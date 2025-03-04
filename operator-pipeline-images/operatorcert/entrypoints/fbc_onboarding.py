@@ -7,8 +7,8 @@ from typing import Any, Dict, Optional
 
 import requests
 import yaml
-from operator_repo import Operator, Repo
 from operatorcert.logger import setup_logger
+from operatorcert.operator_repo import Operator, Repo
 from operatorcert.utils import run_command
 
 LOGGER = logging.getLogger("operator-cert")
@@ -246,9 +246,9 @@ def render_fbc_from_template(operator: Operator, version: str) -> None:
             "basic",
             "-o",
             "yaml",
-            os.path.join(operator.root, CATALOG_TEMPLATES_DIR, f"v{version}.yaml"),
+            os.path.join(str(operator.root), CATALOG_TEMPLATES_DIR, f"v{version}.yaml"),
         ],
-        cwd=operator.root,
+        cwd=str(operator.root),
     )
 
     catalogs_path = os.path.join(operator.root, "../../catalogs")

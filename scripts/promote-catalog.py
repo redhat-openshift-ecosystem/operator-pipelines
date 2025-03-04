@@ -5,14 +5,13 @@ import logging
 import os
 import re
 import shutil
-
 from datetime import datetime
-from git import Repo as GitRepo
 from pathlib import Path
 from typing import Any, Optional
 
+from git import Repo as GitRepo
 from operatorcert import github, ocp_version_info
-from operator_repo import Repo as OperatorRepo
+from operatorcert.operator_repo import Repo as OperatorRepo
 
 LOG = logging.getLogger(__name__)
 
