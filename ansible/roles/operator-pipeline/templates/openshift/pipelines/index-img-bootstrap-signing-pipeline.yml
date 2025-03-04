@@ -62,6 +62,9 @@ spec:
         kind: Task
       runAfter:
         - set-env
+      workspaces:
+        - name: results
+          workspace: pipeline
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -70,31 +73,28 @@ spec:
         - name: pyxis_env
           value: "$(params.env)"
 
-    - name: request-signature
-      taskRef:
-        resolver: bundles
-        params:
-          - name: bundle
-            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
-          - name: name
-            value: request-signature
-          - name: kind
-            value: Task
+    - name: sign-index-image
       runAfter:
         - index-signing-image-check
+      taskRef:
+        name: sign-index-image
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: manifest_digest
-          value: "$(tasks.index-signing-image-check.results.manifest_digests)"
-        - name: reference
-          value: "$(tasks.index-signing-image-check.results.docker_references)"
+
+        # Signing config
         - name: requester
           value: "$(params.requester)"
         - name: sig_key_id
           value: "$(tasks.set-env.results.sig_key_id)"
         - name: sig_key_name
           value: "$(tasks.set-env.results.sig_key_name)"
+        - name: signing_pub_secret_name
+          value: "$(params.signing_pub_secret_name)"
+        - name: signing_pub_secret_key
+          value: "$(params.signing_pub_secret_key)"
+
+        # UMB
         - name: umb_ssl_secret_name
           value: "$(params.ssl_cert_secret_name)"
         - name: umb_ssl_cert_secret_key
@@ -105,28 +105,8 @@ spec:
           value: "$(tasks.set-env.results.umb_client_name_signing)"
         - name: umb_url
           value: "$(tasks.set-env.results.umb_url)"
-      workspaces:
-        - name: source
-          workspace: pipeline
-          subPath: signing
 
-    - name: upload-signature
-      taskRef:
-        resolver: bundles
-        params:
-          - name: bundle
-            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
-          - name: name
-            value: upload-signature
-          - name: kind
-            value: Task
-      runAfter:
-        - request-signature
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: signature_data_file
-          value: "$(tasks.request-signature.results.signature_data_file)"
+        # Pyxis
         - name: pyxis_ssl_secret_name
           value: "$(params.ssl_cert_secret_name)"
         - name: pyxis_ssl_cert_secret_key
@@ -135,11 +115,10 @@ spec:
           value: "$(params.ssl_key_secret_key)"
         - name: pyxis_url
           value: "$(tasks.set-env.results.pyxis_url)"
-        - name: signing_pub_secret_name
-          value: "$(params.signing_pub_secret_name)"
-        - name: signing_pub_secret_key
-          value: "$(params.signing_pub_secret_key)"
+
+
+        - name: registry_auth_secret_name
+          value: "index-img-signing-pipeline-registry-auth"
       workspaces:
-        - name: source
+        - name: results
           workspace: pipeline
-          subPath: signing
