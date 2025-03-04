@@ -506,7 +506,7 @@ spec:
     # call IIB to add the bundle to index
     - name: add-bundle-to-index
       runAfter:
-        - build-fbc-index-images
+        - acquire-lease
       when:
         - *catalogUpdated
         - *notUndistributed
@@ -539,62 +539,18 @@ spec:
           workspace: results
           subPath: paths
 
-    - name: decide-index-paths
+    - name: sign-index-image
       runAfter:
         - add-bundle-to-index
+        - build-fbc-index-images
       when:
         - *catalogUpdated
         - *notUndistributed
       taskRef:
-        name: decide-index-paths
+        name: sign-index-image
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-      workspaces:
-        - name: input
-          workspace: results
-          subPath: paths
-
-    # use manifest list digests from IIB output and get the manifest digests from registry
-    - name: get-manifest-digests
-      runAfter:
-        - decide-index-paths
-      when:
-        - *catalogUpdated
-        - *notUndistributed
-      taskRef:
-        name: get-manifest-digests
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: index_image_paths
-          value: "$(tasks.decide-index-paths.results.index_image_paths)"
-        - name: environment
-          value: "$(params.env)"
-
-    # send UMB message for RADAS to sign the container image
-    - name: request-signature
-      runAfter:
-        - get-manifest-digests
-      when:
-        - *catalogUpdated
-        - *notUndistributed
-      taskRef:
-        resolver: bundles
-        params:
-          - name: bundle
-            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
-          - name: name
-            value: request-signature
-          - name: kind
-            value: Task
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: manifest_digest
-          value: "$(tasks.get-manifest-digests.results.manifest_digests)"
-        - name: reference
-          value: "$(tasks.get-manifest-digests.results.docker_references)"
         - name: requester
           value: "araszka"
         - name: sig_key_id
@@ -611,31 +567,7 @@ spec:
           value: "$(tasks.set-env.results.umb_client_name)"
         - name: umb_url
           value: "$(tasks.set-env.results.umb_url)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: signing
 
-    - name: upload-signature
-      runAfter:
-        - request-signature
-      when:
-        - *catalogUpdated
-        - *notUndistributed
-      taskRef:
-        resolver: bundles
-        params:
-          - name: bundle
-            value: "quay.io/redhat-isv/tkn-signing-bundle:4692680007"
-          - name: name
-            value: upload-signature
-          - name: kind
-            value: Task
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: signature_data_file
-          value: "$(tasks.request-signature.results.signature_data_file)"
         - name: pyxis_ssl_secret_name
           value: "$(params.pipeline_ssl_secret_name)"
         - name: pyxis_ssl_cert_secret_key
@@ -648,16 +580,14 @@ spec:
           value: "$(params.signing_pub_secret_name)"
         - name: signing_pub_secret_key
           value: "$(params.signing_pub_secret_key)"
-        - name: verify_signature
-          value: "true"
       workspaces:
-        - name: source
-          workspace: repository
-          subPath: signing
+        - name: results
+          workspace: results
+          subPath: paths
 
     - name: publish-to-index
       runAfter:
-        - upload-signature
+        - sign-index-image
       when:
         - *catalogUpdated
         - *notUndistributed
@@ -666,8 +596,6 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: index_image_paths
-          value: "$(tasks.decide-index-paths.results.index_image_paths)"
         - name: environment
           value: "$(params.env)"
         - name: organization
@@ -675,9 +603,8 @@ spec:
         - name: quay_push_final_index_secret
           value: "$(params.quay_push_final_index_secret)"
       workspaces:
-        - name: output
+        - name: results
           workspace: results
-          subPath: summary
 
     - name: add-bundle-to-fbc
       runAfter:
