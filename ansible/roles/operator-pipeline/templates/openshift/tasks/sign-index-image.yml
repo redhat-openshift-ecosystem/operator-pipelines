@@ -1,0 +1,234 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: sign-index-image
+spec:
+  description: |
+    This task is used to sign the index image and upload the signature to Pyxis sigstore.
+  params:
+    - name: pipeline_image
+      description: A docker image of operator-pipeline-images for the steps to run in.
+
+    # Signing configuration
+    - name: requester
+      description: Name of the user that requested the signing, for auditing purposes
+    - name: sig_key_id
+      description: The signing key id that the content is signed with
+      default: "4096R/55A34A82 SHA-256"
+    - name: sig_key_name
+      description: The signing key name that the content is signed with
+      default: containerisvsign
+    - name: signing_pub_secret_name
+      description: The name of the Kubernetes Secret that contains the public key for verifying signatures.
+      default: signing-pub-key
+    - name: signing_pub_secret_key
+      description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
+      default: sig-key.pub
+    - name: registry_auth_secret_name
+      default: "registry-secret-default"
+
+    # UMB configuration
+    - name: umb_ssl_secret_name
+      description: Kubernetes secret name that contains the umb SSL files
+    - name: umb_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the umb SSL cert.
+    - name: umb_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the umb SSL key.
+    - name: umb_client_name
+      description: Client name to connect to umb, usually a service account name
+      default: operatorpipelines
+    - name: umb_listen_topic
+      description: umb topic to listen to for responses with signed content
+      default: VirtualTopic.eng.robosignatory.isv.sign
+    - name: umb_publish_topic
+      description: umb topic to publish to for requesting signing
+      default: VirtualTopic.eng.operatorpipelines.isv.sign
+    - name: umb_url
+      description: umb host to connect to for messaging
+      default: umb.api.redhat.com
+
+    # Pyxis/Sigstore configuration
+    - name: pyxis_ssl_secret_name
+      description: Kubernetes secret name that contains the Pyxis SSL files.
+    - name: pyxis_ssl_cert_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL cert.
+    - name: pyxis_ssl_key_secret_key
+      description: The key within the Kubernetes secret that contains the Pyxis SSL key.
+    - name: pyxis_url
+      description: Pyxis instance to upload the signature to.
+      default: https://pyxis.engineering.redhat.com
+
+  results:
+    - name: signature_data_file
+  volumes:
+    - name: umb-ssl-volume
+      secret:
+        secretName: "$(params.umb_ssl_secret_name)"
+        optional: false
+    - name: pyxis-ssl-volume
+      secret:
+        secretName: "$(params.pyxis_ssl_secret_name)"
+        optional: false
+    - name: signing-pub-key-volume
+      secret:
+        secretName: "$(params.signing_pub_secret_name)"
+        optional: true
+    - name: registry-auth
+      secret:
+        secretName: "$(params.registry_auth_secret_name)"
+        optional: true
+  workspaces:
+    - name: results
+  steps:
+    - name: get-image-digests
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.results.path)
+      volumeMounts:
+        - name: registry-auth
+          readOnly: true
+          mountPath: "/tmp/registry-auth"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        INDEX_IMAGE_FILE="$(workspaces.results.path)/index-image-paths.txt"
+
+        DIGEST_LIST=$(cat $INDEX_IMAGE_FILE | tr "," " ")
+
+        SKOPEO_EXTRA_ARGS=""
+        if [[ -f /tmp/registry-auth/config.json ]]; then
+          echo "Registry auth file found. Using it for skopeo."
+          SKOPEO_EXTRA_ARGS="--authfile /tmp/registry-auth/config.json"
+        fi
+
+        DOCKER_REFERENCES=""
+        MANIFEST_DIGESTS=""
+        for i in $DIGEST_LIST
+        do
+            REFERENCE=$(echo $i | awk -F '+' '{print $1}')
+
+            DIGEST=$(echo $i | awk -F '+' '{print $2}')
+
+            MANIFEST_LIST=$(skopeo inspect --retry-times 5 $SKOPEO_EXTRA_ARGS --raw docker://$DIGEST)
+            MANIFEST_LIST=$(echo $MANIFEST_LIST | jq -r '.manifests[].digest')
+
+            # create comma separated index images that match each digest
+            for j in $MANIFEST_LIST
+            do
+              DOCKER_REFERENCES+=$REFERENCE,
+            done
+
+            # parse json output of manifest inspect into comma separated list of manifest digests for signing
+            MANIFEST_DIGESTS+=$(echo $MANIFEST_LIST | tr " " ",")
+            MANIFEST_DIGESTS+=","
+
+        done
+
+        echo -n $DOCKER_REFERENCES | tee "$(workspaces.results.path)/docker_references.txt"
+        echo -n $MANIFEST_DIGESTS | tee "$(workspaces.results.path)/manifest_digests.txt"
+
+    - name: request-signature
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.results.path)
+      env:
+        - name: UMB_CERT_PATH
+          value: /etc/umb-ssl-volume/$(params.umb_ssl_cert_secret_key)
+        - name: UMB_KEY_PATH
+          value: /etc/umb-ssl-volume/$(params.umb_ssl_key_secret_key)
+      volumeMounts:
+        - name: umb-ssl-volume
+          readOnly: true
+          mountPath: "/etc/umb-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        MAX_RETRIES=3
+        RETRY_DELAY=5 # Initial delay
+
+        MANIFEST_DIGESTS=$(cat $(workspaces.results.path)/manifest_digests.txt)
+        DOCKER_REFERENCES=$(cat $(workspaces.results.path)/docker_references.txt)
+
+        echo "Requesting signing from RADAS"
+        for ((i=1; i<=MAX_RETRIES; i++)); do
+          if request-signature \
+            --manifest-digest "$MANIFEST_DIGESTS" \
+            --output signing_response.json \
+            --reference "$DOCKER_REFERENCES" \
+            --requester "$(params.requester)" \
+            --sig-key-id "$(params.sig_key_id)" \
+            --sig-key-name "$(params.sig_key_name)" \
+            --umb-client-name "$(params.umb_client_name)" \
+            --umb-listen-topic "$(params.umb_listen_topic)" \
+            --umb-publish-topic "$(params.umb_publish_topic)" \
+            --umb-url "$(params.umb_url)" \
+            --verbose
+          then
+            echo "request-signature command succeeded."
+            break
+          elif [ $i -eq $MAX_RETRIES ]; then
+            echo "Max retries reached. Exiting."
+            exit 1
+          else
+            echo "Attempt $i failed. Retrying in $RETRY_DELAY seconds..."
+            sleep $RETRY_DELAY
+            RETRY_DELAY=$((RETRY_DELAY * 2))  # Exponential backoff
+          fi
+        done
+
+        SIG_DATA=$(cat signing_response.json)
+        echo "Signed claims and their metadata: "
+        echo -n $SIG_DATA
+        # echo -n signing_response.json | tee $(results.signature_data_file.path)
+
+    - name: verify-signature
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.results.path)
+      volumeMounts:
+        - name: signing-pub-key-volume
+          readOnly: true
+          mountPath: "/etc/signing-pub-key-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        PUB_KEY_PATH="/etc/signing-pub-key-volume/$(params.signing_pub_secret_key)"
+        ls -l /etc/signing-pub-key-volume
+        if [[ ! -f $PUB_KEY_PATH ]]; then
+          echo "Public key file not found. Skipping signature verification."
+          exit 0
+        fi
+
+        echo "Verifying signature before upload"
+        # Extract list of signed claims and loop through
+        SIGNED_CLAIMS=$(cat signing_response.json | jq -r '.[].signed_claim')
+
+        gpg --import $PUB_KEY_PATH
+
+        for CLAIM in $SIGNED_CLAIMS; do
+          echo "$CLAIM" | base64 --decode > decoded_signed_claim
+          gpg --verify decoded_signed_claim
+        done
+
+    - name: upload-signature
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.results.path)
+      env:
+        - name: PYXIS_CERT_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_cert_secret_key)
+        - name: PYXIS_KEY_PATH
+          value: /etc/pyxis-ssl-volume/$(params.pyxis_ssl_key_secret_key)
+      volumeMounts:
+        - name: pyxis-ssl-volume
+          readOnly: true
+          mountPath: "/etc/pyxis-ssl-volume"
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        echo "Signature verified. Uploading to Pyxis sigstore"
+        upload-signature \
+          --pyxis-url "$(params.pyxis_url)" \
+          --signature-data "signing_response.json" \
+          --verbose
