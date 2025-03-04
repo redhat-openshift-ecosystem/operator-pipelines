@@ -2,8 +2,8 @@
 
 from collections.abc import Iterator
 
-from operator_repo import Bundle
-from operator_repo.checks import CheckResult, Fail, Warn
+from operatorcert.operator_repo import Bundle
+from operatorcert.operator_repo.checks import CheckResult, Fail, Warn
 from operatorcert.static_tests.helpers import skip_fbc
 
 PRUNED_GRAPH_ERROR = (

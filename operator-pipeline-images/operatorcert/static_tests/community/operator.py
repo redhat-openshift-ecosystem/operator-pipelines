@@ -9,8 +9,8 @@ and taking an Operator argument and yielding OperatorCheck objects
 from collections.abc import Iterator
 from typing import Dict, Optional
 
-from operator_repo import Operator, Bundle
-from operator_repo.checks import CheckResult, Fail, Warn
+from operatorcert.operator_repo import Bundle, Operator
+from operatorcert.operator_repo.checks import CheckResult, Fail, Warn
 from operatorcert.static_tests.helpers import skip_fbc
 
 

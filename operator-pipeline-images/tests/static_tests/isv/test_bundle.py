@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
-from operator_repo import Repo
-from operator_repo.checks import Fail, Warn
+from operatorcert.operator_repo import Repo
+from operatorcert.operator_repo.checks import Fail, Warn
 from operatorcert.static_tests.isv.bundle import (
     PRUNED_GRAPH_ERROR,
     check_marketplace_annotation,

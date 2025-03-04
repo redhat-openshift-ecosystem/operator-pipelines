@@ -2,13 +2,12 @@
 
 import json
 import os
+from collections.abc import Iterator
 from typing import Any
 
-from collections.abc import Iterator
 from jsonschema.validators import Draft202012Validator
-
-from operator_repo import Bundle
-from operator_repo.checks import CheckResult, Fail, Warn
+from operatorcert.operator_repo import Bundle
+from operatorcert.operator_repo.checks import CheckResult, Fail, Warn
 
 
 def _check_consistency(

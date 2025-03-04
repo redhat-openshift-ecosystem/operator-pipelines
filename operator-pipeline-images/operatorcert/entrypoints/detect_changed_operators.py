@@ -9,8 +9,8 @@ import re
 from typing import Optional
 
 from github import Auth, Github
-from operator_repo import Repo as OperatorRepo
 from operatorcert.logger import setup_logger
+from operatorcert.operator_repo import Repo as OperatorRepo
 from operatorcert.parsed_file import (
     AffectedBundleCollection,
     AffectedCatalogCollection,

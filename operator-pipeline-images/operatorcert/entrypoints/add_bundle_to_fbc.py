@@ -8,9 +8,9 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any
 
-from operator_repo import Bundle, Operator, Repo
 from operatorcert import utils
 from operatorcert.logger import setup_logger
+from operatorcert.operator_repo import Bundle, Operator, Repo
 from ruamel.yaml import YAML
 
 LOGGER = logging.getLogger("operator-cert")
@@ -146,7 +146,7 @@ class CatalogTemplate(ABC):
             self.template_type,
             "-o",
             "yaml",
-            self.template_path,
+            str(self.template_path),
         ]
 
         response = utils.run_command(command)
@@ -228,11 +228,11 @@ class BasicTemplate(CatalogTemplate):
             "name": self.operator.operator_name,
             "defaultChannel": channels[0]["name"],
         }
-        bundle = {"schema": "olm.bundle", "image": bundle_pullspec}
+        bundle_obj = {"schema": "olm.bundle", "image": bundle_pullspec}
 
         self._template = {
             "schema": "olm.template.basic",
-            "entries": [package] + channels + [bundle],
+            "entries": [package] + channels + [bundle_obj],
         }
 
     @staticmethod

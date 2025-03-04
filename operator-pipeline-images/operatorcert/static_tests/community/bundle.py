@@ -6,17 +6,17 @@
     (either Fail or Warn) to describe the issues found in the given Bundle.
 """
 
-from bisect import bisect
 import json
 import logging
 import re
 import subprocess
+from bisect import bisect
 from collections.abc import Iterator
 
-from operator_repo import Bundle
-from operator_repo.checks import CheckResult, Fail, Warn
-from operator_repo.utils import lookup_dict
 from operatorcert import utils
+from operatorcert.operator_repo import Bundle
+from operatorcert.operator_repo.checks import CheckResult, Fail, Warn
+from operatorcert.operator_repo.utils import lookup_dict
 from operatorcert.static_tests.helpers import skip_fbc
 from semver import Version
 
@@ -125,7 +125,7 @@ def run_operator_sdk_bundle_validate(
             "validate",
             "-o",
             "json-alpha1",
-            bundle.root,
+            str(bundle.root),
             "--select-optional",
             test_suite_selector,
             f"--optional-values=k8s-version={kube_version_for_deprecation_test}",

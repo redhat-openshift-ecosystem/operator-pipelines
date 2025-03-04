@@ -6,8 +6,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from operatorcert.logger import setup_logger
+from operatorcert.operator_repo import Repo as OperatorRepo
 from operatorcert.utils import SplitArgs
-from operator_repo import Repo as OperatorRepo
 
 LOGGER = logging.getLogger("operator-cert")
 

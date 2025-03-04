@@ -221,10 +221,12 @@ def test_render_fbc_from_template(
                 "-o",
                 "yaml",
                 os.path.join(
-                    operator.root, fbc_onboarding.CATALOG_TEMPLATES_DIR, "v4.15.yaml"
+                    str(operator.root),
+                    fbc_onboarding.CATALOG_TEMPLATES_DIR,
+                    "v4.15.yaml",
                 ),
             ],
-            cwd=operator.root,
+            cwd=str(operator.root),
         )
         mock_makedir.assert_called_once()
         mock_safe_dump_all.assert_called_once()

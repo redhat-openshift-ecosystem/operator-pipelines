@@ -5,9 +5,9 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from operator_repo import Repo, OperatorCatalogList
-from operator_repo.checks import Fail, run_suite
 from operatorcert.logger import setup_logger
+from operatorcert.operator_repo import OperatorCatalogList, Repo
+from operatorcert.operator_repo.checks import Fail, run_suite
 from operatorcert.utils import SplitArgs
 
 LOGGER = logging.getLogger("operator-cert")
@@ -70,7 +70,7 @@ def get_objects_to_test(
     Returns:
         List[Any]: List of objects to test
     """
-    test_objects = []
+    test_objects: list[Any] = []
 
     # In case any of the resources is being removed in the pull request
     # We need to skip the test for that resource
