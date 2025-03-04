@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Any
+from unittest.mock import PropertyMock, patch
 
 import pytest
-from unittest.mock import patch, PropertyMock
-from operator_repo import Repo
-from operator_repo.checks import Fail, Warn
+from operatorcert.operator_repo import Repo
+from operatorcert.operator_repo.checks import Fail, Warn
 from operatorcert.static_tests.community.operator import (
     check_ci_upgrade_graph,
     check_operator_name_unique,

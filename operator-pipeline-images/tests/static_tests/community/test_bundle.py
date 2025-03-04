@@ -1,21 +1,21 @@
 import re
 from pathlib import Path
 from typing import Any, Dict, Optional, Set
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-from operator_repo import Repo
-from operator_repo.checks import CheckResult, Fail, Warn
+from operatorcert.operator_repo import Repo
+from operatorcert.operator_repo.checks import CheckResult, Fail, Warn
 from operatorcert.static_tests.community.bundle import (
+    check_api_version_constraints,
     check_dangling_bundles,
     check_osdk_bundle_validate_operator_framework,
     check_osdk_bundle_validate_operatorhub,
-    check_required_fields,
-    run_operator_sdk_bundle_validate,
-    check_api_version_constraints,
     check_replaces_availability,
+    check_required_fields,
     check_using_fbc,
     ocp_to_k8s_ver,
+    run_operator_sdk_bundle_validate,
 )
 from semver import Version
 from tests.utils import bundle_files, create_files, merge

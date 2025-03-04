@@ -1,30 +1,26 @@
-"""
-    Miscellaneous non-fixture utility functions for tests
-"""
-
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 import yaml
 
 
 def merge(
-    a: Dict[str, Any], b: Dict[str, Any], path: Optional[list[str]] = None
-) -> Dict[str, Any]:
+    dst: dict[Any, Any], src: dict[Any, Any], path: Optional[list[str]] = None
+) -> dict[Any, Any]:
     """
-    Recursively merge two dictionaries, with values from the second dictionary (b)
-    overwriting corresponding values in the first dictionary (a). This function can
+    Recursively merge two dictionaries, with values from the second dictionary (src)
+    overwriting corresponding values in the first dictionary (dst). This function can
     handle nested dictionaries.
 
     Args:
-        a (dict): The base dictionary to merge into.
-        b (dict): The dictionary with values to merge into the base dictionary.
+        dst (dict): The base dictionary to merge into.
+        src (dict): The dictionary with values to merge into the base dictionary.
         path (list of str, optional): A list representing the current path in the recursive merge.
             This argument is used internally for handling nested dictionaries. Users typically
             don't need to provide this argument. Defaults to None.
 
     Returns:
-        dict: The merged dictionary (a) after incorporating values from the second dictionary (b).
+        dict: The merged dictionary (dst) after incorporating values from the second dictionary (src).
 
     Example:
         dict_a = {"key1": 42, "key2": {"subkey1": "value1"}}
@@ -35,18 +31,18 @@ def merge(
     """
     if path is None:
         path = []
-    for key in b:
-        if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
-                merge(a[key], b[key], path + [str(key)])
+    for key in src:
+        if key in dst:
+            if isinstance(dst[key], dict) and isinstance(src[key], dict):
+                merge(dst[key], src[key], path + [str(key)])
             else:
-                a[key] = b[key]
+                dst[key] = src[key]
         else:
-            a[key] = b[key]
-    return a
+            dst[key] = src[key]
+    return dst
 
 
-def create_files(path: Union[str, Path], *contents: Dict[str, Any]) -> None:
+def create_files(path: Union[str, Path], *contents: dict[str, Any]) -> None:
     """
     Create files and directories at the specified path based on the provided content.
 
@@ -90,8 +86,10 @@ def create_files(path: Union[str, Path], *contents: Dict[str, Any]) -> None:
                 full_path.mkdir(parents=True, exist_ok=True)
             else:
                 full_path.parent.mkdir(parents=True, exist_ok=True)
-                if isinstance(content, (str, bytes)):
-                    full_path.write_text(content)  # type: ignore
+                if isinstance(content, str):
+                    full_path.write_text(content)
+                elif isinstance(content, bytes):
+                    full_path.write_bytes(content)
                 elif isinstance(content, tuple):
                     full_path.write_text(yaml.safe_dump_all(content))
                 else:
@@ -143,13 +141,15 @@ def catalog_files(
 def bundle_files(
     operator_name: str,
     bundle_version: str,
-    annotations: Optional[Dict[str, Any]] = None,
-    csv: Optional[Dict[str, Any]] = None,
-    other_files: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    annotations: Optional[dict[str, Any]] = None,
+    csv: Optional[dict[str, Any]] = None,
+    other_files: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     """
-    Creates an in-memory representation of the set of files for an Operator package bundle.
-    The output format can be fed directly to the create_files function.
+    Create a bundle of files and metadata for an Operator package.
+
+    This function generates a bundle of files and metadata for an Operator package,
+    including annotations, a CSV (ClusterServiceVersion) file, and other additional files.
 
     Args:
         operator_name (str): The name of the Operator.

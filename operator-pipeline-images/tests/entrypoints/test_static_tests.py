@@ -2,9 +2,9 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from operator_repo import Repo
-from operator_repo.checks import Fail, Warn
 from operatorcert.entrypoints import static_tests
+from operatorcert.operator_repo import Repo
+from operatorcert.operator_repo.checks import Fail, Warn
 from tests.utils import bundle_files, catalog_files, create_files
 
 

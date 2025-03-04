@@ -1,11 +1,10 @@
 """ Static tests helper utilities. """
 
 import logging
-
 from functools import wraps
 from typing import Any, Callable, Iterator
-from operator_repo import Operator, Bundle
 
+from operatorcert.operator_repo import Bundle, Operator
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -32,10 +31,9 @@ def skip_fbc(func: Callable[..., Any]) -> Callable[..., Any]:
         if not config.get("fbc", {}).get("enabled", False):
             yield from func(*args, **kwargs)
         else:
+            operator_name = operator.operator_name if operator else "<unknown>"
             LOGGER.info(
-                "Skipping %s for FBC enabled operator %s",
-                func.__name__,
-                operator.operator_name,
+                "Skipping %s for FBC enabled operator %s", func.__name__, operator_name
             )
         yield from []
 

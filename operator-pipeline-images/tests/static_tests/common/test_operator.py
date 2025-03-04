@@ -1,14 +1,14 @@
 from pathlib import Path
+from typing import Any
+
 import pytest
-from operator_repo import Repo
-from operator_repo.checks import Fail
+from operatorcert.operator_repo import Repo
+from operatorcert.operator_repo.checks import Fail
 from operatorcert.static_tests.common.operator import (
     check_catalog_usage_ci_config,
     check_schema_operator_ci_config,
 )
 from tests.utils import bundle_files, create_files
-
-from typing import Any
 
 
 @pytest.mark.parametrize(
@@ -173,7 +173,7 @@ from typing import Any
 def test_check_schema_operator_ci_config(
     tmp_path: Path,
     files: list[dict[str, Any]],
-    operator_to_check: tuple[str, str],
+    operator_to_check: str,
     expected_results: set[tuple[type, str]],
 ) -> None:
     create_files(tmp_path, *files)
@@ -265,7 +265,7 @@ def test_check_schema_operator_ci_config(
 def test_check_catalog_usage_ci_config(
     tmp_path: Path,
     files: list[dict[str, Any]],
-    operator_to_check: tuple[str, str],
+    operator_to_check: str,
     expected_results: set[tuple[type, str]],
 ) -> None:
     create_files(tmp_path, *files)
