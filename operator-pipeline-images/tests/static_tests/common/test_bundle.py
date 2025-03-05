@@ -1,16 +1,15 @@
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from typing import Any
+
 import pytest
-from operator_repo import Repo
-from operator_repo.checks import Fail, Warn
+from operatorcert.operator_repo import Repo
+from operatorcert.operator_repo.checks import Fail, Warn
 from operatorcert.static_tests.common.bundle import (
-    check_operator_name,
     check_bundle_release_config,
+    check_operator_name,
     check_validate_schema_bundle_release_config,
 )
 from tests.utils import bundle_files, create_files
-
-from typing import Any
 
 
 @pytest.mark.parametrize(

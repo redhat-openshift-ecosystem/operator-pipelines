@@ -5,7 +5,7 @@
 groups = ["default", "operatorcert-dev", "tox"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:d32b7a87f705a713d9c90ccec15848511c83155e55d0fb2d7b63e832fe3f69f3"
+content_hash = "sha256:d03c616ff24e16ab8cee2d66e8b8c436adb692a406ca0a38695e7ebb4be0bfb9"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -1217,20 +1217,6 @@ dependencies = [
 files = [
     {file = "openshift_client-2.0.5-py3-none-any.whl", hash = "sha256:d90e42dc63ba1e4a871d8ee3c5367e6ba1001028f1c8b594d8b727fdfb26af7d"},
     {file = "openshift_client-2.0.5.tar.gz", hash = "sha256:7fc386e68ff673a7a94a26d70972200bb5e37370d7f2f651d02ac1aa65144415"},
-]
-
-[[package]]
-name = "operator-repo"
-version = "0.4.12"
-requires_python = ">=3.9"
-git = "https://github.com/mporrato/operator-repo.git"
-ref = "v0.4.12"
-revision = "b0d2185b2c356a6fd0dc50b716e30d385479ce74"
-summary = "Library and utilities to handle repositories of kubernetes operators"
-groups = ["default"]
-dependencies = [
-    "pyyaml>=6.0.1",
-    "semantic-version>=2.10.0",
 ]
 
 [[package]]

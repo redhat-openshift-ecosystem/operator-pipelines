@@ -213,8 +213,8 @@ def test_BasicCatalogTemplate_render(
 ) -> None:
     mock_open = mock.mock_open()
     basic_catalog_template.operator.operator_name = "fake-operator"
-    basic_catalog_template.operator.repo.root = Path("./")
-    basic_catalog_template.template_path = (
+    basic_catalog_template.operator.repo.root = Path("./")  # type: ignore
+    basic_catalog_template.template_path = Path(
         "operators/fake-operator/catalog-templates/fake-template.yaml"
     )
 

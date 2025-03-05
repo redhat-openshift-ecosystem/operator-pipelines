@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from git.repo import Repo as GitRepo
-from operator_repo import Repo
 from operatorcert.entrypoints import detect_changed_operators
+from operatorcert.operator_repo import Repo
 from operatorcert.parsed_file import (
     AffectedBundleCollection,
     AffectedCatalogCollection,
