@@ -83,7 +83,7 @@ spec:
         if [[ $ENV == "dev" || $ENV == "qa" ]]; then
             echo "Adding FBC fragment to an index is a NOOP for dev and qa environments at this time."
             # output dummy/test values for following tasks
-            echo -n "placeholder" | tee "$(workspaces.output.path)/fbc-index-image-paths.txt"
+            echo -n "placeholder" | tee "$(workspaces.output.path)/index-image-paths.txt"
             exit 0
         fi
 
@@ -93,10 +93,10 @@ spec:
           --catalog-names "$(params.catalogs_with_added_or_modified_operators)" \
           --image-repository "$(params.image_repository)" \
           --commit-sha "$(params.commit_sha)" \
-          --image-output fbc-index-image-paths.txt \
+          --image-output index-image-paths.txt \
           --verbose
 
-        cat fbc-index-image-paths.txt
+        cat index-image-paths.txt
 
     - name: rm-operator-from-index
       image: "$(params.pipeline_image)"
@@ -127,16 +127,16 @@ spec:
         if [[ $ENV == "dev" || $ENV == "qa" ]]; then
             echo "Adding FBC fragment to an index is a NOOP for dev and qa environments at this time."
             # output dummy/test values for following tasks
-            echo -n "placeholder" | tee "$(workspaces.output.path)/fbc-index-image-paths.txt"
+            echo -n "placeholder" | tee "$(workspaces.output.path)/index-image-paths.txt"
             exit 0
         fi
 
         rm-operator-from-index  \
           --iib-url "$(params.iib_url)" \
           --indices $INDEX_IMAGES \
-          --fragment-builds-output fbc-index-image-paths.txt \
+          --fragment-builds-output index-image-paths.txt \
           --rm-catalog-operators "$(params.deleted_catalog_operators)" \
-          --image-output fbc-index-image-paths.txt \
+          --image-output index-image-paths.txt \
           --verbose
 
-        cat fbc-index-image-paths.txt
+        cat index-image-paths.txt

@@ -119,6 +119,7 @@
   with_items:
     - ../templates/openshift/tasks/set-env.yml
     - ../templates/openshift/tasks/index-signing-image-check.yml
+    - ../templates/openshift/tasks/sign-index-image.yml
 
 - name: Deploy signing pipeline
   tags:

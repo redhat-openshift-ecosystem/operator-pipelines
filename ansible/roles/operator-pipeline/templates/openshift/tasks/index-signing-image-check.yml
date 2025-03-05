@@ -17,16 +17,13 @@ spec:
     - name: pyxis_env
       description: Environment to run in. Can be one of [dev, qa, stage, prod]
       default: prod
-  results:
-    - name: docker_references
-      description: Comma-separated list of indices
-    - name: manifest_digests
-      description: Comma-separated list of manifest digests retrieved from registry
 
   volumes:
     - name: registry-auth
       secret:
         secretName: "$(params.registry_auth_secret_name)"
+  workspaces:
+    - name: results
 
   steps:
     - name: check-allowed-index-image
@@ -73,34 +70,12 @@ spec:
 
         echo "Image $(params.image_pullspec) is not found in Pyxis. Signing is allowed."
 
-    - name: inspect
+    - name: signing-input
       image: "$(params.pipeline_image)"
-      volumeMounts:
-        - name: registry-auth
-          readOnly: true
-          mountPath: "/tmp/registry-auth"
+      workingDir: $(workspaces.results.path)
       script: |
         #! /usr/bin/env bash
         set -xe
 
-        DOCKER_REFERENCES=""
-        MANIFEST_DIGESTS=""
-
-        IMAGE_PULLSPEC="$(params.image_pullspec)"
-
-        MANIFEST_LIST=$(skopeo inspect --retry-times 5 --authfile /tmp/registry-auth/config.json --raw docker://$IMAGE_PULLSPEC)
-        MANIFEST_LIST=$(echo $MANIFEST_LIST | jq -r '.manifests[].digest')
-
-        # create comma separated index images that match each digest
-        for j in $MANIFEST_LIST
-        do
-          DOCKER_REFERENCES+=$IMAGE_PULLSPEC,
-        done
-
-        # parse json output of manifest inspect into comma separated list of manifest digests for signing
-        MANIFEST_DIGESTS+=$(echo $MANIFEST_LIST | tr " " ",")
-        MANIFEST_DIGESTS+=","
-
-
-        echo -n $DOCKER_REFERENCES | tee "$(results.docker_references.path)"
-        echo -n $MANIFEST_DIGESTS | tee "$(results.manifest_digests.path)"
+        # Write the image pullspec to a file to be compatible with the signing task
+        echo -n "$(params.image_pullspec)+$(params.image_pullspec)" > "./index-image-paths.txt"
