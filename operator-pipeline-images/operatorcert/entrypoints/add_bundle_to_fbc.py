@@ -7,6 +7,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from typing import Any
+from pathlib import Path
 
 from operatorcert import utils
 from operatorcert.logger import setup_logger
@@ -68,9 +69,22 @@ class CatalogTemplate(ABC):
         self.catalog_names = catalog_names
 
         self._template: dict[str, Any] = {}
-        self.template_path = (
-            self.operator.root / "catalog-templates" / self.template_name
-        )
+        self.template_path = self.template_dir / self.template_name
+
+    @property
+    def template_dir(self) -> Path:
+        """
+        Get a directory of the template and create it if it doesn't exist.
+
+        Returns:
+            Path: A path to the directory of the template.
+        """
+        path = self.operator.root / "catalog-templates"
+
+        # Create the directory if it doesn't exist
+        os.makedirs(path, exist_ok=True)
+
+        return path
 
     def exists(self) -> bool:
         """
