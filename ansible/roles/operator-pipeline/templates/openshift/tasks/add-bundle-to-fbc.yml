@@ -79,9 +79,6 @@ spec:
           --operator-name "$(params.operator_name)" \
           --operator-version "$(params.operator_version)"
 
-        cat operators/$(params.operator_name)/catalog-templates/basic.yaml
-        cat operators/$(params.operator_name)/catalog-templates/semver.yaml
-
         # Loop over all catalogs in /catalogs and run opm validate to ensure the catalogs are valid
         for catalog in ./catalogs/*; do
           opm validate $catalog
