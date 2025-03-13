@@ -33,6 +33,7 @@ RUN dnf update -y && \
     redhat-rpm-config \
     krb5-devel \
     krb5-workstation \
+    yamllint \
     openssl-devel \
     pinentry \
     pip \
