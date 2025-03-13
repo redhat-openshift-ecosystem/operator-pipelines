@@ -33,7 +33,6 @@ RUN dnf update -y && \
     redhat-rpm-config \
     krb5-devel \
     krb5-workstation \
-    yamllint \
     openssl-devel \
     pinentry \
     pip \
@@ -70,8 +69,8 @@ COPY ./operator-pipeline-images ./operator-pipeline-images
 RUN pip3 install --no-cache-dir pdm
 # install dependencies in virtual environment
 COPY ./pdm.lock ./pyproject.toml ./README.md ./
-RUN pdm venv create 3.12 && pdm install --frozen-lockfile --no-editable \
-        --group operatorcert-dev
+RUN pdm venv create 3.12 && \
+    pdm install --frozen-lockfile --no-editable --production
 
 ENV VIRTUAL_ENV=/home/user/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
