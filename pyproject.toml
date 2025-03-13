@@ -106,8 +106,3 @@ operatorcert-dev = [
     "pip-audit>=2.7.3",
 ]
 tox = ["tox>=4.16.0", "tox-pdm>=0.7.2"]
-
-# The following two lines are required to install ansible-lint under pdm
-# Ref: https://github.com/pdm-project/pdm/issues/1575
-[tool.pdm.resolution.overrides]
-will-not-work-on-windows-try-from-wsl-instead = "0.1.0"

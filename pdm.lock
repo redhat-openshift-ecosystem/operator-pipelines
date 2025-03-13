@@ -5,7 +5,7 @@
 groups = ["default", "operatorcert-dev", "tox"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:d03c616ff24e16ab8cee2d66e8b8c436adb692a406ca0a38695e7ebb4be0bfb9"
+content_hash = "sha256:636399ed2203eaa3e9e009709413bedd8f00c1798785c218e7b65d7eb1e76184"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -26,21 +26,20 @@ files = [
 
 [[package]]
 name = "ansible-compat"
-version = "24.10.0"
-requires_python = ">=3.9"
+version = "25.1.4"
+requires_python = ">=3.10"
 summary = "Ansible compatibility goodies"
 groups = ["operatorcert-dev"]
 dependencies = [
     "PyYAML",
-    "ansible-core>=2.14",
+    "ansible-core>=2.16",
     "jsonschema>=4.6.0",
     "packaging",
     "subprocess-tee>=0.4.1",
-    "typing-extensions>=4.5.0; python_version < \"3.10\"",
 ]
 files = [
-    {file = "ansible_compat-24.10.0-py3-none-any.whl", hash = "sha256:0415bcd82f7d84e5b344c03439154c1f16576809dc3a523b81178354c86ae5a1"},
-    {file = "ansible_compat-24.10.0.tar.gz", hash = "sha256:0ad873e0dae8b2de79bc33ced813d6c92c716c4d7b82f9a4693e1fd57f43776e"},
+    {file = "ansible_compat-25.1.4-py3-none-any.whl", hash = "sha256:25acf1bb49d8072e2737fc109fa9aa981ca9fed17b075af3c812635dad48ba2a"},
+    {file = "ansible_compat-25.1.4.tar.gz", hash = "sha256:ebf8620021dd25c2d7c3e8e9382efbe7328db58ea396cbbe688ebef80dc8f8ae"},
 ]
 
 [[package]]
@@ -63,30 +62,30 @@ files = [
 
 [[package]]
 name = "ansible-lint"
-version = "24.12.2"
+version = "25.1.3"
 requires_python = ">=3.10"
 summary = "Checks playbooks for practices and behavior that could potentially be improved"
 groups = ["operatorcert-dev"]
 dependencies = [
-    "ansible-compat>=24.10.0",
-    "ansible-core>=2.13.0",
+    "ansible-compat>=25.1.3",
+    "ansible-core>=2.16.0",
     "black>=24.3.0",
-    "filelock>=3.3.0",
+    "filelock>=3.8.2",
     "importlib-metadata",
     "jsonschema>=4.10.0",
-    "packaging>=21.3",
+    "packaging>=22.0",
     "pathspec>=0.10.3",
-    "pyyaml>=5.4.1",
-    "ruamel-yaml>=0.18.5",
+    "pyyaml>=6.0.2",
+    "referencing>=0.36.2",
+    "ruamel-yaml!=0.18.7,!=0.18.8,>=0.18.5",
     "subprocess-tee>=0.4.1",
     "wcmatch>=8.1.2; python_version < \"3.12\"",
     "wcmatch>=8.5.0; python_version >= \"3.12\"",
-    "will-not-work-on-windows-try-from-wsl-instead; platform_system == \"Windows\"",
-    "yamllint>=1.30.0",
+    "yamllint>=1.34.0",
 ]
 files = [
-    {file = "ansible_lint-24.12.2-py3-none-any.whl", hash = "sha256:ce7a783ce4f053a965e31f308cdb57554259052efea04b8491c9704f11095e54"},
-    {file = "ansible_lint-24.12.2.tar.gz", hash = "sha256:f636309c4e7f724fc1a544df529c4c2354f54cf35ede11d750366afb1158a464"},
+    {file = "ansible_lint-25.1.3-py3-none-any.whl", hash = "sha256:b68b2149423246ec6369be86df2b79e3555b2b71507e4f7915671ec77381fa2b"},
+    {file = "ansible_lint-25.1.3.tar.gz", hash = "sha256:ff92b31c83a2366381907e21c9a9d4de57f0cd7574e9943ea1b7e32b371f31a2"},
 ]
 
 [[package]]
@@ -1767,17 +1766,18 @@ files = [
 
 [[package]]
 name = "referencing"
-version = "0.35.1"
-requires_python = ">=3.8"
+version = "0.36.2"
+requires_python = ">=3.9"
 summary = "JSON Referencing + Python"
 groups = ["operatorcert-dev"]
 dependencies = [
     "attrs>=22.2.0",
     "rpds-py>=0.7.0",
+    "typing-extensions>=4.4.0; python_version < \"3.13\"",
 ]
 files = [
-    {file = "referencing-0.35.1-py3-none-any.whl", hash = "sha256:eda6d3234d62814d1c64e305c1331c9a3a6132da475ab6382eaa997b21ee75de"},
-    {file = "referencing-0.35.1.tar.gz", hash = "sha256:25b42124a6c8b632a425174f24087783efb348a6f1e0008e63cd4466fedf703c"},
+    {file = "referencing-0.36.2-py3-none-any.whl", hash = "sha256:e8699adbbf8b5c7de96d8ffa0eb5c158b3beafce084968e2ea8bb08c6794dcd0"},
+    {file = "referencing-0.36.2.tar.gz", hash = "sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa"},
 ]
 
 [[package]]
@@ -2370,17 +2370,6 @@ groups = ["default", "operatorcert-dev"]
 files = [
     {file = "websocket_client-1.8.0-py3-none-any.whl", hash = "sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526"},
     {file = "websocket_client-1.8.0.tar.gz", hash = "sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da"},
-]
-
-[[package]]
-name = "will-not-work-on-windows-try-from-wsl-instead"
-version = "0.1.0"
-requires_python = ">=3.11,<4.0"
-summary = ""
-groups = ["operatorcert-dev"]
-marker = "platform_system == \"Windows\""
-files = [
-    {file = "will_not_work_on_windows_try_from_wsl_instead-0.1.0.tar.gz", hash = "sha256:a4641e5420c23718d92986f33185b854c2cb345e136fc5b8bafe5b1c013e7039"},
 ]
 
 [[package]]
