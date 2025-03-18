@@ -1,11 +1,11 @@
 -include .env
 -include .set_env
 
-# Default tag is gnerated from the current timestamp
+# Default tag is generated from the current timestamp
 TAG ?= $(shell date +%s)
 PIPELINE_IMAGE_REPO ?= quay.io/redhat-isv/operator-pipelines-test-image
 PIPELINE_IMAGE ?= $(PIPELINE_IMAGE_REPO):$(TAG)
-# For local tests use a version-release based on the latest sucesfull
+# For local tests use a version-release based on the latest successful
 # pipeline run in Github action and bump up the release number
 # https://github.com/redhat-openshift-ecosystem/operator-pipelines/actions/workflows/integration-tests.yml
 OPERATOR_VERSION_RELEASE ?= 1-1
