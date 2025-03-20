@@ -63,31 +63,16 @@ spec:
           exit 0
         fi
 
-        # To avoid issuing too many GH API requests, fetch all PR info we need
-        # in a single call upfront and process the result later
-        gh pr view "$(params.git_pr_url)" --json isDraft,reviews,author >/tmp/pr.json
+        # we are not using GH reviews for approval, so the only thing we need to check is the presence 
+        # of 'approved' label (added by reviewer through '/approve' comment or by the pipeline)
+        gh pr view "$(params.git_pr_url)" --json labels >/tmp/pr.json
+        IS_APPROVED=$(jq -r '[.labels[].name == "approved"] | any' /tmp/pr.json || echo "false")
 
 
-        # Extract all reviews and return one line per reviewer containing three space separated fields:
-        #   $state $authorAssociation $author
-        # where
-        #   $state is the outcome of the most recent review by the author and can be APPROVED, CHANGES_REQUESTED,
-        #     DISMISSED, COMMENTED or PENDING
-        #   $authorAssociation is the role of the author in the repository; for possible values see
-        #     https://docs.github.com/en/graphql/reference/enums#commentauthorassociation
-        #   $author is the GitHub handle of the reviewer
-        # Example:
-        #   APPROVED MEMBER rh-operator-bundle-bot
-        #   PENDING NONE randomuser
-        jq -r '[.reviews[]|{author:.author.login,authorAssociation,state,submittedAt}]|group_by(.author)|map(sort_by(.submittedAt)|.[-1]|"\(.state) \(.authorAssociation) \(.author)")[]' \
-          /tmp/pr.json | tee /tmp/reviews.txt
-
-
-        # Check if a PR author is a member matches a bot name
-        if [[ "$(jq -r '.author.login' /tmp/pr.json)" == "rh-operator-bundle-bot" ]]; then
-            echo "Author of the PR is known bot, merge is allowed"
-        elif ! grep "^APPROVED MEMBER " /tmp/reviews.txt ; then
-        # Do not merge if we do not have approval from the bot or any other repo member
+        if [ "$IS_APPROVED" = "true" ]; then
+            echo "PR is approved and can be merged"
+        else
+            # Do not merge if we do not have approval
             echo -n "Skipping merge: PR is not approved." | tee "$(workspaces.output.path)/merge_error.txt"
             echo -n "false" > "$(results.pr_merged.path)"
             exit 0

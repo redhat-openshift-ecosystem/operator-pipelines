@@ -7,8 +7,14 @@ import os
 import urllib
 from typing import Any
 
-from github import Auth, Github, UnknownObjectException
+from github import (
+    Auth,
+    Github,
+    UnknownObjectException,
+    GithubException,
+)
 from operatorcert import pyxis
+from operatorcert.github import add_labels_to_pull_request, parse_github_issue_url
 from operatorcert.logger import setup_logger
 from operatorcert.operator_repo import Operator
 from operatorcert.operator_repo import Repo as OperatorRepo
@@ -213,6 +219,10 @@ class OperatorReview:
             return True
         if self.is_partner():
             return self.check_permission_for_partner()
+        if self.pr_owner_can_write():
+            # Enable PR approval on forked repository
+            # and approves rh-operator-bundle-bot PRs
+            return True
         return self.check_permission_for_community()
 
     def is_org_member(self) -> bool:
@@ -246,6 +256,37 @@ class OperatorReview:
             self.pr_owner,
             self.github_repo_org,
         )
+        return False
+
+    def pr_owner_can_write(self) -> bool:
+        """
+        Check if the pull request owner has write permissions for the repository
+
+        Returns:
+            bool: A boolean value indicating if the user
+                  has write permissions for the repository
+        """
+        LOGGER.info(
+            "Checking if the pull request owner has write permissions for the repository"
+        )
+        github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN") or "")
+        github = Github(auth=github_auth)
+        repo = github.get_repo(self.github_repo_name)
+        try:
+            print("HIT A")
+            permission = repo.get_collaborator_permission(self.pr_owner)
+            print("HIT B", permission)
+        except GithubException:
+            LOGGER.info(
+                "Cannot get permissions for the pull request owner '%s'", self.pr_owner
+            )
+            return False
+        if permission in ["admin", "write"]:
+            LOGGER.info(
+                "Pull request owner '%s' has write permissions for the repository",
+                self.pr_owner,
+            )
+            return True
         return False
 
     def check_permission_for_partner(self) -> bool:
@@ -328,22 +369,24 @@ class OperatorReview:
 
     def request_review_from_maintainers(self) -> None:
         """
-        Request review from repository global maintainers.
-        The maintainers are tagged in the PR as reviewers.
+        Request review from the operator maintainers by adding a comment to the PR.
         """
         LOGGER.info(
             "Requesting a review from maintainers for the pull request: %s",
             self.pull_request_url,
         )
+        maintainers_with_at = ", ".join(map(lambda x: f"@{x}", self.maintainers))
+        comment_text = (
+            "This PR requires a review from repository maintainers.\n"
+            f"{maintainers_with_at}: please review the PR and approve it with an "
+            "`/approve` comment.\n\n"
+            "Consider updating the ci.yaml with the list of reviewers "
+            "to tag the right user for the review or add the author of the PR "
+            "to the list of reviewers in the ci.yaml file directly if you want "
+            "automated merge without explicit approval."
+        )
         run_command(
-            [
-                "gh",
-                "pr",
-                "edit",
-                self.pull_request_url,
-                "--add-reviewer",
-                ",".join(self.maintainers),
-            ]
+            ["gh", "pr", "comment", self.pull_request_url, "--body", comment_text]
         )
 
     def request_review_from_owners(self) -> None:
@@ -461,6 +504,21 @@ def check_permissions(
     return all(is_approved)
 
 
+def add_label_approved(pull_request_url: str) -> None:
+    """
+    Add 'approved' label to the pull request
+
+    Args:
+        pull_request_url (str): URL to the pull request
+    """
+    repository_name, pr_id = parse_github_issue_url(pull_request_url)
+    github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN") or "")
+    github = Github(auth=github_auth)
+    repository = github.get_repo(repository_name)
+    pull_request = repository.get_pull(pr_id)
+    add_labels_to_pull_request(pull_request, ["approved"])
+
+
 def main() -> None:
     """
     Main function of the script
@@ -481,7 +539,7 @@ def main() -> None:
     is_approved = check_permissions(base_repo, head_repo, args)
 
     if is_approved:
-        run_command(["gh", "pr", "review", args.pull_request_url, "--approve"])
+        add_label_approved(args.pull_request_url)
 
     # Save the results to a file
     output = {
