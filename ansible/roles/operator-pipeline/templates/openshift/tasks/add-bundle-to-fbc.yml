@@ -57,11 +57,18 @@ spec:
       description: Scratch space and storage for the comment and related data
     - name: ssh-directory
       optional: true
+    - name: registry-credentials
+      description: A workspace with credentials for registry opm render catalog command
+      optional: true
 
   steps:
     - name: add-bundle-to-fbc
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
+      env:
+        # The registry auth file for opm render catalog command
+        - name: REGISTRY_AUTH_FILE
+          value: "$(workspaces.registry-credentials.path)/.dockerconfigjson"
       script: |
         #! /usr/bin/env bash
         set -xe

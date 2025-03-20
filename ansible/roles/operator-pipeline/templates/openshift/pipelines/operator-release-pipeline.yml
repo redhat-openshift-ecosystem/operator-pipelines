@@ -644,6 +644,8 @@ spec:
           subPath: summary
         - name: ssh-directory
           workspace: ssh-dir
+        - name: registry-credentials
+          workspace: registry-pull-credentials
 
   finally:
 
