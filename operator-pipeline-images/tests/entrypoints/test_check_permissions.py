@@ -383,12 +383,9 @@ def test_OperatorReview_request_review_from_maintainers(
             review_community.pull_request_url,
             "--body",
             "This PR requires a review from repository maintainers.\n"
-            "@maintainer1, @maintainer2: please review the PR and approve it with an "
-            "`/approve` comment.\n\n"
-            "Consider updating the ci.yaml with the list of reviewers "
-            "to tag the right user for the review or add the author of the PR "
-            "to the list of reviewers in the ci.yaml file directly if you want "
-            "automated merge without explicit approval.",
+            f"@maintainer1, @maintainer2: please review the PR and approve it with an "
+            "`approved` label if the pipeline is still running or merge the PR "
+            "directly after review if the pipeline already passed successfully.",
         ]
     )
 

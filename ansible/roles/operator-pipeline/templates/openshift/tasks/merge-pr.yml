@@ -63,7 +63,7 @@ spec:
           exit 0
         fi
 
-        # we are not using GH reviews for approval, so the only thing we need to check is the presence 
+        # we are not using GH reviews for approval, so the only thing we need to check is the presence
         # of 'approved' label (added by reviewer through '/approve' comment or by the pipeline)
         gh pr view "$(params.git_pr_url)" --json labels >/tmp/pr.json
         IS_APPROVED=$(jq -r '[.labels[].name == "approved"] | any' /tmp/pr.json || echo "false")

@@ -379,11 +379,8 @@ class OperatorReview:
         comment_text = (
             "This PR requires a review from repository maintainers.\n"
             f"{maintainers_with_at}: please review the PR and approve it with an "
-            "`/approve` comment.\n\n"
-            "Consider updating the ci.yaml with the list of reviewers "
-            "to tag the right user for the review or add the author of the PR "
-            "to the list of reviewers in the ci.yaml file directly if you want "
-            "automated merge without explicit approval."
+            "`approved` label if the pipeline is still running or merge the PR "
+            "directly after review if the pipeline already passed successfully."
         )
         run_command(
             ["gh", "pr", "comment", self.pull_request_url, "--body", comment_text]
