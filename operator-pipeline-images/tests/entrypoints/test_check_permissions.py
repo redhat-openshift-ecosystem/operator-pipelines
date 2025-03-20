@@ -145,7 +145,7 @@ def test_OperatorReview_pr_labels(
             False, True, False, False, False, True, False, False, id="partner - denied"
         ),
         pytest.param(
-            False, False, True, False, False, False, False, True, id="owner - approved"
+            False, False, True, False, False, False, True, True, id="owner - approved"
         ),
         pytest.param(
             False,

@@ -219,11 +219,11 @@ class OperatorReview:
             return True
         if self.is_partner():
             return self.check_permission_for_partner()
-        if self.pr_owner_can_write():
-            # Enable PR approval on forked repository
-            # and approves rh-operator-bundle-bot PRs
+        if self.check_permission_for_community():
             return True
-        return self.check_permission_for_community()
+        # Enable PR approval on forked repository
+        # and approves rh-operator-bundle-bot PRs
+        return self.pr_owner_can_write()
 
     def is_org_member(self) -> bool:
         """
@@ -273,9 +273,7 @@ class OperatorReview:
         github = Github(auth=github_auth)
         repo = github.get_repo(self.github_repo_name)
         try:
-            print("HIT A")
             permission = repo.get_collaborator_permission(self.pr_owner)
-            print("HIT B", permission)
         except GithubException:
             LOGGER.info(
                 "Cannot get permissions for the pull request owner '%s'", self.pr_owner
