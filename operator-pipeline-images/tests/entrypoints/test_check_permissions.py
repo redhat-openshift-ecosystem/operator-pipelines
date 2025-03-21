@@ -1,11 +1,11 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
 import operatorcert.entrypoints.check_permissions as check_permissions
 import pytest
-from github import UnknownObjectException
+from github import GithubException, UnknownObjectException
 from operatorcert.operator_repo import Repo as OperatorRepo
 from tests.operator_repo import bundle_files, create_files
 
@@ -133,20 +133,41 @@ def test_OperatorReview_pr_labels(
 
 
 @pytest.mark.parametrize(
-    "is_org_member, is_partner, permission_partner, permission_community, permission_partner_called, permission_community_called, expected_result",
+    "is_org_member, is_partner, owner_can_write, permission_partner, permission_community, permission_partner_called, permission_community_called, expected_result",
     [
-        pytest.param(True, False, False, False, False, False, True, id="org member"),
         pytest.param(
-            False, True, True, False, True, False, True, id="partner - approved"
+            True, False, False, False, False, False, False, True, id="org member"
         ),
         pytest.param(
-            False, True, False, False, True, False, False, id="partner - denied"
+            False, True, False, True, False, True, False, True, id="partner - approved"
         ),
         pytest.param(
-            False, False, False, True, False, True, True, id="community - approved"
+            False, True, False, False, False, True, False, False, id="partner - denied"
         ),
         pytest.param(
-            False, False, False, False, False, True, False, id="community - denied"
+            False, False, True, False, False, False, True, True, id="owner - approved"
+        ),
+        pytest.param(
+            False,
+            False,
+            False,
+            False,
+            True,
+            False,
+            True,
+            True,
+            id="community - approved",
+        ),
+        pytest.param(
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            True,
+            False,
+            id="community - denied",
         ),
     ],
 )
@@ -158,7 +179,9 @@ def test_OperatorReview_pr_labels(
 )
 @patch("operatorcert.entrypoints.check_permissions.OperatorReview.is_partner")
 @patch("operatorcert.entrypoints.check_permissions.OperatorReview.is_org_member")
+@patch("operatorcert.entrypoints.check_permissions.OperatorReview.pr_owner_can_write")
 def test_OperatorReview_check_permissions(
+    mock_pr_owner_can_write: MagicMock,
     mock_is_org_member: MagicMock,
     mock_is_partner: MagicMock,
     mock_check_permission_for_partner: MagicMock,
@@ -166,6 +189,7 @@ def test_OperatorReview_check_permissions(
     review_community: check_permissions.OperatorReview,
     is_org_member: bool,
     is_partner: bool,
+    owner_can_write: bool,
     permission_partner: bool,
     permission_community: bool,
     permission_partner_called: bool,
@@ -174,6 +198,7 @@ def test_OperatorReview_check_permissions(
 ) -> None:
     mock_is_org_member.return_value = is_org_member
     mock_is_partner.return_value = is_partner
+    mock_pr_owner_can_write.return_value = owner_can_write
     mock_check_permission_for_partner.return_value = permission_partner
     mock_check_permission_for_community.return_value = permission_community
     assert review_community.check_permissions() == expected_result
@@ -214,6 +239,29 @@ def test_OperatorReview_is_org_member(
         404, "", {}
     )
     assert review_community.is_org_member() == False
+
+
+@patch("operatorcert.entrypoints.check_permissions.Github")
+@patch("operatorcert.entrypoints.check_permissions.Auth.Token")
+def test_OperatorReview_pr_owner_can_write(
+    mock_token: MagicMock,
+    mock_github: MagicMock,
+    review_community: check_permissions.OperatorReview,
+) -> None:
+    mock_repo = MagicMock()
+    mock_github.return_value.get_repo.return_value = mock_repo
+
+    # User can write to the repository
+    mock_repo.get_collaborator_permission.return_value = "write"
+    assert review_community.pr_owner_can_write() == True
+
+    # User cannot write to the repository
+    mock_repo.get_collaborator_permission.return_value = "read"
+    assert review_community.pr_owner_can_write() == False
+
+    # Cannot get collaborator permission
+    mock_repo.get_collaborator_permission.side_effect = GithubException(404, "", {})
+    assert review_community.pr_owner_can_write() == False
 
 
 @pytest.mark.parametrize(
@@ -331,10 +379,13 @@ def test_OperatorReview_request_review_from_maintainers(
         [
             "gh",
             "pr",
-            "edit",
+            "comment",
             review_community.pull_request_url,
-            "--add-reviewer",
-            "maintainer1,maintainer2",
+            "--body",
+            "This PR requires a review from repository maintainers.\n"
+            f"@maintainer1, @maintainer2: please review the PR and approve it with an "
+            "`approved` label if the pipeline is still running or merge the PR "
+            "directly after review if the pipeline already passed successfully.",
         ]
     )
 
@@ -446,8 +497,27 @@ def test_check_permissions(
     )
 
 
+@patch("operatorcert.entrypoints.check_permissions.Github")
+@patch("operatorcert.entrypoints.check_permissions.Auth.Token")
+@patch("operatorcert.entrypoints.check_permissions.add_labels_to_pull_request")
+def test_add_label_approved(
+    mock_add_labels: MagicMock,
+    mock_token: MagicMock,
+    mock_github: MagicMock,
+) -> None:
+    mock_repo = MagicMock()
+    mock_github.return_value.get_repo.return_value = mock_repo
+    mock_pull = MagicMock()
+    mock_repo.get_pull.return_value = mock_pull
+
+    check_permissions.add_label_approved("https://github.com/my-org/repo-123/pulls/1")
+    mock_github.return_value.get_repo.assert_has_calls([call("my-org/repo-123")])
+    mock_repo.get_pull.assert_called_once_with(1)
+    mock_add_labels.assert_called_once_with(mock_pull, ["approved"])
+
+
 @patch("operatorcert.entrypoints.check_permissions.json.dump")
-@patch("operatorcert.entrypoints.check_permissions.run_command")
+@patch("operatorcert.entrypoints.check_permissions.add_label_approved")
 @patch("operatorcert.entrypoints.check_permissions.check_permissions")
 @patch("operatorcert.entrypoints.check_permissions.OperatorRepo")
 @patch("operatorcert.entrypoints.check_permissions.setup_logger")
@@ -457,7 +527,7 @@ def test_main(
     mock_setup_logger: MagicMock,
     mock_operator_repo: MagicMock,
     mock_check_permissions: MagicMock,
-    mock_run_command: MagicMock,
+    mock_add_label_approved: MagicMock,
     mock_json_dump: MagicMock,
     monkeypatch: Any,
     tmp_path: Path,
@@ -480,9 +550,7 @@ def test_main(
     check_permissions.main()
 
     mock_check_permissions.assert_called_once_with(base_repo, head_repo, args)
-    mock_run_command.assert_called_once_with(
-        ["gh", "pr", "review", args.pull_request_url, "--approve"]
-    )
+    mock_add_label_approved.assert_called_once_with(args.pull_request_url)
 
     expected_output = {
         "approved": mock_check_permissions.return_value,
