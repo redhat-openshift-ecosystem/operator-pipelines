@@ -138,3 +138,5 @@ spec:
           # Save data about updated indices to volume
           echo "- ${FROM_INDEX_PROXY}:${VERSION}" | tee -a "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
         done
+
+        sort -o "$RELEASE_INFO_DIR_PATH/updated_indices.txt" "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
