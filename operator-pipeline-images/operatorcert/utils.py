@@ -13,6 +13,7 @@ import yaml
 from requests import Session
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
+from packaging.version import Version
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -226,3 +227,19 @@ def copy_images_to_destination(
 
         LOGGER.info("Copying image to destination: %s", cmd)
         subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+
+
+def sort_versions(version_list: list[Any]) -> list[Any]:
+    """
+    Returns a sorted list of version strings in ascending order.
+    Example of the input: ["v4.12", "v4.11", "v4.9"]
+
+    The sorting is done by version number, not by string comparison.
+
+    Args:
+        version_list (list[Any]): A list of version strings to be sorted.
+
+    Returns:
+        list[Any]: A sorted list of version strings.
+    """
+    return sorted(version_list, key=lambda x: Version(x[1:]))
