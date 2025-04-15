@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
 import yaml
+from operatorcert import utils
 from operatorcert.operator_repo import OperatorCatalog
 from operatorcert.operator_repo import Repo as OperatorRepo
 
@@ -42,13 +43,13 @@ class AffectedBundleCollection:
             Dict[str, Any]: A dictionary with the detected changes results
         """
         return {
-            "affected_bundles": [f"{x}/{y}" for x, y in self.union],
-            "added_bundles": [f"{x}/{y}" for x, y in self.added],
-            "modified_bundles": [f"{x}/{y}" for x, y in self.modified],
-            "deleted_bundles": [f"{x}/{y}" for x, y in self.deleted],
-            "added_or_modified_bundles": [
-                f"{x}/{y}" for x, y in self.added | self.modified
-            ],
+            "affected_bundles": sorted([f"{x}/{y}" for x, y in self.union]),
+            "added_bundles": sorted([f"{x}/{y}" for x, y in self.added]),
+            "modified_bundles": sorted([f"{x}/{y}" for x, y in self.modified]),
+            "deleted_bundles": sorted([f"{x}/{y}" for x, y in self.deleted]),
+            "added_or_modified_bundles": sorted(
+                [f"{x}/{y}" for x, y in self.added | self.modified]
+            ),
         }
 
 
@@ -73,11 +74,11 @@ class AffectedOperatorCollection:
             Dict[str, Any]: A dictionary with the detected changes results
         """
         return {
-            "affected_operators": list(self.union),
-            "added_operators": list(self.added),
-            "modified_operators": list(self.modified),
-            "deleted_operators": list(self.deleted),
-            "added_or_modified_operators": list(self.added | self.modified),
+            "affected_operators": sorted(list(self.union)),
+            "added_operators": sorted(list(self.added)),
+            "modified_operators": sorted(list(self.modified)),
+            "deleted_operators": sorted(list(self.deleted)),
+            "added_or_modified_operators": sorted(list(self.added | self.modified)),
         }
 
 
@@ -107,12 +108,14 @@ class AffectedCatalogOperatorCollection:
             Dict[str, Any]: A dictionary with the detected changes results
         """
         return {
-            "affected_catalog_operators": [f"{x}/{y}" for x, y in self.union],
-            "added_catalog_operators": [f"{x}/{y}" for x, y in self.added],
-            "modified_catalog_operators": [f"{x}/{y}" for x, y in self.modified],
-            "deleted_catalog_operators": [f"{x}/{y}" for x, y in self.deleted],
-            "catalogs_with_added_or_modified_operators": list(
-                self.catalogs_with_added_or_modified_operators
+            "affected_catalog_operators": sorted([f"{x}/{y}" for x, y in self.union]),
+            "added_catalog_operators": sorted([f"{x}/{y}" for x, y in self.added]),
+            "modified_catalog_operators": sorted(
+                [f"{x}/{y}" for x, y in self.modified]
+            ),
+            "deleted_catalog_operators": sorted([f"{x}/{y}" for x, y in self.deleted]),
+            "catalogs_with_added_or_modified_operators": utils.sort_versions(
+                list(self.catalogs_with_added_or_modified_operators)
             ),
         }
 
@@ -138,11 +141,13 @@ class AffectedCatalogCollection:
             Dict[str, Any]: A dictionary with the detected changes results
         """
         return {
-            "affected_catalogs": list(self.union),
-            "added_catalogs": list(self.added),
-            "modified_catalogs": list(self.modified),
-            "deleted_catalogs": list(self.deleted),
-            "added_or_modified_catalogs": list(self.added | self.modified),
+            "affected_catalogs": utils.sort_versions(list(self.union)),
+            "added_catalogs": utils.sort_versions(list(self.added)),
+            "modified_catalogs": utils.sort_versions(list(self.modified)),
+            "deleted_catalogs": utils.sort_versions(list(self.deleted)),
+            "added_or_modified_catalogs": utils.sort_versions(
+                list(self.added | self.modified)
+            ),
         }
 
 
