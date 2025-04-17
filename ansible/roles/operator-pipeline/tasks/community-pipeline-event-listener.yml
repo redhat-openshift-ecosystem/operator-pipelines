@@ -38,7 +38,7 @@
                         value: >-
                           (
                             header.match("X-GitHub-Event", "pull_request")
-                            && body.action in ["opened", "reopened", "synchronize"]
+                            && body.action in ["opened", "reopened", "synchronize", "ready_for_review"]
                             && body.pull_request.base.ref == "{{ branch }}"
                           )
                 bindings:
