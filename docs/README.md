@@ -21,7 +21,32 @@ more about Community, Certified and Marketplace operators and contribution.
 
 We would love to see your Operator added to this collection. We currently use automated vetting via continuous integration plus manual review to curate a list of high-quality, well-documented Operators. If you are new to Kubernetes Operators start [here](https://sdk.operatorframework.io/build/).
 
-If you have an existing Operator read our contribution guidelines on how to [open a PR](contributing-via-pr.md). Then the community operator pipeline will be triggered to test your Operator and merge a Pull Request.
+If you have an existing Operator read our contribution guidelines on how to [open a PR](users/contributing-via-pr.md). Then the community operator pipeline will be triggered to test your Operator and merge a Pull Request.
+
+## Remove Your Operator
+
+Before you begin, ensure the operator is [FBC-enabled](users/operator-ci-yaml.md#fbc-mode) to support the removal process. You can choose to either remove the entire operator or remove it from specific catalog version(s).
+
+### Remove the Entire Operator from the Catalog
+
+To remove the operator completely from the catalog:
+
+- Delete the your operator directory from the `operators/` folder.
+- Remove all catalog files related to your operator from the `catalogs/` directory.
+- Open a **single** pull request that includes these changes. Follow our contribution guidelines on how to [open a PR](users/contributing-via-pr.md).
+
+For reference, here’s an [example PR](https://github.com/Allda/community-operators-pipeline-preprod/pull/11/files) demonstrating these steps.
+
+### Remove the Operator from Specific Catalog Version(s)
+
+To remove the operator from particular catalog version(s):
+
+- In the `catalogs/` directory, delete the your operator related catalog file from the targeted catalog version(s).
+- In the `operators/<target_operator_name>/Makefile`, remove the targeted catalog versions.
+- In `operators/<target_operator_name>/catalog-templates/`, delete the catalog file(s) for the targeted catalog version(s).
+- Open a **single** pull request that includes all of the necessary changes. Follow our contribution guidelines on how to [open a PR](users/contributing-via-pr.md).
+
+Here is an [example PR](https://github.com/Allda/community-operators-pipeline-preprod/pull/9/files) that shows how to perform the above steps.
 
 ## Contributing Guide
 
