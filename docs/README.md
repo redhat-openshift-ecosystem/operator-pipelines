@@ -49,7 +49,6 @@ For reference, here’s an [example PR](https://github.com/redhat-openshift-ecos
 
 To remove your operator from selected catalog versions:
 
-- In the `catalogs/` directory, delete the your operator related catalog file from the targeted catalog version(s).
 - In `operators/<operator-name>/ci.yaml`, locate the `fbc.catalog_mapping` section and remove the targeted catalog version(s) from the `catalog_names` list.
 
 Example:
@@ -67,16 +66,18 @@ To remove `v4.15`, update `catalog_names` to:
 ```yaml
 catalog_names: ["v4.14", "v4.16"]
 ```
+
 - From the `operators/<operator-name>/catalog-templates/` directory, delete any template YAML files that were associated with the removed catalog version(s), if applicable.
+- Run `make catalog` to modify the catalog content. This will automatically update all affected catalog files under `catalogs/` by removing the specified version details.
 - Submit a single pull request with all these changes. Follow our [PR guidelines](users/contributing-via-pr.md).
 
 ### Remove a Single Operator Bundle Version
 
 To remove a specific operator bundle version without affecting other versions:
 
-- Identify all catalog files under the catalog/ directory for each catalog version where the targeted operator version is present. These files are typically located at `catalogs/<catalog_version>/<your_operator>/catalog.yaml`. Modify each of these catalog version files and remove the targeted operator version's bundle details from your operator's subdirectory.
-- Remove the entire targeted operator bundle version subdirectory located at `operators/<your_operator_name>/`.
 - Remove the targeted operator version from the list of catalog-templates files located at `operators/<your_operator>/catalog-templates/`.
+- Run `make catalog` to modify the catalog content. This will automatically update all affected catalog files under `catalogs/` by removing the specified version details.
+- Remove the entire targeted operator bundle version subdirectory located at `operators/<your_operator_name>/`.
 - Submit a single pull request that includes this change.
 
 For reference, see this [example pull request](https://github.com/Allda/community-operators-pipeline-preprod/pull/34/files).
