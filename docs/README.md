@@ -68,7 +68,7 @@ catalog_names: ["v4.14", "v4.16"]
 ```
 
 - From the `operators/<operator-name>/catalog-templates/` directory, delete any template YAML files that were associated with the removed catalog version(s), if applicable.
-- Run `make catalog` to modify the catalog content. This will automatically update all affected catalog files under `catalogs/` by removing the specified version details.
+- Run `make catalog` to modify the catalog content. This will automatically remove all affected catalog files under `catalogs/`.
 - Submit a single pull request with all these changes. Follow our [PR guidelines](users/contributing-via-pr.md).
 
 ### Remove a Single Operator Bundle Version
