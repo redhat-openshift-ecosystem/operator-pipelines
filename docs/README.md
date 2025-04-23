@@ -21,7 +21,66 @@ more about Community, Certified and Marketplace operators and contribution.
 
 We would love to see your Operator added to this collection. We currently use automated vetting via continuous integration plus manual review to curate a list of high-quality, well-documented Operators. If you are new to Kubernetes Operators start [here](https://sdk.operatorframework.io/build/).
 
-If you have an existing Operator read our contribution guidelines on how to [open a PR](contributing-via-pr.md). Then the community operator pipeline will be triggered to test your Operator and merge a Pull Request.
+If you have an existing Operator read our contribution guidelines on how to [open a PR](users/contributing-via-pr.md). Then the community operator pipeline will be triggered to test your Operator and merge a Pull Request.
+
+## Remove Your Operator
+
+**Before You Begin**
+Ensure your operator follows the [FBC (File-Based Catalog)](users/fbc_onboarding.md#file-based-catalog-onboarding) workflow.  
+Setting fbc.enabled: true in the ci.yaml file is not enough. The operator must be fully onboarded to FBC.  
+For non-FBC (bundle-based) operators, refer to the [FBC onboarding guide](users/fbc_onboarding.md#convert-existing-operator-to-fbc) before continuing.
+
+Depending on your use case, you may:
+- [Remove the operator entirely from all catalogs.](#remove-the-entire-operator-from-the-catalog)
+- [Remove it from specific catalog version(s).](#remove-the-operator-from-specific-catalog-versions)
+- [Remove a single operator version from the catalog.](#remove-a-single-operator-bundle-version)
+
+### Remove the Entire Operator from the Catalog
+
+To remove the operator completely from the catalog:
+
+- Delete the your operator directory from the `operators/` folder.
+- Remove all catalog files related to your operator from the `catalogs/` directory.
+- Open a **single** pull request that includes these changes. Follow our contribution guidelines on how to [open a PR](users/contributing-via-pr.md).
+
+For reference, here’s an [example PR](https://github.com/redhat-openshift-ecosystem/community-operators-prod/pull/5955/files) demonstrating these steps.
+
+### Remove the Operator from Specific Catalog Version(s)
+
+To remove your operator from selected catalog versions:
+
+- In `operators/<operator-name>/ci.yaml`, locate the `fbc.catalog_mapping` section and remove the targeted catalog version(s) from the `catalog_names` list.
+
+Example:
+
+```yaml
+fbc:
+  enabled: true
+  catalog_mapping:
+    - template_name: basic.yaml
+      catalog_names: ["v4.14", "v4.15", "v4.16"]
+      type: olm.template.basic
+```
+To remove `v4.15`, update `catalog_names` to:
+
+```yaml
+catalog_names: ["v4.14", "v4.16"]
+```
+
+- From the `operators/<operator-name>/catalog-templates/` directory, delete any template YAML files that were associated with the removed catalog version(s), if applicable.
+- Run `make catalog` to modify the catalog content. This will automatically remove all affected catalog files under `catalogs/`.
+- Submit a single pull request with all these changes. Follow our [PR guidelines](users/contributing-via-pr.md).
+
+### Remove a Single Operator Bundle Version
+
+To remove a specific operator bundle version without affecting other versions:
+
+- Remove the targeted operator version from the list of catalog-templates files located at `operators/<your_operator>/catalog-templates/`.
+- Run `make catalog` to modify the catalog content. This will automatically update all affected catalog files under `catalogs/` by removing the specified version details.
+- Remove the entire targeted operator bundle version subdirectory located at `operators/<your_operator_name>/`.
+- Submit a single pull request that includes this change.
+
+For reference, see this [example pull request](https://github.com/Allda/community-operators-pipeline-preprod/pull/34/files).
 
 ## Contributing Guide
 
