@@ -73,8 +73,11 @@ spec:
     - name: pipeline
     - name: ssh-dir
       optional: true
-    - name: basic-auth
+    - name: git_repo_basic_auth
       optional: true
+      description: |
+        Credentials for basic authentication to access a private GitHub repository.
+        A workspace containing a .gitconfig and .git-credentials files.
     - name: registry-credentials
       optional: true
     - name: registry-cacert
@@ -110,7 +113,7 @@ spec:
         - name: ssh-directory
           workspace: ssh-dir
         - name: basic-auth
-          workspace: basic-auth
+          workspace: git_repo_basic_auth
 
     # Verify the bundle path exists
     - name: bundle-path-validation
