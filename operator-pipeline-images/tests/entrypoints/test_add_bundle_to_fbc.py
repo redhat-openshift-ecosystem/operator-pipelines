@@ -205,9 +205,13 @@ def test_BasicCatalogTemplate_amend(
 
 
 @patch("operatorcert.entrypoints.add_bundle_to_fbc.os.makedirs")
-@patch("operatorcert.entrypoints.add_bundle_to_fbc.utils.run_command")
+@patch(
+    "operatorcert.entrypoints.add_bundle_to_fbc.BasicTemplate._render_template_extra_args"
+)
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.BasicTemplate.run_cmd_with_cache")
 def test_BasicCatalogTemplate_render(
     mock_run_command: MagicMock,
+    mock_extra_args: MagicMock,
     mock_mkdir: MagicMock,
     basic_catalog_template: add_bundle_to_fbc.BasicTemplate,
 ) -> None:
@@ -239,7 +243,9 @@ def test_BasicCatalogTemplate_render(
             "yaml",
             "operators/fake-operator/catalog-templates/fake-template.yaml",
         ]
+        + mock_extra_args.return_value,
     )
+    mock_extra_args.assert_called_once_with("v4.12-fake")
 
 
 @patch("operatorcert.entrypoints.add_bundle_to_fbc.BasicTemplate.amend")
@@ -264,6 +270,52 @@ def test_BasicCatalogTemplate_add_new_bundle(
     basic_catalog_template.add_new_bundle({}, "fake-image", bundle)
     mock_create.assert_not_called()
     mock_amend.assert_called_once_with({}, "fake-image", bundle)
+
+
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.utils.run_command")
+def test_BasicCatalogTemplate__run_cmd_with_cache(
+    mock_cmd: MagicMock, basic_catalog_template: add_bundle_to_fbc.BasicTemplate
+) -> None:
+    result = basic_catalog_template.run_cmd_with_cache(["foo", "bar"])
+    assert result == mock_cmd.return_value
+    assert basic_catalog_template._cmd_cache == {"foo bar": result}
+    mock_cmd.assert_called_once_with(["foo", "bar"])
+    mock_cmd.reset_mock()
+
+    result = basic_catalog_template.run_cmd_with_cache(["foo", "bar"])
+    assert result == mock_cmd.return_value
+    mock_cmd.assert_not_called()
+
+    result = basic_catalog_template.run_cmd_with_cache(["foo", "baz"])
+    assert result == mock_cmd.return_value
+    assert basic_catalog_template._cmd_cache == {"foo bar": result, "foo baz": result}
+    mock_cmd.assert_called_once_with(["foo", "baz"])
+
+
+@patch(
+    "operatorcert.entrypoints.add_bundle_to_fbc.BasicTemplate._bundle_object_to_csv_metada"
+)
+def test_BasicCatalogTemplate__render_template_extra_args(
+    mock_bundle_to_csv: MagicMock,
+    basic_catalog_template: add_bundle_to_fbc.BasicTemplate,
+) -> None:
+    mock_bundle_to_csv.return_value = ["--foo", "bar"]
+    result = basic_catalog_template._render_template_extra_args("v4.12-fake")
+
+    assert result == ["--foo", "bar"]
+
+
+def test_BasicCatalogTemplate__bundle_object_to_csv_metada(
+    basic_catalog_template: add_bundle_to_fbc.BasicTemplate,
+) -> None:
+    result = basic_catalog_template._bundle_object_to_csv_metada("unknown")
+    assert result == []
+
+    result = basic_catalog_template._bundle_object_to_csv_metada("v4.12")
+    assert result == []
+
+    result = basic_catalog_template._bundle_object_to_csv_metada("v4.17")
+    assert result == ["--migrate-level", "bundle-object-to-csv-metadata"]
 
 
 def test_SemverTemplate(
