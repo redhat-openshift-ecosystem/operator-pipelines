@@ -5,9 +5,10 @@ A module responsible for automated release of bundle to the FBC catalog.
 import argparse
 import logging
 import os
+import subprocess
 from abc import ABC, abstractmethod
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 from operatorcert import utils
 from operatorcert.logger import setup_logger
@@ -70,6 +71,9 @@ class CatalogTemplate(ABC):
 
         self._template: dict[str, Any] = {}
         self.template_path = self.template_dir / self.template_name
+
+        # A cache for opm commands
+        self._cmd_cache: dict[str, subprocess.CompletedProcess[bytes]] = {}
 
     @property
     def template_dir(self) -> Path:
@@ -153,7 +157,7 @@ class CatalogTemplate(ABC):
         """
         Render the catalog from the template using opm.
         """
-        command = [
+        base_command = [
             "opm",
             "alpha",
             "render-template",
@@ -163,11 +167,14 @@ class CatalogTemplate(ABC):
             str(self.template_path),
         ]
 
-        response = utils.run_command(command)
         for catalog in self.catalog_names:
+            extra_args = self._render_template_extra_args(catalog)
+            command = base_command + extra_args
+
             LOGGER.info(
                 f"Rendering catalog '{catalog}' from template %s", self.template_path
             )
+            response = self.run_cmd_with_cache(command)
             catalog_path = (
                 self.operator.repo.root
                 / "catalogs"
@@ -177,6 +184,63 @@ class CatalogTemplate(ABC):
             os.makedirs(catalog_path, exist_ok=True)
             with open(catalog_path / "catalog.yaml", "w", encoding="utf8") as f:
                 f.write(response.stdout.decode("utf-8"))
+
+    def run_cmd_with_cache(
+        self, command: list[Any]
+    ) -> subprocess.CompletedProcess[bytes]:
+        """
+        Run a command with caching. In case the command was already run,
+        with the same arguments, return the cached result.
+
+        Args:
+            command (list[str]): A command to run.
+
+        Returns:
+            subprocess.CompletedProcess[bytes]: Command output.
+        """
+        cache_key = " ".join(command)
+        if cache_key in self._cmd_cache:
+            LOGGER.debug("Using cached command: %s", command)
+            return self._cmd_cache[cache_key]
+
+        response = utils.run_command(command)
+        self._cmd_cache[cache_key] = response
+        return response
+
+    def _render_template_extra_args(self, catalog: str) -> list[str]:
+        """
+        Get extra command line arguments for the template rendering.
+
+        Args:
+            catalog (str): Name of the catalog.
+
+        Returns:
+            list[str]: A list of extra command line arguments for the rendering.
+        """
+        extra_args = []
+        extra_args.extend(self._bundle_object_to_csv_metada(catalog))
+        return extra_args
+
+    def _bundle_object_to_csv_metada(self, catalog: str) -> list[str]:
+        """
+        A buddle object to CSV metadata migration is needed for
+        catalogs with version >= 4.17.
+
+        Args:
+            catalog (str): A name of the catalog.
+
+        Returns:
+            list[str]: command line arguments for the migration.
+        """
+        if not catalog.startswith("v"):
+            return []
+
+        major, minor = catalog[1:].split(".")
+        if int(major) >= 4 and int(minor) >= 17:
+            # Catalogs with version >= 4.17 needs an extra argument
+            # to migrate catalog content
+            return ["--migrate-level", "bundle-object-to-csv-metadata"]
+        return []
 
 
 class BasicTemplate(CatalogTemplate):
