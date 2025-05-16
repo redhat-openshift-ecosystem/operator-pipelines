@@ -171,3 +171,14 @@ def test_copy_images_to_destination(mock_subprocess: MagicMock) -> None:
         stderr=mock_subprocess.PIPE,
         check=True,
     )
+
+
+def test_is_catalog_v4_17_plus() -> None:
+    assert utils.is_catalog_v4_17_plus("v4.17")
+    assert utils.is_catalog_v4_17_plus("v4.18")
+    assert utils.is_catalog_v4_17_plus("v4.19")
+    assert utils.is_catalog_v4_17_plus("v5.1")
+    assert not utils.is_catalog_v4_17_plus("v3.19")
+    assert not utils.is_catalog_v4_17_plus("v4.15")
+    assert not utils.is_catalog_v4_17_plus("v4.16")
+    assert not utils.is_catalog_v4_17_plus("unknown")

@@ -160,6 +160,19 @@ fbc:
       catalog_names: ["v4.13", "v4.14"] # The 4.14 is already used in the basic.yaml template
       type: olm.semver
 ```
+
+#### check_olm_bundle_object_in_fbc
+The test verifies a presence of `olm.bundle.object` in the catalog's bundle properties.
+For catalogs `>=v4.17` the `olm.bundle.object` is not allowed as it has negative
+impact on performance of the OpenShift olm.
+
+The test will fail if the `olm.bundle.object` is present in the catalog within
+the `/catalogs/{ocp_version}/{operator_name}/catalog.yaml` file.
+
+To prevent the test from failing download the latest [Makefile](https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipelines/main/fbc/Makefile)
+and re-render the catalog again with `make catalogs` command. The Makefile uses
+extra arguments `--migrate-level bundle-object-to-csv-metadata` for opm when rendering
+catalogs for `>=4.17` version.
 ## Running tests locally
 
 ```bash
