@@ -640,6 +640,20 @@ class OperatorCatalog:
         """
         return load_multidoc_yaml(self.catalog_content_path)
 
+    def get_catalog_bundles(self) -> list[Any]:
+        """
+        Get all object with schema olm.bundle from the catalog content
+
+        Returns:
+            list[Any]: List of all bundles in the catalog
+        """
+        content = self.catalog_content
+        bundles = []
+        for item in content:
+            if item.get("schema") == "olm.bundle":
+                bundles.append(item)
+        return bundles
+
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, str):
             return self.operator_catalog_name == other

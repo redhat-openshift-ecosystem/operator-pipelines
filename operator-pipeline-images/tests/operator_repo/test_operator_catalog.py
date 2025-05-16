@@ -20,7 +20,9 @@ def test_invalid_catalog(tmp_path: Path) -> None:
 def test_operator_catalog(tmp_path: Path) -> None:
     create_files(
         tmp_path,
-        catalog_files("v4.14", "fake-operator", content=({"foo": "bar"},)),
+        catalog_files(
+            "v4.14", "fake-operator", content=({"schema": "olm.bundle"}, {"foo": "bar"})
+        ),
         catalog_files("v4.13", "fake-operator-2"),
         bundle_files("fake-operator", "0.0.1"),
     )
@@ -44,7 +46,11 @@ def test_operator_catalog(tmp_path: Path) -> None:
         operator_catalog.catalog_content_path == operator_catalog.root / "catalog.yaml"
     )
 
-    assert operator_catalog.catalog_content == [{"foo": "bar"}]
+    assert operator_catalog.catalog_content == [
+        {"schema": "olm.bundle"},
+        {"foo": "bar"},
+    ]
+    assert operator_catalog.get_catalog_bundles() == [{"schema": "olm.bundle"}]
 
     assert operator_catalog == catalog.operator_catalog("fake-operator")
 
