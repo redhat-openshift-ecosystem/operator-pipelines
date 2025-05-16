@@ -232,15 +232,9 @@ class CatalogTemplate(ABC):
         Returns:
             list[str]: command line arguments for the migration.
         """
-        if not catalog.startswith("v"):
+        if not utils.is_catalog_v4_17_plus(catalog):
             return []
-
-        major, minor = catalog[1:].split(".")
-        if int(major) >= 4 and int(minor) >= 17:
-            # Catalogs with version >= 4.17 needs an extra argument
-            # to migrate catalog content
-            return ["--migrate-level", "bundle-object-to-csv-metadata"]
-        return []
+        return ["--migrate-level", "bundle-object-to-csv-metadata"]
 
 
 class BasicTemplate(CatalogTemplate):

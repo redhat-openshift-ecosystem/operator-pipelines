@@ -305,11 +305,12 @@ def test_BasicCatalogTemplate__render_template_extra_args(
     assert result == ["--foo", "bar"]
 
 
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.utils.is_catalog_v4_17_plus")
 def test_BasicCatalogTemplate__bundle_object_to_csv_metada(
+    mock_is_catalog_v4_17_plus: MagicMock,
     basic_catalog_template: add_bundle_to_fbc.BasicTemplate,
 ) -> None:
-    result = basic_catalog_template._bundle_object_to_csv_metada("unknown")
-    assert result == []
+    mock_is_catalog_v4_17_plus.side_effect = [False, True, False]
 
     result = basic_catalog_template._bundle_object_to_csv_metada("v4.12")
     assert result == []

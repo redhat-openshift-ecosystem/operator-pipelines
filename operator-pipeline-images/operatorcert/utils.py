@@ -5,15 +5,16 @@ import json
 import logging
 import os
 import pathlib
+import re
 import subprocess
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 import yaml
+from packaging.version import Version
 from requests import Session
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
-from packaging.version import Version
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -243,3 +244,25 @@ def sort_versions(version_list: list[Any]) -> list[Any]:
         list[Any]: A sorted list of version strings.
     """
     return sorted(version_list, key=lambda x: Version(x[1:]))
+
+
+def is_catalog_v4_17_plus(catalog: str) -> bool:
+    """
+    Check if the catalog is v4.17 or higher.
+
+    Args:
+        catalog (str): A name of the catalog.
+
+    Returns:
+        bool: True if the catalog is v4.17 or higher, False otherwise.
+    """
+    # We expect the catalog name to be in the format "vX.Y" where X and Y are integers
+    # Example: "v4.17", "v5.0"
+    version_regex = r"^v\d+\.\d+$"
+    if not re.match(version_regex, catalog):
+        return False
+
+    major, minor = catalog[1:].split(".")
+    if int(major) > 4 or (int(major) >= 4 and int(minor) >= 17):
+        return True
+    return False
