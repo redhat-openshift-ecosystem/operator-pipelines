@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 from operatorcert.operator_repo import OperatorCatalog, OperatorCatalogList
 from operatorcert.operator_repo.checks import CheckResult, Fail
+from operatorcert.utils import is_catalog_v4_17_plus
 
 
 def _get_bundle_registries_from_catalog(catalog: OperatorCatalog) -> list[str]:
@@ -54,3 +55,43 @@ def check_bundle_images_in_fbc(
                 "Only these registries are allowed for bundle images: "
                 f"{', '.join(allowed_registries)}."
             )
+
+
+def check_olm_bundle_object_in_fbc(
+    operator_catalogs: OperatorCatalogList,
+) -> Iterator[CheckResult]:
+    """
+    Check if a bundle object in the catalog uses 'olm.bundle.object' type.
+    This is not allowed for catalogs with version >= 4.17.
+    For such catalogs, the bundle object should be rendered again
+    with the "--migrate-level bundle-object-to-csv-metadata"
+
+    Args:
+        operator_catalogs (OperatorCatalogList): A list of operator catalogs
+        to check for bundle object type.
+
+    Yields:
+        Iterator[CheckResult]: An iterator with Fail results if any
+        bundle object is found in the catalog.
+    """
+
+    for operator_catalog in operator_catalogs:
+        if not is_catalog_v4_17_plus(operator_catalog.catalog.catalog_name):
+            # Skip the check for catalogs with version < 4.17
+            continue
+        bundles = operator_catalog.get_catalog_bundles()
+        for bundle in bundles:
+            properties = bundle.get("properties", [])
+            result = [
+                True for prop in properties if prop.get("type") == "olm.bundle.object"
+            ]
+            if any(result):
+                yield Fail(
+                    f"Bundle object found in {operator_catalog} catalog uses 'olm.bundle.object'. "
+                    "This is not allowed for catalogs with version `>= 4.17`. "
+                    "Render catalog again with latest "
+                    "[Makefile](https://redhat-openshift-ecosystem.github.io/operator-pipelines/"
+                    "users/fbc_workflow/#generate-catalogs-using-templates) using `make catalogs`. "
+                    "Bundle object is not supported in FBC."
+                )
+            break
