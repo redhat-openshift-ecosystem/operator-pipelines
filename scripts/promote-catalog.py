@@ -8,7 +8,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
-
+from ruamel.yaml import YAML
 from git import Repo as GitRepo
 from operatorcert import github, ocp_version_info
 from operatorcert.operator_repo import Repo as OperatorRepo
@@ -72,14 +72,14 @@ def setup_argparser() -> Any:
     return parser
 
 
-def copy_files_if_not_exist(
+def copy_catalog_file_if_not_exist(
     operator_name: str,
     repo_dir: Path,
     source_version: str,
     target_version: str,
-) -> list[str]:
+) -> str:
     """
-    Copy catalog and template files if they don't exist
+    Copy catalog file if they don't exist yet
 
     Args:
         operator_name (str): Operator name
@@ -88,10 +88,8 @@ def copy_files_if_not_exist(
         target (str): Target catalog directory
 
     Returns:
-        list[str]: List of relative paths to copied files
-        for Git commit
+        str: A path to the copied catalog file
     """
-    to_commit = []
 
     # copy catalog files if they don't exist
     catalog_dir = repo_dir / "catalogs"
@@ -104,65 +102,58 @@ def copy_files_if_not_exist(
         if source_file.is_file() and not target_file.exists():
             LOG.info("Copying catalog %s to %s", source_file, target_file)
             shutil.copyfile(source_file, target_file)
-            to_commit.append(target_file)
-            to_commit.append(target_file)
-    # copy template file if they don't exist
-    templates_dir = repo_dir / "operators" / operator_name / "catalog-templates"
-    source_template = templates_dir / f"v{source_version}.yaml"
-    target_template = templates_dir / f"v{target_version}.yaml"
-    if source_template.is_file() and not target_template.exists():
-        LOG.info("Copying template %s to %s", source_template, target_template)
-        shutil.copyfile(source_template, target_template)
-        to_commit.append(target_template)
-
-    return to_commit
+            return target_file
 
 
-def update_makefile(
+def add_catalog_to_ci_mapping(
     operator_name: str,
     repo_dir: Path,
+    source_version: str,
     target_version: str,
 ) -> Optional[Path]:
     """
-    Add target version to the `OCP_VERSIONS` in the Makefile if missing
+    Add target version to the catalog mapping in the CI file.
+    The catalog is added to the same template as the source version.
 
     Args:
-        operator_name (str): Operator name
-        repo_dir (Path): Path to the processed local repository
-        target_version (str): Target version to add
-    """
-    makefile_path = repo_dir / "operators" / operator_name / "Makefile"
-    makefile_content = makefile_path.read_text().splitlines(keepends=True)
+        operator_name (str): A name of the operator for which the catalog is added
+        repo_dir (Path): Git repository path
+        source_version (str): A version of the catalog to be promoted
+        target_version (str): A version of the catalog to be added
 
-    makefile_out = []
-    for line in makefile_content:
-        # search for variable assignment
-        if bool(re.match(r"^OCP_VERSIONS\s*=", line)):
-            # find the group of versions on the line
-            versions = re.search(r"(v\d+\.\d+(?:\s+v\d+\.\d+)*)", line)
-            if not versions:
-                LOG.warning(
-                    "No OCP versions found in Makefile or invalid format: %s", line
+    Returns:
+        Optional[Path]: A path to the updated CI file
+    """
+    operator_ci_path = repo_dir / "operators" / operator_name / "ci.yaml"
+    with open(operator_ci_path, "r") as ci_file:
+        ci_content = YAML().load(ci_file)
+
+    # Append target version to the catalog mapping for
+    # a same template as used for the source version
+    mapping = ci_content.get("fbc", {}).get("catalog_mapping", {})
+    for template in mapping:
+        if f"v{source_version}" in template.get("catalog_names", []):
+            if f"v{target_version}" in template.get("catalog_names", []):
+                LOG.info(
+                    "Catalog %s already exists in the mapping for operator %s",
+                    target_version,
+                    operator_name,
                 )
                 return
-            ocp_string = versions.group(1)
-            # check target version in versions list to avoid false positives
-            # from searching just the string
-            if target_version not in ocp_string.split():
-                split_point = line.index(ocp_string) + len(ocp_string)
-                # update the line with target version
-                updated = f"{line[:split_point]} v{target_version}{line[split_point:]}"
-                makefile_out.append(updated)
-                to_commit = makefile_path
-            else:
-                makefile_out.append(line)
-        else:
-            makefile_out.append(line)
-
-    with open(makefile_path, "w") as makefile:
-        makefile.writelines(makefile_out)
-
-    return to_commit
+            template["catalog_names"].append(f"v{target_version}")
+            break
+    else:
+        LOG.warning(
+            "Source version %s not found in catalog mapping for operator %s",
+            source_version,
+            operator_name,
+        )
+        return None
+    with open(operator_ci_path, "w") as ci_file:
+        yaml = YAML()
+        yaml.explicit_start = True
+        yaml.dump(ci_content, ci_file)
+    return operator_ci_path
 
 
 def triage_operators(
@@ -180,7 +171,9 @@ def triage_operators(
     never, always, review = [], [], []
     for operator in operators:
         config = repository.operator(operator).config
-        strategy = config.get("fbc", {}).get("version_promotion_strategy")
+        strategy = config.get("fbc", {}).get(
+            "version_promotion_strategy", "review-needed"
+        )
         if strategy == "never":
             never.append(operator)
         elif strategy == "always":
@@ -221,6 +214,7 @@ def create_pr(
     base: str,
     head: str,
     title: str,
+    body: str,
     local_repo: str,
 ) -> dict[str, Any]:
     """
@@ -230,13 +224,173 @@ def create_pr(
         base (str): Target branch
         head (str): Source branch of the PR
         title (str): PR title
+        body (str): PR body text
         local_repo (str): Work directory
     """
     gh_repo = ORGANIZATIONS[local_repo]["gh_repository"]
     LOG.info("Creating PR in %s for branch %s", gh_repo, head)
     gh_api_url = f"https://api.github.com/repos/{gh_repo}/pulls"
-    data = {"head": head, "base": base, "title": title}
+    data = {"head": head, "base": base, "title": title, "body": body}
     return github.post(gh_api_url, data)
+
+
+def add_pr_labels(
+    pr_id: int,
+    labels: list[str],
+    local_repo: str,
+) -> dict[str, Any]:
+    """
+    Add labels to PR using GitHub API
+
+    Args:
+        pr_id (int): A PR where the labels are added
+        labels (list[str]): List of labels to be added
+        local_repo (str): Work directory
+    """
+    gh_repo = ORGANIZATIONS[local_repo]["gh_repository"]
+    LOG.info("Adding PR labels %s for: %s", labels, pr_id)
+    gh_api_url = f"https://api.github.com/repos/{gh_repo}/issues/{pr_id}/labels"
+    data = {"labels": labels}
+    return github.post(gh_api_url, data)
+
+
+def always_promotion(
+    repo_dir: Path,
+    git_repo: GitRepo,
+    operators: list[str],
+    source_version: str,
+    target_version: str,
+    base_branch: str,
+    branch_suffix: str,
+) -> list[Any]:
+    """
+    Process operators with `fbc.version_promotion_strategy == always` and create
+    a single PR for all operators.
+
+    Args:
+        repo_dir (Path): A path to git repository
+        git_repo (GitRepo): Git repository object
+        operators (list[str]): A list of operators to be promoted with `always` strategy
+        source_version (str): A source version of the catalog to be promoted
+        target_version (str): A target version of the catalog to be promoted
+        base_branch (str): A git branch where the changes are based
+        branch_suffix (str): A suffix for the branch name to be created
+
+    Returns:
+        list[Any]: A list of PR details
+    """
+    # process operators with `fbc.version_promotion_strategy == always`
+    # meaning single PR for all operators
+    pr_info = []
+    head_branch = f"always-promote-v{target_version}-{branch_suffix}"
+    create_or_clear_branch_and_checkout(
+        git_repo,
+        base_branch=base_branch,
+        head_branch=head_branch,
+    )
+    LOG.debug("Processing operators with `fbc.version_promotion_strategy == always`")
+    LOG.debug(operators)
+    to_commit = []
+    for operator in operators:
+        LOG.debug("Processing operator %s", operator)
+        catalog_file = copy_catalog_file_if_not_exist(
+            operator, repo_dir, source_version, target_version
+        )
+        if catalog_file:
+            to_commit.append(catalog_file)
+        ci_file = add_catalog_to_ci_mapping(
+            operator, repo_dir, source_version, target_version
+        )
+        if ci_file:
+            to_commit.append(ci_file)
+
+    if to_commit:
+        commit_and_push(
+            git_repo,
+            head_branch,
+            to_commit,
+            f"Promote operators with `fbc.version_promotion_strategy == always`"
+            f" to catalog version {target_version}",
+        )
+        pr_info.append(
+            {
+                "head": head_branch,
+                "title": f"Promote all operators with `version_promotion_strategy` 'always' "
+                f" to catalog version {target_version}",
+                "labels": ["catalog-promotion/always"],
+            }
+        )
+    return pr_info
+
+
+def review_needed_promotion(
+    repo_dir: Path,
+    git_repo: GitRepo,
+    operators: list[str],
+    source_version: str,
+    target_version: str,
+    base_branch: str,
+    branch_suffix: str,
+) -> list[Any]:
+    """
+    Process operators with `fbc.version_promotion_strategy == review-needed` and create
+    a single PR for each operator.
+
+    Args:
+        repo_dir (Path): A path to git repository
+        git_repo (GitRepo): A git repository object
+        operators (list[str]): A list of operators to be promoted with `review-needed` strategy
+        source_version (str): A source version of the catalog to be promoted
+        target_version (str): A target version of the catalog to be promoted
+        base_branch (str): A git branch where the changes are based
+        branch_suffix (str): A suffix for the branch name to be created
+
+    Returns:
+        list[Any]: A list of PR details
+    """
+    # process operators with `fbc.version_promotion_strategy == review-needed`
+    # single PR for each operator for review reasons
+    pr_info = []
+    LOG.debug(
+        "Processing operators with `fbc.version_promotion_strategy == review-needed`"
+    )
+    LOG.debug(operators)
+    for operator in operators:
+        files_to_commit = []
+        head_branch = f"review-promote-v{target_version}-{operator}-{branch_suffix}"
+        create_or_clear_branch_and_checkout(
+            git_repo,
+            base_branch=base_branch,
+            head_branch=head_branch,
+        )
+        catalog_file_to_commit = copy_catalog_file_if_not_exist(
+            operator, repo_dir, source_version, target_version
+        )
+        if catalog_file_to_commit:
+            files_to_commit.append(catalog_file_to_commit)
+        ci_file = add_catalog_to_ci_mapping(
+            operator, repo_dir, source_version, target_version
+        )
+        if ci_file:
+            files_to_commit.append(ci_file)
+
+        # commit only if there is content
+        if files_to_commit:
+            commit_and_push(
+                git_repo,
+                head_branch,
+                files_to_commit,
+                f"Promote operator {operator} to catalog version {target_version}.",
+            )
+            pr_info.append(
+                {
+                    "head": head_branch,
+                    "title": f"Promote operator {operator} to catalog version {target_version}.",
+                    "labels": ["catalog-promotion/review-needed"],
+                }
+            )
+
+    return pr_info
 
 
 def promote_catalog(
@@ -285,77 +439,26 @@ def promote_catalog(
     # store branch info for PR creation
     pr_info = []
 
-    # process operators with `fbc.version_promotion_strategy == always`
-    # meaning single PR for all operators
-    head_branch = f"always-promote-v{target_version}-{branch_suffix}"
-    create_or_clear_branch_and_checkout(
+    always_prs = always_promotion(
+        repo_dir,
         git_repo,
-        base_branch=base_branch,
-        head_branch=head_branch,
-    )
-    always_strategy_to_commit = []
-    for operator in always:
-        to_commit = copy_files_if_not_exist(
-            operator, repo_dir, source_version, target_version
-        )
-        if to_commit:
-            always_strategy_to_commit.extend(to_commit)
-        to_commit_makefile = update_makefile(operator, repo_dir, target_version)
-        if to_commit_makefile:
-            always_strategy_to_commit.append(to_commit_makefile)
-    if always_strategy_to_commit:
-        commit_and_push(
-            git_repo,
-            head_branch,
-            always_strategy_to_commit,
-            f"Promote operators with `fbc.version_promotion_strategy == always`"
-            f" to catalog version {target_version}",
-        )
-        pr_info.append(
-            {
-                "head": head_branch,
-                "title": f"Promote all operators with `version_promotion_strategy` 'always' "
-                f" to catalog version {target_version}",
-            }
-        )
-    LOG.info(
-        "Processed operators with `fbc.version_promotion_strategy == always`: %s",
         always,
+        source_version,
+        target_version,
+        base_branch,
+        branch_suffix,
     )
-
-    # process operators with `fbc.version_promotion_strategy == review-needed`
-    # single PR for each operator for review reasons
-    for operator in review:
-        head_branch = f"review-promote-v{target_version}-{operator}-{branch_suffix}"
-        create_or_clear_branch_and_checkout(
-            git_repo,
-            base_branch=base_branch,
-            head_branch=head_branch,
-        )
-        to_commit = copy_files_if_not_exist(
-            operator, repo_dir, source_version, target_version
-        )
-        to_commit_makefile = update_makefile(operator, repo_dir, target_version)
-        if to_commit_makefile:
-            to_commit.append(to_commit_makefile)
-        # commit only if there is content
-        if to_commit:
-            commit_and_push(
-                git_repo,
-                head_branch,
-                to_commit,
-                f"Promote operator {operator} to catalog version {target_version}.",
-            )
-            pr_info.append(
-                {
-                    "head": head_branch,
-                    "title": f"Promote operator {operator} to catalog version {target_version}.",
-                }
-            )
-    LOG.info(
-        "Processed operators with `fbc.version_promotion_strategy == review-needed`: %s",
+    review_prs = review_needed_promotion(
+        repo_dir,
+        git_repo,
         review,
+        source_version,
+        target_version,
+        base_branch,
+        branch_suffix,
     )
+    pr_info.extend(always_prs)
+    pr_info.extend(review_prs)
 
     LOG.info("Operators excluded from promotion: %s", never)
     return pr_info, branch_suffix
@@ -397,7 +500,11 @@ def repo_status_clean(git_repo: GitRepo) -> bool:
     branch = str(git_repo.active_branch)
     uncommited_changes = git_repo.is_dirty()
     untracked_files = bool(git_repo.untracked_files)
-    if branch not in ["main", "master"] or uncommited_changes or untracked_files:
+    if (
+        branch not in ["main", "master", "stage", "qa", "dev"]
+        or uncommited_changes
+        or untracked_files
+    ):
         return False
     return True
 
@@ -441,12 +548,6 @@ def main() -> None:
 
     create_or_clear_branch_and_checkout(git_repo)
 
-    # configure repo with the token
-    access_token = os.environ.get("GITHUB_TOKEN")
-    gh_repository = ORGANIZATIONS[local_repo_name]["gh_repository"]
-    remote_url_with_token = f"https://{access_token}@github.com/{gh_repository}.git"
-    git_repo.remotes.origin.set_url(remote_url_with_token)
-
     # gather ocp_version related info
     target_version = args.target_version
     pyxis_url = args.pyxis_url
@@ -474,12 +575,45 @@ def main() -> None:
     # dry run only pushes branches without creating PRs
     # this can be used to prepare PR branches and then create PRs manually
     # to avoid multiple pipelines starting at once
+    pr_body_text = f"""
+## 📢 New OpenShift Version Support Added!
+
+TL;DR: This automated PR promotes the operator catalog to support a newly released OpenShift version `v{target_version}`.
+It ensures your operator remains available for installation on the latest OpenShift clusters.
+
+### Purpose of this Pull Request
+
+This PR has been automatically generated to promote the operator catalog for a newly released OpenShift version.
+
+### What This PR Does
+
+Adds support for OpenShift version `v{target_version}` in the catalog
+
+Updates operator catalogs and metadata accordingly by promoting operators from `N-1` to `N` version.
+
+### Why This PR Was Created
+
+To maintain compatibility and improve user experience, we promote operator catalogs to support new OpenShift
+versions shortly after their release. Keeping the catalog up to date ensures that cluster administrators can
+deploy your operator without delay on the latest OpenShift versions.
+
+If you want to controll how your operator is promoted to the new OpenShift version,
+please check the `fbc.version_promotion_strategy` in the operator config file. Related
+documentation can be found
+[here](https://redhat-openshift-ecosystem.github.io/operator-pipelines/users/operator-ci-yaml/#fbcversion_promotion_strategy)
+"""
     if pr_info and not args.dry_run:
         for push_data in pr_info:
-            create_pr(
+            pr_response = create_pr(
                 base_branch,
                 push_data["head"],
                 push_data["title"],
+                pr_body_text,
+                local_repo_name,
+            )
+            add_pr_labels(
+                pr_response["number"],
+                push_data["labels"],
                 local_repo_name,
             )
 

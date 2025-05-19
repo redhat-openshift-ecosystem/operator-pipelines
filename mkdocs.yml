@@ -24,6 +24,7 @@ nav:
   - "Admin":
       - "Admin guide": "pipeline-admin-guide.md"
       - "Catalog image browser": "catalog_image_browser.md"
+      - "FBC catalog promotion": "fbc-catalog-promotion.md"
 theme:
   name: material
   features:

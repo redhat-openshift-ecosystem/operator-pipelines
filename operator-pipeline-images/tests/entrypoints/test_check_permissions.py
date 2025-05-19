@@ -71,6 +71,16 @@ def test_OperatorReview(review_partner: check_permissions.OperatorReview) -> Non
     assert review_partner.head_repo_operator_config == review_partner.operator.config
 
 
+@patch("operatorcert.entrypoints.check_permissions.Github")
+@patch("operatorcert.entrypoints.check_permissions.Auth.Token")
+def test_OperatorReview_github_client(
+    mock_token: MagicMock,
+    mock_github: MagicMock,
+    review_partner: check_permissions.OperatorReview,
+) -> None:
+    assert review_partner.github_client == mock_github.return_value
+
+
 def test_OperatorReview_base_repo_operator_config(
     review_partner: check_permissions.OperatorReview,
 ) -> None:
@@ -111,10 +121,8 @@ def test_OperatorReview_github_repo_name(
     assert review_community.github_repo_name == "my-org/repo-123"
 
 
-@patch("operatorcert.entrypoints.check_permissions.Github")
-@patch("operatorcert.entrypoints.check_permissions.Auth.Token")
+@patch("operatorcert.entrypoints.check_permissions.OperatorReview.github_client")
 def test_OperatorReview_pr_labels(
-    mock_token: MagicMock,
     mock_github: MagicMock,
     review_community: check_permissions.OperatorReview,
 ) -> None:
@@ -128,24 +136,51 @@ def test_OperatorReview_pr_labels(
 
     pull.get_labels.return_value = [_mock_label("foo"), _mock_label("bar")]
     repo.get_pull.return_value = pull
-    mock_github.return_value.get_repo.return_value = repo
+    mock_github.get_repo.return_value = repo
     assert review_community.pr_labels == {"foo", "bar"}
 
 
 @pytest.mark.parametrize(
-    "is_org_member, is_partner, owner_can_write, permission_partner, permission_community, permission_partner_called, permission_community_called, expected_result",
+    "is_org_member, is_partner, owner_can_write, permission_partner, permission_community, is_catalog_promotion_pr, permission_partner_called, permission_community_called, expected_result",
     [
         pytest.param(
-            True, False, False, False, False, False, False, True, id="org member"
+            True, False, False, False, False, False, False, False, True, id="org member"
         ),
         pytest.param(
-            False, True, False, True, False, True, False, True, id="partner - approved"
+            False,
+            True,
+            False,
+            True,
+            False,
+            False,
+            True,
+            False,
+            True,
+            id="partner - approved",
         ),
         pytest.param(
-            False, True, False, False, False, True, False, False, id="partner - denied"
+            False,
+            True,
+            False,
+            False,
+            False,
+            False,
+            True,
+            False,
+            False,
+            id="partner - denied",
         ),
         pytest.param(
-            False, False, True, False, False, False, True, True, id="owner - approved"
+            False,
+            False,
+            True,
+            False,
+            False,
+            False,
+            False,
+            True,
+            True,
+            id="owner - approved",
         ),
         pytest.param(
             False,
@@ -153,6 +188,7 @@ def test_OperatorReview_pr_labels(
             False,
             False,
             True,
+            False,
             False,
             True,
             True,
@@ -165,9 +201,22 @@ def test_OperatorReview_pr_labels(
             False,
             False,
             False,
+            False,
             True,
             False,
             id="community - denied",
+        ),
+        pytest.param(
+            True,
+            False,
+            False,
+            False,
+            False,
+            True,
+            False,
+            True,
+            False,
+            id="owner, but PR with catalog promotion - denied",
         ),
     ],
 )
@@ -180,7 +229,11 @@ def test_OperatorReview_pr_labels(
 @patch("operatorcert.entrypoints.check_permissions.OperatorReview.is_partner")
 @patch("operatorcert.entrypoints.check_permissions.OperatorReview.is_org_member")
 @patch("operatorcert.entrypoints.check_permissions.OperatorReview.pr_owner_can_write")
+@patch(
+    "operatorcert.entrypoints.check_permissions.OperatorReview.is_catalog_promotion_pr"
+)
 def test_OperatorReview_check_permissions(
+    mock_is_catalog_promotion_pr: MagicMock,
     mock_pr_owner_can_write: MagicMock,
     mock_is_org_member: MagicMock,
     mock_is_partner: MagicMock,
@@ -192,10 +245,12 @@ def test_OperatorReview_check_permissions(
     owner_can_write: bool,
     permission_partner: bool,
     permission_community: bool,
+    is_catalog_promotion_pr: bool,
     permission_partner_called: bool,
     permission_community_called: bool,
     expected_result: bool,
 ) -> None:
+    mock_is_catalog_promotion_pr.return_value = is_catalog_promotion_pr
     mock_is_org_member.return_value = is_org_member
     mock_is_partner.return_value = is_partner
     mock_pr_owner_can_write.return_value = owner_can_write
@@ -214,10 +269,34 @@ def test_OperatorReview_check_permissions(
         mock_check_permission_for_community.assert_not_called()
 
 
-@patch("operatorcert.entrypoints.check_permissions.Github")
-@patch("operatorcert.entrypoints.check_permissions.Auth.Token")
+@patch("operatorcert.entrypoints.check_permissions.OperatorReview.github_client")
+def test_OperatorReview_is_catalog_promotion_pr(
+    mock_github_client: MagicMock, review_community: check_permissions.OperatorReview
+) -> None:
+    # Test with a PR URL that contains "catalog-promotion"
+    class Label:
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+    mock_github_client.get_repo.return_value.get_pull.return_value.get_labels.return_value = [
+        Label("catalog-promotion/review-needed"),
+        Label("other-label"),
+    ]
+    assert review_community.is_catalog_promotion_pr() == True
+
+    mock_github_client.get_repo.return_value.get_pull.return_value.get_labels.return_value = [
+        Label("other-label"),
+    ]
+    assert review_community.is_catalog_promotion_pr() == False
+
+    mock_github_client.get_repo.return_value.get_pull.return_value.get_labels.side_effect = UnknownObjectException(
+        404, "", {}
+    )
+    assert review_community.is_catalog_promotion_pr() == False
+
+
+@patch("operatorcert.entrypoints.check_permissions.OperatorReview.github_client")
 def test_OperatorReview_is_org_member(
-    mock_token: MagicMock,
     mock_github: MagicMock,
     review_community: check_permissions.OperatorReview,
 ) -> None:
@@ -225,7 +304,7 @@ def test_OperatorReview_is_org_member(
     mock_organization = MagicMock()
     members = [MagicMock(login="user123"), MagicMock(login="owner")]
     mock_organization.get_members.return_value = members
-    mock_github.return_value.get_organization.return_value = mock_organization
+    mock_github.get_organization.return_value = mock_organization
     assert review_community.is_org_member() == True
 
     # User is not a member of the organization
@@ -235,21 +314,17 @@ def test_OperatorReview_is_org_member(
 
     # Organization does not exist
     members = [MagicMock(login="user123")]
-    mock_github.return_value.get_organization.side_effect = UnknownObjectException(
-        404, "", {}
-    )
+    mock_github.get_organization.side_effect = UnknownObjectException(404, "", {})
     assert review_community.is_org_member() == False
 
 
-@patch("operatorcert.entrypoints.check_permissions.Github")
-@patch("operatorcert.entrypoints.check_permissions.Auth.Token")
+@patch("operatorcert.entrypoints.check_permissions.OperatorReview.github_client")
 def test_OperatorReview_pr_owner_can_write(
-    mock_token: MagicMock,
     mock_github: MagicMock,
     review_community: check_permissions.OperatorReview,
 ) -> None:
     mock_repo = MagicMock()
-    mock_github.return_value.get_repo.return_value = mock_repo
+    mock_github.get_repo.return_value = mock_repo
 
     # User can write to the repository
     mock_repo.get_collaborator_permission.return_value = "write"
