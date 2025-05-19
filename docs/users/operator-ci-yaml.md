@@ -41,9 +41,10 @@ The `fbc.enabled` flag enables the [File-Based catalog](./fbc_workflow.md) featu
 ### `fbc.version_promotion_strategy`
 The `fbc.version_promotion_strategy` option defines the strategy for promoting the operator into a next OCP version. When a new OCP version becomes available an automated process will promote the operator from a version N to a version N+1. The `fbc.version_promotion_strategy` option can have the following values:
 
-- `never` - the operator will not be promoted to the next OCP version automatically (default)
+- `review-needed` - the operator will be promoted to the next OCP version automatically, but the PR will be created and
+the reviewers will be asked to review the changes (default)
 - `always` - the operator will be promoted to the next OCP version automatically
-- `review-needed` - the operator will be promoted to the next OCP version automatically, but the PR will be created and the reviewers will be asked to review the changes
+- `never` - the operator will not be promoted to the next OCP version automatically
 
 ### `fbc.catalog_mapping`
 The mapping serves as a link between catalog templates within the `./catalog-templates` directory and catalogs within the `./catalogs` directory.
