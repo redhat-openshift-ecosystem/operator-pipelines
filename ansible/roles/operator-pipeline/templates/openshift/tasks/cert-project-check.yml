@@ -6,8 +6,11 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-    - name: operator_path
-      description: path indicating the location of the certified operator within the repository
+    - name: affected_operators
+      description: Comma separated list of affected operators
+      default: ""
+    - name: affected_catalog_operators
+      description: Comma separated list of affected catalog operators
       default: ""
     - name: cert_project_required
       description: A flag determines whether a cert project ID needs to be present
@@ -32,18 +35,48 @@ spec:
           exit 0
         fi
 
-        if [ -z "$(params.operator_path)" ]; then
-          echo "Operator path is missing."
+        if [[ -z "$(params.affected_operators)" && -z "$(params.affected_catalog_operators)" ]]; then
+          echo "No operator is affected."
           exit 1
         fi
 
-        CI_FILE_PATH="$(params.operator_path)/ci.yaml"
+        # Create dictionary of all affected operators to serve as a set
+        declare -A ALL_AFFECTED_OPERATORS
 
-        CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id | select (.!=null)')
-
-        if [ -z $CERT_PROJECT_ID ]; then
-          echo "Certification project ID is missing in ci.yaml file (cert_project_id)"
-          exit 1
+        # Add operators from affected_operators
+        if [ -n "$(params.affected_operators)" ]; then
+          IFS=',' read -ra affected_ops_array <<< "$(params.affected_operators)"
+          for op in "${affected_ops_array[@]}"; do
+            ALL_AFFECTED_OPERATORS["$op"]=1
+          done
         fi
 
-        echo -n $CERT_PROJECT_ID | tee $(results.certification_project_id.path)
+        # Add operators from affected_catalog_operators
+        if [ -n "$(params.affected_catalog_operators)" ]; then
+          IFS=',' read -ra affected_catalog_ops_array <<< "$(params.affected_catalog_operators)"
+          for op in "${affected_catalog_ops_array[@]}"; do
+            operator_name=$(echo "$op" | cut -d'/' -f2) # Parse operator name from its catalog path
+            if [ -n "$operator_name" ]; then
+              ALL_AFFECTED_OPERATORS["$operator_name"]=1
+            fi
+          done
+        fi
+
+
+        for operator_name in "${!ALL_AFFECTED_OPERATORS[@]}"; do
+          file_path="operators/$operator_name/ci.yaml"
+
+          if [ ! -f "$file_path" ]; then
+            echo "File '$file_path' not found."
+            exit 1
+          fi
+
+          CERT_PROJECT_ID=$(cat "$file_path" | yq -r '.cert_project_id | select (.!=null)')
+
+          if [ -z "$CERT_PROJECT_ID" ]; then
+            echo "Certification project ID is missing in '$file_path' file (cert_project_id)"
+            exit 1
+          fi
+        done
+
+        echo -n "$CERT_PROJECT_ID" | tee "$(results.certification_project_id.path)"

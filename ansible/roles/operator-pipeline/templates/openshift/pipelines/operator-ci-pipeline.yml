@@ -228,8 +228,8 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: operator_path
-          value: "$(tasks.bundle-path-validation.results.package_path)"
+        - name: affected_operators
+          value: "$(tasks.bundle-path-validation.results.package_name)"
       workspaces:
         - name: source
           workspace: pipeline
