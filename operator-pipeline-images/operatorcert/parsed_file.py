@@ -249,9 +249,12 @@ class ParserRules:
 
     def check_affected_operators(self) -> None:
         """
-        The PR should affect at most one operator
+        The PR should affect at most one operator unless only non-bundle files are updated.
         """
-        if len(self.object.affected_operators.union) > 1:
+        if (
+            len(self.object.affected_operators.union) > 1
+            and len(self.object.affected_bundles.union) != 0
+        ):
             self.errors.append(
                 "The PR affects more than one operator: "
                 f"{sorted(self.object.affected_operators.union)}"
@@ -349,8 +352,7 @@ class ParserRules:
 
     def check_affected_catalog_operators(self) -> None:
         """
-        Check if the PR affects at most one catalog operator and PR doesn't contains
-        catalog changes and operator changes
+        Check if the PR doesn't contains catalog changes and operator changes at the same time.
         """
         added_or_modified_bundles = (
             self.object.affected_bundles.added | self.object.affected_bundles.modified
@@ -362,18 +364,6 @@ class ParserRules:
                 f"The PR affects a bundle ({sorted(added_or_modified_bundles)}) and catalog "
                 f"({sorted(self.object.affected_catalog_operators.union)}) at the same time. "
                 "Split operator and catalog changes into 2 separate pull requests."
-            )
-        catalog_operators = sorted(
-            list(
-                {
-                    operator[1]
-                    for operator in self.object.affected_catalog_operators.union
-                }
-            )
-        )
-        if len(catalog_operators) > 1:
-            self.errors.append(
-                f"The PR affects more than one catalog operator: {catalog_operators}"
             )
 
     def validate(self) -> None:

@@ -496,9 +496,19 @@ def test_github_pr_affected_files_invalid_url(
                 "extra_files": [],
                 "added_operators": ["operator-e2e", "operator-clone-e2e"],
             },
+            True,
+            None,
+            id="Multiple operators - no bundle change",
+        ),
+        pytest.param(
+            {
+                "extra_files": [],
+                "added_operators": ["operator-e2e", "operator-clone-e2e"],
+                "added_bundles": [("operator-e2e", "0.0.101")],
+            },
             False,
             "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']",
-            id="Multiple operators",
+            id="Multiple operators - with bundle change",
         ),
         pytest.param(
             {
@@ -526,17 +536,17 @@ def test_github_pr_affected_files_invalid_url(
                     ("v4.15", "operator-2"),
                 ],
             },
-            False,
-            "The PR affects more than one catalog operator: ['operator-1', 'operator-2']",
+            True,
+            None,
             id="Multiple catalog operators",
         ),
         pytest.param(
             {
                 "extra_files": ["empty.txt", "operators/empty.txt"],
-                "added_operators": ["operator-e2e", "operator-clone-e2e"],
+                "added_bundles": ["operator-e2e", "operator-clone-e2e"],
             },
             False,
-            "The PR affects more than one operator: ['operator-clone-e2e', 'operator-e2e']\n"
+            "The PR affects more than one bundle: ['operator-clone-e2e', 'operator-e2e']\n"
             "The PR affects non-operator files: ['empty.txt', 'operators/empty.txt']",
             id="Multiple issues",
         ),
@@ -577,6 +587,19 @@ def test_github_pr_affected_files_invalid_url(
             True,
             None,
             id="Add operator catalog",
+        ),
+        pytest.param(
+            {
+                "added_catalog_operators": [
+                    ("v4.15", "operator-e2e"),
+                    ("v4.15", "operator-e2e"),
+                ],
+                "modified_operators": ["operator-e2e", "operator-clone-e2e"],
+                "modified_bundles": [],
+            },
+            True,
+            None,
+            id="Modify two operators' non-bundle files and their catalogs.",
         ),
     ],
 )
