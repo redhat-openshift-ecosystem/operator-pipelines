@@ -143,7 +143,7 @@ spec:
         FBC_UPDATE_BRANCH="add-$(params.operator_name)-$(params.operator_version)-to-fbc-$RANDOM"
 
         git checkout -b $FBC_UPDATE_BRANCH
-        git commit -m "Add $(params.operator_name) $(params.operator_version) to FBC"
+        git commit --signoff -m "Add $(params.operator_name) $(params.operator_version) to FBC"
         git push origin "$FBC_UPDATE_BRANCH"
 
         cat > pr_comment.md << EOL
