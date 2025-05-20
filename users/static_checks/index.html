@@ -415,6 +415,13 @@
     </span>
 </a>
 </li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#check_olm_bundle_object_in_fbc">
+<span class="md-ellipsis">
+      check_olm_bundle_object_in_fbc
+    </span>
+</a>
+</li>
 </ul>
 </nav>
 </li>
@@ -732,6 +739,16 @@ fbc:
       catalog_names: ["v4.13", "v4.14"] # The 4.14 is already used in the basic.yaml template
       type: olm.semver
 </code></pre>
+<h4 id="check_olm_bundle_object_in_fbc">check_olm_bundle_object_in_fbc</h4>
+<p>The test verifies a presence of <code>olm.bundle.object</code> in the catalog's bundle properties.
+For catalogs <code>&gt;=v4.17</code> the <code>olm.bundle.object</code> is not allowed as it has negative
+impact on performance of the OpenShift olm.</p>
+<p>The test will fail if the <code>olm.bundle.object</code> is present in the catalog within
+the <code>/catalogs/{ocp_version}/{operator_name}/catalog.yaml</code> file.</p>
+<p>To prevent the test from failing download the latest <a href="https://raw.githubusercontent.com/redhat-openshift-ecosystem/operator-pipelines/main/fbc/Makefile">Makefile</a>
+and re-render the catalog again with <code>make catalogs</code> command. The Makefile uses
+extra arguments <code>--migrate-level bundle-object-to-csv-metadata</code> for opm when rendering
+catalogs for <code>&gt;=4.17</code> version.</p>
 <h2 id="running-tests-locally">Running tests locally</h2>
 <pre><code class="language-bash"># Install the package with static checks
 $ pip install git+https://github.com/redhat-openshift-ecosystem/operator-pipelines.git
