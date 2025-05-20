@@ -24,6 +24,10 @@ spec:
       description: Path to the operator containing the new bundle
     - name: bundle_path
       description: Path to the new bundle
+    - name: affected_operators
+      description: Comma separated list of affected operators
+    - name: added_or_modified_bundles
+      description: Comma separated list of added or updated bundles
     - name: affected_catalogs
       description: Comma separated list of updated catalogs
     - name: added_or_modified_catalogs
@@ -82,6 +86,12 @@ spec:
 
         affected_catalogs="$(jq -r '.affected_catalogs | join(",")' < changes.json)"
         echo -n $affected_catalogs > "$(results.affected_catalogs.path)"
+
+        affected_operators="$(jq -r '.affected_operators | join(",")' < changes.json)"
+        echo -n $affected_operators > "$(results.affected_operators.path)"
+
+        added_or_modified_bundles="$(jq -r '.added_or_modified_bundles | join(",")' < changes.json)"
+        echo -n $added_or_modified_bundles > "$(results.added_or_modified_bundles.path)"
 
         added_or_modified_catalogs="$(jq -r '.added_or_modified_catalogs | join(",")' < changes.json)"
         echo -n $added_or_modified_catalogs > "$(results.added_or_modified_catalogs.path)"

@@ -525,8 +525,10 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: operator_path
-          value: "$(tasks.detect-changes.results.operator_path)"
+        - name: affected_operators
+          value: "$(tasks.detect-changes.results.affected_operators)"
+        - name: affected_catalog_operators
+          value: "$(tasks.detect-changes.results.affected_catalog_operators)"
         - name: cert_project_required
           value: "$(params.cert_project_required)"
       workspaces:
@@ -1037,8 +1039,8 @@ spec:
         - input: "$(tasks.certification-project-check.results.certification_project_id)"
           operator: "notin"
           values: [""]
-        - input: "$(tasks.detect-changes.results.affected_catalogs)"
-          operator: in
+        - input: "$(tasks.detect-changes.results.added_or_modified_bundles)"
+          operator: "notin"
           values: [""]
       params:
         - name: pipeline_image
