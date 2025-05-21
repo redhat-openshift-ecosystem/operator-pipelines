@@ -292,9 +292,9 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
-        - name: credentials
+        - name: dockerconfig
           workspace: registry-credentials
-        - name: cacert
+        - name: sslcertdir
           workspace: registry-cacert
 
     - name: build-fbc-scratch-catalog
@@ -316,7 +316,7 @@ spec:
         - name: index_image_destination
           value: "$(params.registry)/$(params.image_namespace)/catalog"
         - name: index_image_destination_tag_suffix
-          value: "-$(params.git_commit)"
+          value: "-$(tasks.build-bundle.results.IMAGE_DIGEST)"
       workspaces:
         - name: source
           workspace: pipeline
