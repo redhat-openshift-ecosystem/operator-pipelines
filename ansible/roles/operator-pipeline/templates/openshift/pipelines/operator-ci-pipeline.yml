@@ -333,7 +333,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_index_image
-          value: "$(params.registry)/$(params.image_namespace)/catalog:v$(tasks.get-supported-versions.results.max_supported_ocp_version)-$(params.git_commit)"
+          value: "$(params.registry)/$(params.image_namespace)/catalog:v$(tasks.get-supported-versions.results.max_supported_ocp_version)-$(tasks.build-bundle.results.IMAGE_DIGEST)"
         - name: bundle_image
           value: *bundleImage
         - name: namespace
