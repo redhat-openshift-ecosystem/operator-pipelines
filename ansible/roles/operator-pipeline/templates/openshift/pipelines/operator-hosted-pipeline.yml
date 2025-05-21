@@ -926,9 +926,6 @@ spec:
           subPath: src
         - name: credentials
           workspace: registry-credentials
-        - name: output
-          workspace: results
-          subPath: paths
 
     - name: make-index-repo-public
       runAfter:
