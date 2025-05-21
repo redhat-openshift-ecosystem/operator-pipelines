@@ -99,13 +99,22 @@ spec:
       args:
         - $(params.BUILD_ARGS[*])
       script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        if [ -z "$(params.CONTEXT)" ]; then
+          echo "No bundle added or changed"
+          exit 0
+        fi
+
+        echo "Building $(params.IMAGE)"
         BUILD_ARGS=()
         for buildarg in "$@"
         do
           BUILD_ARGS+=("--build-arg=$buildarg")
         done
         [ "$(workspaces.sslcertdir.bound)" = "true" ] && CERT_DIR_FLAG="--cert-dir=$(workspaces.sslcertdir.path)"
-        [ "$(workspaces.dockerconfig.bound)" = "true" ] && DOCKER_CONFIG="$(workspaces.dockerconfig.path)" && export DOCKER_CONFIG
+        [ "$(workspaces.dockerconfig.bound)" = "true" ] && DOCKER_CONFIG="$(workspaces.dockerconfig.path)/.dockerconfigjson" && export DOCKER_CONFIG
         # build the image (CERT_DIR_FLAG should be omitted if empty and BUILD_EXTRA_ARGS can contain multiple args)
         # shellcheck disable=SC2046,SC2086
         buildah ${CERT_DIR_FLAG} "--storage-driver=${PARAM_STORAGE_DRIVER}" bud "${BUILD_ARGS[@]}" ${PARAM_BUILD_EXTRA_ARGS} \
