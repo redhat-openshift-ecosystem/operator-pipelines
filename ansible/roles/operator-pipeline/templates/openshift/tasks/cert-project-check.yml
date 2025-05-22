@@ -9,6 +9,8 @@ spec:
     - name: operator_path
       description: path indicating the location of the certified operator within the repository
       default: ""
+    - name: affected_operators
+      description: Comma separated list of affected operators
     - name: cert_project_required
       description: A flag determines whether a cert project ID needs to be present
       default: "true"
@@ -37,13 +39,21 @@ spec:
           exit 1
         fi
 
-        CI_FILE_PATH="$(params.operator_path)/ci.yaml"
+        IFS=',' read -ra operator_array <<< "$(params.affected_operators)"
+        for operator_name in $(printf "%s\n" "${operator_array[@]}" | tac); do
+          file_path="operators/$operator_name/ci.yaml"
 
-        CERT_PROJECT_ID=$(cat $CI_FILE_PATH | yq -r '.cert_project_id | select (.!=null)')
+          if [ ! -f "$file_path" ]; then
+            echo "File '$file_path' not found."
+            exit 1
+          fi
 
-        if [ -z $CERT_PROJECT_ID ]; then
-          echo "Certification project ID is missing in ci.yaml file (cert_project_id)"
-          exit 1
-        fi
+          CERT_PROJECT_ID=$(cat "$file_path" | yq -r '.cert_project_id | select (.!=null)')
 
-        echo -n $CERT_PROJECT_ID | tee $(results.certification_project_id.path)
+          if [ -z "$CERT_PROJECT_ID" ]; then
+            echo "Certification project ID is missing in '$file_path' file (cert_project_id)"
+            exit 1
+          fi
+        done
+
+        echo -n "$CERT_PROJECT_ID" | tee "$(results.certification_project_id.path)"
