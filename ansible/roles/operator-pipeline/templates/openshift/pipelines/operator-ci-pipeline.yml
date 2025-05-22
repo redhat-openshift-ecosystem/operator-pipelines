@@ -24,7 +24,7 @@ spec:
       description: Branch in the upstream repo to use as the base for the pull request
     - name: bundle_path
     - name: builder_image
-      default: "registry.redhat.io/rhel8/buildah@sha256:a1e5cc0fb334e333e5eab69689223e8bd1f0c060810d260603b26cf8c0da2023"
+      default: "registry.redhat.io/rhel10/buildah@sha256:01d09cc2988b5cb161e13c2cce78862b303a3a976639756cbb3b4eb72d10a0e4"
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
     - name: podman_image
@@ -292,65 +292,49 @@ spec:
         - name: source
           workspace: pipeline
           subPath: src
-        - name: credentials
+        - name: dockerconfig
           workspace: registry-credentials
-        - name: cacert
+        - name: sslcertdir
           workspace: registry-cacert
 
-    # Index image contains a record of bundle images from which
-    # manifests could be extract in order to install an operator.
-    - name: generate-index
+    - name: build-fbc-scratch-catalog
       runAfter:
         - build-bundle
         - check-ocp-cluster-version
       taskRef:
-        name: generate-index
+        name: build-fbc-scratch-catalog
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: bundle_image
+        - name: bundle_pullspec
           value: *bundleImage
-        - name: podman_image
-          value: "$(params.podman_image)"
-        - name: from_index
-          value: "$(tasks.get-supported-versions.results.max_supported_index)"
-      workspaces:
-        - name: output
-          workspace: pipeline
-          subPath: index
-        - name: credentials
-          workspace: registry-credentials
-
-    - name: build-index
-      runAfter:
-        - generate-index
-      taskRef:
-        name: buildah
-        kind: Task
-      params:
-        - name: IMAGE
-          value: &bundleIndexImage "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-index:$(tasks.bundle-path-validation.results.bundle_version)"
-        - name: DOCKERFILE
-          value: "$(tasks.generate-index.results.index_dockerfile)"
-        - name: TLSVERIFY
-          value: "$(params.tlsverify)"
+        - name: ocp_version
+          value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
+        - name: operator_name
+          value: "$(tasks.bundle-path-validation.results.package_name)"
+        - name: bundle_version
+          value: "$(tasks.bundle-path-validation.results.bundle_version)"
+        - name: index_image_destination
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-index"
+        - name: index_image_destination_tag_suffix
+          value: "-$(tasks.bundle-path-validation.results.bundle_version)"
       workspaces:
         - name: source
           workspace: pipeline
-          subPath: index
+          subPath: src
         - name: credentials
           workspace: registry-credentials
 
     - name: preflight
       runAfter:
-        - build-index
+        - build-fbc-scratch-catalog
       taskRef:
         name: preflight
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_index_image
-          value: *bundleIndexImage
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-index:v$(tasks.get-supported-versions.results.max_supported_ocp_version)-$(tasks.bundle-path-validation.results.bundle_version)"
         - name: bundle_image
           value: *bundleImage
         - name: namespace
