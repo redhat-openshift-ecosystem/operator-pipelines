@@ -300,6 +300,7 @@ spec:
     - name: build-fbc-scratch-catalog
       runAfter:
         - build-bundle
+        - check-ocp-cluster-version
       taskRef:
         name: build-fbc-scratch-catalog
       params:
@@ -314,7 +315,7 @@ spec:
         - name: bundle_version
           value: "$(tasks.bundle-path-validation.results.bundle_version)"
         - name: index_image_destination
-          value: "$(params.registry)/$(params.image_namespace)/index"
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-index"
         - name: index_image_destination_tag_suffix
           value: "-$(tasks.bundle-path-validation.results.bundle_version)"
       workspaces:
@@ -333,7 +334,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: bundle_index_image
-          value: "$(params.registry)/$(params.image_namespace)/index:v$(tasks.get-supported-versions.results.max_supported_ocp_version)-$(tasks.bundle-path-validation.results.bundle_version)"
+          value: "$(params.registry)/$(params.image_namespace)/$(tasks.bundle-path-validation.results.package_name)-index:v$(tasks.get-supported-versions.results.max_supported_ocp_version)-$(tasks.bundle-path-validation.results.bundle_version)"
         - name: bundle_image
           value: *bundleImage
         - name: namespace
