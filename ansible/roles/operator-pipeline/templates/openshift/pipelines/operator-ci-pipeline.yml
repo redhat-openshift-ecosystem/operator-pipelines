@@ -24,7 +24,7 @@ spec:
       description: Branch in the upstream repo to use as the base for the pull request
     - name: bundle_path
     - name: builder_image
-      default: "registry.redhat.io/rhel8/buildah@sha256:a1e5cc0fb334e333e5eab69689223e8bd1f0c060810d260603b26cf8c0da2023"
+      default: "registry.redhat.io/rhel10/buildah@sha256:01d09cc2988b5cb161e13c2cce78862b303a3a976639756cbb3b4eb72d10a0e4"
     - name: registry
       default: image-registry.openshift-image-registry.svc:5000
     - name: podman_image
