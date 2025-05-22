@@ -42,7 +42,7 @@ spec:
       default: "true"
     - name: FORMAT
       description: The format of the built container, oci or docker
-      default: "oci"
+      default: "docker"
     - name: BUILD_EXTRA_ARGS
       description: Extra parameters passed for the build command when building images. WARNING - must be sanitized to avoid command injection
       default: ""
