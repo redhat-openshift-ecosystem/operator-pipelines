@@ -44,7 +44,6 @@ spec:
 
   workspaces:
     - name: source
-    - name: output
     - name: credentials
       optional: true
       description: A workspace with credentials for registry push
