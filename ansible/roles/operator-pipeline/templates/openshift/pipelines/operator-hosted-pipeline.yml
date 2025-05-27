@@ -150,6 +150,11 @@ spec:
     - name: ssh-dir
       optional: true
     - name: registry-credentials
+    - name: registry-pull-credentials
+      description:
+        We are using pull secrets from the release part
+        to authenticate against the registry during the execution of task
+        add-bundle-to-fbc-dryrun
     - name: registry-credentials-all
       description:
         Storage space for the result of merging certification project and
@@ -1232,6 +1237,8 @@ spec:
         - name: output
           workspace: results
           subPath: summary
+        - name: registry-credentials
+          workspace: registry-pull-credentials
 
     # merge PR
     - name: merge-pr
