@@ -150,6 +150,9 @@
                     - name: registry-credentials
                       secret:
                         secretName: hosted-pipeline-registry-auth-secret
+                    - name: registry-pull-credentials
+                      secret:
+                        secretName: release-pipeline-registry-auth-pull-secret
                     - name: ssh-dir
                       secret:
                         secretName: github-rh-operator-bundle-bot-ssh-credentials
