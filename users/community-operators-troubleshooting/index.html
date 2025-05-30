@@ -1519,7 +1519,7 @@
 <p>The pipeline may fail at this stage due to the following reasons:</p>
 <ol>
 <li><b>Changing Non-Operator Files:</b> If the PR attempts to modify external files outside of targeted operator, the pipeline will fail.</li>
-<li><b>Affecting Multiple Operators:</b> If the PR impacts more than one operator, it will result in a failure.</li>
+<li><b>Affecting Multiple Operator Bundles:</b> If the PR impacts more than one operator bundle, it will result in a failure. Update of multiple operators non-bundle files is allowed.</li>
 <li><b>Modifying Existing Bundles:</b> Changes to existing bundles in the PR are not allowed at this stage.</li>
 <li><b>Deleting Existing Bundles:</b> Deleting bundles is only permissible for FBC-enabled operators.</li>
 </ol>
