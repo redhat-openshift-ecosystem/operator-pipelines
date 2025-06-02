@@ -123,25 +123,28 @@
     # A branch from where the catalog will be copied
     SRC_CATALOG_BRANCH="{{ integration_tests_src_operator_git_branch }}"
 
+    SRC_CATALOG_VERSION="v4.15"
+    DEST_CATALOG_VERSION="{{ integration_tests_catalog_versions }}"
+
     # A branch with changes for a pull request
     PR_BRANCH="{{ integration_tests_git_bundle_branch }}"
 
     git checkout -b "$PR_BRANCH" "$UPSTREAM_BRANCH"
 
-    git checkout "origin/$SRC_CATALOG_BRANCH" -- "catalogs/v4.15/$SRC_OPERATOR_PACKAGE_NAME/catalog.json"
+    git checkout "origin/$SRC_CATALOG_BRANCH" -- "catalogs/$SRC_CATALOG_VERSION/$SRC_OPERATOR_PACKAGE_NAME/catalog.yaml"
 
-    # Create a new catalog for the operator package and copy the catalog.json from sample catalog
-    mkdir -p "catalogs/v4.16/$OPERATOR_PACKAGE_NAME"
-    cp "catalogs/v4.15/$SRC_OPERATOR_PACKAGE_NAME/catalog.json" "catalogs/v4.16/$OPERATOR_PACKAGE_NAME/catalog.json"
-    rm -rf "catalogs/v4.15/$SRC_OPERATOR_PACKAGE_NAME"
+    # Create a new catalog for the operator package and copy the catalog.yaml from sample catalog
+    mkdir -p "catalogs/$DEST_CATALOG_VERSION/$OPERATOR_PACKAGE_NAME"
+    cp "catalogs/$SRC_CATALOG_VERSION/$SRC_OPERATOR_PACKAGE_NAME/catalog.yaml" "catalogs/$DEST_CATALOG_VERSION/$OPERATOR_PACKAGE_NAME/catalog.yaml"
+    rm -rf "catalogs/$SRC_CATALOG_VERSION/$SRC_OPERATOR_PACKAGE_NAME"
 
-    pushd "catalogs/v4.16/$OPERATOR_PACKAGE_NAME/"
+    pushd "catalogs/$DEST_CATALOG_VERSION/$OPERATOR_PACKAGE_NAME/"
 
     # Replace the package name and version in the catalog
-    sed -i "s/\"name\": \"$SRC_OPERATOR_PACKAGE_NAME/\"name\": \"$OPERATOR_PACKAGE_NAME/g" catalog.json
-    sed -i "s/\"package\": \"$SRC_OPERATOR_PACKAGE_NAME\"/\"package\": \"$OPERATOR_PACKAGE_NAME\"/g" catalog.json
-    sed -i "s/\"packageName\": \"$SRC_OPERATOR_PACKAGE_NAME\"/\"packageName\": \"$OPERATOR_PACKAGE_NAME\"/g" catalog.json
-    sed -i "s/$SRC_VERSION/$DEST_VERSION/g" catalog.json
+    sed -i "s/name: $SRC_OPERATOR_PACKAGE_NAME/name: $OPERATOR_PACKAGE_NAME/g" catalog.yaml
+    sed -i "s/package: $SRC_OPERATOR_PACKAGE_NAME/package: $OPERATOR_PACKAGE_NAME/g" catalog.yaml
+    sed -i "s/packageName: $SRC_OPERATOR_PACKAGE_NAME/packageName: $OPERATOR_PACKAGE_NAME/g" catalog.yaml
+    sed -i "s/$SRC_VERSION/$DEST_VERSION/g" catalog.yaml
 
     popd
 

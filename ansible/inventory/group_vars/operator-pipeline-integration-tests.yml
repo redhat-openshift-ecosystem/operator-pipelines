@@ -24,7 +24,9 @@ integration_tests_src_operator_git_branch: e2e-test-operator
 integration_tests_src_operator_package_name: test-e2e-operator
 integration_tests_src_operator_bundle_version: 0.0.8
 
-integration_tests_ocp_versions_range: "=v4.16"
+# This version needs to be alligned with the cluster version in order
+# to pass integration tests
+integration_tests_ocp_versions_range: "=v4.18"
 
 integration_tests_fbc_catalog: false
 integration_tests_verify_bundle_in_catalog: true

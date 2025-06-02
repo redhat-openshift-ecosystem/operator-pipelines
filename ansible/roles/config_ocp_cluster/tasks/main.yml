@@ -21,13 +21,16 @@
   ansible.builtin.include_vars:
     file: ../../vaults/pipelinerun-listener/secret-vars.yml
   no_log: true
+  when: config_ocp_cluster_chat_enabled
 
 - name: Include Chat trigger
   tags:
     - chat
   ansible.builtin.include_tasks: tasks/chat-trigger.yml
+  when: config_ocp_cluster_chat_enabled
 
 - name: Include Metrics trigger
   tags:
     - metrics
   ansible.builtin.include_tasks: tasks/metrics-trigger.yml
+  when: config_ocp_cluster_metrics_enabled

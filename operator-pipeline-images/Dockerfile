@@ -49,7 +49,7 @@ COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
 RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.46.0/linux-${ARCH}-opm && \
     chmod +x linux-${ARCH}-opm && \
     mv linux-${ARCH}-opm /usr/local/bin/opm && \
-    curl -LO https://mirror.openshift.com/pub/openshift-v4/${ARCH}/clients/ocp/stable-4.16/openshift-client-linux.tar.gz && \
+    curl -LO https://mirror.openshift.com/pub/openshift-v4/${ARCH}/clients/ocp/stable-4.18/openshift-client-linux.tar.gz && \
     tar xzvf openshift-client-linux.tar.gz -C /usr/local/bin oc && \
     curl -LO https://github.com/operator-framework/operator-sdk/releases/download/v1.36.1/operator-sdk_linux_${ARCH} && \
     chmod +x operator-sdk_linux_${ARCH} && \
