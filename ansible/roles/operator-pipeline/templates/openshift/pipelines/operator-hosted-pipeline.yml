@@ -1231,6 +1231,8 @@ spec:
         - name: output
           workspace: results
           subPath: summary
+        - name: registry-credentials
+          workspace: registry-credentials
 
     # merge PR
     - name: merge-pr
