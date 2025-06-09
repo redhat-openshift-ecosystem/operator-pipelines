@@ -62,7 +62,15 @@ spec:
 
         EXTRA_ARGS=""
         if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
-          EXTRA_ARGS+=" --authfile $(workspaces.credentials.path)/.dockerconfigjson"
+          DOCKERCONFIGJSON="$(workspaces.credentials.path)/.dockerconfigjson"
+          EXTRA_ARGS+=" --authfile $DOCKERCONFIGJSON"
+
+          # provide config.json using the default env variable
+          # so OPM has access to registry
+          TEMP_CONFIG="/tmp/temp_config"
+          mkdir "$TEMP_CONFIG"
+          cp "$DOCKERCONFIGJSON" "${TEMP_CONFIG}/config.json"
+          export DOCKER_CONFIG="$TEMP_CONFIG"
         fi
 
         # The registry pull-spec is in following format:
