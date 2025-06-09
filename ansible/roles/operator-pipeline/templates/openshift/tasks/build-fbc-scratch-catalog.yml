@@ -65,12 +65,9 @@ spec:
           DOCKERCONFIGJSON="$(workspaces.credentials.path)/.dockerconfigjson"
           EXTRA_ARGS+=" --authfile $DOCKERCONFIGJSON"
 
-          # provide config.json using the default env variable
-          # so OPM has access to registry
-          TEMP_CONFIG="/tmp/temp_config"
-          mkdir "$TEMP_CONFIG"
-          cp "$DOCKERCONFIGJSON" "${TEMP_CONFIG}/config.json"
-          export DOCKER_CONFIG="$TEMP_CONFIG"
+          # OPM reads the config location from env var and cannot be provided as a parameter
+          # this will expose the config path to the OPM tool
+          export REGISTRY_AUTH_FILE=$DOCKERCONFIGJSON
         fi
 
         # The registry pull-spec is in following format:
