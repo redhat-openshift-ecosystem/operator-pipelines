@@ -62,7 +62,12 @@ spec:
 
         EXTRA_ARGS=""
         if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
-          EXTRA_ARGS+=" --authfile $(workspaces.credentials.path)/.dockerconfigjson"
+          DOCKERCONFIGJSON="$(workspaces.credentials.path)/.dockerconfigjson"
+          EXTRA_ARGS+=" --authfile $DOCKERCONFIGJSON"
+
+          # OPM reads the config location from env var and cannot be provided as a parameter
+          # this will expose the config path to the OPM tool
+          export REGISTRY_AUTH_FILE=$DOCKERCONFIGJSON
         fi
 
         # The registry pull-spec is in following format:
