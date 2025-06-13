@@ -16,7 +16,7 @@ spec:
     - name: preflight_trigger_environment
       description: Which openshift-ci step-registry steps and ProwJob templates to use. Can be one of [preprod, prod]
 
-    - default: '4.18'
+    - default: '4.19'
       name: ocp_version
       type: string
 
@@ -204,7 +204,7 @@ spec:
           fi
 
           # This is the maximum version supported by openshift-ci
-          DPTP_VER="4.18"
+          DPTP_VER="4.19"
           CP_VER="$(params.ocp_version)"
 
           if [ "$(printf '%s\n' "$DPTP_VER" "$CP_VER" | sort -V | head -n1)" == "$DPTP_VER" ]; then
@@ -272,7 +272,7 @@ spec:
               exit 0
           fi
 
-          DPTP_VER="4.18"
+          DPTP_VER="4.19"
           CP_VER="$(params.ocp_version)"
 
           if [ "$(printf '%s\n' "$DPTP_VER" "$CP_VER" | sort -V | head -n1)" == "$DPTP_VER" ]; then
