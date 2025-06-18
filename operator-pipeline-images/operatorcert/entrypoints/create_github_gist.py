@@ -72,20 +72,26 @@ def create_github_gist(github_api: Github, input_path: List[Path]) -> Gist.Gist:
     """
     github_auth_user = github_api.get_user()
 
-    gist_content = {}
+    gist_content: dict[str, InputFileContent] = {}
+    files_for_gist: list[tuple[Path, str]] = []
 
     for input_item in input_path:
         if input_item.is_dir():
             for file_path in files_in_dir(input_item):
-                gist_content[str(file_path.relative_to(input_item))] = InputFileContent(
-                    file_path.read_text(encoding="utf-8")
-                )
+                relative_path = str(file_path.relative_to(input_item))
+                files_for_gist.append((file_path, relative_path))
         elif input_item.is_file():
-            gist_content[input_item.name] = InputFileContent(
-                input_item.read_text(encoding="utf-8")
-            )
+            files_for_gist.append((input_item, input_item.name))
         else:
             LOGGER.warning("Skipping %s, not a file or directory", input_item)
+
+    for file_path, relative_path in files_for_gist:
+        content = file_path.read_text(encoding="utf-8")
+        if content.strip() == "":
+            LOGGER.warning("Skipping empty file %s", file_path)
+            continue
+        LOGGER.info("Adding file %s to gist", relative_path)
+        gist_content[relative_path] = InputFileContent(content)
 
     LOGGER.info("Creating gist from %s", gist_content.keys())
     gist = github_auth_user.create_gist(

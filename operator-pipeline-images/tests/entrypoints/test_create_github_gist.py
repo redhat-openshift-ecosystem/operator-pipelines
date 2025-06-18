@@ -62,6 +62,7 @@ def test_create_github_gist(
             "file2": "bar",
             "subdir/nested/file3": "baz",
             "subdir/nested/file4": "qux",
+            "subdir/nested/empty": "",
         },
     )
     mock_github = MagicMock()

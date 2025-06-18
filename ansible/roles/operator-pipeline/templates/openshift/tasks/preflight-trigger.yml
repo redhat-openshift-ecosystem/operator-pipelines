@@ -9,6 +9,10 @@ spec:
       description: Preflight trigger image
       default: "quay.io/opdev/preflight-trigger:stable"
 
+    - name: pipeline_image
+      description: The common pipeline image.
+      default: "quay.io/redhat-isv/operator-pipelines-images:released"
+
     - name: preflight_trigger_environment
       description: Which openshift-ci step-registry steps and ProwJob templates to use. Can be one of [preprod, prod]
 
@@ -52,6 +56,10 @@ spec:
       description: The name of the Kubernetes Secret that contains the GitHub token.
       default: github
 
+    - name: pull_request_url
+      description: "The URL of the pull request. This is used to skip the test if a PR is labeled to skip it."
+      default: ""
+
     - name: test_result_path
       description: "A path to existing test results. This indicates if we can skip a preflight test."
       default: "none"
@@ -78,6 +86,59 @@ spec:
       secret:
         secretName: "$(params.gpg_decryption_key_secret_name)"
   steps:
+    - name: skip-preflight-testing-if-labeled
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.results.path)
+      env:
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #!/usr/bin/env bash
+        set -xe
+
+        if [[ "$(params.pull_request_url)" == "" ]]; then
+          echo "No pull request URL provided, skipping label check"
+          exit 0
+        fi
+
+        # Get labels from the pull request
+        gh pr view "$(params.pull_request_url)" --json labels > $(workspaces.results.path)/pr_labels.json
+
+        # Check if the pull request has a label to skip preflight testing using jq
+        if jq -e '.labels | any(.name == "tests/skip/preflight-trigger")' $(workspaces.results.path)/pr_labels.json; then
+          echo "Preflight testing has been skipped due to a label on the PR"
+
+          # Indicator for a rest of the steps to skip preflight testing
+          touch "$(workspaces.results.path)/preflight_skipped_by_label"
+
+          # Create a mock results.json file to indicate that preflight testing was skipped
+          cat > results.json << EOL
+          {
+            "passed": true,
+            "results": {
+              "errors": [],
+              "failed": [],
+              "passed": []
+            },
+            "test_library": {
+              "name": "github.com/redhat-openshift-ecosystem/openshift-preflight"
+            }
+          }
+        EOL
+
+          mkdir artifacts
+          touch preflight.log
+          touch artifacts/preflight.stdout
+          touch artifacts/preflight.stderr
+
+          echo -n "$(workspaces.results.path)/preflight.log" | tee "$(results.log_output_file.path)"
+          echo -n "$(workspaces.results.path)/results.json" | tee "$(results.result_output_file.path)"
+          echo -n "$(workspaces.results.path)/artifacts" | tee "$(results.artifacts_output_dir.path)"
+        fi
+
     - env:
         - name: PIPELINE_GPG_DECRYPTION_PRIVATE_KEY
           value: /etc/gpg-key/$(params.gpg_decryption_private_key_secret_key)
@@ -98,7 +159,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" ]]; then
+          if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" || -f "$(workspaces.results.path)/preflight_skipped_by_label" ]]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
@@ -137,7 +198,7 @@ spec:
       script: |
           #!/usr/bin/env bash
 
-          if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" ]]; then
+          if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" || -f "$(workspaces.results.path)/preflight_skipped_by_label" ]]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
@@ -198,6 +259,10 @@ spec:
           mountPath: "/etc/gpg-key"
       script: |
           #!/usr/bin/env bash
+          if [[ -f "$(workspaces.results.path)/preflight_skipped_by_label" ]]; then
+            echo "Preflight testing has been skipped due to a label on the PR"
+            exit 0
+          fi
 
           if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" ]]; then
               echo "Preflight testing has been skipped"
