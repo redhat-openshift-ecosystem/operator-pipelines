@@ -986,6 +986,8 @@ spec:
         kind: Task
         name: preflight-trigger
       params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
         - name: preflight_trigger_environment
           value: "$(params.preflight_trigger_environment)"
         - name: ocp_version
@@ -1021,6 +1023,8 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
+        - name: pull_request_url
+          value: "$(params.git_pr_url)"
       workspaces:
         - name: credentials
           workspace: registry-credentials-all
