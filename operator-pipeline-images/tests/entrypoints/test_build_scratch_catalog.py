@@ -19,7 +19,7 @@ def test_generate_and_save_basic_template(mock_yaml_dump: MagicMock) -> None:
             "template.yaml",
             "package",
             "default_channel",
-            "channel_name",
+            ["channel_name", "another_channel"],
             "csv_name",
             "bundle_pullspec",
         )
@@ -29,17 +29,20 @@ def test_generate_and_save_basic_template(mock_yaml_dump: MagicMock) -> None:
         "name": "package",
         "defaultChannel": "default_channel",
     }
-    channel = {
-        "schema": "olm.channel",
-        "package": "package",
-        "name": "channel_name",
-        "entries": [{"name": "csv_name"}],
-    }
+    channels = [
+        {
+            "schema": "olm.channel",
+            "package": "package",
+            "name": channel_name,
+            "entries": [{"name": "csv_name"}],
+        }
+        for channel_name in ["channel_name", "another_channel"]
+    ]
 
     bundles = {"schema": "olm.bundle", "image": "bundle_pullspec"}
     template = {
         "schema": "olm.template.basic",
-        "entries": [package_obj, channel, bundles],
+        "entries": [package_obj, bundles] + channels,
     }
 
     mock_open.assert_called_once_with("template.yaml", "w", encoding="utf-8")
@@ -70,7 +73,7 @@ def test_build_and_push_catalog_image(
 
     mock_tmp.return_value.__enter__.return_value = "/tmp"
     bundle = MagicMock()
-    bundle.channels = set(["channel"])
+    bundle.channels = set(["channel", "another_channel"])
     build_scratch_catalog.build_and_push_catalog_image(
         bundle, "bundle_pullspec", "repository_destination", "authfile"
     )
@@ -78,7 +81,7 @@ def test_build_and_push_catalog_image(
         template_path="/tmp/template.yaml",
         package=bundle.metadata_operator_name,
         default_channel=bundle.default_channel,
-        channel_name=list(bundle.channels)[0],
+        channel_names=list(bundle.channels),
         csv_name=bundle.csv["metadata"]["name"],
         bundle_pullspec="bundle_pullspec",
     )

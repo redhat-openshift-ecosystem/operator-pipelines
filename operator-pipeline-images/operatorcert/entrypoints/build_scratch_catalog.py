@@ -57,7 +57,7 @@ def generate_and_save_basic_template(  # pylint: disable=too-many-arguments,too-
     template_path: str,
     package: str,
     default_channel: str,
-    channel_name: str,
+    channel_names: list[str],
     csv_name: str,
     bundle_pullspec: str,
 ) -> Any:
@@ -68,7 +68,7 @@ def generate_and_save_basic_template(  # pylint: disable=too-many-arguments,too-
         template_path (str): A path to the file where the template will be saved
         package (str): A name of the package
         default_channel (str): A name of the default channel for the package
-        channel_name (str): A name of the channel for the package
+        channel_names (list[str]): A name of the channels for the package
         csv_name (str): A name of the CSV resource
         bundle_pullspec (str): A pullspec of the bundle image
 
@@ -81,17 +81,20 @@ def generate_and_save_basic_template(  # pylint: disable=too-many-arguments,too-
         "name": package,
         "defaultChannel": default_channel,
     }
-    channel = {
-        "schema": "olm.channel",
-        "package": package,
-        "name": channel_name,
-        "entries": [{"name": csv_name}],
-    }
+    channels = []
+    for channel_name in channel_names:
+        channel = {
+            "schema": "olm.channel",
+            "package": package,
+            "name": channel_name,
+            "entries": [{"name": csv_name}],
+        }
+        channels.append(channel)
 
     bundles = {"schema": "olm.bundle", "image": bundle_pullspec}
     template = {
         "schema": "olm.template.basic",
-        "entries": [package_obj, channel, bundles],
+        "entries": [package_obj, bundles] + channels,
     }
 
     with open(template_path, "w", encoding="utf-8") as f:
@@ -130,14 +133,14 @@ def build_and_push_catalog_image(
         os.mkdir(bundle_dir)
 
         template_path = os.path.join(tmpdir, "template.yaml")
-        channel_name = list(bundle.channels)[0] if bundle.channels else "stable"
-        default_channel = bundle.default_channel or channel_name
+        channels = list(bundle.channels) or ["stable"]
+        default_channel = bundle.default_channel or channels[0]
 
         generate_and_save_basic_template(
             template_path=template_path,
             package=bundle.metadata_operator_name,
             default_channel=default_channel,
-            channel_name=channel_name,
+            channel_names=channels,
             csv_name=bundle.csv["metadata"]["name"],
             bundle_pullspec=bundle_pullspec,
         )
