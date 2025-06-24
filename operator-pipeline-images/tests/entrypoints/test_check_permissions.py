@@ -340,39 +340,65 @@ def test_OperatorReview_pr_owner_can_write(
 
 
 @pytest.mark.parametrize(
-    ["project", "valid"],
+    ["project", "catalog_promotion_pr", "approved", "valid"],
     [
-        pytest.param(None, False, id="no project"),
-        pytest.param({}, False, id="no container"),
-        pytest.param({"container": {}}, False, id="no github_usernames"),
+        pytest.param(None, False, False, False, id="no project"),
+        pytest.param({}, False, False, False, id="no container"),
+        pytest.param({"container": {}}, False, False, False, id="no github_usernames"),
         pytest.param(
-            {"container": {"github_usernames": None}}, False, id="no github_usernames"
+            {"container": {"github_usernames": None}},
+            False,
+            False,
+            False,
+            id="no github_usernames",
         ),
         pytest.param(
             {"container": {"github_usernames": ["user123"]}},
+            False,
+            False,
             False,
             id="user not in github_usernames",
         ),
         pytest.param(
             {"container": {"github_usernames": ["owner"]}},
+            False,
+            True,
+            True,
+            id="user in github_usernames",
+        ),
+        pytest.param(
+            {"container": {"github_usernames": ["owner"]}},
+            True,
+            False,
             True,
             id="user in github_usernames",
         ),
     ],
 )
+@patch(
+    "operatorcert.entrypoints.check_permissions.OperatorReview.request_review_from_partners"
+)
 @patch("operatorcert.entrypoints.check_permissions.pyxis.get_project")
 def test_OperatorReview_check_permission_for_partner(
     mock_pyxis_project: MagicMock,
+    mock_request_review_from_partners: MagicMock,
     review_partner: check_permissions.OperatorReview,
     project: dict[str, Any],
+    catalog_promotion_pr: bool,
+    approved: bool,
     valid: bool,
 ) -> None:
     mock_pyxis_project.return_value = project
     if valid:
-        assert review_partner.check_permission_for_partner() == True
+        assert (
+            review_partner.check_permission_for_partner(catalog_promotion_pr)
+            == approved
+        )
+        if catalog_promotion_pr:
+            mock_request_review_from_partners.assert_called_once()
     else:
         with pytest.raises(check_permissions.NoPermissionError):
-            review_partner.check_permission_for_partner()
+            review_partner.check_permission_for_partner(catalog_promotion_pr)
 
 
 @pytest.mark.parametrize(
@@ -461,6 +487,29 @@ def test_OperatorReview_request_review_from_maintainers(
             f"@maintainer1, @maintainer2: please review the PR and approve it with an "
             "`approved` label if the pipeline is still running or merge the PR "
             "directly after review if the pipeline already passed successfully.",
+        ]
+    )
+
+
+@patch("operatorcert.entrypoints.check_permissions.run_command")
+def test_OperatorReview_request_review_from_partners(
+    mock_command: MagicMock,
+    review_community: check_permissions.OperatorReview,
+) -> None:
+    review_community.request_review_from_partners(["user1", "user2"])
+    mock_command.assert_called_once_with(
+        [
+            "gh",
+            "pr",
+            "comment",
+            review_community.pull_request_url,
+            "--body",
+            "The author of the PR is not listed as one of the reviewers in certification project.\n"
+            f"@user1, @user2: please review the PR and approve it with an "
+            "`/approve` comment.\n\n"
+            "Consider adding the author of the PR to the list of reviewers in "
+            "the certification project if you want automated merge without explicit "
+            "approval.",
         ]
     )
 

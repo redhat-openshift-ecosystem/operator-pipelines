@@ -68,6 +68,7 @@ def setup_argparser() -> argparse.ArgumentParser:
     return parser
 
 
+# pylint: disable=too-many-public-methods
 class OperatorReview:
     """
     A class represents a pull request review and permissions check
@@ -244,7 +245,7 @@ class OperatorReview:
             # Members of the organization have permissions to submit a PR
             return True
         if self.is_partner():
-            return self.check_permission_for_partner()
+            return self.check_permission_for_partner(is_catalog_promotion_pr)
         if self.check_permission_for_community():
             return True
         # Enable PR approval on forked repository
@@ -350,12 +351,16 @@ class OperatorReview:
             return True
         return False
 
-    def check_permission_for_partner(self) -> bool:
+    def check_permission_for_partner(self, is_catalog_promotion_pr: bool) -> bool:
         """
         Check if the pull request owner has permissions to submit a PR for the for
         partner operator.
         A user has permissions to submit a PR if the user is listed in the certification
         project in Pyxis.
+
+        Args:
+            is_catalog_promotion_pr (bool): A boolean value indicating if the pull request
+            is a catalog promotion PR that needs to be reviewed by users
 
         Raises:
             NoPermissionError: An exception raised when user does not have permissions
@@ -372,6 +377,12 @@ class OperatorReview:
             )
         container = project.get("container") or {}
         usernames = container.get("github_usernames") or []
+        if is_catalog_promotion_pr:
+            LOGGER.info(
+                "Pull request is a catalog promotion PR. Asking for review from partners.."
+            )
+            self.request_review_from_partners(usernames)
+            return False
         if self.pr_owner not in usernames:
             raise NoPermissionError(
                 f"User {self.pr_owner} does not have permissions to submit a PR for "
@@ -458,6 +469,24 @@ class OperatorReview:
             "`/approve` comment.\n\n"
             "Consider adding the author of the PR to the list of reviewers in "
             "the ci.yaml file if you want automated merge without explicit "
+            "approval."
+        )
+
+        run_command(
+            ["gh", "pr", "comment", self.pull_request_url, "--body", comment_text]
+        )
+
+    def request_review_from_partners(self, reviewers: list[str]) -> None:
+        """
+        Request review from the partner by adding a comment to the PR.
+        """
+        reviewers_with_at = ", ".join(map(lambda x: f"@{x}", reviewers))
+        comment_text = (
+            "The author of the PR is not listed as one of the reviewers in certification project.\n"
+            f"{reviewers_with_at}: please review the PR and approve it with an "
+            "`/approve` comment.\n\n"
+            "Consider adding the author of the PR to the list of reviewers in "
+            "the certification project if you want automated merge without explicit "
             "approval."
         )
 
