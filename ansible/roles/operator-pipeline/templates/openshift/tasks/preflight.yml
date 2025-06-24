@@ -7,7 +7,7 @@ spec:
   params:
     - name: pipeline_image
     - name: base_image
-      default: quay.io/redhat-isv/preflight-test@sha256:724c68fb806cad88c2b742dc5dead19a4ac7844cdfb9ef91dda1f17e1619e077
+      default: quay.io/redhat-isv/preflight-test@sha256:13381cfff3275e1573380faeb10bc3186d7b646e0c38767f83d560d96af5a108
       description: Preflight image used
     - name: bundle_index_image
       description: The Operator index image which includes the bundle
