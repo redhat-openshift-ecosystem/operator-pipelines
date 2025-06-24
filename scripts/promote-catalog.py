@@ -126,20 +126,26 @@ def add_catalog_to_ci_mapping(
     """
     operator_ci_path = repo_dir / "operators" / operator_name / "ci.yaml"
     with open(operator_ci_path, "r") as ci_file:
-        ci_content = YAML().load(ci_file)
+        yaml = YAML()
+        yaml.preserve_quotes = True
+
+        ci_content = yaml.load(ci_file)
 
     # Append target version to the catalog mapping for
     # a same template as used for the source version
     mapping = ci_content.get("fbc", {}).get("catalog_mapping", {})
+    all_catalog_from_mapping = [
+        catalog for template in mapping for catalog in template.get("catalog_names", [])
+    ]
+    if f"v{target_version}" in all_catalog_from_mapping:
+        LOG.info(
+            "Catalog %s already exists in the mapping for operator %s",
+            target_version,
+            operator_name,
+        )
+        return None
     for template in mapping:
         if f"v{source_version}" in template.get("catalog_names", []):
-            if f"v{target_version}" in template.get("catalog_names", []):
-                LOG.info(
-                    "Catalog %s already exists in the mapping for operator %s",
-                    target_version,
-                    operator_name,
-                )
-                return
             template["catalog_names"].append(f"v{target_version}")
             break
     else:
@@ -149,9 +155,12 @@ def add_catalog_to_ci_mapping(
             operator_name,
         )
         return None
+
     with open(operator_ci_path, "w") as ci_file:
         yaml = YAML()
         yaml.explicit_start = True
+        yaml.preserve_quotes = True
+        yaml.indent(mapping=2, sequence=4, offset=2)
         yaml.dump(ci_content, ci_file)
     return operator_ci_path
 
@@ -206,8 +215,16 @@ def commit_and_push(
     """
     git_repo.index.add(files_to_commit)
     LOG.info("Committing and pushing changes to %s", head_branch)
-    git_repo.index.commit(message)
-    git_repo.remotes.origin.push(head_branch)
+
+    # Construct the Signed-off-by line
+    name = git_repo.config_reader().get_value("user", "name")
+    email = git_repo.config_reader().get_value("user", "email")
+
+    signed_off_by = f"Signed-off-by: {name} <{email}>"
+    full_message = f"{message}\n\n{signed_off_by}"
+
+    git_repo.index.commit(full_message)
+    git_repo.remotes.upstream.push(head_branch)
 
 
 def create_pr(
@@ -228,7 +245,7 @@ def create_pr(
         local_repo (str): Work directory
     """
     gh_repo = ORGANIZATIONS[local_repo]["gh_repository"]
-    LOG.info("Creating PR in %s for branch %s", gh_repo, head)
+    LOG.info("Creating PR in %s for branch %s to %s", gh_repo, head, base)
     gh_api_url = f"https://api.github.com/repos/{gh_repo}/pulls"
     data = {"head": head, "base": base, "title": title, "body": body}
     return github.post(gh_api_url, data)
