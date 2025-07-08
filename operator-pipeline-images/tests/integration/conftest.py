@@ -36,6 +36,9 @@ inventory=./ansible/inventory/local
 def integration_tests_config_file(tmp_path: Path) -> Path:
     sample_config = """
 ---
+fixtures_repository:
+    url: https://github.com/foo/foo
+    token: secretABC
 operator_repository:
     url: https://github.com/foo/bar
     token: asdfg

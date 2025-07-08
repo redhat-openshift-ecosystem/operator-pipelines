@@ -46,10 +46,18 @@ class Config(BaseModel):
     Root configuration object
     """
 
+    # GitHub repo containing fixtures used by test cases
+    fixtures_repository: GitHubRepoConfig
+    # Main GitHub repo to be used by test cases. PRs submitted to this repo will trigger
+    # the hosted pipeline
     operator_repository: GitHubRepoConfig
+    # GitHub repo to submit PRs from
     contributor_repository: GitHubRepoConfig
+    # Container registry where to store bundle and index images created by test cases
     bundle_registry: ContainerRegistryConfig
+    # Container registry where to push the operator-pipeline image
     test_registry: ContainerRegistryConfig
+    # The IIB instance to be used by integration tests
     iib: IIBConfig
 
     @classmethod

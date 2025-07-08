@@ -40,7 +40,9 @@ def test__deploy_pipelines(
 @patch("openshift_client.delete_project")
 @patch("openshift_client.get_config_context")
 @patch("operatorcert.integration.runner.datetime")
+@patch("operatorcert.integration.runner.run_tests")
 def test_run_integration_tests(
+    mock_run_tests: MagicMock,
     mock_datetime: MagicMock,
     mock_get_config_context: MagicMock,
     mock_delete_project: MagicMock,
@@ -49,6 +51,7 @@ def test_run_integration_tests(
     operator_pipelines_path: Path,
     integration_tests_config_file: Path,
 ) -> None:
+    mock_run_tests.return_value = 0
     mock_datetime.now.return_value = datetime(2024, 11, 25, 12, 34, 56)
     mock_get_config_context.return_value = (
         "default/api-my-openshift-cluster:6443/user\n"

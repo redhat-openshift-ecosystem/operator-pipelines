@@ -1,5 +1,9 @@
 ---
 
+fixtures_repository:
+    # The GitHub repo containing fixtures used by test cases
+    url: https://github.com/foo/operators-integration-tests-fixtures
+    token: secretABC
 operator_repository:
     # The GitHub repository hosting the operators for integration tests
     url: https://github.com/foo/operators-integration-tests
