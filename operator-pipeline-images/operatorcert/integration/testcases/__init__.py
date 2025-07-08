@@ -45,4 +45,6 @@ def import_submodules(
     return results
 
 
-import_submodules(__name__)
+def import_testcases() -> None:
+    """Import all testcases in this module"""
+    import_submodules(__name__)

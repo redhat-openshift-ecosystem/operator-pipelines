@@ -8,6 +8,7 @@ from typing import TypeVar
 from colorama import Fore, Style, init as colorama_init
 
 from operatorcert.integration.config import Config
+from operatorcert.integration.testcases import import_testcases
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -87,6 +88,7 @@ def run_tests(config: Config, run_id: str) -> int:
     Return:
         number of test cases that failed
     """
+    import_testcases()
     colorama_init()
     failed = 0
     for test_class in _test_cases:

@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -42,13 +43,6 @@ def test_basetestcase(
     mock_cleanup.assert_called_once()
 
 
-@patch("operatorcert.integration.testcase._test_cases")
-def test_integration_test_case(mock_test_cases: MagicMock) -> None:
-    fake_class = MagicMock(spec=BaseTestCase)
-    integration_test_case(fake_class)
-    mock_test_cases.append.assert_called_once_with(fake_class)
-
-
 class GoodTest(BaseTestCase):
     pass
 
@@ -58,7 +52,16 @@ class BadTest(BaseTestCase):
         raise Exception()
 
 
+@patch("operatorcert.integration.testcase._test_cases")
+def test_integration_test_case(mock_test_cases: MagicMock) -> None:
+    assert integration_test_case(GoodTest) == GoodTest
+    mock_test_cases.append.assert_called_once_with(GoodTest)
+
+
 @patch("operatorcert.integration.testcase._test_cases", [GoodTest, BadTest, GoodTest])
-def test_run() -> None:
-    fake_config = MagicMock(spec=Config)
-    assert run_tests(fake_config, "20240315143025") == 1
+@patch("operatorcert.integration.testcase.import_testcases")
+def test_run(
+    mock_import_testcases: MagicMock, integration_tests_config_file: Path
+) -> None:
+    cfg = Config.from_yaml(integration_tests_config_file)
+    assert run_tests(cfg, "20240315143025") == 1
