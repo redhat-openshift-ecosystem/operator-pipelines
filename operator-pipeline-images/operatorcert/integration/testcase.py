@@ -5,9 +5,10 @@ Framework for the definition of integration test cases as python classes.
 import logging
 from typing import TypeVar
 
-from operatorcert.integration.config import Config
 from colorama import Fore, Style, init as colorama_init
 
+from operatorcert.integration.config import Config
+from operatorcert.integration.testcases import import_testcases
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -20,6 +21,7 @@ class BaseTestCase:
     def __init__(self, config: Config, logger: logging.Logger) -> None:
         self.config = config
         self.logger = logger
+        self.run_id = "(unset)"
 
     def setup(self) -> None:
         """
@@ -48,11 +50,12 @@ class BaseTestCase:
         any resources created during the execution of the test
         """
 
-    def run(self) -> None:
+    def run(self, run_id: str) -> None:
         """
         Execute the test case; `setup()`, `watch()`, `validate()` and
         `cleanup()` are called in order
         """
+        self.run_id = run_id
         try:
             self.setup()
             self.watch()
@@ -77,7 +80,7 @@ def integration_test_case(test_class: _T) -> _T:
     return test_class
 
 
-def run_tests(config: Config) -> int:
+def run_tests(config: Config, run_id: str) -> int:
     """
     Executes all the test cases that have been registered using the
     `integration_test_case` decorator
@@ -85,6 +88,7 @@ def run_tests(config: Config) -> int:
     Return:
         number of test cases that failed
     """
+    import_testcases()
     colorama_init()
     failed = 0
     for test_class in _test_cases:
@@ -92,7 +96,7 @@ def run_tests(config: Config) -> int:
         print(f"Running {test_name} ", end="")
         try:
             test_instance = test_class(config, LOGGER)
-            test_instance.run()
+            test_instance.run(run_id)
             print(f"{Fore.GREEN}PASS{Style.RESET_ALL}")
         except Exception as e:  # pylint: disable=broad-except
             print(f"{Fore.RED}FAIL{Style.RESET_ALL}")
