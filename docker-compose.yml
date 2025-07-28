@@ -1,0 +1,22 @@
+---
+services:
+  db:
+    image: registry.redhat.io/rhel10/postgresql-16@sha256:8515941a42d6bc5d59b753839174b3c0e839315d686ca2fdd6fa65e1cccf3390
+    container_name: webhook-dispatcher-db
+    restart: unless-stopped
+    environment:
+      POSTGRESQL_USER: user
+      POSTGRESQL_PASSWORD: password
+      POSTGRESQL_DATABASE: webhook_dispatcher
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

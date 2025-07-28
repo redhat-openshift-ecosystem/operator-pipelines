@@ -1,4 +1,4 @@
-""" A script to promote catalog to latest/desired version """
+"""A script to promote catalog to latest/desired version"""
 
 import argparse
 import logging
