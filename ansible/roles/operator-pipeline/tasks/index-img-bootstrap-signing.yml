@@ -101,7 +101,7 @@
         name: tekton-pipeline-executor
       subjects:
         - kind: ServiceAccount
-          name: "{{ item}}"
+          name: "{{ item }}"
           namespace: "{{ oc_index_bootstrap_namespace }}"
   with_items: "{{ index_img_bootstrap_service_accounts }}"
 

@@ -13,9 +13,9 @@
       body: E2e test for {{ integration_tests_operator_package_name }} ({{ integration_tests_operator_bundle_version }})
       head: "{{ integration_tests_git_bundle_branch }}"
       base: "{{ integration_tests_git_upstream_branch }}"
-  register: pr_response
+  register: integration_tests_pr_response
   no_log: true
 
 - name: Display PR response
   ansible.builtin.debug:
-    var: pr_response
+    var: integration_tests_pr_response
