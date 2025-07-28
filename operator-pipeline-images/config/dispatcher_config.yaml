@@ -1,0 +1,24 @@
+---
+dispatcher:
+  items:
+    - name: Red Hat community operators preprod
+      events:
+        - labeled
+        - opened
+        - reopened
+        - synchronize
+        - ready_for_review
+        - closed
+      full_repository_name: "redhat-openshift-ecosystem/community-operators-preprod"
+      capacity:
+        type: ocp_tekton
+        pipeline_name: "operator-hosted-pipeline"
+        max_capacity: 2
+        namespace: "operator-pipeline-stage"
+      callback_url: "https://example.com/foo" # Placeholder URL
+
+security:
+  # github_webhook_secret: "" # This can be also set by `GITHUB_WEBHOOK_SECRET`
+  verify_signatures: true
+  allowed_github_events:
+    - pull_request

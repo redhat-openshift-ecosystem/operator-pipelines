@@ -1,4 +1,4 @@
-""" Static tests helper utilities. """
+"""Static tests helper utilities."""
 
 import logging
 from functools import wraps
