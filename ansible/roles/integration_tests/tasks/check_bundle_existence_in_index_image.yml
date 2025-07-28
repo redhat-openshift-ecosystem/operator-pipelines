@@ -45,7 +45,7 @@
           ansible.builtin.shell:
             cmd: |
               set -o pipefail &&
-              export PATH="{{ temp_tools_dir.path }}:$PATH"
+              export PATH="{{ integration_tests_temp_tools_dir.path }}:$PATH"
               while read image_url; do
                 version=$(echo "$image_url" | sed 's/^.*:v//' )
                 # Add stage to registry address

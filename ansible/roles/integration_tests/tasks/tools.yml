@@ -6,12 +6,12 @@
     - name: Create temporary directory
       ansible.builtin.tempfile:
         state: directory
-      register: temp_tools_dir
+      register: integration_tests_temp_tools_dir
 
     - name: Download and extract the tkn binary
       ansible.builtin.unarchive:
         src: https://mirror.openshift.com/pub/openshift-v4/clients/pipelines/1.18.0/tkn-linux-amd64.tar.gz
-        dest: "{{ temp_tools_dir.path }}"
+        dest: "{{ integration_tests_temp_tools_dir.path }}"
         remote_src: true
         include:
           - tkn
@@ -19,18 +19,18 @@
     - name: Download and extract the opm binary
       ansible.builtin.unarchive:
         src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest-4.18/opm-linux.tar.gz
-        dest: "{{ temp_tools_dir.path }}"
+        dest: "{{ integration_tests_temp_tools_dir.path }}"
         remote_src: true
         include:
           - opm-rhel8
 
     - name: Rename the opm binary
       ansible.builtin.copy:
-        src: "{{ temp_tools_dir.path }}/opm-rhel8"
-        dest: "{{ temp_tools_dir.path }}/opm"
+        src: "{{ integration_tests_temp_tools_dir.path }}/opm-rhel8"
+        dest: "{{ integration_tests_temp_tools_dir.path }}/opm"
         mode: '0755'
 
     - name: Delete the original file
       ansible.builtin.file:
-        path: "{{ temp_tools_dir.path }}/opm-rhel8"
+        path: "{{ integration_tests_temp_tools_dir.path }}/opm-rhel8"
         state: absent

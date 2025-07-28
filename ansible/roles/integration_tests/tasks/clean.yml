@@ -17,5 +17,5 @@
     fi
   args:
     executable: /bin/bash
-    chdir: "{{ git_temp_dir.path }}"
+    chdir: "{{ integration_tests_git_temp_dir.path }}"
   changed_when: true

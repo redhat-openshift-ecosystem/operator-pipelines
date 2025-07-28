@@ -34,6 +34,10 @@ dependencies = [
     "pydantic>=2.10.0",
     "ruamel-yaml>=0.18.10",
     "semantic-version>=2.10.0",
+    "sqlalchemy>=2.0.41",
+    "flask>=3.1.1",
+    "psycopg2-binary>=2.9.10",
+    "httpx>=0.28.1",
 ]
 
 [project.scripts]
@@ -78,6 +82,7 @@ upload-artifacts = "operatorcert.entrypoints.upload_artifacts:main"
 upload-signature = "operatorcert.entrypoints.upload_signature:main"
 validate-catalog-format = "operatorcert.entrypoints.validate_catalog_format:main"
 verify-changed-dirs = "operatorcert.entrypoints.verify_changed_dirs:main"
+webhook-dospatecher = "operatorcert.webhook_dispatcher.main:main"
 
 
 [build-system]
@@ -104,5 +109,6 @@ operatorcert-dev = [
     "ansible-lint>=24.10.0",
     "colorama>=0.4.6",
     "pip-audit>=2.7.3",
+    "pytest-asyncio>=1.1.0",
 ]
 tox = ["tox>=4.16.0", "tox-pdm>=0.7.2"]

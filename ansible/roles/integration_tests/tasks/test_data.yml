@@ -7,7 +7,7 @@
     - prepare-bundle
   ansible.builtin.template:
     src: ci.yaml.j2
-    dest: "{{ git_temp_dir.path }}/ci.yaml"
+    dest: "{{ integration_tests_git_temp_dir.path }}/ci.yaml"
     mode: "0644"
   changed_when: true
 
@@ -35,7 +35,7 @@
     git push origin "$UPSTREAM_BRANCH"
   args:
     executable: /bin/bash
-    chdir: "{{ git_temp_dir.path }}"
+    chdir: "{{ integration_tests_git_temp_dir.path }}"
   changed_when: true
 
 - name: Generate and push Operator Bundle
@@ -102,7 +102,7 @@
     git push origin "$BUNDLE_BRANCH"
   args:
     executable: /bin/bash
-    chdir: "{{ git_temp_dir.path }}"
+    chdir: "{{ integration_tests_git_temp_dir.path }}"
   changed_when: true
 
 - name: Generate and push Catalog to a PR branch
@@ -153,6 +153,6 @@
     git push origin "$PR_BRANCH"
   args:
     executable: /bin/bash
-    chdir: "{{ git_temp_dir.path }}"
+    chdir: "{{ integration_tests_git_temp_dir.path }}"
   changed_when: true
   when: integration_tests_fbc_catalog
