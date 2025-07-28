@@ -67,7 +67,6 @@ def github_pipeline_webhook() -> Any:
     if isinstance(result, tuple):
         LOGGER.debug("GitHub webhook validation failed: %s", result)
         return jsonify(result[0]), result[1]
-
     webhook_event = convert_to_webhook_event(payload, request)
     if webhook_event is None:
         return jsonify({"status": "rejected", "message": "Unsupported event"}), 400
