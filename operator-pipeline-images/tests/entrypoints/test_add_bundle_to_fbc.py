@@ -9,6 +9,7 @@ from operatorcert.entrypoints import add_bundle_to_fbc
 @pytest.fixture
 def basic_catalog_template() -> add_bundle_to_fbc.BasicTemplate:
     operator = MagicMock()
+    operator.root = Path("./tmp")
     return add_bundle_to_fbc.BasicTemplate(
         operator=operator,
         template_type="fake-type",
@@ -20,6 +21,7 @@ def basic_catalog_template() -> add_bundle_to_fbc.BasicTemplate:
 @pytest.fixture
 def semver_template() -> add_bundle_to_fbc.SemverTemplate:
     operator = MagicMock()
+    operator.root = Path("./tmp")
     return add_bundle_to_fbc.SemverTemplate(
         operator=operator,
         template_type="fake-type",

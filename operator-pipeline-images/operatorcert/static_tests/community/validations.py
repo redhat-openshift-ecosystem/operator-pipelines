@@ -1,5 +1,5 @@
 """
-    Utility functions to support the check_required_fields bundle check
+Utility functions to support the check_required_fields bundle check
 """
 
 import binascii

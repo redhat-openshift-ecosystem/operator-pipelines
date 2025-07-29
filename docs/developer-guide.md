@@ -315,7 +315,7 @@ Choose the preparation process according to your Linux version.
 ```bash
 sudo dnf -y install hadolint
 python3 -m pip install pdm
-pdm venv create 3.12
+pdm venv create 3.13
 pdm install
 source .venv/bin/activate
 python3 -m pip install ansible-lint
@@ -328,7 +328,7 @@ Before starting, make sure you have installed the [Brew][2] package manager.
 ```bash
 brew install hadolint
 python3 -m pip install pdm
-pdm venv create 3.12
+pdm venv create 3.13
 pdm install
 source .venv/bin/activate
 python3 -m pip install ansible-lint
@@ -347,7 +347,7 @@ tox
 Setup python virtual environment using pdm.
 
 ```shell
-pdm venv create 3.12
+pdm venv create 3.13
 pdm install
 source .venv/bin/activate
 ```

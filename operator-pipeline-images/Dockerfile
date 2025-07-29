@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora:40
+FROM quay.io/fedora/fedora:42
 
 LABEL description="Cli tools for operator certification pipeline"
 LABEL summary="This image contains tools required for operator bundle certification pipeline."
@@ -70,7 +70,7 @@ COPY ./operator-pipeline-images ./operator-pipeline-images
 RUN pip3 install --no-cache-dir pdm
 # install dependencies in virtual environment
 COPY ./pdm.lock ./pyproject.toml ./README.md ./
-RUN pdm venv create 3.12 && \
+RUN pdm venv create 3.13 && \
     pdm install --frozen-lockfile --no-editable --production
 
 ENV VIRTUAL_ENV=/home/user/.venv

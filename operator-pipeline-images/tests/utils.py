@@ -1,5 +1,5 @@
 """
-    Miscellaneous non-fixture utility functions for tests
+Miscellaneous non-fixture utility functions for tests
 """
 
 from pathlib import Path
