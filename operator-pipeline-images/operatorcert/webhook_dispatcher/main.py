@@ -43,7 +43,9 @@ def main() -> None:
 
     db_manager.create_tables()
 
-    config = load_config(os.getenv("CONFIG_FILE", "./config/dispatcher_config.yaml"))
+    config = load_config(
+        os.getenv("WEBHOOK_DISPATCHER_CONFIG", "./config/dispatcher_config.yaml")
+    )
 
     # Open a new thread for the dispatcher
     dispatcher = EventDispatcher(config.dispatcher)
@@ -54,7 +56,10 @@ def main() -> None:
     dispatcher_thread.start()
 
     LOGGER.info("Starting API")
-    app.run(port=int(os.environ.get("DISPATCHER_PORT", "5000")), host="127.0.0.1")
+    app.run(
+        port=int(os.environ.get("DISPATCHER_PORT", "5000")),
+        host="0.0.0.0",  # nosec
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover

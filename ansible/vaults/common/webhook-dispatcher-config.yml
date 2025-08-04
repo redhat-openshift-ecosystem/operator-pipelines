@@ -1,0 +1,8 @@
+---
+dispatcher:
+  items: {{ operator_pipeline_dispatcher_config }}
+
+security:
+  verify_signatures: true
+  allowed_github_events:
+    - pull_request

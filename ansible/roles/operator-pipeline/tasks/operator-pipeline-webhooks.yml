@@ -7,7 +7,7 @@
   community.general.github_webhook:
     state: "{{ github_webhook_state }}"
     repository: "{{ item }}"
-    url: "{{ operator_pipeline_url }}"
+    url: "{{ operator_pipeline_webhook_dispatcher_url }}"
     secret: "{{ lookup('file', operator_pipeline_webhook_secret, rstrip=False) }}"
     content_type: json
     events:

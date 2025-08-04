@@ -14,6 +14,8 @@ operator_pipeline_image_tag: latest
 operator_pipeline_image_pull_spec: "{{ operator_pipeline_image_repo }}:{{ operator_pipeline_image_tag }}"
 operator_pipeline_pending_namespace: "operator-pipeline-{{ env }}"
 
+operator_pipeline_base_url: "apps.pipelines-stage.0ce8.p1.openshiftapps.com"
+
 tekton_pruner_keep: 10
 
 ##### Secrets locations
@@ -41,7 +43,7 @@ operator_pipeline_gpg_passphrase_path: ../../vaults/{{ env }}/operator-pipeline-
 # SSH key for the operator pipeline bot to access git repositories
 operator_pipeline_bot_ssh_key_path: ../../vaults/common/github-bot-ssh
 
-operator_pipeline_url: "https://operator-pipeline-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
+operator_pipeline_webhook_dispatcher_url: "https://webhook-dispatcher-{{ oc_namespace }}.{{ operator_pipeline_base_url }}/api/v1/webhooks/github-pipeline"
 operator_pipeline_webhook_secret: ../../vaults/common/github-webhook-secret-preprod.txt
 
 kerberos_keytab_isv: ../../vaults/common/nonprod-operatorpipelines.keytab
@@ -59,3 +61,85 @@ community_operator_hosted_pipeline_registry_auth_path: ../../vaults/{{ env }}/re
 community_operator_pipeline_pending_namespace: "community-operator-pipeline-{{ env }}"
 
 signing_pub_key_local_path: ../../vaults/{{ env }}/sig-key.pub
+
+# Webhook dispatcher
+operator_pipeline_webhook_dispatcher_config_file: ../../vaults/common/webhook-dispatcher-config.yml
+operator_pipeline_dispatcher_hosted_pipeline_events:
+  - labeled
+  - opened
+  - reopened
+  - synchronize
+  - ready_for_review
+operator_pipeline_dispatcher_release_pipeline_events:
+  - labeled
+  - closed
+
+operator_pipeline_dispatcher_hosted_capacity: 3
+operator_pipeline_dispatcher_release_capacity: 3
+
+operator_pipeline_callback_url: "https://operator-pipeline-{{ oc_namespace }}.{{ operator_pipeline_base_url}}"
+operator_pipeline_community_pipeline_callback_url: "https://community-operator-pipeline-{{ oc_namespace }}.{{ operator_pipeline_base_url }}"
+
+operator_pipeline_certified_operators_repository_name: "redhat-openshift-ecosystem/certified-operators-preprod"
+operator_pipeline_marketplace_operators_repository_name: "redhat-openshift-ecosystem/redhat-marketplace-operators-preprod"
+operator_pipeline_community_operators_repository_name: "redhat-openshift-ecosystem/community-operators-pipeline-preprod"
+
+operator_pipeline_dispatcher_config:
+  - name: Hosted pipeline for certified operators
+    events: "{{ operator_pipeline_dispatcher_hosted_pipeline_events }}"
+    full_repository_name: "{{ operator_pipeline_certified_operators_repository_name }}"
+    capacity:
+      type: ocp_tekton
+      pipeline_name: "operator-hosted-pipeline"
+      max_capacity: "{{ operator_pipeline_dispatcher_hosted_capacity }}"
+      namespace: "{{ oc_namespace }}"
+    callback_url: "{{ operator_pipeline_callback_url }}"
+  - name: Release pipeline for certified operators
+    events: "{{ operator_pipeline_dispatcher_release_pipeline_events }}"
+    full_repository_name: "{{ operator_pipeline_certified_operators_repository_name }}"
+    capacity:
+      type: ocp_tekton
+      pipeline_name: "operator-release-pipeline"
+      max_capacity: "{{ operator_pipeline_dispatcher_release_capacity }}"
+      namespace: "{{ oc_namespace }}"
+    callback_url: "{{ operator_pipeline_callback_url }}"
+
+  - name: Hosted pipeline for marketplace operators
+    events: "{{ operator_pipeline_dispatcher_hosted_pipeline_events }}"
+    full_repository_name: "{{ operator_pipeline_marketplace_operators_repository_name }}"
+    capacity:
+      type: ocp_tekton
+      pipeline_name: "operator-hosted-pipeline"
+      max_capacity: "{{ operator_pipeline_dispatcher_hosted_capacity }}"
+      namespace: "{{ oc_namespace }}"
+    callback_url: "{{ operator_pipeline_callback_url }}"
+
+  - name: Release pipeline for marketplace operators
+    events: "{{ operator_pipeline_dispatcher_release_pipeline_events }}"
+    full_repository_name: "{{ operator_pipeline_marketplace_operators_repository_name }}"
+    capacity:
+      type: ocp_tekton
+      pipeline_name: "operator-release-pipeline"
+      max_capacity: "{{ operator_pipeline_dispatcher_release_capacity }}"
+      namespace: "{{ oc_namespace }}"
+    callback_url: "{{ operator_pipeline_callback_url }}"
+
+  - name: Hosted pipeline for community operators
+    events: "{{ operator_pipeline_dispatcher_hosted_pipeline_events }}"
+    full_repository_name: "{{ operator_pipeline_community_operators_repository_name }}"
+    capacity:
+      type: ocp_tekton
+      pipeline_name: "operator-hosted-pipeline"
+      max_capacity: "{{ operator_pipeline_dispatcher_hosted_capacity }}"
+      namespace: "{{ oc_namespace }}"
+    callback_url: "{{ operator_pipeline_community_pipeline_callback_url }}"
+
+  - name: Release pipeline for community operators
+    events: "{{ operator_pipeline_dispatcher_release_pipeline_events }}"
+    full_repository_name: "{{ operator_pipeline_community_operators_repository_name }}"
+    capacity:
+      type: ocp_tekton
+      pipeline_name: "operator-release-pipeline"
+      max_capacity: "{{ operator_pipeline_dispatcher_release_capacity }}"
+      namespace: "{{ oc_namespace }}"
+    callback_url: "{{ operator_pipeline_community_pipeline_callback_url }}"

@@ -1,6 +1,8 @@
 ---
 env: prod
 ocp_host: https://api.pipelines-prod.ijdb.p1.openshiftapps.com:6443
+operator_pipeline_base_url: "apps.pipelines-prod.ijdb.p1.openshiftapps.com"
+
 branch: main
 operator_pipeline_webhook_secret: ../../vaults/prod/github-webhook-secret-prod.txt
 
@@ -33,3 +35,9 @@ redhat_marketplace_index: registry.redhat.io/redhat/redhat-marketplace-index
 
 # Settings for the index image bootstrap signing pipeline
 index_img_bootstrap_signing_pipeline_registry_auth_path: ../../vaults/common/index-bootstrap-signing-pipeline.json
+
+
+# Webhook dispatcher
+operator_pipeline_certified_operators_repository_name: "redhat-openshift-ecosystem/certified-operators"
+operator_pipeline_marketplace_operators_repository_name: "redhat-openshift-ecosystem/redhat-marketplace-operators"
+operator_pipeline_community_operators_repository_name: "redhat-openshift-ecosystem/community-operators-prod"

@@ -1,0 +1,75 @@
+---
+version: v1
+kind: Deployment
+metadata:
+  name: "{{ operator_pipeline_webhook_dispatcher_name }}"
+  labels:
+    app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+    suffix: "{{ suffix }}"
+    env: "{{ env }}"
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+  template:
+    metadata:
+      labels:
+        app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+      annotations:
+        checksum/config: "{{ lookup('file', '{{ operator_pipeline_webhook_dispatcher_config_file }}') | checksum }}"
+    spec:
+      serviceAccountName: "{{ operator_pipeline_webhook_dispatcher_name }}"
+      containers:
+        - name: "{{ operator_pipeline_webhook_dispatcher_name }}"
+          image: "{{ operator_pipeline_image_pull_spec}}"
+          command: ["/bin/sh", "-c", "webhook-dispatcher --verbose"]
+          ports:
+            - containerPort: 5000
+          livenessProbe:
+            httpGet:
+              path: /api/v1/status/ping
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/v1/status/ping
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          envFrom:
+            - configMapRef:
+                name: "{{ operator_pipeline_webhook_dispatcher_config_map_name }}"
+            - secretRef:
+                name: "{{ operator_pipeline_webhook_dispatcher_db_secret_name }}"
+          env:
+            - name: WEBHOOK_DISPATCHER_CONFIG
+              value: "/home/user/dispatcher-config.yml"
+            - name: POSTGRESQL_HOST
+              value: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db"
+            - name: POSTGRESQL_PORT
+              value: "5432"
+            - name: GITHUB_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: github-webhook-secret
+                  key: webhook-secret
+          volumeMounts:
+            - name: "webhook-dispatcher-config"
+              mountPath: "/home/user/dispatcher-config.yml"
+              subPath: dispatcher-config.yml
+      volumes:
+        - name: "webhook-dispatcher-config"
+          configMap:
+            name: "{{ operator_pipeline_webhook_dispatcher_config_map_name }}"

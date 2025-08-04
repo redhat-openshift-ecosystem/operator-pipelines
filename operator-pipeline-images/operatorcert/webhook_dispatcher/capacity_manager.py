@@ -47,7 +47,10 @@ class OCPTektonCapacityManager(CapacityManager):
             client.ApiClient: A Kubernetes API client instance
         """
         try:
-            config.load_kube_config()
+            try:
+                config.load_incluster_config()
+            except config.config_exception.ConfigException:
+                config.load_kube_config()
             self._k8s_client = client.ApiClient()
             return self._k8s_client
 

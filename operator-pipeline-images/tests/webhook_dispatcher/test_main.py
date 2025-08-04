@@ -24,12 +24,12 @@ def test_main(
     monkeypatch: Any,
 ) -> None:
 
-    monkeypatch.setenv("CONFIG_FILE", "config/dispatcher_config.yaml")
+    monkeypatch.setenv("WEBHOOK_DISPATCHER_CONFIG", "config/dispatcher_config.yaml")
     monkeypatch.setenv("DISPATCHER_PORT", "5000")
 
     main()
 
-    mock_app.run.assert_called_once_with(port=5000, host="127.0.0.1")
+    mock_app.run.assert_called_once_with(port=5000, host="0.0.0.0")
     mock_load_config.assert_called_once_with("config/dispatcher_config.yaml")
     mock_dispatcher.assert_called_once_with(mock_load_config.return_value.dispatcher)
     mock_thread.return_value.start.assert_called_once()

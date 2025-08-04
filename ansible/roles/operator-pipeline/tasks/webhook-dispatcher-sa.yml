@@ -1,0 +1,84 @@
+---
+- name: Create webhook dispatcher SA
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: "{{ operator_pipeline_webhook_dispatcher_name }}"
+        namespace: "{{ oc_namespace }}"
+
+- name: Create SA token secret
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "{{ operator_pipeline_webhook_dispatcher_name }}-token"
+        namespace: "{{ oc_namespace }}"
+        annotations:
+          kubernetes.io/service-account.name: "{{ operator_pipeline_webhook_dispatcher_name }}"
+      type: kubernetes.io/service-account-token
+
+- name: Grant SA view access to the namespace
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: view
+        namespace: "{{ oc_namespace }}"
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: view
+      subjects:
+        - kind: ServiceAccount
+          name: "{{ operator_pipeline_webhook_dispatcher_name }}"
+          namespace: "{{ oc_namespace }}"
+
+
+- name: Create a tekton view role
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: tekton-pipeline-viewer
+        namespace: "{{ oc_namespace }}"
+      rules:
+        - apiGroups: ["tekton.dev"]
+          resources: ["pipelines", "tasks", "pipelineruns"]
+          verbs: ["get", "list", "watch"]
+
+- name: Create a tekton view role binding
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: tekton-pipeline-viewer-binding
+        namespace: "{{ oc_namespace }}"
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: tekton-pipeline-viewer
+      subjects:
+        - kind: ServiceAccount
+          name: "{{ operator_pipeline_webhook_dispatcher_name }}"
+          namespace: "{{ oc_namespace }}"

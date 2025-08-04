@@ -1,0 +1,16 @@
+---
+version: v1
+kind: Route
+metadata:
+  name: "{{ operator_pipeline_webhook_dispatcher_name }}"
+  labels:
+    app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+spec:
+  to:
+    kind: Service
+    name: "{{ operator_pipeline_webhook_dispatcher_name }}"
+  port:
+    targetPort: http
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
