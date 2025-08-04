@@ -107,7 +107,7 @@ security:
 
 Production mode:
 ```bash
-export CONFIG_FILE="/path/to/dispatcher_config.yaml"
+export WEBHOOK_DISPATCHER_CONFIG="/path/to/dispatcher_config.yaml"
 python -m operatorcert.webhook_dispatcher.main
 ```
 

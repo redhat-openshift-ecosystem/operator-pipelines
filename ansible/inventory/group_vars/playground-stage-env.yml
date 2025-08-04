@@ -1,0 +1,6 @@
+---
+operator_pipeline_github_user: "REPLACE_ME"
+
+operator_pipeline_certified_operators_repository_name: "{{ operator_pipeline_github_user }}/certified-operators-preprod"
+operator_pipeline_marketplace_operators_repository_name: "{{ operator_pipeline_github_user }}/redhat-marketplace-operators-preprod"
+operator_pipeline_community_operators_repository_name: "{{ operator_pipeline_github_user }}/community-operators-pipeline-preprod"

@@ -1,0 +1,64 @@
+---
+version: v1
+kind: StatefulSet
+metadata:
+  name: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db"
+  labels:
+    app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+    suffix: "{{ suffix }}"
+    env: "{{ env }}"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db"
+  template:
+    metadata:
+      labels:
+        app: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db"
+    spec:
+      serviceName: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db"
+      containers:
+        - name: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db"
+          image: registry.redhat.io/rhel10/postgresql-16@sha256:8515941a42d6bc5d59b753839174b3c0e839315d686ca2fdd6fa65e1cccf3390
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+                - --live
+            initialDelaySeconds: 120
+            timeoutSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          envFrom:
+            - secretRef:
+                name: "{{ operator_pipeline_webhook_dispatcher_db_secret_name }}"
+
+          volumeMounts:
+            - name: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db-volume"
+              mountPath: /var/lib/pgsql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db-volume"
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi
+        storageClassName: "gp2"
