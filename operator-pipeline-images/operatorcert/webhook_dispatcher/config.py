@@ -10,15 +10,34 @@ from pydantic import BaseModel, Field
 class DatabaseConfig(BaseModel):
     """Database configuration settings."""
 
-    url: str = Field(
-        default_factory=lambda: os.getenv(
-            "DATABASE_URL",
-            "postgresql://user:password@localhost:5432/webhook_dispatcher",
-        )
+    db_user: str = Field(default_factory=lambda: os.getenv("POSTGRESQL_USER") or "")
+    db_password: str = Field(
+        default_factory=lambda: os.getenv("POSTGRESQL_PASSWORD") or ""
     )
+    db_host: str = Field(default_factory=lambda: os.getenv("POSTGRESQL_HOST") or "")
+    db_port: str = Field(default_factory=lambda: os.getenv("POSTGRESQL_PORT") or "")
+    db_name: str = Field(default_factory=lambda: os.getenv("POSTGRESQL_DATABASE") or "")
+
     echo: bool = Field(default=False)
     pool_size: int = Field(default=10)
     max_overflow: int = Field(default=20)
+
+    @property
+    def url(self) -> str:
+        """
+        Get the database URL using the individual parameters or the DATABASE_URL
+        environment variable.
+
+        Returns:
+            str: The database URL.
+        """
+        # A user can set the DATABASE_URL or provide the individual parameters
+        default_url = (
+            f"postgresql://{self.db_user}:{self.db_password}@"
+            f"{self.db_host}:{self.db_port}/{self.db_name}"
+        )
+        env_url = os.getenv("DATABASE_URL", default_url)
+        return env_url
 
 
 class SecurityConfig(BaseModel):

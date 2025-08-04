@@ -2,12 +2,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from operatorcert.webhook_dispatcher.capacity_manager import OCPTektonCapacityManager
+from kubernetes.config.config_exception import ConfigException
 
 
 @patch("operatorcert.webhook_dispatcher.capacity_manager.config.load_kube_config")
+@patch("operatorcert.webhook_dispatcher.capacity_manager.config.load_incluster_config")
 @patch("operatorcert.webhook_dispatcher.capacity_manager.client.ApiClient")
 def test_ocptekton_capacity_manager_k8s_client(
-    mock_load_kube_config: MagicMock, mock_api_client: MagicMock
+    mock_api_client: MagicMock,
+    mock_load_incluster_config: MagicMock,
+    mock_load_kube_config: MagicMock,
 ) -> None:
     capacity_manager = OCPTektonCapacityManager(
         pipeline_name="test-pipeline",
@@ -16,8 +20,15 @@ def test_ocptekton_capacity_manager_k8s_client(
     )
 
     assert capacity_manager.k8s_client is not None
-    mock_load_kube_config.assert_called_once()
+    mock_load_incluster_config.assert_called_once()
+    mock_load_kube_config.assert_not_called()
     mock_api_client.assert_called_once()
+
+    mock_load_incluster_config.reset_mock()
+    mock_load_incluster_config.side_effect = ConfigException("test")
+
+    assert capacity_manager.k8s_client is not None
+    mock_load_kube_config.assert_called_once()
 
     mock_load_kube_config.side_effect = Exception("test")
     with pytest.raises(Exception):

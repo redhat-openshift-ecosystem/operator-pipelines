@@ -86,64 +86,90 @@ class EventDispatcher:
             pull_request_events (list[WebhookEvent]): A list of WebhookEvent objects
             for a specific pull request.
         """
-        pipeline_events = [
-            self.convert_to_pipeline_event(event) for event in pull_request_events
-        ]
-
-        valid_pipeline_events = [event for event in pipeline_events if event.is_valid()]
-        invalid_pipeline_events = [
-            event for event in pipeline_events if not event.is_valid()
-        ]
-
-        for pipeline_event in invalid_pipeline_events:
-            self.abort_unsupported_event(pipeline_event.event)
-
-        sorted_events = sorted(
-            valid_pipeline_events, key=lambda x: x.event.received_at, reverse=True
+        valid_events, invalid_events = self.split_events_by_validity(
+            pull_request_events
         )
+        for event in invalid_events:
+            # Events produced by the Github that are not supported by the dispatcher
+            # are aborted
+            self.abort_unsupported_event(event)
 
-        # cancel all events except the latest one
-        for pipeline_event in sorted_events[1:]:
-            self.cancel_event(pipeline_event.event)
+        if not valid_events:
+            return
 
-        the_latest_pipeline_event = sorted_events[0]
-        await self.process_pipeline_event(the_latest_pipeline_event)
+        sorted_events = sorted(valid_events, key=lambda x: x.received_at, reverse=True)
 
-    def assign_config_to_event(
-        self, event: WebhookEvent
-    ) -> DispatcherConfigItem | None:
+        # First event is the latest one, so it will be processed
+        # All other events are cancelled as duplicates
+        event_to_process = sorted_events[0]
+        events_to_cancel = sorted_events[1:]
+
+        for event in events_to_cancel:
+            self.cancel_event(event)
+
+        pipeline_events_to_process = self.convert_to_pipeline_events(event_to_process)
+        for pipeline_event in pipeline_events_to_process:
+            await self.process_pipeline_event(pipeline_event)
+
+    def split_events_by_validity(
+        self, events: list[WebhookEvent]
+    ) -> tuple[list[WebhookEvent], list[WebhookEvent]]:
         """
-        Assign the configuration item to the event based on the repository name
+        Split events into valid and invalid events based on whether there is
+        a configuration item that matches the event.
+
+        Args:
+            events (list[WebhookEvent]): A list of WebhookEvent objects to split.
+
+        Returns:
+            tuple[list[WebhookEvent], list[WebhookEvent]]: A tuple containing two lists:
+            the first list contains valid events, and the second list contains invalid events.
+        """
+        valid_events = []
+        invalid_events = []
+        for event in events:
+            configs = self.assign_configs_to_event(event)
+            if configs:
+                valid_events.append(event)
+            else:
+                invalid_events.append(event)
+        return valid_events, invalid_events
+
+    def assign_configs_to_event(
+        self, event: WebhookEvent
+    ) -> list[DispatcherConfigItem]:
+        """
+        Assign the configuration items to the event based on the repository name
         and action type.
 
         Args:
             event (WebhookEvent): A WebhookEvent object containing event data.
 
         Returns:
-            DispatcherConfigItem | None: A configuration item that matches the event,
-            or None if no matching configuration is found.
+            list[DispatcherConfigItem]: A list of configuration items that matches the event.
         """
+        configs = []
         for item in self.config.items:
             if event.repository_full_name != item.full_repository_name:
                 continue
             if event.action not in item.events:
                 continue
-            return item
-        return None
+            configs.append(item)
+        return configs
 
-    def convert_to_pipeline_event(self, event: WebhookEvent) -> PipelineEvent:
+    def convert_to_pipeline_events(self, event: WebhookEvent) -> list[PipelineEvent]:
         """
-        Convert a WebhookEvent to a PipelineEvent with the assigned configuration.
+        Convert a WebhookEvent to a PipelineEvents with the assigned configuration.
 
         Args:
             event (WebhookEvent): A WebhookEvent object to convert.
 
         Returns:
-            PipelineEvent: A PipelineEvent object initialized with the event
-            and the assigned configuration item.
+            list[PipelineEvent]: A list of PipelineEvent objects initialized with the event
+            and the assigned configuration items.
         """
-        config = self.assign_config_to_event(event)
-        return PipelineEvent(event, config)
+        configs = self.assign_configs_to_event(event)
+        return [PipelineEvent(event, config) for config in configs]
 
     async def process_pipeline_event(self, pipeline_event: PipelineEvent) -> None:
         """

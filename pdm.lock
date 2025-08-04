@@ -2,10 +2,10 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default", "operatorcert-dev", "tox"]
+groups = ["default", "operatorcert", "operatorcert-dev", "tox"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:1c7cba6b2412c1df10b260d74d9d8766a87d959219b5e9db69104361bc479981"
+content_hash = "sha256:85a98b5caf35bd25ff08c202d4e4b58ed94b8a5331e73e9782102fd00614a45b"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -292,7 +292,7 @@ name = "cachetools"
 version = "6.1.0"
 requires_python = ">=3.9"
 summary = "Extensible memoizing collections and decorators"
-groups = ["operatorcert-dev", "tox"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "cachetools-6.1.0-py3-none-any.whl", hash = "sha256:1c7bb3cf9193deaf3508b7c5f2a79986c13ea38965c5adcff1f84519cf39163e"},
     {file = "cachetools-6.1.0.tar.gz", hash = "sha256:b4c4f404392848db3ce7aac34950d17be4d864da4b8b66911008e430bc544587"},
@@ -783,7 +783,7 @@ files = [
 name = "durationpy"
 version = "0.10"
 summary = "Module for converting between datetime.timedelta and Go's Duration strings."
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev"]
 files = [
     {file = "durationpy-0.10-py3-none-any.whl", hash = "sha256:3b41e1b601234296b4fb368338fdcd3e13e0b4fb5b67345948f4f2bf9868b286"},
     {file = "durationpy-0.10.tar.gz", hash = "sha256:1fa6893409a6e739c9c72334fc65cca1f355dbdd93405d30f726deb5bde42fba"},
@@ -880,7 +880,7 @@ name = "google-auth"
 version = "1.6.3"
 requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
 summary = "Google Authentication Library"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev"]
 dependencies = [
     "cachetools>=2.0.0",
     "pyasn1-modules>=0.2.1",
@@ -1169,7 +1169,7 @@ name = "kubernetes"
 version = "33.1.0"
 requires_python = ">=3.6"
 summary = "Kubernetes python client"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev"]
 dependencies = [
     "certifi>=14.05.14",
     "durationpy>=0.7",
@@ -1411,7 +1411,7 @@ name = "oauthlib"
 version = "3.3.1"
 requires_python = ">=3.8"
 summary = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev"]
 files = [
     {file = "oauthlib-3.3.1-py3-none-any.whl", hash = "sha256:88119c938d2b8fb88561af5f6ee0eec8cc8d552b7bb1f712743136eb7523b7a1"},
     {file = "oauthlib-3.3.1.tar.gz", hash = "sha256:0f0f8aa759826a193cf66c12ea1af1637f87b9b4622d46e866952bb022e538c9"},
@@ -1640,7 +1640,7 @@ name = "pyasn1"
 version = "0.6.1"
 requires_python = ">=3.8"
 summary = "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev"]
 files = [
     {file = "pyasn1-0.6.1-py3-none-any.whl", hash = "sha256:0d632f46f2ba09143da3a8afe9e33fb6f92fa2320ab7e886e2d0f7672af84629"},
     {file = "pyasn1-0.6.1.tar.gz", hash = "sha256:6f580d2bdd84365380830acf45550f2511469f673cb4a5ae3857a3170128b034"},
@@ -1651,7 +1651,7 @@ name = "pyasn1-modules"
 version = "0.4.2"
 requires_python = ">=3.8"
 summary = "A collection of ASN.1-based protocols modules"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev"]
 dependencies = [
     "pyasn1<0.7.0,>=0.6.1",
 ]
@@ -2138,7 +2138,7 @@ name = "requests-oauthlib"
 version = "2.0.0"
 requires_python = ">=3.4"
 summary = "OAuthlib authentication support for Requests."
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev"]
 dependencies = [
     "oauthlib>=3.0.0",
     "requests>=2.0.0",
@@ -2306,7 +2306,7 @@ name = "rsa"
 version = "4.9.1"
 requires_python = "<4,>=3.6"
 summary = "Pure-Python RSA implementation"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev"]
 dependencies = [
     "pyasn1>=0.1.3",
 ]

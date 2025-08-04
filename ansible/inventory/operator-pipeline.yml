@@ -13,6 +13,11 @@ operator-pipeline-prod:
     operator-pipeline-prod-project:
 
 operator-pipeline-stage:
+  children:
+    operator-pipeline-stage-env:
+    playground-stage-env:
+
+operator-pipeline-stage-env:
   hosts:
     operator-pipeline-stage-project:
 
@@ -23,6 +28,10 @@ operator-pipeline-dev:
 operator-pipeline-qa:
   hosts:
     operator-pipeline-qa-project:
+
+playground-stage-env:
+  hosts:
+    playground-stage-project:
 
 # Integration tests
 operator-pipeline-integration-tests:

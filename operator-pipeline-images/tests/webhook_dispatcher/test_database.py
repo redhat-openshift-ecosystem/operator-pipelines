@@ -14,7 +14,14 @@ from sqlalchemy.exc import SQLAlchemyError
 @pytest.fixture
 def database_manager() -> DatabaseManager:
     config = DatabaseConfig(
-        url="sqlite:///:memory:", echo=False, pool_size=5, max_overflow=10
+        db_user="user",
+        db_password="password",
+        db_host="localhost",
+        db_port="5432",
+        db_name="test",
+        echo=False,
+        pool_size=5,
+        max_overflow=10,
     )
     return DatabaseManager(config)
 
@@ -26,7 +33,10 @@ def test_database_manager_engine(
 
     assert database_manager.engine is not None
     assert mock_create_engine.call_count == 1
-    assert mock_create_engine.call_args[0][0] == "sqlite:///:memory:"
+    assert (
+        mock_create_engine.call_args[0][0]
+        == "postgresql://user:password@localhost:5432/test"
+    )
     assert mock_create_engine.call_args[1]["echo"] is False
     assert mock_create_engine.call_args[1]["pool_size"] == 5
     assert mock_create_engine.call_args[1]["max_overflow"] == 10

@@ -1,0 +1,16 @@
+---
+version: v1
+kind: Service
+metadata:
+  name: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db"
+  labels:
+    app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+spec:
+  selector:
+    app: "{{ operator_pipeline_webhook_dispatcher_name }}-postgres-db"
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  type: ClusterIP
