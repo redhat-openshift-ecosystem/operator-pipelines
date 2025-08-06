@@ -22,6 +22,8 @@ spec:
       description: The namespace of the PipelineRun.
     - name: pipelinerun
       description: The name of the PipelineRun to summarize.
+    - name: git_pr_url
+      description: The url of the related pull request.
     - name: jq_image
       description: Container image with jq installed
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
@@ -46,8 +48,12 @@ spec:
 
         ns="$(params.namespace)"
         pr="$(params.pipelinerun)"
+        pr_url="$(params.git_pr_url)"
         echo "PipelineRun: $pr" >> pipelinerun.txt
         echo "Namespace: $ns" >> pipelinerun.txt
+        if [ -n "$pr_url" ]; then
+          echo "PR URL: $pr_url" >> pipelinerun.txt
+        fi
 
         echo "Getting PipelineRun info"
         status=$(oc get pipelinerun $pr -n $ns -o 'jsonpath={.status.conditions[-1].reason}')
