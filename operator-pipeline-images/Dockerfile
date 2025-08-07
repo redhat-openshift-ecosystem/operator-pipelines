@@ -44,6 +44,7 @@ RUN dnf update -y && \
     dnf clean all
 
 COPY operator-pipeline-images/config/krb5.conf /etc/krb5.conf
+COPY operator-pipeline-images/hacks/retry-command.sh /usr/local/bin/retry
 
 # Install oc, opm and operator-sdk CLI
 RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.46.0/linux-${ARCH}-opm && \

@@ -134,33 +134,43 @@ class SplitArgs(argparse.Action):
 
 
 def run_command(
-    cmd: List[str], check: bool = True, cwd: Optional[str] = None
+    cmd: List[str], check: bool = True, cwd: Optional[str] = None, retries: int = 1
 ) -> subprocess.CompletedProcess[bytes]:
     """
     Run a shell command and return its output.
 
     Args:
         cmd (List[str]): Command to run
+        check (bool): Whether to check the command exit code
+        cwd (Optional[str]): Current working directory
+        retries (int): Number of retries before failing
 
     Returns:
         CompletedProcess: Command output
     """
     LOGGER.debug("Running command: %s", cmd)
-    try:
-        output = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=check,
-            cwd=cwd,
-        )
-    except subprocess.CalledProcessError as e:
-        LOGGER.error(
-            "Error running command: \nstdout: %s\nstderr: %s",
-            e.stdout,
-            e.stderr,
-        )
-        raise e
+    for attempt in range(1, retries + 1):
+        try:
+            output = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=check,
+                cwd=cwd,
+            )
+            break
+        except subprocess.CalledProcessError as e:
+            LOGGER.error(
+                "Error running command: \nstdout: %s\nstderr: %s",
+                e.stdout,
+                e.stderr,
+            )
+            if attempt >= retries:
+                raise e
+            LOGGER.warning(
+                "Command failed, retrying... (attempt %d of %d)", attempt, retries
+            )
+
     LOGGER.debug("Command output: %s", output.stdout.decode("utf-8"))
     return output
 
@@ -227,7 +237,8 @@ def copy_images_to_destination(
             cmd.extend(["--authfile", auth_file])
 
         LOGGER.info("Copying image to destination: %s", cmd)
-        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+
+        run_command(cmd, retries=5)
 
 
 def sort_versions(version_list: list[Any]) -> list[Any]:
