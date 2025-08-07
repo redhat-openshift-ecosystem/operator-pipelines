@@ -80,5 +80,10 @@
     - signing-pipeline
     - bootstrap-signing
 
+- name: Deploy webhook dispatcher
+  ansible.builtin.import_tasks: tasks/webhook-dispatcher.yml
+  tags:
+    - webhook-dispatcher
+
 - name: Import operator release webhooks
   ansible.builtin.import_tasks: tasks/operator-pipeline-webhooks.yml

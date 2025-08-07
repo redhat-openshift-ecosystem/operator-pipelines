@@ -21,13 +21,14 @@ build-and-deploy-playground:
 deploy-playground:
 	@echo "Deploying playground..."
 	ansible-playbook \
-		ansible/playbooks/deploy.yml \
+		ansible/playbooks/deploy-playground.yml \
 		-e oc_namespace=$(USER)-playground \
 		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
 		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
 		-e suffix=123 \
 		-e ocp_token=`oc whoami -t` \
 		-e branch=$(USER) \
+		-e operator_pipeline_github_user=$(GITHUB_USER) \
 		-e env=stage \
 		--skip-tags ci,import-index-images \
 		-vv \

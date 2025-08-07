@@ -1,9 +1,30 @@
 ---
 integration_tests_operator_package_name: test-e2e-community-operator
-operator_pipeline_url: "https://community-operator-pipeline-{{ oc_namespace }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
 integration_tests_git_base_branch: community  # contains config.yaml containing pointer to community-operators index
 integration_tests_organization: community-operators
 integration_tests_ci_pipeline_enabled: false
 
 integration_tests_ci_file_reviewers:
   - rh-operator-bundle-test-e2e
+
+
+operator_pipeline_dispatcher_config:
+  - name: Hosted pipeline for community operators
+    events: "{{ operator_pipeline_dispatcher_hosted_pipeline_events }}"
+    full_repository_name: "{{ integration_tests_git_upstream_repo }}"
+    capacity:
+      type: ocp_tekton
+      pipeline_name: "operator-hosted-pipeline"
+      max_capacity: "{{ operator_pipeline_dispatcher_hosted_capacity }}"
+      namespace: "{{ oc_namespace }}"
+    callback_url: "{{ operator_pipeline_community_pipeline_callback_url }}"
+
+  - name: Release pipeline for community operators
+    events: "{{ operator_pipeline_dispatcher_release_pipeline_events }}"
+    full_repository_name: "{{ integration_tests_git_upstream_repo }}"
+    capacity:
+      type: ocp_tekton
+      pipeline_name: "operator-release-pipeline"
+      max_capacity: "{{ operator_pipeline_dispatcher_release_capacity }}"
+      namespace: "{{ oc_namespace }}"
+    callback_url: "{{ operator_pipeline_community_pipeline_callback_url }}"

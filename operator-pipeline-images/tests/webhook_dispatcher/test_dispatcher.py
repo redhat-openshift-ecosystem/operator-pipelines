@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch, call
 
 import pytest
 from operatorcert.webhook_dispatcher.config import (
@@ -24,10 +24,17 @@ def dispatcher() -> EventDispatcher:
         config=DispatcherConfig(
             items=[
                 DispatcherConfigItem(
-                    name="test",
-                    events=["test"],
+                    name="test1.0",
+                    events=["pull_request"],
                     full_repository_name="test/test",
                     callback_url="http://test.com",
+                    capacity=capacity_config,
+                ),
+                DispatcherConfigItem(
+                    name="test1.1",
+                    events=["pull_request"],
+                    full_repository_name="test/test",
+                    callback_url="http://test-another.com",
                     capacity=capacity_config,
                 ),
                 DispatcherConfigItem(
@@ -134,53 +141,100 @@ async def test_process_repository_events(
     "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.process_pipeline_event"
 )
 @patch(
-    "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.convert_to_pipeline_event"
+    "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.convert_to_pipeline_events"
+)
+@patch(
+    "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.split_events_by_validity"
 )
 async def test_process_pull_request_events(
+    mock_split_events_by_validity: MagicMock,
     mock_convert_to_pipeline_event: MagicMock,
-    mock_process_pipeline_event: MagicMock,
+    mock_process_pipeline_events: MagicMock,
     mock_abort_unsupported_event: MagicMock,
     mock_cancel_event: MagicMock,
     dispatcher: EventDispatcher,
 ) -> None:
     valid_event_1 = MagicMock()
-    valid_event_1.is_valid.return_value = True
-    valid_event_1.event.received_at = datetime.now()
+    valid_event_1.received_at = datetime.now()
 
     valid_event_2 = MagicMock()
-    valid_event_2.is_valid.return_value = True
-    valid_event_2.event.received_at = datetime.now() - timedelta(days=1)
+    valid_event_2.received_at = datetime.now() - timedelta(days=1)
 
     invalid_event = MagicMock()
-    invalid_event.is_valid.return_value = False
 
-    mock_convert_to_pipeline_event.side_effect = [
-        valid_event_1,
-        valid_event_2,
-        invalid_event,
-    ]
-
-    await dispatcher.process_pull_request_events(
-        [MagicMock(), MagicMock(), MagicMock()]
+    mock_split_events_by_validity.return_value = (
+        [valid_event_1, valid_event_2],
+        [invalid_event],
     )
 
-    mock_cancel_event.assert_called_once_with(valid_event_2.event)
-    mock_abort_unsupported_event.assert_called_once_with(invalid_event.event)
-    mock_process_pipeline_event.assert_called_once_with(valid_event_1)
+    mock_pipeline_events = [MagicMock(), MagicMock()]
+
+    mock_convert_to_pipeline_event.return_value = mock_pipeline_events
+
+    await dispatcher.process_pull_request_events(
+        [valid_event_1, valid_event_2, invalid_event]
+    )
+
+    mock_cancel_event.assert_called_once_with(valid_event_2)
+    mock_abort_unsupported_event.assert_called_once_with(invalid_event)
+    mock_process_pipeline_events.assert_has_calls(
+        [
+            call(mock_pipeline_events[0]),
+            call(mock_pipeline_events[1]),
+        ]
+    )
+
+    # Test only invalid events
+    mock_split_events_by_validity.return_value = (
+        [],
+        [invalid_event],
+    )
+    mock_process_pipeline_events.reset_mock()
+    mock_abort_unsupported_event.reset_mock()
+    mock_cancel_event.reset_mock()
+    await dispatcher.process_pull_request_events(
+        [valid_event_1, valid_event_2, invalid_event]
+    )
+
+    mock_process_pipeline_events.assert_not_called()
+    mock_abort_unsupported_event.assert_called_once_with(invalid_event)
+    mock_cancel_event.assert_not_called()
 
 
-def test_assign_config_to_event(dispatcher: EventDispatcher) -> None:
+@patch(
+    "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.assign_configs_to_event"
+)
+def test_split_events_by_validity(
+    mock_assign_configs_to_event: MagicMock,
+    dispatcher: EventDispatcher,
+) -> None:
+    mock_assign_configs_to_event.side_effect = [
+        [],
+        [MagicMock(), MagicMock()],
+        [MagicMock()],
+    ]
+    events = [MagicMock(), MagicMock(), MagicMock()]
+
+    valid_events, invalid_events = dispatcher.split_events_by_validity(events)  # type: ignore
+    assert len(valid_events) == 2
+    assert len(invalid_events) == 1
+    assert valid_events == events[1:]
+    assert invalid_events == events[:1]
+
+
+def test_assign_configs_to_event(dispatcher: EventDispatcher) -> None:
     event = WebhookEvent(
         id=1,
-        repository_full_name="test/test2",
+        repository_full_name="test/test",
         pull_request_number=1,
-        action="push",
+        action="pull_request",
         processed=False,
         processing_error=None,
     )
-    config = dispatcher.assign_config_to_event(event)
-    assert config is not None
-    assert config.name == "test2"
+    configs = dispatcher.assign_configs_to_event(event)
+    assert len(configs) == 2
+    assert configs[0].name == "test1.0"
+    assert configs[1].name == "test1.1"
 
     event = WebhookEvent(
         id=1,
@@ -190,15 +244,15 @@ def test_assign_config_to_event(dispatcher: EventDispatcher) -> None:
         processed=False,
         processing_error=None,
     )
-    config = dispatcher.assign_config_to_event(event)
-    assert config is None
+    configs = dispatcher.assign_configs_to_event(event)
+    assert len(configs) == 0
 
 
 @patch(
-    "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.assign_config_to_event"
+    "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.assign_configs_to_event"
 )
 def test_convert_to_pipeline_event(
-    mock_assign_config_to_event: MagicMock, dispatcher: EventDispatcher
+    mock_assign_configs_to_event: MagicMock, dispatcher: EventDispatcher
 ) -> None:
     event = WebhookEvent(
         id=1,
@@ -208,10 +262,17 @@ def test_convert_to_pipeline_event(
         processed=False,
         processing_error=None,
     )
-    mock_assign_config_to_event.return_value = MagicMock()
-    pipeline_event = dispatcher.convert_to_pipeline_event(event)
-    assert pipeline_event.config_item == mock_assign_config_to_event.return_value
-    assert pipeline_event.event == event
+    mock_assign_configs_to_event.return_value = [MagicMock(), MagicMock()]
+    pipeline_events = dispatcher.convert_to_pipeline_events(event)
+    assert len(pipeline_events) == 2
+    assert (
+        pipeline_events[0].config_item == mock_assign_configs_to_event.return_value[0]
+    )
+    assert (
+        pipeline_events[1].config_item == mock_assign_configs_to_event.return_value[1]
+    )
+    assert pipeline_events[0].event == event
+    assert pipeline_events[1].event == event
 
 
 @pytest.mark.asyncio

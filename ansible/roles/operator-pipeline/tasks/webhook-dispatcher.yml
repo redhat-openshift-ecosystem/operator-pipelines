@@ -1,0 +1,63 @@
+---
+- name: Create database secret
+  no_log: true
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: opaque
+      metadata:
+        name: "{{ operator_pipeline_webhook_dispatcher_db_secret_name }}"
+        labels:
+          app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        POSTGRESQL_USER: "{{ operator_pipeline_webhook_dispatcher_db_user | b64encode }}"
+        POSTGRESQL_PASSWORD: "{{ operator_pipeline_webhook_dispatcher_db_password | b64encode }}"
+        POSTGRESQL_DATABASE: "{{ operator_pipeline_webhook_dispatcher_db_database | b64encode }}"
+
+
+- name: Deploy postgres database
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  loop:
+    - ../templates/openshift/webhook_dispatcher/postgres-db-stateful-set.yml
+    - ../templates/openshift/webhook_dispatcher/postgres-db-service.yml
+
+- name: Create a webhook dispatcher service account
+  ansible.builtin.import_tasks: tasks/webhook-dispatcher-sa.yml
+
+- name: Create a webhook dispatcher config map
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: "{{ operator_pipeline_webhook_dispatcher_config_map_name }}"
+        labels:
+          app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+          suffix: "{{ suffix }}"
+          env: "{{ env }}"
+      data:
+        dispatcher-config.yml: "{{ lookup('template', '{{ operator_pipeline_webhook_dispatcher_config_file }}') }}"
+
+- name: Deploy webhook dispatcher
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  loop:
+    - "../templates/openshift/webhook_dispatcher/webhook-dispatcher-deployment.yml"
+    - "../templates/openshift/webhook_dispatcher/webhook-dispatcher-service.yml"
+    - "../templates/openshift/webhook_dispatcher/webhook-dispatcher-route.yml"

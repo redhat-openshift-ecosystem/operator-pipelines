@@ -1,0 +1,16 @@
+---
+version: v1
+kind: Service
+metadata:
+  name: "{{ operator_pipeline_webhook_dispatcher_name }}"
+  labels:
+    app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+spec:
+  selector:
+    app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000
+      protocol: TCP
+  type: ClusterIP
