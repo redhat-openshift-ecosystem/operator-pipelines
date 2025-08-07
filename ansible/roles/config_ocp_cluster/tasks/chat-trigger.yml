@@ -46,8 +46,8 @@
                 value: $(body.pipelineRun.metadata.namespace)
               - name: pipelinerun
                 value: $(body.pipelineRun.metadata.name)
-              - name: thread_key
-                value: "$(body.pipelineRun.metadata.namespace)-$(header['Ce-Type'])"
+              - name: git_pr_url
+                value: $(body.pipelineRun.spec.params[?(@.name=='git_pr_url')].value)
 
     - name: Create Chat TriggerTemplate
       kubernetes.core.k8s:
@@ -64,7 +64,8 @@
             params:
               - name: namespace
               - name: pipelinerun
-              - name: thread_key
+              - name: git_pr_url
+                default: ""
             resourcetemplates:
               - apiVersion: tekton.dev/v1
                 kind: TaskRun
@@ -79,8 +80,8 @@
                       value: $(tt.params.namespace)
                     - name: pipelinerun
                       value: $(tt.params.pipelinerun)
-                    - name: thread_key
-                      value: $(tt.params.thread_key)
+                    - name: git_pr_url
+                      value: $(tt.params.git_pr_url)
                   taskRef:
                     name: chat-pipelinerun-summary
 
