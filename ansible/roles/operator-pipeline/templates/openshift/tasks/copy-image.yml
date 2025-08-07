@@ -58,7 +58,7 @@ spec:
         DEST_AUTHFILE=$(workspaces.dest-registry-credentials.path)/.dockerconfigjson
         CONNECT_REPO_PATH="$(params.connect_registry)/$(params.vendor_label)/$(params.repo_name)"
 
-        skopeo copy \
+        retry 5 skopeo copy \
           --retry-times 5 \
           --src-authfile $SRC_AUTHFILE \
           --dest-authfile $DEST_AUTHFILE \
@@ -66,14 +66,14 @@ spec:
           docker://"$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag)"
 
 
-        skopeo copy \
+        retry 5 skopeo copy \
           --retry-times 5 \
           --src-authfile $SRC_AUTHFILE \
           --dest-authfile $DEST_AUTHFILE \
           docker://$(params.src_image) \
           docker://"$(params.dest_image_registry_namespace_certproject):latest"
 
-        DIGEST=$(skopeo inspect --retry-times 5 --authfile $DEST_AUTHFILE docker://$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag) | jq -r .Digest)
+        DIGEST=$(retry 5 skopeo inspect --retry-times 5 --authfile $DEST_AUTHFILE docker://$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag) | jq -r .Digest)
         echo -n $DIGEST | tee $(results.container_digest.path)
         echo "- $CONNECT_REPO_PATH:$(params.dest_image_tag)" | tee "$RELEASE_INFO_DIR_PATH/released_bundle.txt"
         echo -n "$CONNECT_REPO_PATH@${DIGEST}" > $(results.image_pullspec.path)

@@ -116,7 +116,7 @@ class BundleImage:
         if self.auth_file_path:
             command.extend(["--authfile", self.auth_file_path])
 
-        utils.run_command(command)
+        utils.run_command(command, retries=5)
 
     def _extract_content(self) -> None:
         """
