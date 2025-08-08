@@ -101,12 +101,49 @@ def test_get_repo_config(mock_yaml_load: MagicMock) -> None:
         assert result == {"foo": "bar"}
 
 
-def test_run_command() -> None:
+@patch("operatorcert.utils.subprocess.run")
+def test_run_command(mock_subprocess_run: MagicMock) -> None:
     result = utils.run_command(["echo", "foo"])
+    mock_subprocess_run.return_value.stdout = b"foo\n"
     assert result.stdout.decode("utf-8") == "foo\n"
+    mock_subprocess_run.assert_called_once_with(
+        ["echo", "foo"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=True,
+        cwd=None,
+    )
 
+    result = utils.run_command(["echo", "foo"], retries=2)
+    assert result.stdout.decode("utf-8") == "foo\n"
+    assert mock_subprocess_run.call_count == 2
+
+    valid_response = MagicMock()
+    valid_response.stdout = b"foo\n"
+
+    # Fails on first attempt, succeeds on second
+    mock_subprocess_run.reset_mock()
+    mock_subprocess_run.side_effect = [
+        subprocess.CalledProcessError(1, ["false"]),
+        valid_response,
+    ]
+    result = utils.run_command(["echo", "foo"], retries=5)
+    assert result.stdout.decode("utf-8") == "foo\n"
+    assert mock_subprocess_run.call_count == 2
+
+    # Fails immediately
+    mock_subprocess_run.reset_mock()
+    mock_subprocess_run.side_effect = subprocess.CalledProcessError(1, ["false"])
     with pytest.raises(subprocess.CalledProcessError):
         utils.run_command(["false"])
+        mock_subprocess_run.assert_called_once()
+
+    # Fails after retries
+    mock_subprocess_run.reset_mock()
+    mock_subprocess_run.side_effect = subprocess.CalledProcessError(1, ["false"])
+    with pytest.raises(subprocess.CalledProcessError):
+        utils.run_command(["false"], retries=2)
+        assert mock_subprocess_run.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -144,8 +181,8 @@ def test_get_ocp_supported_versions_error(mock_get: MagicMock) -> None:
     mock_get.assert_called_once()
 
 
-@patch("operatorcert.utils.subprocess")
-def test_copy_images_to_destination(mock_subprocess: MagicMock) -> None:
+@patch("operatorcert.utils.run_command")
+def test_copy_images_to_destination(mock_run_command: MagicMock) -> None:
     iib_response = [
         {
             "from_index": "quay.io/qwe/asd:v4.12",
@@ -156,7 +193,7 @@ def test_copy_images_to_destination(mock_subprocess: MagicMock) -> None:
         iib_response, "quay.io/foo/bar", "-foo", "test.txt"
     )
 
-    mock_subprocess.run.assert_called_once_with(
+    mock_run_command.assert_called_once_with(
         [
             "skopeo",
             "copy",
@@ -167,9 +204,7 @@ def test_copy_images_to_destination(mock_subprocess: MagicMock) -> None:
             "--authfile",
             "test.txt",
         ],
-        stdout=mock_subprocess.PIPE,
-        stderr=mock_subprocess.PIPE,
-        check=True,
+        retries=5,
     )
 
 

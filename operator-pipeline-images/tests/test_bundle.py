@@ -68,7 +68,8 @@ def test_BundleImage__copy_image(mock_command: MagicMock, bundle: BundleImage) -
             "dir:fake_path",
             "--authfile",
             "fake_auth_file",
-        ]
+        ],
+        retries=5,
     )
 
 

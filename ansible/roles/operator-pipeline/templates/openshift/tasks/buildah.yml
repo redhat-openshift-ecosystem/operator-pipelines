@@ -110,6 +110,23 @@ spec:
           EXTRA_ARGS+=" --authfile $(workspaces.dockerconfig.path)/.dockerconfigjson"
         fi
 
+        retry() {
+            local max_retries=$1
+            shift
+
+            local attempt=1
+
+            until "$@"; do
+                if [ $attempt -ge $max_retries ]; then
+                    echo "Command failed after $max_retries attempts" >&2
+                    return 1
+                fi
+                attempt=$((attempt + 1))
+                echo "Attempt $attempt failed. Retrying..." >&2
+                sleep 1
+            done
+        }
+
         echo "Building $(params.IMAGE)"
         BUILD_ARGS=()
         for buildarg in "$@"
@@ -125,7 +142,7 @@ spec:
         [ "${PARAM_SKIP_PUSH}" = "true" ] && echo "Push skipped" && exit 0
         # push the image (CERT_DIR_FLAG should be omitted if empty and PUSH_EXTRA_ARGS can contain multiple args)
         # shellcheck disable=SC2046,SC2086
-        buildah ${CERT_DIR_FLAG} "--storage-driver=${PARAM_STORAGE_DRIVER}" push \
+        retry 5 buildah ${CERT_DIR_FLAG} "--storage-driver=${PARAM_STORAGE_DRIVER}" push \
           "--tls-verify=${PARAM_TLSVERIFY}" --digestfile /tmp/image-digest ${PARAM_PUSH_EXTRA_ARGS} ${EXTRA_ARGS} \
           "${PARAM_IMAGE}" "docker://${PARAM_IMAGE}"
         tee "$(results.IMAGE_DIGEST.path)" < /tmp/image-digest

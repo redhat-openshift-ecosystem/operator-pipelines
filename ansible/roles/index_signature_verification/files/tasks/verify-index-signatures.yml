@@ -10,15 +10,9 @@ spec:
   params:
     - name: organization
       description: Index organization
-    - name: jq_image
-      description: Operator pipeline default image
+    - name: pipeline_image
+      description: Pipeline image
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
-    - name: podman_image
-      description: Podman image
-      default: "registry.redhat.io/ubi9/podman:9.5"
-    - name: skopeo_image
-      description: Skopeo image
-      default: "registry.redhat.io/ubi9/skopeo:9.5"
     - name: indices_api
       description: Pyxis API endpoint for Operator index images
       default: https://catalog.redhat.com/api/containers/v1/operators/indices
@@ -50,7 +44,7 @@ spec:
 
   steps:
     - name: get-index-images
-      image: "$(params.jq_image)"
+      image: "$(params.pipeline_image)"
       script: |
         #!/usr/bin/env bash
         set +x -e -o pipefail
@@ -65,7 +59,7 @@ spec:
           | tee image-tags.txt
 
     - name: inspect-images
-      image: "$(params.skopeo_image)"
+      image: "$(params.pipeline_image)"
       script: |
         #!/usr/bin/env bash
         set +x -e -o pipefail
@@ -73,11 +67,11 @@ spec:
         for image in $(cat image-tags.txt); do
           dest=$(echo -n $image | base64)
           echo "Inspecting $image"
-          skopeo inspect --retry-times 5 --raw docker://$image > $dest.json
+          retry 5 skopeo inspect --raw docker://$image > $dest.json
         done
 
     - name: get-digest-pull-specs
-      image: "$(params.jq_image)"
+      image: "$(params.pipeline_image)"
       script: |
         #!/usr/bin/env bash
         set +x -e -o pipefail
@@ -93,7 +87,7 @@ spec:
     - name: pull-images-by-digest
       securityContext:
         privileged: true
-      image: "$(params.podman_image)"
+      image: "$(params.pipeline_image)"
       env:
         - name: STORAGE_DRIVER
           value: vfs
@@ -104,22 +98,6 @@ spec:
         cp /etc/containers/policy.json /tmp/
         podman image trust set --policypath=/tmp/policy.json -f /mnt/keys/pub.gpg registry.redhat.io
 
-        max_retries=5
-
         for pull_spec in $(cat image-digests.txt); do
-            wait_time=1
-            for ((i=1; i<=max_retries; i++)); do
-                podman pull --retry 0 --signature-policy=/tmp/policy.json $pull_spec
-                if [ $? -eq 0 ]; then
-                    break
-                fi
-
-                sleep $wait_time
-                wait_time=$((wait_time * 2))
-
-                if [ $i -eq $max_retries ]; then
-                    echo "ERROR: Podman pull failed after $max_retries attempts."
-                    exit 1
-                fi
-            done
+          retry 5 podman pull --retry 0 --signature-policy=/tmp/policy.json $pull_spec
         done

@@ -33,7 +33,7 @@ def build_image(dockerfile_path: str, context: str, output_image: str) -> Any:
         context,
     ]
     LOGGER.info("Building image: %s", output_image)
-    return run_command(cmd)
+    return run_command(cmd, retries=2)
 
 
 def push_image(image: str, authfile: str) -> Any:
@@ -58,4 +58,4 @@ def push_image(image: str, authfile: str) -> Any:
     ]
 
     LOGGER.info("Pushing image: %s", image)
-    return run_command(cmd)
+    return run_command(cmd, retries=5)

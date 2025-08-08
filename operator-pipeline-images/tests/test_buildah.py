@@ -19,7 +19,8 @@ def test_build_image(mock_run_command: MagicMock) -> None:
             "-t",
             "image",
             "context",
-        ]
+        ],
+        retries=2,
     )
 
 
@@ -29,5 +30,6 @@ def test_push_image(mock_run_command: MagicMock) -> None:
     assert result == mock_run_command.return_value
 
     mock_run_command.assert_called_once_with(
-        ["buildah", "push", "--authfile", "authfile", "image", "docker://image"]
+        ["buildah", "push", "--authfile", "authfile", "image", "docker://image"],
+        retries=5,
     )
