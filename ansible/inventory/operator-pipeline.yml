@@ -2,10 +2,17 @@
 operator-pipeline:
   children:
     operator-pipeline-prod:
-    operator-pipeline-stage:
+    operator-pipeline-stage-like:
     operator-pipeline-dev:
     operator-pipeline-qa:
     operator-pipeline-integration-tests:
+
+# A group for all operator pipeline environments that are similar to stage
+# This is an ubrela group for real stage environment and playground stage environment
+operator-pipeline-stage-like:
+  children:
+    operator-pipeline-stage:
+    playground-stage-env:
 
 # Operator pipeline environments
 operator-pipeline-prod:
@@ -13,11 +20,6 @@ operator-pipeline-prod:
     operator-pipeline-prod-project:
 
 operator-pipeline-stage:
-  children:
-    operator-pipeline-stage-env:
-    playground-stage-env:
-
-operator-pipeline-stage-env:
   hosts:
     operator-pipeline-stage-project:
 
