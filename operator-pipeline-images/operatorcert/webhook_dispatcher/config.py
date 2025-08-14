@@ -2,6 +2,7 @@
 
 import os
 from typing import List, Optional
+from urllib.parse import quote_plus
 
 import yaml
 from pydantic import BaseModel, Field
@@ -33,7 +34,7 @@ class DatabaseConfig(BaseModel):
         """
         # A user can set the DATABASE_URL or provide the individual parameters
         default_url = (
-            f"postgresql://{self.db_user}:{self.db_password}@"
+            f"postgresql://{quote_plus(self.db_user)}:{quote_plus(self.db_password)}@"
             f"{self.db_host}:{self.db_port}/{self.db_name}"
         )
         env_url = os.getenv("DATABASE_URL", default_url)
