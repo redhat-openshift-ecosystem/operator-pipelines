@@ -14,8 +14,8 @@ from sqlalchemy.exc import SQLAlchemyError
 @pytest.fixture
 def database_manager() -> DatabaseManager:
     config = DatabaseConfig(
-        db_user="user",
-        db_password="password",
+        db_user="user_with_special_chars!@#",
+        db_password="password_with_special_chars!@#",
         db_host="localhost",
         db_port="5432",
         db_name="test",
@@ -35,7 +35,7 @@ def test_database_manager_engine(
     assert mock_create_engine.call_count == 1
     assert (
         mock_create_engine.call_args[0][0]
-        == "postgresql://user:password@localhost:5432/test"
+        == "postgresql://user_with_special_chars%21%40%23:password_with_special_chars%21%40%23@localhost:5432/test"
     )
     assert mock_create_engine.call_args[1]["echo"] is False
     assert mock_create_engine.call_args[1]["pool_size"] == 5
