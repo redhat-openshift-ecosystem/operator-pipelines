@@ -28,10 +28,22 @@ spec:
         # DO NOT use `set -x` to avoid exposing the OAuth token
         set -e
 
-        curl -X POST \
+        response=$(curl -s -w "\n%{http_code}" -X POST \
           -H "Authorization: Bearer $QUAY_OAUTH_TOKEN" \
           -H "Content-Type:application/json" \
           -d "{\"visibility\": \"$(params.visibility)\"}" \
-          "https://quay.io/api/v1/repository/$(params.repository)/changevisibility"
+          "https://quay.io/api/v1/repository/$(params.repository)/changevisibility")
 
-        echo "Repository visibility set to '$(params.visibility)'."
+        http_code=$(echo "$response" | tail -n1)
+        response_body=$(echo "$response" | head -n -1)
+
+        echo "Response body: $response_body"
+        echo "HTTP status code: $http_code"
+
+        # Account for 200 and 201, since quay's docs mention 201, but in testing 200 is returned
+        if [ "$http_code" != "200" || "$http_code" != "201"]; then
+          echo "Error: Expected HTTP 2xx but got $http_code"
+          exit 1
+        fi
+
+        echo "Repository visibility successfully changed."
