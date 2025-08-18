@@ -36,6 +36,7 @@ class UmbClient:
             keepalive=True,
             host_and_ports=self.hostnames,
             reconnect_attempts_max=5,
+            timeout=10,
             heartbeats=(8000, 0),
         )
         self.connection.set_ssl(
