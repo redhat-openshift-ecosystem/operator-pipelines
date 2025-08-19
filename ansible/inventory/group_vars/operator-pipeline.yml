@@ -43,7 +43,8 @@ operator_pipeline_gpg_passphrase_path: ../../vaults/{{ env }}/operator-pipeline-
 # SSH key for the operator pipeline bot to access git repositories
 operator_pipeline_bot_ssh_key_path: ../../vaults/common/github-bot-ssh
 
-operator_pipeline_webhook_dispatcher_url: "https://webhook-dispatcher-{{ oc_namespace }}.{{ operator_pipeline_base_url }}/api/v1/webhooks/github-pipeline"
+operator_pipeline_webhook_dispatcher_base_url: "https://webhook-dispatcher-{{ oc_namespace }}.{{ operator_pipeline_base_url }}"
+operator_pipeline_webhook_dispatcher_url: "{{ operator_pipeline_webhook_dispatcher_base_url }}/api/v1/webhooks/github-pipeline"
 operator_pipeline_webhook_secret: ../../vaults/common/github-webhook-secret-preprod.txt
 
 kerberos_keytab_isv: ../../vaults/common/nonprod-operatorpipelines.keytab
@@ -74,8 +75,8 @@ operator_pipeline_dispatcher_release_pipeline_events:
   - labeled
   - closed
 
-operator_pipeline_dispatcher_hosted_capacity: 3
-operator_pipeline_dispatcher_release_capacity: 3
+operator_pipeline_dispatcher_hosted_capacity: 5
+operator_pipeline_dispatcher_release_capacity: 5
 
 operator_pipeline_callback_url: "https://operator-pipeline-{{ oc_namespace }}.{{ operator_pipeline_base_url}}"
 operator_pipeline_community_pipeline_callback_url: "https://community-operator-pipeline-{{ oc_namespace }}.{{ operator_pipeline_base_url }}"
