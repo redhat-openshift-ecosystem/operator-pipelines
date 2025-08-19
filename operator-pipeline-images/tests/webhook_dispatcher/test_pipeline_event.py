@@ -27,6 +27,7 @@ def pipeline_event() -> PipelineEvent:
                 max_capacity=1,
                 namespace="test",
             ),
+            filter=None,
         ),
     )
 

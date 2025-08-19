@@ -49,6 +49,9 @@ operator_pipeline_dispatcher_config:
       max_capacity: "{{ operator_pipeline_dispatcher_hosted_capacity }}"
       namespace: "{{ oc_namespace }}"
     callback_url: "{{ operator_pipeline_callback_url }}"
+    filter:
+      cel_expression: "{{ operator_pipeline_hosted_pipeline_cel_filter | replace('\n', '') }}"
+
   - name: Release pipeline for certified operators
     events: "{{ operator_pipeline_dispatcher_release_pipeline_events }}"
     full_repository_name: "{{ integration_tests_git_upstream_repo }}"
@@ -58,3 +61,5 @@ operator_pipeline_dispatcher_config:
       max_capacity: "{{ operator_pipeline_dispatcher_release_capacity }}"
       namespace: "{{ oc_namespace }}"
     callback_url: "{{ operator_pipeline_callback_url }}"
+    filter:
+      cel_expression: "{{ operator_pipeline_release_pipeline_cel_filter | replace('\n', '') }}"

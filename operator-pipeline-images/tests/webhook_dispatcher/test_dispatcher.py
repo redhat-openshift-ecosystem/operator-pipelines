@@ -1,11 +1,14 @@
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
+import celpy.celparser
 import pytest
 from operatorcert.webhook_dispatcher.config import (
     CapacityConfig,
     DispatcherConfig,
     DispatcherConfigItem,
+    Filter,
 )
 from operatorcert.webhook_dispatcher.dispatcher import EventDispatcher
 from operatorcert.webhook_dispatcher.models import WebhookEvent
@@ -20,6 +23,8 @@ def dispatcher() -> EventDispatcher:
         max_capacity=10,
         namespace="test",
     )
+    cel_filter = Filter(cel_expression="body.action == 'pull_request'")  # type: ignore[arg-type]
+
     return EventDispatcher(
         config=DispatcherConfig(
             items=[
@@ -29,6 +34,7 @@ def dispatcher() -> EventDispatcher:
                     full_repository_name="test/test",
                     callback_url="http://test.com",
                     capacity=capacity_config,
+                    filter=cel_filter,
                 ),
                 DispatcherConfigItem(
                     name="test1.1",
@@ -36,6 +42,7 @@ def dispatcher() -> EventDispatcher:
                     full_repository_name="test/test",
                     callback_url="http://test-another.com",
                     capacity=capacity_config,
+                    filter=cel_filter,
                 ),
                 DispatcherConfigItem(
                     name="test2",
@@ -43,6 +50,7 @@ def dispatcher() -> EventDispatcher:
                     full_repository_name="test/test2",
                     callback_url="http://test2.com",
                     capacity=capacity_config,
+                    filter=cel_filter,
                 ),
             ]
         )
@@ -50,7 +58,7 @@ def dispatcher() -> EventDispatcher:
 
 
 @pytest.mark.asyncio
-@patch("operatorcert.webhook_dispatcher.dispatcher.time.sleep")
+@patch("operatorcert.webhook_dispatcher.dispatcher.asyncio.sleep")
 @patch(
     "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.process_repository_events"
 )
@@ -222,7 +230,12 @@ def test_split_events_by_validity(
     assert invalid_events == events[:1]
 
 
-def test_assign_configs_to_event(dispatcher: EventDispatcher) -> None:
+@patch(
+    "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.match_cel_expression"
+)
+def test_assign_configs_to_event(
+    mock_match_cel_expression: MagicMock, dispatcher: EventDispatcher
+) -> None:
     event = WebhookEvent(
         id=1,
         repository_full_name="test/test",
@@ -231,10 +244,17 @@ def test_assign_configs_to_event(dispatcher: EventDispatcher) -> None:
         processed=False,
         processing_error=None,
     )
+
     configs = dispatcher.assign_configs_to_event(event)
     assert len(configs) == 2
     assert configs[0].name == "test1.0"
     assert configs[1].name == "test1.1"
+
+    dispatcher.config.items[0].filter.cel_expression = "fake_expression"  # type: ignore
+    mock_match_cel_expression.side_effect = [True, False]
+    configs = dispatcher.assign_configs_to_event(event)
+    assert len(configs) == 1
+    assert configs[0].name == "test1.0"
 
     event = WebhookEvent(
         id=1,
@@ -276,11 +296,13 @@ def test_convert_to_pipeline_event(
 
 
 @pytest.mark.asyncio
+@patch("operatorcert.webhook_dispatcher.dispatcher.asyncio.sleep")
 @patch("operatorcert.webhook_dispatcher.dispatcher.PipelineEvent.trigger_pipeline")
 @patch("operatorcert.webhook_dispatcher.dispatcher.PipelineEvent.is_capacity_available")
 async def test_process_pipeline_event(
     mock_is_capacity_available: AsyncMock,
     mock_trigger_pipeline: AsyncMock,
+    mock_time_sleep: MagicMock,
     dispatcher: EventDispatcher,
 ) -> None:
     event = WebhookEvent(
@@ -395,3 +417,105 @@ def test_group_by_repository_and_pull_request(dispatcher: EventDispatcher) -> No
             1: [events[3]],
         },
     }
+
+
+@pytest.mark.parametrize(
+    "cel_expression, payload, headers, expected_result",
+    [
+        pytest.param(
+            'body.action == "pull_request"',
+            {"action": "pull_request"},
+            {},
+            True,
+            id="simple match",
+        ),
+        pytest.param(
+            "("
+            'body.action == "labeled"'
+            ' && body.label.name == "pipeline/trigger-hosted"'
+            ' && body.pull_request.base.ref == "main"'
+            ")",
+            {
+                "action": "labeled",
+                "label": {"name": "pipeline/trigger-hosted"},
+                "pull_request": {"base": {"ref": "main"}},
+            },
+            {},
+            True,
+            id="complex match",
+        ),
+        pytest.param(
+            "("
+            'headers["X-GitHub-Event"] == "pull_request"'
+            ' && body.action == "labeled"'
+            ' && body.label.name == "pipeline/trigger-hosted"'
+            ' && body.pull_request.base.ref == "main"'
+            ")",
+            {
+                "action": "labeled",
+                "label": {"name": "pipeline/trigger-hosted"},
+                "pull_request": {"base": {"ref": "main"}},
+            },
+            {"X-GitHub-Event": "pull_request"},
+            True,
+            id="header match with complex body",
+        ),
+        pytest.param(
+            "("
+            'body.non_existing_field == "labeled"'
+            ' && body.label.name == "pipeline/trigger-hosted"'
+            ' && body.pull_request.base.ref == "main"'
+            ")",
+            {
+                "action": "labeled",
+                "label": {"name": "pipeline/trigger-hosted"},
+                "pull_request": {"base": {"ref": "main"}},
+            },
+            {},
+            False,
+            id="non existing field in body",
+        ),
+        pytest.param(
+            "1 / x",
+            {},
+            {},
+            False,
+            id="Runtime error, not defined variable x",
+        ),
+    ],
+)
+def test_match_cel_expression(
+    cel_expression: str,
+    payload: dict[str, Any],
+    headers: dict[str, str],
+    expected_result: bool,
+) -> None:
+    capacity_config = CapacityConfig(
+        type="test",
+        pipeline_name="test",
+        max_capacity=10,
+        namespace="test",
+    )
+
+    item = DispatcherConfigItem(
+        name="test1.0",
+        events=["pull_request"],
+        full_repository_name="test/test",
+        callback_url="http://test.com",
+        capacity=capacity_config,
+        filter=Filter(cel_expression=cel_expression),  # type: ignore[arg-type]
+    )
+    dispatcher = EventDispatcher(config=DispatcherConfig(items=[item]))
+    event = WebhookEvent(
+        id=1,
+        action="pull_request",
+        repository_full_name="test/test",
+        pull_request_number=1,
+        processed=False,
+        processing_error=None,
+        payload=payload,
+        request_headers={"X-GitHub-Event": "pull_request"},
+    )
+
+    result = dispatcher.match_cel_expression(event, item.filter.cel_expression)  # type: ignore
+    assert result is expected_result

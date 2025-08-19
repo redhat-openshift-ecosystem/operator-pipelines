@@ -1,11 +1,13 @@
 """A module for configuration models."""
 
 import os
-from typing import List, Optional
+from typing import Any, List, Optional
 from urllib.parse import quote_plus
 
+import celpy
+import celpy.celparser
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class DatabaseConfig(BaseModel):
@@ -60,6 +62,42 @@ class CapacityConfig(BaseModel):
     namespace: str
 
 
+class Filter(BaseModel):
+    """Filter configuration for webhook events."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    cel_expression: celpy.Expression[Any] | None = Field(
+        default=None,
+        description="CEL expression to filter events. "
+        "If empty, no filtering is applied.",
+    )
+
+    @field_validator("cel_expression", mode="before")
+    @classmethod
+    def validate_cel_expression_and_compile(
+        cls, value: str
+    ) -> celpy.Expression[Any] | None:
+        """
+        Validate and parse the CEL expression syntax.
+
+        Raise ValueError if the expression is invalid.
+
+        Args:
+            value (celpy.Expression[Any] | None): A parsed cel expression if
+            available or None.
+        """
+        if not value:
+            return None
+
+        try:
+            env = celpy.Environment()
+            ast = env.compile(value)
+            return ast
+        except celpy.celparser.CELParseError as e:
+            raise ValueError(f"Invalid CEL expression: {e}") from e
+
+
 class DispatcherConfigItem(BaseModel):
     """Configuration for a webhook dispatcher item."""
 
@@ -68,6 +106,7 @@ class DispatcherConfigItem(BaseModel):
     full_repository_name: str
     callback_url: str
     capacity: CapacityConfig
+    filter: Optional[Filter] = None
 
 
 class DispatcherConfig(BaseModel):
