@@ -3,10 +3,14 @@ Event dispatcher module handles the processing of webhook events
 and dispatches them to the appropriate pipelines based on the configuration.
 """
 
+import asyncio
 import logging
-import time
 from datetime import datetime
+from typing import Any
 
+import celpy
+import celpy.adapter
+import celpy.evaluation
 from operatorcert.webhook_dispatcher.config import (
     DispatcherConfig,
     DispatcherConfigItem,
@@ -59,7 +63,7 @@ class EventDispatcher:
 
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Error in event dispatcher")
-            time.sleep(5)
+            await asyncio.sleep(5)
 
     async def process_repository_events(
         self, repository_events: dict[int, list[WebhookEvent]]
@@ -154,8 +158,49 @@ class EventDispatcher:
                 continue
             if event.action not in item.events:
                 continue
+            if item.filter and item.filter.cel_expression:
+                if not self.match_cel_expression(
+                    event,
+                    item.filter.cel_expression,
+                ):
+                    LOGGER.debug(
+                        "Event %s did not match the CEL expression for config %s",
+                        event.id,
+                        item.name,
+                    )
+                    continue
             configs.append(item)
         return configs
+
+    def match_cel_expression(
+        self,
+        event: WebhookEvent,
+        cel_expression: celpy.Expression[Any],
+    ) -> bool:
+        """
+        Match the event against a CEL expression and return whether it matches.
+
+        Args:
+            event (WebhookEvent): A WebhookEvent object containing event data.
+            cel_expression (celpy.Expression): A CEL expression to match against the event.
+
+        Returns:
+            bool: A True if the event matches the CEL expression, False otherwise.
+        """
+        try:
+            env = celpy.Environment()
+            program = env.program(cel_expression)
+
+            context = {
+                "body": celpy.adapter.json_to_cel(event.payload),
+                "headers": celpy.adapter.json_to_cel(event.request_headers),
+            }
+
+            result = program.evaluate(context)
+            return bool(result)
+        except (celpy.evaluation.CELEvalError, celpy.evaluation.CELUnsupportedError):
+            LOGGER.exception("Failed to evaluate CEL.")
+            return False
 
     def convert_to_pipeline_events(self, event: WebhookEvent) -> list[PipelineEvent]:
         """
@@ -197,6 +242,10 @@ class EventDispatcher:
             LOGGER.error("Failed to trigger pipeline for event %s", event.id)
             # Don't mark the event as processed, so it will be retried in the next loop
             return
+
+        # Give some time for the pipeline to start so it can be tracked
+        # by the capacity manager in the next loop
+        await asyncio.sleep(10)
 
         event.processed = True
         event.processing_error = None

@@ -1,6 +1,9 @@
 from unittest.mock import MagicMock, patch
 
-from operatorcert.webhook_dispatcher.config import load_config
+import lark
+from operatorcert.webhook_dispatcher.config import Filter, load_config
+import pytest
+from pydantic import ValidationError
 
 
 @patch("operatorcert.webhook_dispatcher.config.yaml.safe_load")
@@ -21,6 +24,9 @@ def test_load_config(mock_open: MagicMock, mock_yaml_load: MagicMock) -> None:
                         "pipeline_name": "test",
                         "namespace": "test",
                     },
+                    "filter": {
+                        "cel_expression": "body.action == 'push'",
+                    },
                 }
             ]
         },
@@ -34,3 +40,17 @@ def test_load_config(mock_open: MagicMock, mock_yaml_load: MagicMock) -> None:
     assert config.dispatcher.items[0].name == "test"
     assert config.dispatcher.items[0].events == ["push"]
     assert config.dispatcher.items[0].full_repository_name == "test/test"
+
+
+def test_cel_expression_compilation() -> None:
+    # Valid expression
+    filter_config = Filter(cel_expression='body.action == "push"')  # type: ignore[arg-type]
+    assert isinstance(filter_config.cel_expression, lark.Tree)
+
+    # Empty expression
+    filter_config_no_expr = Filter(cel_expression="")  # type: ignore[arg-type]
+    assert filter_config_no_expr.cel_expression is None
+
+    # Invalid expression
+    with pytest.raises(ValidationError):
+        Filter(cel_expression="body.action = push")  # type: ignore[arg-type]

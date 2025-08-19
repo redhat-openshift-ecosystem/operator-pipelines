@@ -8,6 +8,7 @@ from typing import Any
 
 import flask
 from flask import jsonify, request
+
 from operatorcert.webhook_dispatcher.config import load_config
 from operatorcert.webhook_dispatcher.database import get_database, get_db_session
 from operatorcert.webhook_dispatcher.models import (
@@ -43,6 +44,7 @@ def event_to_dict(event: WebhookEvent) -> dict[str, Any]:
     return {
         "id": event.id,
         "delivery_id": event.delivery_id,
+        "action": event.action,
         "repository_full_name": event.repository_full_name,
         "pull_request_number": event.pull_request_number,
         "processed": event.processed,

@@ -8,6 +8,7 @@ from operatorcert.webhook_dispatcher.config import (
     CapacityConfig,
     DispatcherConfig,
     DispatcherConfigItem,
+    Filter,
     SecurityConfig,
     WebhookDispatcherConfig,
 )
@@ -30,6 +31,7 @@ def test_get_config(mock_load_config: MagicMock) -> None:
                         max_capacity=10,
                         namespace="test",
                     ),
+                    filter=Filter(cel_expression="body.action == 'pull_request'"),  # type: ignore[arg-type]
                 )
             ],
         ),
@@ -48,6 +50,7 @@ def test_event_to_dict() -> None:
     event = WebhookEvent(
         id=1,
         delivery_id="123",
+        action="opened",
         repository_full_name="test/test",
         pull_request_number=123,
         processed=False,
@@ -59,6 +62,7 @@ def test_event_to_dict() -> None:
     assert api.event_to_dict(event) == {
         "id": 1,
         "delivery_id": "123",
+        "action": "opened",
         "repository_full_name": "test/test",
         "pull_request_number": 123,
         "processed": False,
@@ -97,6 +101,7 @@ def test_github_pipeline_webhook(
                         max_capacity=10,
                         namespace="test",
                     ),
+                    filter=None,
                 )
             ],
         ),

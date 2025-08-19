@@ -85,6 +85,34 @@ operator_pipeline_certified_operators_repository_name: "redhat-openshift-ecosyst
 operator_pipeline_marketplace_operators_repository_name: "redhat-openshift-ecosystem/redhat-marketplace-operators-preprod"
 operator_pipeline_community_operators_repository_name: "redhat-openshift-ecosystem/community-operators-pipeline-preprod"
 
+operator_pipeline_hosted_pipeline_cel_filter: >-
+  (
+    (
+      body.action in ["opened", "reopened", "synchronize", "ready_for_review"]
+      && body.pull_request.base.ref == "{{ branch }}"
+    ) ||
+    (
+      body.action == "labeled"
+      && body.label.name == "pipeline/trigger-hosted"
+      && body.pull_request.base.ref == "{{ branch }}"
+    )
+  )
+
+operator_pipeline_release_pipeline_cel_filter: >-
+  (
+    (
+      body.action == "closed"
+      && body.pull_request.base.ref == "{{ branch }}"
+      && body.pull_request.merged == true
+    ) ||
+    (
+      body.action == "labeled"
+      && body.label.name == "pipeline/trigger-release"
+      && body.pull_request.base.ref == "{{ branch }}"
+      && body.pull_request.merged == true
+    )
+  )
+
 operator_pipeline_dispatcher_config:
   - name: Hosted pipeline for certified operators
     events: "{{ operator_pipeline_dispatcher_hosted_pipeline_events }}"
@@ -95,6 +123,9 @@ operator_pipeline_dispatcher_config:
       max_capacity: "{{ operator_pipeline_dispatcher_hosted_capacity }}"
       namespace: "{{ oc_namespace }}"
     callback_url: "{{ operator_pipeline_callback_url }}"
+    filter:
+      cel_expression: "{{ operator_pipeline_hosted_pipeline_cel_filter | replace('\n', '') }}"
+
   - name: Release pipeline for certified operators
     events: "{{ operator_pipeline_dispatcher_release_pipeline_events }}"
     full_repository_name: "{{ operator_pipeline_certified_operators_repository_name }}"
@@ -104,6 +135,8 @@ operator_pipeline_dispatcher_config:
       max_capacity: "{{ operator_pipeline_dispatcher_release_capacity }}"
       namespace: "{{ oc_namespace }}"
     callback_url: "{{ operator_pipeline_callback_url }}"
+    filter:
+      cel_expression: "{{ operator_pipeline_release_pipeline_cel_filter | replace('\n', '') }}"
 
   - name: Hosted pipeline for marketplace operators
     events: "{{ operator_pipeline_dispatcher_hosted_pipeline_events }}"
@@ -114,6 +147,8 @@ operator_pipeline_dispatcher_config:
       max_capacity: "{{ operator_pipeline_dispatcher_hosted_capacity }}"
       namespace: "{{ oc_namespace }}"
     callback_url: "{{ operator_pipeline_callback_url }}"
+    filter:
+      cel_expression: "{{ operator_pipeline_hosted_pipeline_cel_filter | replace('\n', '') }}"
 
   - name: Release pipeline for marketplace operators
     events: "{{ operator_pipeline_dispatcher_release_pipeline_events }}"
@@ -124,6 +159,8 @@ operator_pipeline_dispatcher_config:
       max_capacity: "{{ operator_pipeline_dispatcher_release_capacity }}"
       namespace: "{{ oc_namespace }}"
     callback_url: "{{ operator_pipeline_callback_url }}"
+    filter:
+      cel_expression: "{{ operator_pipeline_release_pipeline_cel_filter | replace('\n', '') }}"
 
   - name: Hosted pipeline for community operators
     events: "{{ operator_pipeline_dispatcher_hosted_pipeline_events }}"
@@ -134,6 +171,8 @@ operator_pipeline_dispatcher_config:
       max_capacity: "{{ operator_pipeline_dispatcher_hosted_capacity }}"
       namespace: "{{ oc_namespace }}"
     callback_url: "{{ operator_pipeline_community_pipeline_callback_url }}"
+    filter:
+      cel_expression: "{{ operator_pipeline_hosted_pipeline_cel_filter | replace('\n', '') }}"
 
   - name: Release pipeline for community operators
     events: "{{ operator_pipeline_dispatcher_release_pipeline_events }}"
@@ -144,3 +183,5 @@ operator_pipeline_dispatcher_config:
       max_capacity: "{{ operator_pipeline_dispatcher_release_capacity }}"
       namespace: "{{ oc_namespace }}"
     callback_url: "{{ operator_pipeline_community_pipeline_callback_url }}"
+    filter:
+      cel_expression: "{{ operator_pipeline_release_pipeline_cel_filter | replace('\n', '') }}"
