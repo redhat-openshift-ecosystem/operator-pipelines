@@ -9,22 +9,20 @@
       
       
       
-        <link rel="prev" href="../isv_pipelines/">
+        <link rel="prev" href="../fbc-catalog-promotion/">
       
       
-        <link rel="next" href="../operator-ci-yaml/">
       
-      
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.17">
     
     
       
-        <title>Contributing via PR - Red Hat OpenShift Operators</title>
+        <title>Local development environment - Red Hat OpenShift Operators</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
       
       
 
@@ -43,7 +41,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -62,7 +60,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#submitting-your-operator-via-pull-requests-pr" class="md-skip">
+        <a href="#local-development-environment" class="md-skip">
           Skip to content
         </a>
       
@@ -76,7 +74,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Red Hat OpenShift Operators" class="md-header__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+    <a href=".." title="Red Hat OpenShift Operators" class="md-header__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -96,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing via PR
+              Local development environment
             
           </span>
         </div>
@@ -181,7 +179,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
   
@@ -198,13 +196,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../pipelines_overview/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../users/pipelines_overview/" class="md-tabs__link">
           
   
   
@@ -224,7 +220,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../static_checks/" class="md-tabs__link">
+        <a href="../users/static_checks/" class="md-tabs__link">
           
   
   
@@ -244,7 +240,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../contributing-prerequisites/" class="md-tabs__link">
+        <a href="../users/contributing-prerequisites/" class="md-tabs__link">
           
   
   
@@ -260,11 +256,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../pipeline-admin-guide/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../pipeline-admin-guide/" class="md-tabs__link">
           
   
   
@@ -300,7 +298,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Red Hat OpenShift Operators" class="md-nav__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+    <a href=".." title="Red Hat OpenShift Operators" class="md-nav__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -330,7 +328,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -349,31 +347,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
             
   
   
@@ -386,7 +381,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             Operator pipelines
@@ -400,7 +395,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../pipelines_overview/" class="md-nav__link">
+      <a href="../users/pipelines_overview/" class="md-nav__link">
         
   
   
@@ -423,7 +418,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../isv_pipelines/" class="md-nav__link">
+      <a href="../users/isv_pipelines/" class="md-nav__link">
         
   
   
@@ -443,32 +438,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Contributing via PR
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../users/contributing-via-pr/" class="md-nav__link">
         
   
   
@@ -479,71 +452,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overview
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pull-request" class="md-nav__link">
-    <span class="md-ellipsis">
-      Pull request
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#you-are-done" class="md-nav__link">
-    <span class="md-ellipsis">
-      You are done
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#test-results-failed" class="md-nav__link">
-    <span class="md-ellipsis">
-      Test results failed?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#useful-commands-interacting-with-the-pipeline" class="md-nav__link">
-    <span class="md-ellipsis">
-      Useful commands interacting with the pipeline
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -556,7 +464,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operator-ci-yaml/" class="md-nav__link">
+      <a href="../users/operator-ci-yaml/" class="md-nav__link">
         
   
   
@@ -579,7 +487,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../community-operators-troubleshooting/" class="md-nav__link">
+      <a href="../users/community-operators-troubleshooting/" class="md-nav__link">
         
   
   
@@ -654,7 +562,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../static_checks/" class="md-nav__link">
+      <a href="../users/static_checks/" class="md-nav__link">
         
   
   
@@ -677,7 +585,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dynamic_checks/" class="md-nav__link">
+      <a href="../users/dynamic_checks/" class="md-nav__link">
         
   
   
@@ -752,7 +660,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contributing-prerequisites/" class="md-nav__link">
+      <a href="../users/contributing-prerequisites/" class="md-nav__link">
         
   
   
@@ -775,7 +683,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contributing-where-to/" class="md-nav__link">
+      <a href="../users/contributing-where-to/" class="md-nav__link">
         
   
   
@@ -798,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../best-practices/" class="md-nav__link">
+      <a href="../users/best-practices/" class="md-nav__link">
         
   
   
@@ -821,7 +729,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fbc_onboarding/" class="md-nav__link">
+      <a href="../users/fbc_onboarding/" class="md-nav__link">
         
   
   
@@ -844,7 +752,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fbc_workflow/" class="md-nav__link">
+      <a href="../users/fbc_workflow/" class="md-nav__link">
         
   
   
@@ -867,7 +775,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fbc_autorelease/" class="md-nav__link">
+      <a href="../users/fbc_autorelease/" class="md-nav__link">
         
   
   
@@ -890,7 +798,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../packaging-required-criteria-ocp/" class="md-nav__link">
+      <a href="../users/packaging-required-criteria-ocp/" class="md-nav__link">
         
   
   
@@ -917,28 +825,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -951,7 +862,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Admin
@@ -965,7 +876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../pipeline-admin-guide/" class="md-nav__link">
+      <a href="../pipeline-admin-guide/" class="md-nav__link">
         
   
   
@@ -988,7 +899,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../catalog_image_browser/" class="md-nav__link">
+      <a href="../catalog_image_browser/" class="md-nav__link">
         
   
   
@@ -1011,7 +922,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../fbc-catalog-promotion/" class="md-nav__link">
+      <a href="../fbc-catalog-promotion/" class="md-nav__link">
         
   
   
@@ -1031,10 +942,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../local-dev-environment/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Local development environment
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1045,6 +978,44 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup &amp; Deployment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trigger-a-pipeline-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trigger a pipeline event
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1076,59 +1047,49 @@
   
 
 
-<h1 id="submitting-your-operator-via-pull-requests-pr">Submitting your Operator via Pull Requests (PR)</h1>
-<h2 id="overview">Overview</h2>
-<p>To submit an operator one has to do these steps</p>
+<h1 id="local-development-environment">Local development environment</h1>
+<p>This document provides instructiion on how to set up an environment for "local"
+development of the Operator Pipelines project.</p>
+<p>The word "local" in this context means that developer will use existing stage
+operator pipelines cluster and use a custom namespace for development.</p>
+<h2 id="setup-deployment">Setup &amp; Deployment</h2>
+<p>A operator pipelines interact with Github repositories (certified, marketplace and
+community). It is highly recomended to <code>fork</code> the upstream repository and only work
+on your fork.</p>
 <ol>
-<li>Fork project based on desired <a href="../pipelines_overview/#operator-repositories">Operator Repository</a></li>
-<li>Place the operator in the target directory. <a href="../contributing-where-to/">More info</a><ul>
-<li>operators</li>
-</ul>
-</li>
-<li>Configure <code>ci.yaml</code> file. <a href="../operator-ci-yaml/">More info</a><ul>
-<li>Setup reviewers</li>
-<li>Enable FBC mode</li>
-<li>Add template to catalog mapping</li>
-</ul>
-</li>
-<li>Configure the <code>release-config.yaml</code> file if you want to automatically release the operator to the OCP catalogs. <a href="../fbc_autorelease/#release-configyaml">More info</a></li>
-<li>Make a pull request with a new operator bundle or catalog changes</li>
-<li>Verify tests and fix problems, if possible</li>
-<li>Ask for help in the PR in case of problems</li>
+<li>Fork the upstream repository:</li>
+<li><a href="https://github.com/redhat-openshift-ecosystem/certified-operators-preprod/">Certified Operators</a></li>
+<li><a href="https://github.com/redhat-openshift-ecosystem/community-operators-pipeline-preprod">Community Operators</a></li>
+<li>Set environment variables referencing your fork:</li>
+<li>Create <code>.env</code> file in the root of the repository.</li>
+<li>Add the following variables to the <code>.env</code> file:<ol>
+<li><code>GITHUB_USER</code> - your GitHub username</li>
 </ol>
-<h2 id="pull-request">Pull request</h2>
-<p>When a pull request is created, a number of tests are executed via community hosted pipeline. One can see the results in the comment section of conversation tab.</p>
-<p><img alt="PR" src="../../img/op_test_pr.png" /></p>
-<h2 id="you-are-done">You are done</h2>
-<p>User is done when all tests are green. When the PR is merged, the community release pipeline will be triggered.</p>
-<h2 id="test-results-failed">Test results failed?</h2>
-<p>When operator tests are failing, one can see a following picture</p>
-<p><img alt="Summary of test results when failing" src="../../img/op_pr_tests_failed.png" /></p>
-<p>In case of failures, please have a look at the logs of specific tests. If an error is not clear to you, please ask in the PR. Maintainers will be happy to help you with it.</p>
-<h2 id="useful-commands-interacting-with-the-pipeline">Useful commands interacting with the pipeline</h2>
-<p>You can post the following comment/command:</p>
-<table>
-<thead>
-<tr>
-<th>Command</th>
-<th>Functionality</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/pipeline restart operator-hosted-pipeline</code></td>
-<td>The hosted pipeline will be re-triggered and PR will be merged if possible. The command only works if a previous pipeline failed.</td>
-</tr>
-<tr>
-<td><code>/pipeline restart operator-release-pipeline</code></td>
-<td>The release pipeline will be re-triggered. The command only works if a previous pipeline failed.</td>
-</tr>
-<tr>
-<td><code>/test skip {test_case_name}</code></td>
-<td><em>test_case_name</em> test will be skipped. Please consider that only a subset of tests (<em>currently only pruned graph test</em>) can be skipped.</td>
-</tr>
-</tbody>
-</table>
+</li>
+<li>Sign in to the OpenShift cluster using <code>oc</code> CLI:
+   <code>bash
+   oc login --web --server=https://api.pipelines-stage.0ce8.p1.openshiftapps.com:6443</code></li>
+<li>Use a <code>Makefile</code> to build and deploy your namespace:</li>
+<li><code>make deploy-playground</code></li>
+<li>This will create a new namespace <code>$(USER)-playground</code> and deploy the operator pipelines
+      to it.</li>
+<li>Add a Github webhook to your forked repositories:</li>
+<li>Go to your forked repository settings.</li>
+<li>Add a new webhook with the following settings:<ul>
+<li><strong>Payload URL</strong>: <code>https://webhook-dispatcher-$(USER)-playground.operator-pipeline-stage.apps.pipelines-stage.0ce8.p1.openshiftapps.com/api/v1/webhooks/github-pipeline</code></li>
+<li><strong>Content type</strong>: <code>application/json</code></li>
+<li><strong>Secret</strong>: Use the value from <code>ansible/vaults/common/github-webhook-secret-preprod.txt</code>.</li>
+<li><strong>Which events would you like to trigger this webhook?</strong>: Select "Let me select individual events" and check "Pull requests and Labels".</li>
+<li><strong>Active</strong>: Ensure the webhook is active.</li>
+</ul>
+</li>
+</ol>
+<h2 id="trigger-a-pipeline-event">Trigger a pipeline event</h2>
+<p>Once the environment is set up, you can submit a new pull request to your forked repository.
+When opening your PR you need to target the branch <code>$USER</code> (the same as your local user).
+This will trigger the webhook and start the operator pipelines and process the pull request.</p>
+<p>After a moment you should see the pipeline running in the OpenShift console and also see
+firts interaction in the PR comments and labels being added to the PR.</p>
 
 
 
@@ -1177,10 +1138,10 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      <script src="../assets/javascripts/bundle.92b07e13.min.js"></script>
       
     
   </body>
