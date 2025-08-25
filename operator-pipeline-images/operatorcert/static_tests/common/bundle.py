@@ -187,3 +187,25 @@ def check_validate_schema_bundle_release_config(
             "Bundle's 'release-config.yaml' contains invalid data "
             f"which does not comply with the schema: {ve.message}"
         )
+
+
+def check_network_policy_presence(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Check if the bundle contains a network policy object within its manifests.
+    Network policies are not supported by OpenShift and their presence
+    in the bundle will lead to bundle rejection during the certification process.
+    """
+    for manifest_file, content in bundle.manifest_files_content():
+        kind = content.get("kind") or ""
+        api_version = content.get("apiVersion") or ""
+
+        if not (
+            kind == "NetworkPolicy" and api_version.startswith("networking.k8s.io/")
+        ):
+            continue
+
+        yield Fail(
+            f"Bundle contains a NetworkPolicy in {manifest_file.name}. "
+            "Network policies are not a supported resource that Operator "
+            "Lifecycle Manager(OLM) can install and manage."
+        )

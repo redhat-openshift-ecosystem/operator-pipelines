@@ -173,6 +173,19 @@ To prevent the test from failing download the latest [Makefile](https://raw.gith
 and re-render the catalog again with `make catalogs` command. The Makefile uses
 extra arguments `--migrate-level bundle-object-to-csv-metadata` for opm when rendering
 catalogs for `>=4.17` version.
+
+#### check_network_policy_presence
+
+The test checks if there is a NetworkPolicy object defined in the bundle manifests.
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+...
+```
+Network policies are not a supported resource that Operator Lifecycle Manager(OLM)
+can install and manage. Static checks will raise an error if such resource is
+found in the bundle manifests.
+
 ## Running tests locally
 
 ```bash

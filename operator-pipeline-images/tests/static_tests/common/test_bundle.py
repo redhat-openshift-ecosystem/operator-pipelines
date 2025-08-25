@@ -8,6 +8,7 @@ from operatorcert.static_tests.common.bundle import (
     check_bundle_release_config,
     check_operator_name,
     check_validate_schema_bundle_release_config,
+    check_network_policy_presence,
 )
 from tests.utils import bundle_files, create_files
 
@@ -655,4 +656,54 @@ def test_check_validate_schema_bundle_release_config(
     assert {
         (x.__class__, x.reason)
         for x in check_validate_schema_bundle_release_config(bundle)
+    } == expected_results
+
+
+@pytest.mark.parametrize(
+    "files, bundle_to_check, expected_results",
+    [
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+            ],
+            ("hello", "0.0.1"),
+            set(),
+            id="pass: network policy not present",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+                {
+                    "operators/hello/0.0.1/manifests/dummy_.k8s.io_v1_networkpolicy.yaml": {
+                        "kind": "NetworkPolicy",
+                        "apiVersion": "networking.k8s.io/v1",
+                    }
+                },
+            ],
+            ("hello", "0.0.1"),
+            {
+                (
+                    Fail,
+                    f"Bundle contains a NetworkPolicy in dummy_.k8s.io_v1_networkpolicy.yaml. "
+                    "Network policies are not a supported resource that Operator "
+                    "Lifecycle Manager(OLM) can install and manage.",
+                ),
+            },
+            id="fail: A bundle contains a NetworkPolicy",
+        ),
+    ],
+)
+def test_check_network_policy_presence(
+    tmp_path: Path,
+    files: list[dict[str, Any]],
+    bundle_to_check: tuple[str, str],
+    expected_results: set[tuple[type, str]],
+) -> None:
+    create_files(tmp_path, *files)
+    repo = Repo(tmp_path)
+    operator_name, bundle_version = bundle_to_check
+    operator = repo.operator(operator_name)
+    bundle = operator.bundle(bundle_version)
+    assert {
+        (x.__class__, x.reason) for x in check_network_policy_presence(bundle)
     } == expected_results
