@@ -142,3 +142,38 @@ def test_bundle_invalid(tmp_path: Path) -> None:
 def test_bundle_caching(mock_bundle: Bundle) -> None:
     assert Bundle(mock_bundle.root).operator == mock_bundle.operator
     assert Bundle(mock_bundle.root).operator is not mock_bundle.operator
+
+
+def test_bundle_manifest_files(tmp_path: Path) -> None:
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1"),
+        {
+            "operators/hello/0.0.1/manifests/sample_doc.yaml": "---",
+            "operators/hello/0.0.1/manifests/sample_doc_2.yml": "---\nfoo: bar",
+        },
+    )
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle = operator.bundle("0.0.1")
+
+    manifest_files = list(bundle.manifest_files())
+    assert len(manifest_files) == 3
+    assert sorted(manifest_files) == sorted(
+        [
+            bundle.root / "manifests" / "hello.clusterserviceversion.yaml",
+            bundle.root / "manifests" / "sample_doc.yaml",
+            bundle.root / "manifests" / "sample_doc_2.yml",
+        ]
+    )
+    for manifest_file, content in bundle.manifest_files_content():
+        assert manifest_file in manifest_files
+        assert isinstance(content, dict)
+        if manifest_file.name == "sample_doc.yaml":
+            assert content == {}
+        elif manifest_file.name == "sample_doc_2.yml":
+            assert content == {"foo": "bar"}
+        elif manifest_file.name == "hello.clusterserviceversion.yaml":
+            assert content["metadata"]["name"] == "hello.v0.0.1"
+        else:
+            pytest.fail(f"Unexpected manifest file {manifest_file}")
