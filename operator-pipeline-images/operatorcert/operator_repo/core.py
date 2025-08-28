@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
 Definition of Repo, Operator, Bundle, Catalog and CatalogOperator classes
 """
@@ -7,7 +8,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cached_property, total_ordering
 from pathlib import Path
-from typing import Any, Optional, SupportsIndex, Union
+from typing import Any, Optional, SupportsIndex, Union, Generator
 
 from semantic_version import NpmSpec, Version
 
@@ -178,6 +179,36 @@ class Bundle:
         raise InvalidBundleException(
             f"CSV file for {self.operator_name}/{self.operator_version} not found"
         )
+
+    def manifest_files(self) -> list[Path]:
+        """
+        Get a list of all manifest files in the bundle.
+        The manifest files are considered to be all .yaml and .yml files within
+        the manifests/ directory of the bundle.
+
+        Returns:
+            list[Path]: List of paths to manifest files.
+        """
+        return list(self._manifests_path.glob("*.yaml")) + list(
+            self._manifests_path.glob("*.yml")
+        )
+
+    def manifest_files_content(
+        self,
+    ) -> Generator[tuple[Path, dict[str, Any]], None, None]:
+        """
+        Iterate over all manifest files in the bundle and yield their content.
+
+        Yields:
+            Generator[tuple[Path, dict[str, Any]], None, None]: A generator yielding tuples
+            with the file path and its parsed content as a dictionary.
+        """
+        for file in self.manifest_files():
+            content = load_yaml(file)
+            if not isinstance(content, dict):
+                log.warning("Manifest file %s does not contain a valid yaml document")
+                continue
+            yield file, content
 
     @property
     def channels(self) -> set[str]:
