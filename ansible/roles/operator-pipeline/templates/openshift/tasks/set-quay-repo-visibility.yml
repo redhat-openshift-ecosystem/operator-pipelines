@@ -41,7 +41,7 @@ spec:
         echo "HTTP status code: $http_code"
 
         # Account for 200 and 201, since quay's docs mention 201, but in testing 200 is returned
-        if [ "$http_code" != "200" || "$http_code" != "201"]; then
+        if [[ "$http_code" != "200" && "$http_code" != "201" ]]; then
           echo "Error: Expected HTTP 2xx but got $http_code"
           exit 1
         fi
