@@ -4,3 +4,4 @@ pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-nonprod
 
 config_ocp_cluster_chat_enabled: false
 config_ocp_cluster_metrics_enabled: false
+config_ocp_cluster_summary_bot_enabled: false

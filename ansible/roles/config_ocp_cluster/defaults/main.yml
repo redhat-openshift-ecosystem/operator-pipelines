@@ -1,3 +1,6 @@
 ---
 k8s_validate_certs: true   # noqa: var-naming[no-role-prefix]
 pipelinerun_listener_namespace: pipelinerun-listener   # noqa: var-naming[no-role-prefix]
+
+config_ocp_cluster_support_summary_namespace: pipeline-support
+config_ocp_cluster_support_summary_issue_display_limit: "5"

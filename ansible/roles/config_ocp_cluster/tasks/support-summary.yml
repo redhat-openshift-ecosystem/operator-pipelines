@@ -1,0 +1,59 @@
+---
+- name: Create Chat trigger resources
+  tags:
+    - slack
+  block:
+    - name: Create a namespace for summary bot
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ config_ocp_cluster_support_summary_namespace }}"
+
+    - name: Create a Secrets for summary bot
+      no_log: true
+      kubernetes.core.k8s:
+        state: present
+        force: true
+        validate_certs: "{{ k8s_validate_certs }}"
+        namespace: "{{ config_ocp_cluster_support_summary_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: opaque
+          metadata:
+            name: "summary-bot-secrets"
+          data:
+            GITHUB_TOKEN: "{{ config_ocp_cluster_summary_bot_github_token | b64encode }}"
+            SLACK_WEBHOOK_URL: "{{ slack_webhook | b64encode }}"
+
+    - name: Create Slack summary bot CronJob
+      kubernetes.core.k8s:
+        state: present
+        apply: true
+        namespace: "{{ config_ocp_cluster_support_summary_namespace }}"
+        definition:
+          kind: CronJob
+          apiVersion: batch/v1
+          metadata:
+            name: pipeline-summary-bot
+          spec:
+            schedule: "0 9 * * 1-5"  # At 09:00 on every day-of-week from Monday through Friday
+            jobTemplate:
+              spec:
+                template:
+                  spec:
+                    restartPolicy: OnFailure
+                    containers:
+                      - name: summary-bot
+                        image: "quay.io/redhat-isv/operator-pipelines-images:released"
+                        imagePullPolicy: IfNotPresent
+                        command: ["support-summary"]
+                        envFrom:
+                          - secretRef:
+                              name: "summary-bot-secrets"
+                        env:
+                          - name: ISSUE_DISPLAY_LIMIT
+                            value: "{{ config_ocp_cluster_support_summary_issue_display_limit }}"
