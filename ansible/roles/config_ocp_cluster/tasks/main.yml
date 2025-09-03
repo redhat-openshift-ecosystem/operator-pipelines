@@ -15,14 +15,6 @@
     - metrics
   ansible.builtin.include_tasks: tasks/pipelinerun-listener.yml
 
-- name: Include Chat secret vars
-  tags:
-    - chat
-  ansible.builtin.include_vars:
-    file: ../../vaults/pipelinerun-listener/secret-vars.yml
-  no_log: true
-  when: config_ocp_cluster_chat_enabled
-
 - name: Include Chat trigger
   tags:
     - chat
@@ -34,3 +26,9 @@
     - metrics
   ansible.builtin.include_tasks: tasks/metrics-trigger.yml
   when: config_ocp_cluster_metrics_enabled
+
+- name: Include Slack summary bot
+  tags:
+    - slack
+  ansible.builtin.include_tasks: tasks/support-summary.yml
+  when: config_ocp_cluster_summary_bot_enabled

@@ -3,6 +3,8 @@
   hosts: "{{ clusters }}"
   roles:
     - name: config_ocp_cluster
+  vars_files:
+    - ../vaults/config-ocp-cluster/secret-vars.yml
   environment:
     K8S_AUTH_API_KEY: "{{ ocp_token }}"
     K8S_AUTH_HOST: "{{ ocp_host }}"
