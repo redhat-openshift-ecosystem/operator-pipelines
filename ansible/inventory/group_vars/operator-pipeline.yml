@@ -1,6 +1,7 @@
 ---
 ##### General settings
 ansible_connection: local
+ansible_python_interpreter: /usr/bin/python3
 env: unset
 oc_namespace: "operator-pipeline-{{ env }}"
 oc_signing_namespace: "signing-pipeline-{{ env }}"
