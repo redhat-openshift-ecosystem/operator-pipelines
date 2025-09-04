@@ -344,7 +344,7 @@ class NewIssues(CategoryChecker):
     Checker for new issues created in the last 7 days in the OCP and K8s community repos.
     """
 
-    category_name = "K8s Community PRs Needing Review"
+    category_name = "Operator repositories - New Issues (last 7 days)"
     instructions = (
         "Check if a new issue was created by a user that needs help. If so, "
         "provide help or bring the issue to a team."
