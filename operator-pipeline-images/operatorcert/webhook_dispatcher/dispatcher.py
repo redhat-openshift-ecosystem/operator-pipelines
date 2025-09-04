@@ -5,12 +5,15 @@ and dispatches them to the appropriate pipelines based on the configuration.
 
 import asyncio
 import logging
+import os
 from datetime import datetime
 from typing import Any
 
 import celpy
 import celpy.adapter
 import celpy.evaluation
+from github import Auth, Github
+from operatorcert.github import add_labels_to_pull_request
 from operatorcert.webhook_dispatcher.config import (
     DispatcherConfig,
     DispatcherConfigItem,
@@ -234,6 +237,11 @@ class EventDispatcher:
             LOGGER.debug(
                 "There is not enough capacity to process the event %s", event.id
             )
+            if event.status != "queued":
+                # Mark the event as queued and set the GitHub label
+                self.set_github_queued_label(pipeline_event)
+                event.status = "queued"
+
             # Waiting for a next loop to process the event
             return
 
@@ -315,3 +323,22 @@ class EventDispatcher:
                 output[event.repository_full_name][event.pull_request_number] = []
             output[event.repository_full_name][event.pull_request_number].append(event)
         return output
+
+    @staticmethod
+    def set_github_queued_label(pipeline_event: PipelineEvent) -> None:
+        """
+        Set the "github/queued" label on the pull request associated with the event.
+
+        Args:
+            event (WebhookEvent): A WebhookEvent object for which to set the label.
+        """
+        github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN") or "")
+        github = Github(auth=github_auth)
+
+        event = pipeline_event.event
+        label = f"{pipeline_event.config_item.capacity.pipeline_name}/queued"
+
+        repo = github.get_repo(event.repository_full_name)
+        pull_request = repo.get_pull(event.pull_request_number)
+        add_labels_to_pull_request(pull_request, [label])
+        LOGGER.info("Set label '%s' on pull request %s", label, pull_request.html_url)
