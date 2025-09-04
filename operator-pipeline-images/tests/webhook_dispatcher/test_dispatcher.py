@@ -297,11 +297,15 @@ def test_convert_to_pipeline_event(
 
 @pytest.mark.asyncio
 @patch("operatorcert.webhook_dispatcher.dispatcher.asyncio.sleep")
+@patch(
+    "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher.set_github_queued_label"
+)
 @patch("operatorcert.webhook_dispatcher.dispatcher.PipelineEvent.trigger_pipeline")
 @patch("operatorcert.webhook_dispatcher.dispatcher.PipelineEvent.is_capacity_available")
 async def test_process_pipeline_event(
     mock_is_capacity_available: AsyncMock,
     mock_trigger_pipeline: AsyncMock,
+    mock_set_github_queued_label: MagicMock,
     mock_time_sleep: MagicMock,
     dispatcher: EventDispatcher,
 ) -> None:
@@ -319,14 +323,17 @@ async def test_process_pipeline_event(
     # no capacity
     await dispatcher.process_pipeline_event(pipeline_event)
     mock_trigger_pipeline.assert_not_called()
+    mock_set_github_queued_label.assert_called_once_with(pipeline_event)
     assert pipeline_event.event.processed == False
 
     # capacity available but trigger pipeline failed
     mock_trigger_pipeline.reset_mock()
+    mock_set_github_queued_label.reset_mock()
     mock_trigger_pipeline.return_value = False
     mock_is_capacity_available.return_value = True
     await dispatcher.process_pipeline_event(pipeline_event)
     mock_trigger_pipeline.assert_called_once_with()
+    mock_set_github_queued_label.assert_not_called()
     assert pipeline_event.event.processed == False
 
     # capacity available and trigger pipeline successful
@@ -519,3 +526,49 @@ def test_match_cel_expression(
 
     result = dispatcher.match_cel_expression(event, item.filter.cel_expression)  # type: ignore
     assert result is expected_result
+
+
+@patch("operatorcert.webhook_dispatcher.dispatcher.add_labels_to_pull_request")
+@patch("operatorcert.webhook_dispatcher.dispatcher.Github")
+@patch("operatorcert.webhook_dispatcher.dispatcher.Auth")
+def test_set_github_queued_label(
+    mock_auth: MagicMock,
+    mock_github: MagicMock,
+    mock_add_labels: MagicMock,
+    monkeypatch: Any,
+) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "test_token")
+    config_item = DispatcherConfigItem(
+        name="test1.0",
+        events=["pull_request"],
+        full_repository_name="test/test",
+        callback_url="http://test.com",
+        capacity=CapacityConfig(
+            type="test",
+            pipeline_name="my-pipeline",
+            max_capacity=10,
+            namespace="test",
+        ),
+    )
+    event = WebhookEvent(
+        id=1,
+        repository_full_name="test/test",
+        pull_request_number=1,
+        action="push",
+        processed=False,
+        processing_error=None,
+    )
+    pipeline_event = PipelineEvent(event, config_item)
+    mock_pull_request = MagicMock()
+    mock_github.return_value.get_repo.return_value.get_pull.return_value = (
+        mock_pull_request
+    )
+    EventDispatcher.set_github_queued_label(pipeline_event)
+
+    mock_auth.Token.assert_called_once_with("test_token")
+    mock_github.assert_called_once_with(auth=mock_auth.Token.return_value)
+
+    mock_github.return_value.get_repo.assert_called_once_with("test/test")
+    mock_github.return_value.get_repo.return_value.get_pull.assert_called_once_with(1)
+
+    mock_add_labels.assert_called_once_with(mock_pull_request, ["my-pipeline/queued"])

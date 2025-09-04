@@ -65,6 +65,11 @@ spec:
                 secretKeyRef:
                   name: github-webhook-secret
                   key: webhook-secret
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-bot-token
+                  key: github_bot_token
           volumeMounts:
             - name: "webhook-dispatcher-config"
               mountPath: "/home/user/dispatcher-config.yml"
