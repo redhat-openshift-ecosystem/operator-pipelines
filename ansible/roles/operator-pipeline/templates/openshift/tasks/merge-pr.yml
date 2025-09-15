@@ -80,7 +80,7 @@ spec:
 
         # Squash and merge only if the head commit sha has not changed since
         # the start of the pipeline run
-        MERGE_STDERR=$(gh pr merge "$(params.git_pr_url)" --squash --auto --match-head-commit "$(params.git_head_commit)" 2>&1 >/dev/null)
+        MERGE_STDERR=$(gh pr merge "$(params.git_pr_url)" --squash --admin --match-head-commit "$(params.git_head_commit)" 2>&1 >/dev/null)
         MERGE_RESULT=$?
         MERGE_ERROR=$(echo "$MERGE_STDERR" | grep -oP '(?<=GraphQL: ).*')
 
