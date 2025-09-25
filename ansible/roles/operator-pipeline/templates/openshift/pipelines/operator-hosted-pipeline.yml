@@ -821,139 +821,11 @@ spec:
           workspace: repository
           subPath: src
 
-    - name: build-fbc-index-images
-      runAfter:
-        - get-supported-versions
-      when:
-        - *catalogFileChange
-      taskRef:
-        name: build-fbc-index-images
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: index_images
-          value: "$(tasks.get-supported-versions.results.indices)"
-        - name: commit_sha
-          value: "$(params.git_commit)"
-        - name: catalogs_with_added_or_modified_operators
-          value: "$(tasks.detect-changes.results.catalogs_with_added_or_modified_operators)"
-        - name: deleted_catalog_operators
-          value: "$(tasks.detect-changes.results.deleted_catalog_operators)"
-        - name: image_repository
-          value: "$(params.registry)/$(params.image_namespace)/catalog"
-        - name: iib_url
-          value: "$(tasks.set-env.results.iib_url)"
-        - name: environment
-          value: "$(params.env)"
-        - name: kerberos_keytab_secret_name
-          value: "$(params.kerberos_keytab_secret_name)"
-        - name: kerberos_keytab_secret_key
-          value: "$(params.kerberos_keytab_secret_key)"
-      workspaces:
-        - name: output
-          workspace: results
-          subPath: paths
-
-    # Build new temporary index using IIB
-    - name: add-bundle-to-index
-      runAfter:
-        - build-fbc-index-images
-      when:
-        # Run only when a bundle is added and it doesn't use FBC
-        - *bundleAdded
-        - &isNotFBC
-          input: "$(tasks.read-config.results.fbc-enabled)"
-          operator: notin
-          values: ["true"]
-      taskRef:
-        name: add-bundle-to-index
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: index_images
-          value: "$(tasks.get-supported-versions.results.max_supported_index)"
-        - name: bundle_pullspec
-          value: *bundleImage
-        - name: environment
-          value: "$(params.env)"
-        - name: kerberos_keytab_secret_name
-          value: "$(params.kerberos_keytab_secret_name)"
-        - name: kerberos_keytab_secret_key
-          value: "$(params.kerberos_keytab_secret_key)"
-        - name: index-image-destination
-          value: &tempIndexRepo "$(params.registry)/$(params.image_namespace)/catalog"
-        - name: index-image-destination-tag-suffix
-          value: "-$(params.git_commit)"
-        - name: iib_url
-          value: "$(tasks.set-env.results.iib_url)"
-        - name: upgrade-graph-mode
-          value: "$(tasks.read-config.results.upgrade-graph-mode)"
-      workspaces:
-        - name: credentials
-          workspace: registry-credentials
-        - name: output
-          workspace: results
-          subPath: paths
-
-    - name: build-fbc-scratch-catalog
-      runAfter:
-        - build-fbc-index-images
-      when:
-        # Run only when a bundle is added and it uses FBC
-        - *bundleAdded
-        - &isFBC
-          input: "$(tasks.read-config.results.fbc-enabled)"
-          operator: in
-          values: ["true"]
-      taskRef:
-        name: build-fbc-scratch-catalog
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: ocp_version
-          value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
-        - name: bundle_pullspec
-          value: *bundleImage
-        - name: operator_name
-          value: "$(tasks.detect-changes.results.added_operator)"
-        - name: bundle_version
-          value: "$(tasks.detect-changes.results.added_bundle)"
-        - name: index_image_destination
-          value: *tempIndexRepo
-        - name: index_image_destination_tag_suffix
-          value: "-$(params.git_commit)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-        - name: credentials
-          workspace: registry-credentials
-
-    - name: make-index-repo-public
-      runAfter:
-        - add-bundle-to-index
-        - build-fbc-scratch-catalog
-      when:
-        - *operatorOrBundleChange
-      taskRef:
-        name: set-quay-repo-visibility
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: repository
-          value: "$(params.image_namespace)/catalog"
-        - name: visibility
-          value: public
-        - name: oauth_secret_name
-          value: "$(params.quay_oauth_secret_name)"
-        - name: oauth_secret_key
-          value: "$(params.quay_oauth_secret_key)"
-
     # Try to retrieve preflight tests results
     # (they can run on premise)
     - name: get-ci-results-attempt
       runAfter:
-        - make-index-repo-public
+        - get-supported-versions
       taskRef:
         name: get-ci-results-attempt
       params:
@@ -1145,6 +1017,135 @@ spec:
         - name: results
           workspace: results
           subPath: results
+
+    - name: build-fbc-index-images
+      runAfter:
+        - get-ci-results
+      when:
+        - *catalogFileChange
+      taskRef:
+        name: build-fbc-index-images
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: index_images
+          value: "$(tasks.get-supported-versions.results.indices)"
+        - name: commit_sha
+          value: "$(params.git_commit)"
+        - name: catalogs_with_added_or_modified_operators
+          value: "$(tasks.detect-changes.results.catalogs_with_added_or_modified_operators)"
+        - name: deleted_catalog_operators
+          value: "$(tasks.detect-changes.results.deleted_catalog_operators)"
+        - name: image_repository
+          value: "$(params.registry)/$(params.image_namespace)/catalog"
+        - name: iib_url
+          value: "$(tasks.set-env.results.iib_url)"
+        - name: environment
+          value: "$(params.env)"
+        - name: kerberos_keytab_secret_name
+          value: "$(params.kerberos_keytab_secret_name)"
+        - name: kerberos_keytab_secret_key
+          value: "$(params.kerberos_keytab_secret_key)"
+      workspaces:
+        - name: output
+          workspace: results
+          subPath: paths
+
+    # Build new temporary index using IIB
+    - name: add-bundle-to-index
+      runAfter:
+        - build-fbc-index-images
+      when:
+        # Run only when a bundle is added and it doesn't use FBC
+        - *bundleAdded
+        - &isNotFBC
+          input: "$(tasks.read-config.results.fbc-enabled)"
+          operator: notin
+          values: ["true"]
+      taskRef:
+        name: add-bundle-to-index
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: index_images
+          value: "$(tasks.get-supported-versions.results.max_supported_index)"
+        - name: bundle_pullspec
+          value: *bundleImage
+        - name: environment
+          value: "$(params.env)"
+        - name: kerberos_keytab_secret_name
+          value: "$(params.kerberos_keytab_secret_name)"
+        - name: kerberos_keytab_secret_key
+          value: "$(params.kerberos_keytab_secret_key)"
+        - name: index-image-destination
+          value: &tempIndexRepo "$(params.registry)/$(params.image_namespace)/catalog"
+        - name: index-image-destination-tag-suffix
+          value: "-$(params.git_commit)"
+        - name: iib_url
+          value: "$(tasks.set-env.results.iib_url)"
+        - name: upgrade-graph-mode
+          value: "$(tasks.read-config.results.upgrade-graph-mode)"
+      workspaces:
+        - name: credentials
+          workspace: registry-credentials
+        - name: output
+          workspace: results
+          subPath: paths
+
+    - name: build-fbc-scratch-catalog
+      runAfter:
+        - build-fbc-index-images
+      when:
+        # Run only when a bundle is added and it uses FBC
+        - *bundleAdded
+        - &isFBC
+          input: "$(tasks.read-config.results.fbc-enabled)"
+          operator: in
+          values: ["true"]
+      taskRef:
+        name: build-fbc-scratch-catalog
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: ocp_version
+          value: "$(tasks.get-supported-versions.results.max_supported_ocp_version)"
+        - name: bundle_pullspec
+          value: *bundleImage
+        - name: operator_name
+          value: "$(tasks.detect-changes.results.added_operator)"
+        - name: bundle_version
+          value: "$(tasks.detect-changes.results.added_bundle)"
+        - name: index_image_destination
+          value: *tempIndexRepo
+        - name: index_image_destination_tag_suffix
+          value: "-$(params.git_commit)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+        - name: credentials
+          workspace: registry-credentials
+
+    - name: make-index-repo-public
+      runAfter:
+        - add-bundle-to-index
+        - build-fbc-scratch-catalog
+      when:
+        - *operatorOrBundleChange
+      taskRef:
+        name: set-quay-repo-visibility
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: repository
+          value: "$(params.image_namespace)/catalog"
+        - name: visibility
+          value: public
+        - name: oauth_secret_name
+          value: "$(params.quay_oauth_secret_name)"
+        - name: oauth_secret_key
+          value: "$(params.quay_oauth_secret_key)"
+
 
     # link pull request details to test results
     - name: link-pull-request-with-open-status

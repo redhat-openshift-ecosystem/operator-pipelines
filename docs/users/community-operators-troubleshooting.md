@@ -35,12 +35,12 @@ This document provides troubleshooting steps for each Tekton task in the Operato
     - [build-bundle](#build-bundle)
     - [make-bundle-repo-public](#make-bundle-repo-public)
     - [get-supported-versions](#get-supported-versions)
-    - [add-bundle-to-index](#add-bundle-to-index)
-    - [make-index-repo-public](#make-index-repo-public)
     - [get-ci-results-attempt](#get-ci-results-attempt)
     - [preflight-trigger](#preflight-trigger)
     - [evaluate-preflight-result](#evaluate-preflight-result)
     - [get-ci-results](#get-ci-results)
+    - [add-bundle-to-index](#add-bundle-to-index)
+    - [make-index-repo-public](#make-index-repo-public)
     - [link-pull-request-with-open-status](#link-pull-request-with-open-status)
     - [merge-pr](#merge-pr)
     - [link-pull-request-with-merged-status](#link-pull-request-with-merged-status)
@@ -157,19 +157,6 @@ Failures at this stage are rare. To diagnose the issue, review the pipeline logs
 ### get-supported-versions
 Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.
 
-### add-bundle-to-index
-Failures at this stage are rare and often due to transient issues. Start by reviewing the pipeline logs linked in the PipelineRun summary within the PR.
-
-As an initial step, re-trigger the pipeline by adding the appropriate command in the PR comment:
-
-1.	`/pipeline restart operator-hosted-pipeline` for the hosted pipeline.
-1.	`/pipeline restart operator-release-pipeline` for the release pipeline.
-
-If the PR fails again after two consecutive attempts, feel free to request assistance in the PR comments. Maintainers will assist in identifying and resolving the issue.
-
-### make-index-repo-public
-Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.
-
 ### get-ci-results-attempt
 Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.
 
@@ -190,6 +177,19 @@ Failures at this stage are uncommon. To diagnose the issue:
 If the logs and artifacts do not clarify the issue, feel free to ask for assistance in the PR comments. Maintainers will help identify and resolve the problem.
 
 ### get-ci-results
+Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.
+
+### add-bundle-to-index
+Failures at this stage are rare and often due to transient issues. Start by reviewing the pipeline logs linked in the PipelineRun summary within the PR.
+
+As an initial step, re-trigger the pipeline by adding the appropriate command in the PR comment:
+
+1.	`/pipeline restart operator-hosted-pipeline` for the hosted pipeline.
+1.	`/pipeline restart operator-release-pipeline` for the release pipeline.
+
+If the PR fails again after two consecutive attempts, feel free to request assistance in the PR comments. Maintainers will assist in identifying and resolving the issue.
+
+### make-index-repo-public
 Failures at this stage are rare. To diagnose the issue, review the pipeline logs linked in the PipelineRun summary within the PR. If the logs don’t clarify the problem, feel free to ask for assistance in the PR comments.  Maintainers will assist in identifying and resolving the issue.
 
 ### link-pull-request-with-open-status
