@@ -172,7 +172,7 @@ class OCPPullRequestReview(CategoryChecker):
             str: A GitHub search query string.
         """
         return (
-            f"{self.repo_query} is:pr is:open label:operator-hosted-pipeline/passed"
+            f"{self.repo_query} is:pr is:open label:operator-hosted-pipeline/passed "
             f"{EXCLUDE_FILTER}"
         )
 
