@@ -10,4 +10,4 @@
       metadata:
         name: "{{ oc_namespace }}"
         annotations:
-          operator.tekton.dev/prune.keep: "{{ tekton_pruner_keep | int }}"
+          operator.tekton.dev/prune.keep: "{{ tekton_pruner_keep | string }}"

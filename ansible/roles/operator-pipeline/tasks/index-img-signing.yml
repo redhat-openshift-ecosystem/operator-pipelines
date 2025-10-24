@@ -11,7 +11,7 @@
       metadata:
         name: "{{ oc_signing_namespace }}"
         annotations:
-          operator.tekton.dev/prune.keep: "{{ tekton_pruner_keep | int }}"
+          operator.tekton.dev/prune.keep: "{{ tekton_pruner_keep | string }}"
 
 - name: Include signing secrets
   ansible.builtin.include_tasks: tasks/index-img-signing-secrets.yml
