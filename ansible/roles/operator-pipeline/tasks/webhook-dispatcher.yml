@@ -44,7 +44,7 @@
   delay: 3
 
 - name: Create a webhook dispatcher service account
-  ansible.builtin.import_tasks: tasks/webhook-dispatcher-sa.yml
+  ansible.builtin.include_tasks: tasks/webhook-dispatcher-sa.yml
 
 - name: Create a webhook dispatcher config map
   kubernetes.core.k8s:
@@ -78,7 +78,6 @@
   ansible.builtin.uri:
     url: "{{ operator_pipeline_webhook_dispatcher_base_url }}/api/v1/status/db"
     method: GET
-    status_code: 200
   register: webhook_dispatcher_status
   until: webhook_dispatcher_status.status == 200
   retries: 20
