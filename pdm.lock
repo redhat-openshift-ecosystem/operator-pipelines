@@ -5,7 +5,7 @@
 groups = ["default", "operatorcert", "operatorcert-dev", "tox"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:e8b37e7eac1baecc23f38881aeb336cc0fe70c3df714e3d3126fcb6cbb6f4147"
+content_hash = "sha256:a44a22395605fab02d42b265f8c89ceb0bdb4a685304b904701138f1770df61c"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -221,7 +221,7 @@ files = [
 name = "boolean-py"
 version = "5.0"
 summary = "Define boolean algebras, create and parse boolean expressions and create custom boolean DSL."
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "boolean_py-5.0-py3-none-any.whl", hash = "sha256:ef28a70bd43115208441b53a045d1549e2f0ec6e3d08a9d142cbc41c1938e8d9"},
     {file = "boolean_py-5.0.tar.gz", hash = "sha256:60cbc4bad079753721d32649545505362c754e121570ada4658b852a3a318d95"},
@@ -261,7 +261,7 @@ name = "cachecontrol"
 version = "0.14.3"
 requires_python = ">=3.9"
 summary = "httplib2 caching for requests"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "msgpack<2.0.0,>=0.5.2",
     "requests>=2.16.0",
@@ -277,7 +277,7 @@ version = "0.14.3"
 extras = ["filecache"]
 requires_python = ">=3.9"
 summary = "httplib2 caching for requests"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "CacheControl==0.14.3",
     "filelock>=3.8.0",
@@ -322,7 +322,7 @@ name = "certifi"
 version = "2025.7.14"
 requires_python = ">=3.7"
 summary = "Python package for providing Mozilla's CA Bundle."
-groups = ["default", "operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "certifi-2025.7.14-py3-none-any.whl", hash = "sha256:6b31f564a415d79ee77df69d757bb49a5bb53bd9f756cbbe24394ffd6fc1f4b2"},
     {file = "certifi-2025.7.14.tar.gz", hash = "sha256:8ea99dbdfaaf2ba2f9bac77b9249ef62ec5218e7c2b2e903378ed5fccf765995"},
@@ -403,7 +403,7 @@ name = "charset-normalizer"
 version = "3.4.2"
 requires_python = ">=3.7"
 summary = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
-groups = ["default", "operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "charset_normalizer-3.4.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:7c48ed483eb946e6c04ccbe02c6b4d1d48e51944b6db70f697e089c193404941"},
     {file = "charset_normalizer-3.4.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b2d318c11350e10662026ad0eb71bb51c7812fc8590825304ae0bdd4ac283acd"},
@@ -719,7 +719,7 @@ name = "cyclonedx-python-lib"
 version = "9.1.0"
 requires_python = "<4.0,>=3.8"
 summary = "Python library for CycloneDX"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "license-expression<31,>=30",
     "packageurl-python<2,>=0.11",
@@ -748,7 +748,7 @@ name = "defusedxml"
 version = "0.7.1"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "XML bomb protection for Python stdlib modules"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
     {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
@@ -828,7 +828,7 @@ name = "filelock"
 version = "3.18.0"
 requires_python = ">=3.9"
 summary = "A platform independent file lock."
-groups = ["operatorcert-dev", "tox"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "filelock-3.18.0-py3-none-any.whl", hash = "sha256:c401f4f8377c4464e6db25fff06205fd89bdd83b65eb0488ed1b160f780e21de"},
     {file = "filelock-3.18.0.tar.gz", hash = "sha256:adbc88eabb99d2fec8c9c1b229b171f18afa655400173ddc653d5d01501fb9f2"},
@@ -909,6 +909,60 @@ dependencies = [
 files = [
     {file = "google-auth-1.6.3.tar.gz", hash = "sha256:0f7c6a64927d34c1a474da92cfc59e552a5d3b940d3266606c6a28b72888b9e4"},
     {file = "google_auth-1.6.3-py2.py3-none-any.whl", hash = "sha256:20705f6803fd2c4d1cc2dcb0df09d4dfcb9a7d51fd59e94a3a28231fd93119ed"},
+]
+
+[[package]]
+name = "google-re2"
+version = "1.1.20250805"
+requires_python = "~=3.9"
+summary = "RE2 Python bindings"
+groups = ["default"]
+marker = "python_version != \"3.13\" or sys_platform != \"darwin\" or platform_machine != \"arm64\""
+files = [
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-macosx_13_0_arm64.whl", hash = "sha256:7d2a7dea1448733184a99516a41f28ffcfc9eda345697a14fd5c6d8144b60841"},
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-macosx_13_0_x86_64.whl", hash = "sha256:51b4e3c5e6f3f74193666295385b44e1043e55cf98e4b933fe11a0d7a2457a67"},
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:0c43d2120ba62e8da4d064dcb5b5c9ac103bfe4cd71a5472055a7f02298b544b"},
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-macosx_14_0_x86_64.whl", hash = "sha256:46eb32ca99136e5ff76b33195b37d41342afcc505f4b60309a4159008f80b064"},
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-macosx_15_0_arm64.whl", hash = "sha256:eaf8b912020ec9bcc1811f64478e2dfb82907e502b718ad4b263045820519595"},
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-macosx_15_0_x86_64.whl", hash = "sha256:0df2591355131457f9a008b3bd8fbdb104f8344b75d150fd90ddc0bc19b80935"},
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:fb56c6e7c8fe2eaf045b987dbf8dfc979f61a21e6446dd8b3c0e4028f9ff8611"},
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7f2124ccc4e06c1841e18360edbc379f050b8dcb54096293e2e6e90b5f913f92"},
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-win32.whl", hash = "sha256:0bcf2acdc32a3890ddfca87fa846806b6db200a059a83ab114e6ab390beaf10e"},
+    {file = "google_re2-1.1.20250805-1-cp310-cp310-win_amd64.whl", hash = "sha256:8c6da22b158459e5a592fcd66a9e99347f517284d91d61b6ff2befff3eb79339"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:e7f7e960002c702ae2c0aff3b8db895ded37006ac7aa0c158743fb20dcd485c2"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-macosx_13_0_x86_64.whl", hash = "sha256:bfacaa9b274871796bfd0750e23f804ff632a5397b830c640449d3d57b3d148f"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:c4f72b275ec6b5ef6e3215dab9392aefc2e8f8590d0c3d8b266e6a913503d2a1"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-macosx_14_0_x86_64.whl", hash = "sha256:c6b5550a9767e444b17a9c3c4b020c51629282748d77244d833aacbd765f28fe"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-macosx_15_0_arm64.whl", hash = "sha256:4c1e5ec68dfe2e0866f14468600e2e2928dcfe684c0f2fbeda8d16f14f909141"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-macosx_15_0_x86_64.whl", hash = "sha256:336d6830888ea2abdc1744d201e19cf76c4f001cf821bed3e8844c1899bcbdaf"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:52a153ce37ccfd5429257a91d68f4338fe2809711bff64c7ab84c97ddef2de25"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2ffc79fe2f4be9c5e3e8bb04c8e84e0c9a27b5f08ad5103779b084005e99d220"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-win32.whl", hash = "sha256:2cfccbbd8577250406a3a3ff1b5d3ee21a479e3f1a01f78042d4d15c461eca1e"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-win_amd64.whl", hash = "sha256:4d0669fed9f9f993c5cffae42d7193da752e5b4e42e95b0e9ee0b95de9fcd8ad"},
+    {file = "google_re2-1.1.20250805-1-cp311-cp311-win_arm64.whl", hash = "sha256:50495e5f783e0c1577384bac75455a799904158b5077284c70e6a9510995f3be"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:39f81ff026701533593ffb43acd999d11b8ff769d2234e2083c9ae38d02a01a4"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:7d26aecd8850ec469bf8ae7d3a1ad26b1b1c0477400351ff5df181ef5dff68f0"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:f45314ef7b22c28a1c43469d522398068af4bd1b59839c831033723c782c7402"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-macosx_14_0_x86_64.whl", hash = "sha256:13e8b83655fcb97d7190d8c07a2886dd5bf9c55935419c98a4b7f09cc6e2019d"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-macosx_15_0_arm64.whl", hash = "sha256:9c17c678b3bf2ca874c74b898a21b534d3e60123eda8ef18dde1c1932d142b1f"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-macosx_15_0_x86_64.whl", hash = "sha256:a848f44752286372cfb0ff225a836ed7b02738b29ca31ed3c58e70dc7d584537"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a90f090081e415ee182a01f4113076ad5707c5501ae985c8edc5bfc439cbdee6"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9b5749bcbb363cdfdff5da14aa0c53de28f918662d0b6f546af31f96c8fd46dd"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-win32.whl", hash = "sha256:19689531ce9839813035663df68aa49074c92e426b20095e5e665521c55c1cab"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-win_amd64.whl", hash = "sha256:b533077b8a1c120c5f446e6734893d2a18d098e3edde149dda6a9ff9a3e2e7d2"},
+    {file = "google_re2-1.1.20250805-1-cp312-cp312-win_arm64.whl", hash = "sha256:3a0193237b274faf57492efbeecc9be5818f3852f186ea5c672490b49da4d124"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-macosx_13_0_arm64.whl", hash = "sha256:049732fce70dea6246f035027e512f7cbc22fa9c7f2969c503cd0abb0fcfc674"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-macosx_13_0_x86_64.whl", hash = "sha256:552e37f08514778d98b6d27aea2abd80efca19c4812ca6388175fd5e54d08229"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:6d452dab6bd9dedecef4cc4a0ba22203f5c4273395fd7896fe9ed0cc85643b11"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-macosx_14_0_x86_64.whl", hash = "sha256:358f497682cb5d57f0dd107944f7a2167226d31fb5211cfd187ec16cb5275355"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-macosx_15_0_arm64.whl", hash = "sha256:af66c822179f7f412e4c1fcc8b5ca84885e24ba77c2ee8aa7364f19131b77e7d"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-macosx_15_0_x86_64.whl", hash = "sha256:555b6183fa1a6f54117ec0eda333b98d96620c5d59b563a1dbe2a3eddf64ca24"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e7dfeab6a641a8e6c8ac1cb7fa40b4d2cb91571a3c4bcc840a6d1245d37c33bb"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8b328e6d75e7b1e161dd834c42a7e1762d2e03919453257a64712a5bda798226"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-win32.whl", hash = "sha256:eb1c398eaec3c8ffe74fe7064008c81f452ca5bdf12c2538acc4c087d043a6e1"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-win_amd64.whl", hash = "sha256:18f72952c71de0ace48fbe0ca9928bd7b7bbe1062f685c0d1326a0205966f2dc"},
+    {file = "google_re2-1.1.20250805-1-cp313-cp313-win_arm64.whl", hash = "sha256:149ec3ce1a4711daf45aab4fc7d5926f9e3082ee2c6ea138043c27e64ff1d782"},
+    {file = "google_re2-1.1.20250805.tar.gz", hash = "sha256:c55d9f7c92a814eb53918a7b38e5ba5eaa1c99548321acb826da9532781af5b5"},
 ]
 
 [[package]]
@@ -1054,7 +1108,7 @@ name = "idna"
 version = "3.10"
 requires_python = ">=3.6"
 summary = "Internationalized Domain Names in Applications (IDNA)"
-groups = ["default", "operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "idna-3.10-py3-none-any.whl", hash = "sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3"},
     {file = "idna-3.10.tar.gz", hash = "sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9"},
@@ -1223,7 +1277,7 @@ name = "license-expression"
 version = "30.4.4"
 requires_python = ">=3.9"
 summary = "license-expression is a comprehensive utility library to parse, compare, simplify and normalize license expressions (such as SPDX license expressions) using boolean logic."
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "boolean-py>=4.0",
 ]
@@ -1237,7 +1291,7 @@ name = "markdown-it-py"
 version = "3.0.0"
 requires_python = ">=3.8"
 summary = "Python port of markdown-it. Markdown parsing, done right!"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "mdurl~=0.1",
 ]
@@ -1322,7 +1376,7 @@ name = "mdurl"
 version = "0.1.2"
 requires_python = ">=3.7"
 summary = "Markdown URL utilities"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
@@ -1333,7 +1387,7 @@ name = "msgpack"
 version = "1.1.1"
 requires_python = ">=3.8"
 summary = "MessagePack serializer"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "msgpack-1.1.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:353b6fc0c36fde68b661a12949d7d49f8f51ff5fa019c1e47c87c4ff34b080ed"},
     {file = "msgpack-1.1.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:79c408fcf76a958491b4e3b103d1c417044544b68e96d06432a189b43d1215c8"},
@@ -1468,7 +1522,7 @@ name = "packageurl-python"
 version = "0.17.2"
 requires_python = ">=3.8"
 summary = "A purl aka. Package URL parser and builder"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "packageurl_python-0.17.2-py3-none-any.whl", hash = "sha256:863a903bb9fffd17c367c836903a46ee68942966d0600fdf26449630d8bf344c"},
     {file = "packageurl_python-0.17.2.tar.gz", hash = "sha256:dc087e3a3340656c6966a3d651f12c7f689f01dc9fb8a28f1150f7be823c688e"},
@@ -1573,13 +1627,13 @@ files = [
 
 [[package]]
 name = "pip"
-version = "25.2"
+version = "25.3"
 requires_python = ">=3.9"
 summary = "The PyPA recommended tool for installing Python packages."
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
-    {file = "pip-25.2-py3-none-any.whl", hash = "sha256:6d67a2b4e7f14d8b31b8b52648866fa717f45a1eb70e83002f4331d07e953717"},
-    {file = "pip-25.2.tar.gz", hash = "sha256:578283f006390f85bb6282dffb876454593d637f5d1be494b5202ce4877e71f2"},
+    {file = "pip-25.3-py3-none-any.whl", hash = "sha256:9655943313a94722b7774661c21049070f6bbb0a1516bf02f7c8d5d9201514cd"},
+    {file = "pip-25.3.tar.gz", hash = "sha256:8d0538dbbd7babbd207f261ed969c65de439f6bc9e5dbd3b3b9a77f25d95f343"},
 ]
 
 [[package]]
@@ -1587,7 +1641,7 @@ name = "pip-api"
 version = "0.0.34"
 requires_python = ">=3.8"
 summary = "An unofficial, importable pip API"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "pip",
 ]
@@ -1601,7 +1655,7 @@ name = "pip-audit"
 version = "2.9.0"
 requires_python = ">=3.9"
 summary = "A tool for scanning Python environments for known vulnerabilities"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "CacheControl[filecache]>=0.13.0",
     "cyclonedx-python-lib<10,>=5",
@@ -1623,7 +1677,7 @@ name = "pip-requirements-parser"
 version = "32.0.1"
 requires_python = ">=3.6.0"
 summary = "pip requirements parser - a mostly correct pip requirements parsing library because it uses pip's own code."
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "packaging",
     "pyparsing",
@@ -1638,7 +1692,7 @@ name = "platformdirs"
 version = "4.3.8"
 requires_python = ">=3.9"
 summary = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
-groups = ["operatorcert-dev", "tox"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "platformdirs-4.3.8-py3-none-any.whl", hash = "sha256:ff7059bb7eb1179e2685604f4aaf157cfd9535242bd23742eadc3c13542139b4"},
     {file = "platformdirs-4.3.8.tar.gz", hash = "sha256:3d512d96e16bcb959a814c9f348431070822a6496326a4be0911c40b5a74c2bc"},
@@ -1717,7 +1771,7 @@ name = "py-serializable"
 version = "2.1.0"
 requires_python = "<4.0,>=3.8"
 summary = "Library for serializing and deserializing Python Objects to and from JSON and XML."
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "defusedxml<0.8.0,>=0.7.1",
 ]
@@ -1890,7 +1944,7 @@ name = "pygments"
 version = "2.19.2"
 requires_python = ">=3.8"
 summary = "Pygments is a syntax highlighting package written in Python."
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b"},
     {file = "pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887"},
@@ -1974,7 +2028,7 @@ name = "pyparsing"
 version = "3.2.3"
 requires_python = ">=3.9"
 summary = "pyparsing module - Classes and methods to define and execute parsing grammars"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "pyparsing-3.2.3-py3-none-any.whl", hash = "sha256:a749938e02d6fd0b59b356ca504a24982314bb090c383e3cf201c95ef7e2bfcf"},
     {file = "pyparsing-3.2.3.tar.gz", hash = "sha256:b9c13f1ab8b3b542f72e28f634bad4de758ab3ce4546e4301970ad6fa77c38be"},
@@ -2182,7 +2236,7 @@ name = "requests"
 version = "2.32.4"
 requires_python = ">=3.8"
 summary = "Python HTTP for Humans."
-groups = ["default", "operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "certifi>=2017.4.17",
     "charset-normalizer<4,>=2",
@@ -2254,7 +2308,7 @@ name = "rich"
 version = "14.1.0"
 requires_python = ">=3.8.0"
 summary = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 dependencies = [
     "markdown-it-py>=2.2.0",
     "pygments<3.0.0,>=2.13.0",
@@ -2537,7 +2591,7 @@ files = [
 name = "sortedcontainers"
 version = "2.4.0"
 summary = "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
     {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
@@ -2671,7 +2725,7 @@ name = "toml"
 version = "0.10.2"
 requires_python = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 summary = "Python Library for Tom's Obvious, Minimal Language"
-groups = ["operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
@@ -2846,7 +2900,7 @@ name = "urllib3"
 version = "2.5.0"
 requires_python = ">=3.9"
 summary = "HTTP library with thread-safe connection pooling, file post, and more."
-groups = ["default", "operatorcert-dev"]
+groups = ["default", "operatorcert-dev", "tox"]
 files = [
     {file = "urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc"},
     {file = "urllib3-2.5.0.tar.gz", hash = "sha256:3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760"},
