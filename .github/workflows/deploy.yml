@@ -37,7 +37,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy dev environment
-        uses: dawidd6/action-ansible-playbook@v4
+        uses: dawidd6/action-ansible-playbook@v5
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -67,7 +67,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy qa environment
-        uses: dawidd6/action-ansible-playbook@v4
+        uses: dawidd6/action-ansible-playbook@v5
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -98,7 +98,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy stage environment
-        uses: dawidd6/action-ansible-playbook@v4
+        uses: dawidd6/action-ansible-playbook@v5
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -128,7 +128,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy prod environment
-        uses: dawidd6/action-ansible-playbook@v4
+        uses: dawidd6/action-ansible-playbook@v5
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
