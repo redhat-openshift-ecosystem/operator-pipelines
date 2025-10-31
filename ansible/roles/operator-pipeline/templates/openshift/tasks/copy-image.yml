@@ -58,6 +58,7 @@ spec:
         DEST_AUTHFILE=$(workspaces.dest-registry-credentials.path)/.dockerconfigjson
         CONNECT_REPO_PATH="$(params.connect_registry)/$(params.vendor_label)/$(params.repo_name)"
 
+        # Copy from temp quay repo to official certification repo (registry.connect.redhat.com)
         retry 5 skopeo copy \
           --retry-times 5 \
           --src-authfile $SRC_AUTHFILE \
@@ -65,7 +66,7 @@ spec:
           docker://$(params.src_image) \
           docker://"$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag)"
 
-
+        # Adding `latest` tag to the image in the official certification repo that was just copied
         retry 5 skopeo copy \
           --retry-times 5 \
           --src-authfile $SRC_AUTHFILE \
@@ -73,7 +74,18 @@ spec:
           docker://$(params.src_image) \
           docker://"$(params.dest_image_registry_namespace_certproject):latest"
 
+        # Saving the immutable digest off to be used later when we are adding the bundle to a catalog/index
         DIGEST=$(retry 5 skopeo inspect --retry-times 5 --authfile $DEST_AUTHFILE docker://$(params.dest_image_registry_namespace_certproject):$(params.dest_image_tag) | jq -r .Digest)
         echo -n $DIGEST | tee $(results.container_digest.path)
         echo "- $CONNECT_REPO_PATH:$(params.dest_image_tag)" | tee "$RELEASE_INFO_DIR_PATH/released_bundle.txt"
         echo -n "$CONNECT_REPO_PATH@${DIGEST}" > $(results.image_pullspec.path)
+
+        # Verify the image exists at the pullspec, this ensures that we don't fail at a later task
+        # when trying to create a catalog since opm does not have retry logic
+        PULLSPEC=$(cat $(results.image_pullspec.path))
+        echo "Verifying image exists at: $PULLSPEC"
+        if ! retry 5 skopeo inspect --retry-times 5 --authfile $DEST_AUTHFILE "docker://$PULLSPEC" > /dev/null; then
+          echo "ERROR: Failed to verify image at $PULLSPEC"
+          exit 1
+        fi
+        echo "Image exists in the certification container repo"
