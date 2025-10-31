@@ -401,6 +401,48 @@ spec:
         - name: registry-credentials
           workspace: registry-serve-credentials
 
+    # Automatically add bundle to FBC based on operators release config file
+    - name: add-bundle-to-fbc
+      runAfter:
+        - publish-pyxis-data
+      taskRef:
+        kind: Task
+        name: add-bundle-to-fbc
+      when:
+        - input: "$(tasks.detect-changes.results.added_bundle)"
+          operator: notin
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: bundle_pullspec
+          value: "$(tasks.copy-bundle-image-to-released-registry.results.image_pullspec)"
+        - name: operator_name
+          value: "$(tasks.detect-changes.results.added_operator)"
+        - name: operator_version
+          value: "$(tasks.detect-changes.results.added_bundle)"
+        - name: git_base_branch
+          value: "$(params.git_base_branch)"
+        - name: github_origin_pr_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+        - name: create_pull_request
+          value: "true"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+        - name: output
+          workspace: results
+          subPath: summary
+        - name: ssh-directory
+          workspace: ssh-dir
+        - name: registry-credentials
+          workspace: registry-pull-credentials
+
     # Get the bundle versions to build index
     - name: get-supported-versions
       runAfter:
@@ -607,47 +649,6 @@ spec:
       workspaces:
         - name: results
           workspace: results
-
-    - name: add-bundle-to-fbc
-      runAfter:
-        - copy-bundle-image-to-released-registry
-      taskRef:
-        kind: Task
-        name: add-bundle-to-fbc
-      when:
-        - input: "$(tasks.detect-changes.results.added_bundle)"
-          operator: notin
-          values: [""]
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_pullspec
-          value: "$(tasks.copy-bundle-image-to-released-registry.results.image_pullspec)"
-        - name: operator_name
-          value: "$(tasks.detect-changes.results.added_operator)"
-        - name: operator_version
-          value: "$(tasks.detect-changes.results.added_bundle)"
-        - name: git_base_branch
-          value: "$(params.git_base_branch)"
-        - name: github_origin_pr_url
-          value: "$(params.git_pr_url)"
-        - name: github_token_secret_name
-          value: "$(params.github_token_secret_name)"
-        - name: github_token_secret_key
-          value: "$(params.github_token_secret_key)"
-        - name: create_pull_request
-          value: "true"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-        - name: output
-          workspace: results
-          subPath: summary
-        - name: ssh-directory
-          workspace: ssh-dir
-        - name: registry-credentials
-          workspace: registry-pull-credentials
 
   finally:
 
