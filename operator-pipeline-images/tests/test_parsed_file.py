@@ -79,6 +79,12 @@ def test_AffectedCatalogOperatorCollection() -> None:
             "v4.12/catalog_operator-x",
             "v4.12/catalog_operator-z",
         ],
+        "added_or_modified_catalog_operators": [
+            "v4.11/test_catalog_operator",
+            "v4.12/catalog_operator-x",
+            "v4.12/catalog_operator-z",
+            "v4.12/test_catalog_operator",
+        ],
         "affected_catalog_operators": [
             "v4.11/test_catalog_operator",
             "v4.12/catalog_operator-x",

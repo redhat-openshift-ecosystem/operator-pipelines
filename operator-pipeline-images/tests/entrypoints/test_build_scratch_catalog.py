@@ -88,9 +88,9 @@ def test_build_and_push_catalog_image(
     mock_render.assert_called_once_with(
         "/tmp/template.yaml", f"/tmp/{bundle.metadata_operator_name}/catalog.yaml"
     )
-    mock_dockerfile.assert_called_once_with("/tmp", bundle.metadata_operator_name)
+    mock_dockerfile.assert_called_once_with(Path("/tmp"), bundle.metadata_operator_name)
     mock_build.assert_called_once_with(
-        mock_dockerfile.return_value, "/tmp", "repository_destination"
+        mock_dockerfile.return_value.as_posix(), "/tmp", "repository_destination"
     )
     mock_push.assert_called_once_with("repository_destination", "authfile")
 
