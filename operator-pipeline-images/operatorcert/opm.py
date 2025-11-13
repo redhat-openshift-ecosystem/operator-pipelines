@@ -2,36 +2,37 @@
 
 import logging
 import os
+from pathlib import Path
 
 from operatorcert.utils import run_command
 
 LOGGER = logging.getLogger("operator-cert")
 
 
-def create_catalog_dockerfile(catalog_path: str, catalog_name: str) -> str:
+def create_catalog_dockerfile(catalog_path: Path, catalog_name: str) -> Path:
     """
     Generate a Dockerfile using opm for a given catalog.
 
     Args:
-        catalog_path (str): Path to a catalogs direcotory
+        catalog_path (Path): Path to a catalogs direcotory
         catalog_name (str): Name of the catalog in the catalogs directory
 
     Returns:
-        str: A Dockerfile path for the given catalog
+        Path: A Dockerfile path for the given catalog
     """
-    dockerfile_path = f"{catalog_path}/{catalog_name}.Dockerfile"
-    if os.path.exists(dockerfile_path):
+    dockerfile_path = catalog_path / f"{catalog_name}.Dockerfile"
+    if dockerfile_path.exists():
         LOGGER.warning("Dockerfile already exists: %s. Removing...", dockerfile_path)
         os.remove(dockerfile_path)
     cmd = [
         "opm",
         "generate",
         "dockerfile",
-        f"{catalog_path}/{catalog_name}",
+        str(catalog_path / catalog_name),
     ]
     LOGGER.debug("Creating dockerfile: %s", catalog_name)
     run_command(cmd)
-    return f"{catalog_path}/{catalog_name}.Dockerfile"
+    return dockerfile_path
 
 
 def render_template_to_catalog(template_path: str, catalog_path: str) -> None:

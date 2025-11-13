@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
@@ -5,17 +6,17 @@ from operatorcert import opm
 
 
 @patch("operatorcert.opm.os.remove")
-@patch("operatorcert.opm.os.path.exists")
+@patch("operatorcert.opm.Path.exists")
 @patch("operatorcert.opm.run_command")
 def test_create_dockerfile(
     mock_run_command: MagicMock, mock_exists: MagicMock, mock_remove: MagicMock
 ) -> None:
     mock_exists.return_value = True
 
-    result = opm.create_catalog_dockerfile("catalogs", "catalog1")
-    assert result == "catalogs/catalog1.Dockerfile"
+    result = opm.create_catalog_dockerfile(Path("catalogs"), "catalog1")
+    assert result == Path("catalogs/catalog1.Dockerfile")
 
-    mock_remove.assert_called_once_with("catalogs/catalog1.Dockerfile")
+    mock_remove.assert_called_once_with(Path("catalogs/catalog1.Dockerfile"))
     mock_run_command.assert_called_once_with(
         ["opm", "generate", "dockerfile", "catalogs/catalog1"]
     )

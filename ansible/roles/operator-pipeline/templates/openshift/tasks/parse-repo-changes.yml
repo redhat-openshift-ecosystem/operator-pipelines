@@ -38,6 +38,10 @@ spec:
       description: |
         Comma separated list of operators added/updated/deleted inside
         a catalogs directory structure
+    - name: added_or_modified_catalog_operators
+      description: |
+        Comma separated list of operators added or modified inside a catalogs
+        directory structure
     - name: deleted_catalog_operators
       description: |
         Comma separated list of operators deleted from the catalogs
@@ -101,6 +105,9 @@ spec:
 
         affected_catalog_operators="$(jq -r '.affected_catalog_operators | join(",")' < changes.json)"
         echo -n $affected_catalog_operators > "$(results.affected_catalog_operators.path)"
+
+        added_or_modified_catalog_operators="$(jq -r '.added_or_modified_catalog_operators | join(",")' < changes.json)"
+        echo -n $added_or_modified_catalog_operators > "$(results.added_or_modified_catalog_operators.path)"
 
         deleted_catalog_operators="$(jq -r '.deleted_catalog_operators | join(",")' < changes.json)"
         echo -n $deleted_catalog_operators > "$(results.deleted_catalog_operators.path)"

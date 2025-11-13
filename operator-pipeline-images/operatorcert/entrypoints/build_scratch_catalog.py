@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import tempfile
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -149,9 +150,9 @@ def build_and_push_catalog_image(
         opm.render_template_to_catalog(template_path, catalog_path)
 
         dockerfile_path = opm.create_catalog_dockerfile(
-            tmpdir, bundle.metadata_operator_name
+            Path(tmpdir), bundle.metadata_operator_name
         )
-        buildah.build_image(dockerfile_path, tmpdir, repository_destination)
+        buildah.build_image(dockerfile_path.as_posix(), tmpdir, repository_destination)
         buildah.push_image(repository_destination, authfile)
 
 

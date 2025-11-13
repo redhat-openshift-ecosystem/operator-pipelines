@@ -463,8 +463,8 @@ spec:
           value: "$(params.pipeline_image)"
         - name: commit_sha
           value: $(params.git_commit)
-        - name: affected_catalogs
-          value: "$(tasks.detect-changes.results.catalogs_with_added_or_modified_operators)"
+        - name: affected_catalog_operators
+          value: "$(tasks.detect-changes.results.added_or_modified_catalog_operators)"
         - name: fragment_repository
           value: "$(params.registry)/$(params.image_namespace)/catalog"
       workspaces:

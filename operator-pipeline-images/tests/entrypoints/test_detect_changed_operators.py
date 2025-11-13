@@ -170,6 +170,7 @@ from operatorcert.parsed_file import (
             {
                 "affected_catalog_operators": ["v4.15/operator-1"],
                 "added_catalog_operators": ["v4.15/operator-1"],
+                "added_or_modified_catalog_operators": ["v4.15/operator-1"],
                 "affected_catalogs": ["v4.15"],
                 "added_catalogs": ["v4.15"],
                 "added_or_modified_catalogs": ["v4.15"],
@@ -184,6 +185,7 @@ from operatorcert.parsed_file import (
             {
                 "affected_catalog_operators": ["v4.15/operator-2"],
                 "added_catalog_operators": ["v4.15/operator-2"],
+                "added_or_modified_catalog_operators": ["v4.15/operator-2"],
                 "affected_catalogs": ["v4.15"],
                 "modified_catalogs": ["v4.15"],
                 "added_or_modified_catalogs": ["v4.15"],
@@ -198,6 +200,7 @@ from operatorcert.parsed_file import (
             {
                 "affected_catalog_operators": ["v4.15/operator-1"],
                 "modified_catalog_operators": ["v4.15/operator-1"],
+                "added_or_modified_catalog_operators": ["v4.15/operator-1"],
                 "affected_catalogs": ["v4.15"],
                 "modified_catalogs": ["v4.15"],
                 "added_or_modified_catalogs": ["v4.15"],
@@ -243,6 +246,10 @@ from operatorcert.parsed_file import (
                 "affected_catalog_operators": ["v4.15/operator-1", "v4.15/operator-2"],
                 "added_catalog_operators": ["v4.15/operator-2"],
                 "modified_catalog_operators": ["v4.15/operator-1"],
+                "added_or_modified_catalog_operators": [
+                    "v4.15/operator-1",
+                    "v4.15/operator-2",
+                ],
             },
             id="Modify operator in existing catalog and add new operator",
         ),
@@ -324,6 +331,7 @@ def test_detect_changes(
         "affected_catalog_operators": [],
         "added_catalog_operators": [],
         "modified_catalog_operators": [],
+        "added_or_modified_catalog_operators": [],
         "deleted_catalog_operators": [],
         "affected_catalogs": [],
         "added_catalogs": [],

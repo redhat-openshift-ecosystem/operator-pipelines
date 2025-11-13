@@ -7,8 +7,8 @@ spec:
   params:
     - name: pipeline_image
 
-    - name: affected_catalogs
-      description: Comma separated list of updated catalogs
+    - name: affected_catalog_operators
+      description: Comma separated list of updated operator catalogs
 
     - name: fragment_repository
       description: A repository where fragments are pushed
@@ -34,7 +34,7 @@ spec:
         #! /usr/bin/env bash
         set -xe
 
-        if [[ "$(params.affected_catalogs)" == "" ]]; then
+        if [[ "$(params.affected_catalog_operators)" == "" ]]; then
           echo "No affected catalogs, skipping fragment image build"
           exit 0
         fi
@@ -45,7 +45,7 @@ spec:
         fi
 
         build-fragment-images \
-          --catalog-names "$(params.affected_catalogs)" \
+          --catalog-operators "$(params.affected_catalog_operators)" \
           --repository-destination "$(params.fragment_repository)" \
           --tag-suffix "fragment-$(params.commit_sha)" \
           --verbose $EXTRA_ARGS

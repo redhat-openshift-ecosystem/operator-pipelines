@@ -111,10 +111,7 @@ operatorcert-dev = [
     "kubernetes>=31.0.0",
     "ansible-lint>=24.10.0",
     "colorama>=0.4.6",
-    "pip-audit>=2.9.0",
+    "pip-audit>=2.7.3",
     "pytest-asyncio>=1.1.0",
 ]
-tox = [
-    "tox>=4.16.0",
-    "tox-pdm>=0.7.2",
-]
+tox = ["tox>=4.16.0", "tox-pdm>=0.7.2"]

@@ -114,6 +114,9 @@ class AffectedCatalogOperatorCollection:
                 [f"{x}/{y}" for x, y in self.modified]
             ),
             "deleted_catalog_operators": sorted([f"{x}/{y}" for x, y in self.deleted]),
+            "added_or_modified_catalog_operators": sorted(
+                [f"{x}/{y}" for x, y in self.added | self.modified]
+            ),
             "catalogs_with_added_or_modified_operators": utils.sort_versions(
                 list(self.catalogs_with_added_or_modified_operators)
             ),
