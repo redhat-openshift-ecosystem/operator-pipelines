@@ -33,10 +33,11 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
+        # default is true - only set to false if specified by ci.yaml
         if [[ -z "$(params.operator_path)" ]]; then
-          echo -n false > "$(results.bool_merge.path)"
+          echo -n true > "$(results.bool_merge.path)"
         elif [[ ! -f "$(params.operator_path)/ci.yaml" ]]; then
-          echo -n false > "$(results.bool_merge.path)"
+          echo -n true > "$(results.bool_merge.path)"
         else
           BOOL_MERGE=$(yq -r '.merge!=false' < "$(params.operator_path)/ci.yaml")
 
