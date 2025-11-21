@@ -19,7 +19,7 @@ jobs:
       bundle_image: ${{ steps.push-bundle.outputs.pullspec }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Install tekton CLI
         id: install-deps
@@ -36,7 +36,7 @@ jobs:
 
       - name: Login to quay.io
         id: registry-login
-        uses: redhat-actions/podman-login@v1
+        uses: redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603 # v1.7
         with:
           registry: quay.io/redhat-isv
           username: ${{ secrets.REGISTRY_USERNAME }}
