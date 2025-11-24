@@ -31,7 +31,7 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -61,7 +61,7 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -92,7 +92,7 @@ jobs:
       - deploy-qa
       - deploy-dev
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -122,7 +122,7 @@ jobs:
       - prepare-env
       - deploy-stage
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -149,7 +149,7 @@ jobs:
     needs:
       - deploy-prod
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Bump version and push tag
         id: tag_version
