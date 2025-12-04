@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v4
@@ -55,7 +55,7 @@ jobs:
           else
             echo "tags=${{ github.sha }}">> $GITHUB_OUTPUT
           fi
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Build Image
         id: build-image
@@ -94,7 +94,7 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Prepare
         id: prepare
