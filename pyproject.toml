@@ -58,7 +58,6 @@ detect-changed-operators = "operatorcert.entrypoints.detect_changed_operators:ma
 download-test-results = "operatorcert.entrypoints.download_test_results:main"
 fbc-onboarding = "operatorcert.entrypoints.fbc_onboarding:main"
 get-cert-project-related-data = "operatorcert.entrypoints.get_cert_project_related_data:main"
-get-vendor-related-data = "operatorcert.entrypoints.get_vendor_related_data:main"
 github-add-comment = "operatorcert.entrypoints.github_add_comment:main"
 github-labels = "operatorcert.entrypoints.github_labels:main"
 github-wait-labels = "operatorcert.entrypoints.github_wait_labels:main"

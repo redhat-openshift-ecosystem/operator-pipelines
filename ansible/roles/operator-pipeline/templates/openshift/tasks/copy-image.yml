@@ -14,8 +14,8 @@ spec:
       description: reference to the destination bundle image tag
     - name: connect_registry
       description: Connect container registry proxy based on selected environment
-    - name: vendor_label
-      description: A label of company that owns a certification
+    - name: repository_namespace
+      description: Repository namespace assigned to certification project
     - name: repo_name
       description: Repository name assigned to certification project from Red Hat Connect
   workspaces:
@@ -46,7 +46,7 @@ spec:
         RELEASE_INFO_DIR_PATH="$(workspaces.output.path)/release_info"
         mkdir -p "$RELEASE_INFO_DIR_PATH"
 
-        if [[ "$(params.vendor_label)" == "" ]]; then
+        if [[ "$(params.repository_namespace)" == "" ]]; then
           echo "Image pullspec for community bundle is the source image itself."
           echo -n > "$(results.container_digest.path)"
           echo -n "$(params.src_image)" > "$(results.image_pullspec.path)"
@@ -56,7 +56,7 @@ spec:
 
         SRC_AUTHFILE=$(workspaces.src-registry-credentials.path)/.dockerconfigjson
         DEST_AUTHFILE=$(workspaces.dest-registry-credentials.path)/.dockerconfigjson
-        CONNECT_REPO_PATH="$(params.connect_registry)/$(params.vendor_label)/$(params.repo_name)"
+        CONNECT_REPO_PATH="$(params.connect_registry)/$(params.repository_namespace)/$(params.repo_name)"
 
         retry 5 skopeo copy \
           --retry-times 5 \
