@@ -31,13 +31,13 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy dev environment
-        uses: dawidd6/action-ansible-playbook@v5
+        uses: dawidd6/action-ansible-playbook@3363d6aa333ecb41ef01579bc5eb4412b3d6802f # v5
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -61,13 +61,13 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy qa environment
-        uses: dawidd6/action-ansible-playbook@v5
+        uses: dawidd6/action-ansible-playbook@3363d6aa333ecb41ef01579bc5eb4412b3d6802f # v5
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -92,13 +92,13 @@ jobs:
       - deploy-qa
       - deploy-dev
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy stage environment
-        uses: dawidd6/action-ansible-playbook@v5
+        uses: dawidd6/action-ansible-playbook@3363d6aa333ecb41ef01579bc5eb4412b3d6802f # v5
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -122,13 +122,13 @@ jobs:
       - prepare-env
       - deploy-stage
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy prod environment
-        uses: dawidd6/action-ansible-playbook@v5
+        uses: dawidd6/action-ansible-playbook@3363d6aa333ecb41ef01579bc5eb4412b3d6802f # v5
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -149,16 +149,16 @@ jobs:
     needs:
       - deploy-prod
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Bump version and push tag
         id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
+        uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b # v6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a GitHub release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -167,7 +167,7 @@ jobs:
           body: ${{ steps.tag_version.outputs.changelog }}
 
       - name: Log in to Quay.io
-        uses: redhat-actions/podman-login@v1
+        uses: redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603 # v1.7
         with:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
