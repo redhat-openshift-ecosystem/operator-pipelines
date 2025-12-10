@@ -24,7 +24,11 @@ def get_session(kerberos_auth: bool = True) -> Any:
         Any: IIB session
     """
     session = requests.Session()
-    add_session_retries(session)
+    add_session_retries(
+        session,
+        # The IIB sometime returns 401/403 even with valid kerberos ticket
+        status_forcelist=(401, 403, 408, 500, 502, 503, 504),
+    )
 
     if kerberos_auth:
         session.auth = HTTPKerberosAuth()
