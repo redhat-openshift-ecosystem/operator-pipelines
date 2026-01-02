@@ -25,7 +25,7 @@ class CapacityManager(ABC):  # pylint: disable=too-few-public-methods
 
 class OCPTektonCapacityManager(CapacityManager):
     """
-    A Teknton based capacity manager for OpenShift pipelines.
+    A Tekton based capacity manager for OpenShift pipelines.
     A capacity is determined by the number of currently running Tekton PipelineRuns
     for the specified pipeline name in the given namespace.
 
