@@ -11,6 +11,24 @@ PIPELINE_IMAGE ?= $(PIPELINE_IMAGE_REPO):$(TAG)
 OPERATOR_VERSION_RELEASE ?= 1-1
 OPERATOR_VERSION ?= 0.1.$(OPERATOR_VERSION_RELEASE)
 
+
+.PHONY: configure-stage-cluster
+configure-stage-cluster:
+	@echo "Configuring stage cluster..."
+	ansible-playbook \
+		ansible/playbooks/config-ocp-cluster.yml \
+		-e clusters=stage-cluster \
+		-i ansible/inventory/clusters \
+		--vault-password-file ansible/vault-password
+
+configure-prod-cluster:
+	@echo "Configuring prod cluster..."
+	ansible-playbook \
+		ansible/playbooks/config-ocp-cluster.yml \
+		-e clusters=prod-cluster \
+		-i ansible/inventory/clusters \
+		--vault-password-file ansible/vault-password-prod
+
 .PHONY: build-and-deploy-playground
 build-and-deploy-playground:
 	@echo "Building and deploying playground..."

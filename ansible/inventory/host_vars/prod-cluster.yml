@@ -1,4 +1,5 @@
 ---
+env: prod
 ocp_host: https://api.pipelines-prod.ijdb.p1.openshiftapps.com:6443
 pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-prod
 

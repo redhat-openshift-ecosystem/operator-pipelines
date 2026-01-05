@@ -1,6 +1,8 @@
 ---
+env: stage
 ocp_host: https://api.pipelines-stage.0ce8.p1.openshiftapps.com:6443
 pipelines_metrics_endpoint: http://pipeline-metrics.pipeline-metrics-nonprod
 
 config_ocp_cluster_chat_enabled: false
 config_ocp_cluster_metrics_enabled: true
+config_ocp_cluster_summary_bot_enabled: false

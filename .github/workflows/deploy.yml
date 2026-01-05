@@ -21,11 +21,36 @@ jobs:
         run: |
           echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-  deploy-dev:
+  configure-stage-cluster:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     needs:
       - prepare-env
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - name: Install dependencies
+        run: |
+          # Install python packages needed from ansible
+          pipx inject ansible-core jmespath openshift pygithub
+      - name: Configure stage cluster
+        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        with:
+          playbook: playbooks/config-ocp-cluster.yml
+          directory: ./ansible
+          requirements: playbooks/requirements.yml
+          vault_password: ${{secrets.VAULT_PASSWORD}}
+          options: |
+            --inventory ./inventory/clusters
+            --extra-vars "clusters=stage-cluster"
+            --extra-vars "env=stage"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
+            --verbose
+
+  deploy-dev:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare-env
+      - configure-stage-cluster
     environment:
       name: dev
     env:
@@ -37,7 +62,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy dev environment
-        uses: dawidd6/action-ansible-playbook@3363d6aa333ecb41ef01579bc5eb4412b3d6802f # v5
+        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -53,9 +78,9 @@ jobs:
 
   deploy-qa:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     needs:
       - prepare-env
+      - configure-stage-cluster
     environment:
       name: qa
     env:
@@ -67,7 +92,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy qa environment
-        uses: dawidd6/action-ansible-playbook@3363d6aa333ecb41ef01579bc5eb4412b3d6802f # v5
+        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -89,6 +114,7 @@ jobs:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     needs:
       - prepare-env
+      - configure-stage-cluster
       - deploy-qa
       - deploy-dev
     steps:
@@ -97,8 +123,9 @@ jobs:
         run: |
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
+
       - name: Deploy stage environment
-        uses: dawidd6/action-ansible-playbook@3363d6aa333ecb41ef01579bc5eb4412b3d6802f # v5
+        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -112,6 +139,33 @@ jobs:
             --skip-tags ci,import-index-images
             --verbose
 
+  configure-prod-cluster:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare-env
+      - deploy-stage
+    environment:
+      name: prod
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - name: Install dependencies
+        run: |
+          # Install python packages needed from ansible
+          pipx inject ansible-core jmespath openshift pygithub
+      - name: Configure prod cluster
+        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        with:
+          playbook: playbooks/config-ocp-cluster.yml
+          directory: ./ansible
+          requirements: playbooks/requirements.yml
+          vault_password: ${{secrets.VAULT_PASSWORD_PROD}}
+          options: |
+            --inventory ./inventory/clusters
+            --extra-vars "clusters=prod-cluster"
+            --extra-vars "env=prod"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
+            --verbose
+
   deploy-prod:
     runs-on: ubuntu-latest
     environment:
@@ -120,7 +174,7 @@ jobs:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     needs:
       - prepare-env
-      - deploy-stage
+      - configure-prod-cluster
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Install dependencies
@@ -128,7 +182,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy prod environment
-        uses: dawidd6/action-ansible-playbook@3363d6aa333ecb41ef01579bc5eb4412b3d6802f # v5
+        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible

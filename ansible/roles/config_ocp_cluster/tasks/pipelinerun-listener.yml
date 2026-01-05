@@ -80,6 +80,7 @@
           apiVersion: v1
           kind: ConfigMap
           metadata:
-            name: config-defaults
+            name: config-events
           data:
-            default-cloud-events-sink: "http://el-pipelinerun-listener.{{ pipelinerun_listener_namespace }}.svc.cluster.local:8080"
+            formats: tektonv1
+            sink: "http://el-pipelinerun-listener.{{ pipelinerun_listener_namespace }}.svc.cluster.local:8080"
