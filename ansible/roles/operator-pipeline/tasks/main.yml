@@ -16,7 +16,7 @@
   kubernetes.core.k8s:
     state: present
     apply: true
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   with_items:
     - ../templates/openshift/openshift-pipelines-custom-scc.yml
     - ../templates/openshift/openshift-pipeline-sa-scc-role.yml
@@ -29,7 +29,7 @@
     state: present
     apply: true
     namespace: "{{ oc_namespace }}"
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   with_fileglob:
     - ../templates/openshift/tasks/*
 
@@ -40,7 +40,7 @@
     state: present
     apply: true
     namespace: "{{ oc_namespace }}"
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   with_items:
     - ../templates/openshift/pipelines/operator-hosted-pipeline.yml
     - ../templates/openshift/pipelines/operator-release-pipeline.yml
@@ -52,7 +52,7 @@
     state: present
     apply: true
     namespace: "{{ oc_namespace }}"
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   with_items:
     - ../templates/openshift/pipelines/operator-ci-pipeline.yml
 

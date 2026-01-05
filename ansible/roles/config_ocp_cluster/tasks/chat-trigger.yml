@@ -9,7 +9,7 @@
         apply: true
         validate_certs: "{{ k8s_validate_certs }}"
         namespace: "{{ pipelinerun_listener_namespace }}"
-        definition: "{{ lookup('file', '{{ item }}') }}"
+        definition: "{{ lookup('file', item) }}"
       with_fileglob:
         - ../files/tasks/*
 

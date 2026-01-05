@@ -115,7 +115,7 @@
     state: present
     apply: true
     namespace: "{{ oc_index_bootstrap_namespace }}"
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   with_items:
     - ../templates/openshift/tasks/set-env.yml
     - ../templates/openshift/tasks/index-signing-image-check.yml
@@ -129,6 +129,6 @@
     state: present
     apply: true
     namespace: "{{ oc_index_bootstrap_namespace }}"
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   with_items:
     - ../templates/openshift/pipelines/index-img-bootstrap-signing-pipeline.yml

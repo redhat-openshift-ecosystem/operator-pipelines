@@ -23,7 +23,7 @@
     state: present
     apply: true
     namespace: "{{ oc_signing_namespace }}"
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   with_items:
     - ../templates/openshift/tasks/set-env.yml
 
@@ -35,6 +35,6 @@
     state: present
     apply: true
     namespace: "{{ oc_signing_namespace }}"
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   with_items:
     - ../templates/openshift/pipelines/index-img-signing-pipeline.yml

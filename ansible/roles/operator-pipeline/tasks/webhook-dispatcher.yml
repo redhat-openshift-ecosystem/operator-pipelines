@@ -26,7 +26,7 @@
     state: present
     apply: true
     namespace: "{{ oc_namespace }}"
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   loop:
     - ../templates/openshift/webhook_dispatcher/postgres-db-stateful-set.yml
     - ../templates/openshift/webhook_dispatcher/postgres-db-service.yml
@@ -61,14 +61,14 @@
           suffix: "{{ suffix }}"
           env: "{{ env }}"
       data:
-        dispatcher-config.yml: "{{ lookup('template', '{{ operator_pipeline_webhook_dispatcher_config_file }}') }}"
+        dispatcher-config.yml: "{{ lookup('template', operator_pipeline_webhook_dispatcher_config_file) }}"
 
 - name: Deploy webhook dispatcher
   kubernetes.core.k8s:
     state: present
     apply: true
     namespace: "{{ oc_namespace }}"
-    definition: "{{ lookup('template', '{{ item }}') }}"
+    definition: "{{ lookup('template', item) }}"
   loop:
     - "../templates/openshift/webhook_dispatcher/webhook-dispatcher-deployment.yml"
     - "../templates/openshift/webhook_dispatcher/webhook-dispatcher-service.yml"
