@@ -5,7 +5,7 @@
   kubernetes.core.k8s:
     state: present
     validate_certs: "{{ k8s_validate_certs }}"
-    definition: "{{ lookup('file', '{{ item }}') }}"
+    definition: "{{ lookup('file', item) }}"
   with_items:
     - ../files/tektonconfig.yml
 

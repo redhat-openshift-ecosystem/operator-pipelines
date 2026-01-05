@@ -16,7 +16,7 @@
     apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
-    definition: "{{ lookup('file', '{{ item }}') }}"
+    definition: "{{ lookup('file', item) }}"
   with_fileglob:
     - ../files/configmaps/*
 
@@ -26,7 +26,7 @@
     apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
-    definition: "{{ lookup('file', '{{ item }}') }}"
+    definition: "{{ lookup('file', item) }}"
   with_fileglob:
     - ../files/tasks/*
 
@@ -36,7 +36,7 @@
     apply: true
     validate_certs: "{{ k8s_validate_certs }}"
     namespace: "{{ k8s_namespace }}"
-    definition: "{{ lookup('file', '{{ item }}') }}"
+    definition: "{{ lookup('file', item) }}"
   with_fileglob:
     - ../files/pipelines/*
 

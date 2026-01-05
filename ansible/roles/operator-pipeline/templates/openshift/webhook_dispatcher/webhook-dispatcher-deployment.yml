@@ -18,7 +18,7 @@ spec:
       labels:
         app: "{{ operator_pipeline_webhook_dispatcher_name }}"
       annotations:
-        checksum/config: "{{ lookup('file', '{{ operator_pipeline_webhook_dispatcher_config_file }}') | checksum }}"
+        checksum/config: "{{ lookup('file', operator_pipeline_webhook_dispatcher_config_file) | checksum }}"
     spec:
       serviceAccountName: "{{ operator_pipeline_webhook_dispatcher_name }}"
       containers:
