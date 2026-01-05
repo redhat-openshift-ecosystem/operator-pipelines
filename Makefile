@@ -21,6 +21,7 @@ configure-stage-cluster:
 		-i ansible/inventory/clusters \
 		--vault-password-file ansible/vault-password
 
+.PHONY: configure-prod-cluster
 configure-prod-cluster:
 	@echo "Configuring prod cluster..."
 	ansible-playbook \
