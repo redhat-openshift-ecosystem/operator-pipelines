@@ -6,19 +6,16 @@ TektonConfig. But there is also a custom EventListener which reports PipelineRun
 events to Slack and a pipeline that uploads the metrics of other pipelines
 for monitoring purposes. This configuration must be applied manually for now.
 
-To apply these cluster-wide configurations, run the Ansible playbook. To only apply
-the cluster-wide resources, the following command will suffice.
+The configuration is managed by Ansible playbooks and are automatically included
+in the CI/CD process in Github Actions.
+
+If you want to apply the configuration to a cluster manually, you can use the
+following command :
 
 ```bash
-ansible-playbook \
-    -i inventory/clusters \
-    -e "clusters={INSERT ANSIBLE HOST LIST}" \
-    -e "ocp_token={INSERT TOKEN}" \
-    -e "k8s_validate_certs={yes|no}" \
-    --vault-password-file "{INSERT FILE}" \
-    playbooks/config-ocp-cluster.yml
-```
+# For Stage cluster
+make configure-stage-cluster
 
-If you want to deploy the metrics pipeline, add `--tags metrics` to the above command.
-To deploy the Chat Webhook, add `--tags chat`. If you wish to deploy both, add
-`--tags metrics,chat`.
+# For Prod cluster
+make configure-prod-cluster
+```
