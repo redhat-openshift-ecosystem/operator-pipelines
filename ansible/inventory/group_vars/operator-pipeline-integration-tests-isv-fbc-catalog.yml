@@ -11,5 +11,5 @@ integration_tests_pr_title: "Catalog update {{ integration_tests_operator_packag
 
 # To avoid conflicts with the non-fbc tests, we use a different range
 # and keep the version N-1
-integration_tests_ocp_versions_range: "=v4.17"
-integration_tests_catalog_versions: "v4.17"
+integration_tests_ocp_versions_range: "=v4.19"
+integration_tests_catalog_versions: "v4.19"
