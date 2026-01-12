@@ -209,3 +209,19 @@ def check_network_policy_presence(bundle: Bundle) -> Iterator[CheckResult]:
             "Network policies are not a supported resource that Operator "
             "Lifecycle Manager(OLM) can install and manage."
         )
+
+
+def check_operator_version_directory_name(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Check if the operator version matches the bundle directory name.
+    The bundle directory name should be in the format <operator_name>/<version>.
+    """
+    csv_version = bundle.csv_version
+    directory_version = bundle.root.name
+
+    if csv_version != directory_version:
+        yield Fail(
+            f"Bundle directory name '{bundle.operator_name}/{directory_version}' does not match "
+            f"the expected operator CSV version '{csv_version}' from "
+            f"./{bundle.csv_file_name.relative_to(bundle.operator.repo.root)}."
+        )

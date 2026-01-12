@@ -186,6 +186,20 @@ Network policies are not a supported resource that Operator Lifecycle Manager(OL
 can install and manage. Static checks will raise an error if such resource is
 found in the bundle manifests.
 
+
+#### check_operator_version_directory_name
+The test checks if the operator version matches the bundle directory name.
+The bundle directory name should be in the format `<operator_name>/<version>` and
+the `<version>` part should match the version defined in the CSV file
+
+```yaml
+kind: ClusterServiceVersion
+spec:
+  version: <version>
+metadata:
+  name: <operator_name>.v<version>
+```
+
 ## Running tests locally
 
 ```bash
