@@ -191,8 +191,8 @@ def bundle_files(
     base_csv = {
         "metadata": {
             "name": f"{operator_name}.v{bundle_version}",
-            "spec": {"version": bundle_version},
-        }
+        },
+        "spec": {"version": bundle_version},
     }
     return merge(
         {

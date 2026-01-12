@@ -121,6 +121,13 @@ class Bundle:
         _, version = self.csv_full_name
         return version
 
+    @property
+    def csv_version(self) -> str:
+        """
+        :return: The version of the operator from CSV
+        """
+        return self.csv.get("spec", {}).get("version", "") or ""
+
     @classmethod
     def probe(cls, path: Path) -> bool:
         """

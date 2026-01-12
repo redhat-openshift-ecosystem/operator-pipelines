@@ -9,6 +9,7 @@ from operatorcert.static_tests.common.bundle import (
     check_operator_name,
     check_validate_schema_bundle_release_config,
     check_network_policy_presence,
+    check_operator_version_directory_name,
 )
 from tests.utils import bundle_files, create_files
 
@@ -706,4 +707,48 @@ def test_check_network_policy_presence(
     bundle = operator.bundle(bundle_version)
     assert {
         (x.__class__, x.reason) for x in check_network_policy_presence(bundle)
+    } == expected_results
+
+
+@pytest.mark.parametrize(
+    "files, bundle_to_check, expected_results",
+    [
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1"),
+            ],
+            ("hello", "0.0.1"),
+            set(),
+            id="pass: CSV version matches directory name",
+        ),
+        pytest.param(
+            [
+                bundle_files("hello", "0.0.1", csv={"spec": {"version": "0.0.2"}}),
+            ],
+            ("hello", "0.0.1"),
+            {
+                (
+                    Fail,
+                    "Bundle directory name 'hello/0.0.1' does not match the expected "
+                    "operator CSV version '0.0.2' from "
+                    "./operators/hello/0.0.1/manifests/hello.clusterserviceversion.yaml.",
+                ),
+            },
+            id="fail: CSV version does not match directory name",
+        ),
+    ],
+)
+def test_check_operator_version_directory_name(
+    tmp_path: Path,
+    files: list[dict[str, Any]],
+    bundle_to_check: tuple[str, str],
+    expected_results: set[tuple[type, str]],
+) -> None:
+    create_files(tmp_path, *files)
+    repo = Repo(tmp_path)
+    operator_name, bundle_version = bundle_to_check
+    operator = repo.operator(operator_name)
+    bundle = operator.bundle(bundle_version)
+    assert {
+        (x.__class__, x.reason) for x in check_operator_version_directory_name(bundle)
     } == expected_results
