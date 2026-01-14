@@ -519,6 +519,15 @@
     </span>
 </a>
 </li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#check_operator_version_directory_name">
+<span class="md-ellipsis">
+      
+        check_operator_version_directory_name
+      
+    </span>
+</a>
+</li>
 </ul>
 </nav>
 </li>
@@ -929,6 +938,16 @@ kind: NetworkPolicy
 <p>Network policies are not a supported resource that Operator Lifecycle Manager(OLM)
 can install and manage. Static checks will raise an error if such resource is
 found in the bundle manifests.</p>
+<h4 id="check_operator_version_directory_name">check_operator_version_directory_name</h4>
+<p>The test checks if the operator version matches the bundle directory name.
+The bundle directory name should be in the format <code>&lt;operator_name&gt;/&lt;version&gt;</code> and
+the <code>&lt;version&gt;</code> part should match the version defined in the CSV file</p>
+<pre><code class="language-yaml">kind: ClusterServiceVersion
+spec:
+  version: &lt;version&gt;
+metadata:
+  name: &lt;operator_name&gt;.v&lt;version&gt;
+</code></pre>
 <h2 id="running-tests-locally">Running tests locally</h2>
 <pre><code class="language-bash"># Install the package with static checks
 $ pip install git+https://github.com/redhat-openshift-ecosystem/operator-pipelines.git
