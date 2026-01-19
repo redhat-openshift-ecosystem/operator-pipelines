@@ -81,4 +81,4 @@ spec:
           --bundle-version "$(params.bundle_version)" \
           --bundle-pullspec "$(params.bundle_pullspec)" \
           --repository-destination $CATALOG_REPO \
-          --verbose $EXTRA_ARGS
+          $EXTRA_ARGS
