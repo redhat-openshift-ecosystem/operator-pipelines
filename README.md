@@ -212,6 +212,20 @@ running OCP cluster and requires some resources a tests are execute only when
 workflow.
 
 All PRs should pass a tests before merging.
+
+### CI/CD for external contributors
+The repository contains Github Actions workflows that automatically run all
+CI steps including linting, building and testing the operator pipelines.
+
+In case of a pull request from a forked repository the tests are not executed
+automatically due to security reasons. To run the tests an owner of the repository
+must review the pull request to make sure it doesn't contain any malicious code
+then approve the `build-and-test` workflow environment.
+
+The manuall approval is not needed for contributors who have write access to the
+repository and not using a forked repository.
+
+
 ## Additional Documentation
 
 - [OpenShift cluster configuration](docs/cluster-config.md)
