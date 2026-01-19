@@ -168,8 +168,6 @@ jobs:
 
   deploy-prod:
     runs-on: ubuntu-latest
-    environment:
-      name: prod
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     needs:
