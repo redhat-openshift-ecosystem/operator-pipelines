@@ -42,7 +42,7 @@ def parse_vulnerabilities_json(data: Dict[str, Any]) -> bool:
     if vulnerable_packages:
         print("Vulnerable packages found:")
         table = Table("Package", "Version", "Vulnerability", "Fixed version")
-        to_update = []
+        to_update = set()
         for package in vulnerable_packages:
             table.add_row(
                 package["name"],
@@ -50,10 +50,10 @@ def parse_vulnerabilities_json(data: Dict[str, Any]) -> bool:
                 package["vulnerability"],
                 ",".join(package["fix"]),
             )
-            to_update.append(package["name"])
+            to_update.add(package["name"])
         console = Console()
         console.print(table)
-        print(f"To fix, run:\npdm update {' '.join(to_update)}  --update-reuse")
+        print(f"To fix, run:\npdm update {' '.join(to_update)} --update-reuse")
         return False
     return True
 
