@@ -10,10 +10,11 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
+from ruamel.yaml import YAML
+
 from operatorcert import utils
 from operatorcert.logger import setup_logger
 from operatorcert.operator_repo import Bundle, Operator, Repo
-from ruamel.yaml import YAML
 
 LOGGER = logging.getLogger("operator-cert")
 

@@ -33,7 +33,7 @@ def _build_and_push_image(
     podman.build(
         project_dir,
         image,
-        project_dir / "operator-pipeline-images" / "Dockerfile",
+        project_dir / "Dockerfile",
         # enforce a two days lifetime on the image pushed to quay
         ["--label", "quay.expires-after=48h"],
     )

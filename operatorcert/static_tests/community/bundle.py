@@ -13,12 +13,13 @@ import subprocess
 from bisect import bisect
 from collections.abc import Iterator
 
+from semver import Version
+
 from operatorcert import utils
 from operatorcert.operator_repo import Bundle
 from operatorcert.operator_repo.checks import CheckResult, Fail, Warn
 from operatorcert.operator_repo.utils import lookup_dict
 from operatorcert.static_tests.helpers import skip_fbc
-from semver import Version
 
 from .validations import (
     validate_capabilities,

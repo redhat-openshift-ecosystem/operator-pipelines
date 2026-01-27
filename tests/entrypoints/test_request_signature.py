@@ -21,7 +21,7 @@ def create_test_umb_client() -> UmbClient:
 @patch("sys.exit")
 def test_process_message_match(mock_exit: MagicMock) -> None:
     mock_request_id = "request123"
-    request_signature.request_ids = [mock_request_id]
+    request_signature.REQUEST_IDS = {mock_request_id}
     mock_open = mock.mock_open()
     mock_msg = {"msg": {"request_id": mock_request_id}}
     with mock.patch("builtins.open", mock_open):
@@ -34,7 +34,7 @@ def test_process_message_match(mock_exit: MagicMock) -> None:
 
 
 def test_process_message_no_match() -> None:
-    request_signature.request_ids = ["request123"]
+    request_signature.REQUEST_IDS = {"request123"}
     mock_open = mock.mock_open()
     mock_msg = {"msg": {"request_id": "no-match"}}
     with mock.patch("builtins.open", mock_open):

@@ -40,8 +40,7 @@ def test_pipelinerun() -> None:
     assert str(pr.start_time) == "2021-11-10 18:38:09+00:00"
     assert pr.finally_taskruns == pr.taskruns[:2]
 
-    md = textwrap.dedent(
-        """
+    md = textwrap.dedent("""
         # Pipeline Summary
 
         Pipeline: *operator-hosted-pipeline*
@@ -60,7 +59,6 @@ def test_pipelinerun() -> None:
         | :heavy_check_mark: | bundle-path-validation | 2021-11-10 18:39:29+00:00 | 14 seconds |
         | :heavy_check_mark: | content-hash | 2021-11-10 18:39:46+00:00 | 17 seconds |
         | :x: | certification-project-check | 2021-11-10 18:39:46+00:00 | 17 seconds |
-    """
-    )
+    """)
 
     assert pr.markdown_summary() == md

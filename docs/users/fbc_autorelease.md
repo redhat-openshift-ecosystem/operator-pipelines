@@ -55,7 +55,7 @@ The `replaces` field is optional and it specifies the bundle that the new bundle
 replaces in the update graph.
 
 ### File structure
-The schema of the file is available here: [release-config.yaml schema](https://github.com/redhat-openshift-ecosystem/operator-pipelines/blob/main/operator-pipeline-images/operatorcert/schemas/release-config-schema.json).
+The schema of the file is available here: [release-config.yaml schema](https://github.com/redhat-openshift-ecosystem/operator-pipelines/blob/main/operatorcert/schemas/release-config-schema.json).
 The schema is validated automatically in the pipeline and the PR will fail with explanations if the file is not valid.
 
 Here is a summary of the file structure:

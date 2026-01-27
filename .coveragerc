@@ -1,5 +1,5 @@
 [run]
-source = operator-pipeline-images/operatorcert
+source = operatorcert
 omit =
-    operator-pipeline-images/operatorcert/webhook/*
-    operator-pipeline-images/operatorcert/integration/testcases/*
+    operatorcert/webhook/*
+    operatorcert/integration/testcases/*

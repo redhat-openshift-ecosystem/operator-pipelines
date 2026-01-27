@@ -4,11 +4,12 @@ import logging
 from contextlib import contextmanager
 from typing import Any, Generator
 
-from operatorcert.webhook_dispatcher.config import DatabaseConfig
-from operatorcert.webhook_dispatcher.models import Base
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
+
+from operatorcert.webhook_dispatcher.config import DatabaseConfig
+from operatorcert.webhook_dispatcher.models import Base
 
 LOGGER = logging.getLogger("operator-cert")
 

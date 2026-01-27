@@ -26,7 +26,7 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64: MagicMock) -> None:
     args.pull_request_url = "http://bar.com/"
 
     mock_b64.return_value = b"a"
-    filename = "operator-pipeline-images/tests/data/preflight.log"
+    filename = "tests/data/preflight.log"
     upload_artifacts.upload_artifact(args, filename, 1)
 
     mock_post.assert_called_once_with(
