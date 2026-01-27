@@ -8,8 +8,8 @@ import os
 import sys
 import threading
 import time
-from typing import Any, Dict
 import uuid
+from typing import Any, Dict
 
 import stomp
 
@@ -97,7 +97,7 @@ def setup_argparser() -> Any:  # pragma: no cover
     return parser
 
 
-request_ids: Any = None
+REQUEST_IDS: Any = None
 
 # wait for signing response for a total of 5 min, at 5 second intervals
 TIMEOUT_COUNT = 60
@@ -152,7 +152,7 @@ def process_message(msg: Any, output_file: str) -> None:
     msg = json.loads(msg)["msg"]
 
     msg_request_id = msg.get("request_id")
-    if request_ids and msg_request_id in request_ids:
+    if REQUEST_IDS and msg_request_id in REQUEST_IDS:
         LOGGER.info("Received radas response: %s", msg)
 
         result_file_path = f"{msg_request_id}-{output_file}"
@@ -294,8 +294,8 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
     )
 
     request_msgs = {}
-    global request_ids  # pylint: disable=global-statement
-    request_ids = set()
+    global REQUEST_IDS  # pylint: disable=global-statement
+    REQUEST_IDS = set()
 
     if len(manifests) > 0:
         for manifest, reference in zip(manifests, references):
@@ -306,7 +306,7 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
                 reference=reference,
                 request_id=request_id,
             )
-            request_ids.add(request_id)
+            REQUEST_IDS.add(request_id)
     else:
         for blob in blobs:
             request_id = str(uuid.uuid4())
@@ -315,7 +315,7 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
                 blob=blob,
                 request_id=request_id,
             )
-            request_ids.add(request_id)
+            REQUEST_IDS.add(request_id)
 
     umb.connect_and_subscribe(args.umb_listen_topic)
 
@@ -325,18 +325,18 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
         for i in range(retry_count + 1):
             LOGGER.info(
                 "Sending %s signing request messages...attempt #%s",
-                len(request_ids),
+                len(REQUEST_IDS),
                 i + 1,
             )
-            for request_id in request_ids:
+            for request_id in REQUEST_IDS:
                 umb.send(args.umb_publish_topic, json.dumps(request_msgs[request_id]))
 
             wait_count = 0
             LOGGER.debug(
                 "Checking for signing response result files with prefixes %s",
-                request_ids,
+                REQUEST_IDS,
             )
-            while len(request_ids) != 0:
+            while len(REQUEST_IDS) != 0:
                 wait_count += 1
                 if wait_count > TIMEOUT_COUNT:
                     LOGGER.warning("Timeout from waiting for signing response.")
@@ -345,7 +345,7 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
                 time.sleep(WAIT_INTERVAL_SEC)
 
                 sig_received = set()
-                for request_id in request_ids:
+                for request_id in REQUEST_IDS:
                     if os.path.exists(f"{request_id}-{output_file}"):
                         with open(
                             f"{request_id}-{output_file}", "r", encoding="utf-8"
@@ -367,7 +367,7 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
                                     signing_status,
                                 )
 
-                request_ids = request_ids - sig_received
+                REQUEST_IDS = REQUEST_IDS - sig_received
             else:
                 # exit retry loop if all response files detected
                 break
@@ -378,9 +378,9 @@ def request_signature(  # pylint: disable=too-many-branches,too-many-statements,
         LOGGER.info("Unsubscribing from queue and disconnecting from UMB...")
         umb.unsubscribe(args.umb_listen_topic)
         umb.stop()
-        if request_ids:
+        if REQUEST_IDS:
             LOGGER.error(
-                "Missing signing responses after all 3 retries for %s", request_ids
+                "Missing signing responses after all 3 retries for %s", REQUEST_IDS
             )
             sys.exit(1)
         else:

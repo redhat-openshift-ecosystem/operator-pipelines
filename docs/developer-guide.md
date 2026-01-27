@@ -13,17 +13,31 @@
 
 ## Setup
 
-1. [Git leaks detection](#git-leaks-detection)
-1. [Prepare a development environment](#prepare-a-development-environment)
-1. [Prepare a certification project](#prepare-a-certification-project)
-1. [Prepare an Operator bundle](#prepare-an-operator-bundle)
-1. [Prepare your `ci.yaml`](#prepare-your-ciyaml)
-1. [Create a bundle pull request](#create-a-bundle-pull-request) (optional)
-   - Required for testing hosted or release pipelines
-1. [Create an API key](#create-an-api-key) (optional)
-   - Required for testing submission with the CI pipeline
-1. [Prepare the CI to run from your fork](ci-cd.md) (optional)
-   - Required to run integration testing on forks of this repo.
+- [Developer Guide](#developer-guide)
+  - [Workflow](#workflow)
+  - [Setup](#setup)
+    - [Git leaks detection](#git-leaks-detection)
+    - [Prepare a Development Environment](#prepare-a-development-environment)
+      - [Integration tests](#integration-tests)
+      - [Install tkn](#install-tkn)
+      - [Using CodeReady Containers](#using-codeready-containers)
+        - [Running a Pipeline with CRC](#running-a-pipeline-with-crc)
+      - [Prepare a Certification Project](#prepare-a-certification-project)
+      - [Prepare an Operator Bundle](#prepare-an-operator-bundle)
+      - [Prepare Your ci.yaml](#prepare-your-ciyaml)
+      - [Create a Bundle Pull Request](#create-a-bundle-pull-request)
+      - [Create an API Key](#create-an-api-key)
+  - [Making Changes to the Pipelines](#making-changes-to-the-pipelines)
+    - [Guiding Principles](#guiding-principles)
+    - [Applying Pipeline Changes](#applying-pipeline-changes)
+  - [Making Changes to the Pipeline Image](#making-changes-to-the-pipeline-image)
+    - [Dependency](#dependency)
+    - [Run Unit Tests, Code Style Checkers, etc.](#run-unit-tests-code-style-checkers-etc)
+      - [Preparation on RPM-based Linux](#preparation-on-rpm-based-linux)
+      - [Preparation on other Linux systems](#preparation-on-other-linux-systems)
+      - [Run the local tests](#run-the-local-tests)
+    - [Local development](#local-development)
+    - [Build \& Push](#build--push)
 
 ### Git leaks detection
 
@@ -280,30 +294,23 @@ oc apply -R -f ansible/roles/operator-pipeline/templates/openshift
 ### Dependency
 
 Operator pipelines project is configured to automatically manage Python
-dependencies using [PDM][1] tool. The pdm automates definition, installation,
+dependencies using [Poetry][1] tool. The poetry automates definition, installation,
 upgrades and the whole lifecycle of dependency in a project. All dependencies
-are stored in `pyproject.toml` file in a groups that corresponds to individual
-applications within the Operator pipelines project.
+are stored in `pyproject.toml` file.
 
 Adding, removing and updating of dependency needs to be always done
-using `pdm` cli.
+using `poetry` cli.
 
 ```bash
-pdm add -G operator-pipelines gunicorn==20.1.0
+poetry add gunicorn==20.1.0
 ```
 
-After a dependency is installed it is added to pdm.lock file. The lock file
+After a dependency is installed it is added to poetry.lock file. The lock file
 is always part of git repository.
 
-If you want to install specific group set of dependencies use following command:
-
-```bash
-pdm install -G operator-pipelines
-```
-
 Dependencies are stored into virtual environment (.venv) which is automatically
-created after `pdm install`. If .venv wasn't created, configure pdm to
-automatically create it during installation with `pdm config python.use_venv true`.
+created after `poetry install`. If .venv wasn't created, configure poetry to
+automatically create it during installation with `POETRY_VIRTUALENVS_IN_PROJECT=true`.
 
 ### Run Unit Tests, Code Style Checkers, etc.
 
@@ -314,9 +321,9 @@ Choose the preparation process according to your Linux version.
 
 ```bash
 sudo dnf -y install hadolint
-python3 -m pip install pdm
-pdm venv create 3.13
-pdm install
+python3 -m pip install poetry
+poetry env use python3.13
+poetry install
 source .venv/bin/activate
 python3 -m pip install ansible-lint
 ```
@@ -327,9 +334,9 @@ Before starting, make sure you have installed the [Brew][2] package manager.
 
 ```bash
 brew install hadolint
-python3 -m pip install pdm
-pdm venv create 3.13
-pdm install
+python3 -m pip install poetry
+poetry env use python3.13
+poetry install
 source .venv/bin/activate
 python3 -m pip install ansible-lint
 ```
@@ -344,11 +351,11 @@ tox
 
 ### Local development
 
-Setup python virtual environment using pdm.
+Setup python virtual environment using poetry.
 
 ```shell
-pdm venv create 3.13
-pdm install
+poetry env use python3.13
+poetry install
 source .venv/bin/activate
 ```
 
@@ -375,5 +382,5 @@ source .venv/bin/activate
     buildah login quay.io
     ```
 
-[1]: https://pdm.fming.dev/latest/
+[1]: https://python-poetry.org
 [2]: https://brew.sh/

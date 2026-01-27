@@ -7,8 +7,9 @@ from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
 import requests
-from operatorcert.utils import add_session_retries
 from requests_kerberos import HTTPKerberosAuth
+
+from operatorcert.utils import add_session_retries
 
 LOGGER = logging.getLogger("operator-cert")
 

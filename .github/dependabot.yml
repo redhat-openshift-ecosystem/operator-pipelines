@@ -8,3 +8,13 @@ updates:
     schedule:
       # Check for updates to GitHub Actions every week
       interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      # Check for updates to Python dependencies every week
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      # Check for updates to Docker images every week
+      interval: "weekly"

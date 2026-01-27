@@ -6,9 +6,10 @@ import logging
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
+from requests.exceptions import HTTPError
+
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
-from requests.exceptions import HTTPError
 
 LOGGER = logging.getLogger("operator-cert")
 

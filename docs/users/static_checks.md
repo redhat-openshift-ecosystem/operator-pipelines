@@ -139,7 +139,7 @@ including the schema definition can be found [here](./fbc_autorelease.md#release
 
 #### check_schema_operator_ci_config
 The test validates the `ci.yaml` file against the schema. The schema definition can
-be found[here](https://github.com/redhat-openshift-ecosystem/operator-pipelines/blob/main/operator-pipeline-images/operatorcert/schemas/ci-schema.json).
+be found[here](https://github.com/redhat-openshift-ecosystem/operator-pipelines/blob/main/operatorcert/schemas/ci-schema.json).
 
 #### check_catalog_usage_ci_config
 The test makes sure the `fbc.catalog_mapping` in `ci.yaml` file is not mapping a single

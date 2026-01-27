@@ -49,7 +49,7 @@ When developers submit operators via pull requests, the dispatcher:
 
 1. Install dependencies:
 ```bash
-pdm install --no-dev
+poetry install
 ```
 
 2. Create database:

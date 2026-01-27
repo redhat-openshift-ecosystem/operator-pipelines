@@ -23,7 +23,6 @@ from github import Github, Auth
 from github.Repository import Repository
 from github.PullRequest import PullRequest
 
-
 logger = logging.getLogger(__name__)
 
 

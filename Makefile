@@ -81,7 +81,7 @@ build-and-test-isv-fbc-catalog:
 .PHONY: build
 build:
 	@echo "Building..."
-	podman build -t pipelines . -f operator-pipeline-images/Dockerfile
+	podman build -t pipelines . -f Dockerfile
 	@echo "Tagging..."
 	podman tag pipelines $(PIPELINE_IMAGE_REPO):$(TAG)
 	podman push $(PIPELINE_IMAGE_REPO):$(TAG)

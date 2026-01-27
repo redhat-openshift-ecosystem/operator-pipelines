@@ -8,7 +8,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cached_property, total_ordering
 from pathlib import Path
-from typing import Any, Optional, SupportsIndex, Union, Generator
+from typing import Any, Generator, Optional, SupportsIndex, Union
 
 from semantic_version import NpmSpec, Version
 
@@ -213,7 +213,9 @@ class Bundle:
         for file in self.manifest_files():
             content = load_yaml(file)
             if not isinstance(content, dict):
-                log.warning("Manifest file %s does not contain a valid yaml document")
+                log.warning(
+                    "Manifest file %s does not contain a valid yaml document", file
+                )
                 continue
             yield file, content
 
