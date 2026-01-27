@@ -20,10 +20,15 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Set up PDM
-        uses: pdm-project/setup-pdm@94a823180e06fcde4ad29308721954a521c96ed0 # v4.4
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
+
+      - name: Set up poetry
+        uses: Gr1N/setup-poetry@48b0f77c8c1b1b19cb962f0f00dff7b4be8f81ec # v9
+        with:
+          poetry-version: "2.3.1"
 
       - name: Install non-python dependencies
         run: |
@@ -35,14 +40,14 @@ jobs:
           /home/linuxbrew/.linuxbrew/bin/brew install hadolint
           sudo ln -s /home/linuxbrew/.linuxbrew/bin/hadolint /usr/bin/
 
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
-          pdm sync -dG tox
-          pipx install ansible-lint
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
 
       - name: Run Tests
         run: |
-          pdm run -v tox
+          poetry run tox
 
   build:
     name: Build and push image
@@ -69,7 +74,7 @@ jobs:
           image: operator-pipelines-images
           tags: ${{ steps.set-vars.outputs.tags }}
           dockerfiles: |
-            ./operator-pipeline-images/Dockerfile
+            ./Dockerfile
 
       - name: Push To quay.io
         id: push-to-quay
@@ -114,7 +119,7 @@ jobs:
           pipx inject ansible-core jmespath openshift pygithub
 
           # Add certificates to trusted list
-          sudo cp  operator-pipeline-images/certs/* /usr/local/share/ca-certificates
+          sudo cp  certs/* /usr/local/share/ca-certificates
           # Rename all .pem files to .crt to allow update-ca-certificates
           for file in /usr/local/share/ca-certificates/*.pem
           do
