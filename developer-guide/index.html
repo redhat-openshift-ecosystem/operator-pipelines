@@ -1127,19 +1127,41 @@
 <li>Submit a pull request with your changes.</li>
 </ol>
 <h2 id="setup">Setup</h2>
-<ol>
+<ul>
+<li><a href="#developer-guide">Developer Guide</a></li>
+<li><a href="#workflow">Workflow</a></li>
+<li><a href="#setup">Setup</a><ul>
 <li><a href="#git-leaks-detection">Git leaks detection</a></li>
-<li><a href="#prepare-a-development-environment">Prepare a development environment</a></li>
-<li><a href="#prepare-a-certification-project">Prepare a certification project</a></li>
-<li><a href="#prepare-an-operator-bundle">Prepare an Operator bundle</a></li>
-<li><a href="#prepare-your-ciyaml">Prepare your <code>ci.yaml</code></a></li>
-<li><a href="#create-a-bundle-pull-request">Create a bundle pull request</a> (optional)</li>
-<li>Required for testing hosted or release pipelines</li>
-<li><a href="#create-an-api-key">Create an API key</a> (optional)</li>
-<li>Required for testing submission with the CI pipeline</li>
-<li><a href="../ci-cd/">Prepare the CI to run from your fork</a> (optional)</li>
-<li>Required to run integration testing on forks of this repo.</li>
-</ol>
+<li><a href="#prepare-a-development-environment">Prepare a Development Environment</a></li>
+<li><a href="#integration-tests">Integration tests</a></li>
+<li><a href="#install-tkn">Install tkn</a></li>
+<li><a href="#using-codeready-containers">Using CodeReady Containers</a><ul>
+<li><a href="#running-a-pipeline-with-crc">Running a Pipeline with CRC</a></li>
+</ul>
+</li>
+<li><a href="#prepare-a-certification-project">Prepare a Certification Project</a></li>
+<li><a href="#prepare-an-operator-bundle">Prepare an Operator Bundle</a></li>
+<li><a href="#prepare-your-ciyaml">Prepare Your ci.yaml</a></li>
+<li><a href="#create-a-bundle-pull-request">Create a Bundle Pull Request</a></li>
+<li><a href="#create-an-api-key">Create an API Key</a></li>
+</ul>
+</li>
+<li><a href="#making-changes-to-the-pipelines">Making Changes to the Pipelines</a><ul>
+<li><a href="#guiding-principles">Guiding Principles</a></li>
+<li><a href="#applying-pipeline-changes">Applying Pipeline Changes</a></li>
+</ul>
+</li>
+<li><a href="#making-changes-to-the-pipeline-image">Making Changes to the Pipeline Image</a><ul>
+<li><a href="#dependency">Dependency</a></li>
+<li><a href="#run-unit-tests-code-style-checkers-etc">Run Unit Tests, Code Style Checkers, etc.</a></li>
+<li><a href="#preparation-on-rpm-based-linux">Preparation on RPM-based Linux</a></li>
+<li><a href="#preparation-on-other-linux-systems">Preparation on other Linux systems</a></li>
+<li><a href="#run-the-local-tests">Run the local tests</a></li>
+<li><a href="#local-development">Local development</a></li>
+<li><a href="#build--push">Build \&amp; Push</a></li>
+</ul>
+</li>
+</ul>
 <h3 id="git-leaks-detection">Git leaks detection</h3>
 <p>Since the repository contains secret information in form of encrypted
 Ansible Vault there is high chance that developer may push a commit with
@@ -1347,39 +1369,35 @@ It will add all the Tekton resources used across all the pipelines.</p>
 <h2 id="making-changes-to-the-pipeline-image">Making Changes to the Pipeline Image</h2>
 <h3 id="dependency">Dependency</h3>
 <p>Operator pipelines project is configured to automatically manage Python
-dependencies using <a href="https://pdm.fming.dev/latest/">PDM</a> tool. The pdm automates definition, installation,
+dependencies using <a href="https://python-poetry.org">Poetry</a> tool. The poetry automates definition, installation,
 upgrades and the whole lifecycle of dependency in a project. All dependencies
-are stored in <code>pyproject.toml</code> file in a groups that corresponds to individual
-applications within the Operator pipelines project.</p>
+are stored in <code>pyproject.toml</code> file.</p>
 <p>Adding, removing and updating of dependency needs to be always done
-using <code>pdm</code> cli.</p>
-<pre><code class="language-bash">pdm add -G operator-pipelines gunicorn==20.1.0
+using <code>poetry</code> cli.</p>
+<pre><code class="language-bash">poetry add gunicorn==20.1.0
 </code></pre>
-<p>After a dependency is installed it is added to pdm.lock file. The lock file
+<p>After a dependency is installed it is added to poetry.lock file. The lock file
 is always part of git repository.</p>
-<p>If you want to install specific group set of dependencies use following command:</p>
-<pre><code class="language-bash">pdm install -G operator-pipelines
-</code></pre>
 <p>Dependencies are stored into virtual environment (.venv) which is automatically
-created after <code>pdm install</code>. If .venv wasn't created, configure pdm to
-automatically create it during installation with <code>pdm config python.use_venv true</code>.</p>
+created after <code>poetry install</code>. If .venv wasn't created, configure poetry to
+automatically create it during installation with <code>POETRY_VIRTUALENVS_IN_PROJECT=true</code>.</p>
 <h3 id="run-unit-tests-code-style-checkers-etc">Run Unit Tests, Code Style Checkers, etc.</h3>
 <p>Before running the tests locally, the environment needs to be prepared.
 Choose the preparation process according to your Linux version.</p>
 <h4 id="preparation-on-rpm-based-linux">Preparation on RPM-based Linux</h4>
 <pre><code class="language-bash">sudo dnf -y install hadolint
-python3 -m pip install pdm
-pdm venv create 3.13
-pdm install
+python3 -m pip install poetry
+poetry env use python3.13
+poetry install
 source .venv/bin/activate
 python3 -m pip install ansible-lint
 </code></pre>
 <h4 id="preparation-on-other-linux-systems">Preparation on other Linux systems</h4>
 <p>Before starting, make sure you have installed the <a href="https://brew.sh/">Brew</a> package manager.</p>
 <pre><code class="language-bash">brew install hadolint
-python3 -m pip install pdm
-pdm venv create 3.13
-pdm install
+python3 -m pip install poetry
+poetry env use python3.13
+poetry install
 source .venv/bin/activate
 python3 -m pip install ansible-lint
 </code></pre>
@@ -1388,9 +1406,9 @@ python3 -m pip install ansible-lint
 <pre><code class="language-bash">tox
 </code></pre>
 <h3 id="local-development">Local development</h3>
-<p>Setup python virtual environment using pdm.</p>
-<pre><code class="language-shell">pdm venv create 3.13
-pdm install
+<p>Setup python virtual environment using poetry.</p>
+<pre><code class="language-shell">poetry env use python3.13
+poetry install
 source .venv/bin/activate
 </code></pre>
 <h3 id="build-push">Build &amp; Push</h3>
