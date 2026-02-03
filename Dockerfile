@@ -101,5 +101,3 @@ RUN poetry install --only-root
 ENV PATH=/home/user/.venv/bin:$PATH
 
 USER "${USER_UID}"
-
-ENTRYPOINT [ "/usr/bin/sh" ]
