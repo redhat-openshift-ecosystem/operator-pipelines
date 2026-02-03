@@ -74,8 +74,11 @@ def github_pipeline_webhook() -> Any:
         return jsonify({"status": "rejected", "message": "Unsupported event"}), 400
 
     db_session = next(get_db_session())
-    db_session.add(webhook_event)
-    db_session.commit()
+    try:
+        db_session.add(webhook_event)
+        db_session.commit()
+    finally:
+        db_session.close()
 
     return (
         jsonify(
@@ -109,20 +112,22 @@ def events_status() -> Any:
             db_filter.append(getattr(WebhookEvent, key) == val)
 
     db_session = next(get_db_session())
+    try:
+        events = (
+            db_session.query(WebhookEvent)
+            .filter(*db_filter)
+            .order_by(WebhookEvent.received_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+        total_count = db_session.query(WebhookEvent).filter(*db_filter).count()
 
-    events = (
-        db_session.query(WebhookEvent)
-        .filter(*db_filter)
-        .order_by(WebhookEvent.received_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
-    )
-    total_count = db_session.query(WebhookEvent).filter(*db_filter).count()
-
-    output = []
-    for event in events:
-        output.append(event_to_dict(event))
+        output = []
+        for event in events:
+            output.append(event_to_dict(event))
+    finally:
+        db_session.close()
 
     return (
         jsonify(

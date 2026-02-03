@@ -84,8 +84,9 @@ def test_github_pipeline_webhook(
     mock_convert_to_webhook_event: MagicMock,
 ) -> None:
     mock_validate_github_webhook.return_value = True
-    mock_get_db_session.return_value.__iter__.return_value = iter([MagicMock()])
-    mock_get_db_session.return_value.__next__.return_value = MagicMock()
+    mock_db_session = MagicMock()
+    mock_get_db_session.return_value.__iter__.return_value = iter([mock_db_session])
+    mock_get_db_session.return_value.__next__.return_value = mock_db_session
 
     mock_get_config.return_value = WebhookDispatcherConfig(
         dispatcher=DispatcherConfig(
@@ -136,6 +137,7 @@ def test_github_pipeline_webhook(
             "message": "Event received",
             **api.event_to_dict(mock_convert_to_webhook_event.return_value),
         }
+        mock_db_session.close.assert_called_once()
 
 
 @patch("operatorcert.webhook_dispatcher.api.validate_github_webhook")
@@ -219,6 +221,7 @@ def test_events_status(mock_get_db_session: MagicMock) -> None:
             "total_count": 1,
             "events": [api.event_to_dict(event) for event in mock_events],
         }
+        mock_db_session.close.assert_called_once()
 
 
 def test_get_ping() -> None:

@@ -44,25 +44,28 @@ class EventDispatcher:
         while True:
             try:
                 db_session = next(get_db_session())
-                # Get active webhook events that are not processed
-                webhook_events = (
-                    db_session.query(WebhookEvent)
-                    .filter(WebhookEvent.processed.is_(False))
-                    .all()
-                )
-                LOGGER.debug("Found %s active webhook events", len(webhook_events))
-                grouped_events = self._group_by_repository_and_pull_request(
-                    webhook_events
-                )
-
-                for repository_name, repository_events in grouped_events.items():
-                    LOGGER.info(
-                        "Processing repository %s with %s pull request events",
-                        repository_name,
-                        len(repository_events),
+                try:
+                    # Get active webhook events that are not processed
+                    webhook_events = (
+                        db_session.query(WebhookEvent)
+                        .filter(WebhookEvent.processed.is_(False))
+                        .all()
                     )
-                    await self.process_repository_events(repository_events)
-                db_session.commit()
+                    LOGGER.debug("Found %s active webhook events", len(webhook_events))
+                    grouped_events = self._group_by_repository_and_pull_request(
+                        webhook_events
+                    )
+
+                    for repository_name, repository_events in grouped_events.items():
+                        LOGGER.info(
+                            "Processing repository %s with %s pull request events",
+                            repository_name,
+                            len(repository_events),
+                        )
+                        await self.process_repository_events(repository_events)
+                    db_session.commit()
+                finally:
+                    db_session.close()
 
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Error in event dispatcher")

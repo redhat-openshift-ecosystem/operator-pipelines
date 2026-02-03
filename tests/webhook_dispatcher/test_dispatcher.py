@@ -118,6 +118,7 @@ async def test_event_dispatcher_run(
                 ]
             }
         )
+        mock_db_session.close.assert_called_once()
 
 
 @pytest.mark.asyncio
