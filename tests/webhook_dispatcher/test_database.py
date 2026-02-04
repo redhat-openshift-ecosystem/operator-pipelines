@@ -5,7 +5,6 @@ from operatorcert.webhook_dispatcher.config import DatabaseConfig
 from operatorcert.webhook_dispatcher.database import (
     DatabaseManager,
     get_database,
-    get_db_session,
     init_database,
 )
 from sqlalchemy.exc import SQLAlchemyError
@@ -137,13 +136,3 @@ def test_get_database(mock_database_manager: MagicMock) -> None:
 
     init_database(MagicMock())
     assert get_database() is not None
-
-
-@patch("operatorcert.webhook_dispatcher.database.get_database")
-def test_get_db_session(mock_get_database: MagicMock) -> None:
-    mock_db_context = MagicMock()
-    mock_db_context.__enter__.return_value = MagicMock()
-    mock_get_database.return_value.get_session.return_value = mock_db_context
-
-    resp = next(get_db_session())
-    assert resp == mock_db_context.__enter__.return_value

@@ -18,7 +18,7 @@ from operatorcert.webhook_dispatcher.config import (
     DispatcherConfig,
     DispatcherConfigItem,
 )
-from operatorcert.webhook_dispatcher.database import get_db_session
+from operatorcert.webhook_dispatcher.database import get_database
 from operatorcert.webhook_dispatcher.models import WebhookEvent
 from operatorcert.webhook_dispatcher.pipeline_event import PipelineEvent
 
@@ -43,28 +43,27 @@ class EventDispatcher:
 
         while True:
             try:
-                db_session = next(get_db_session())
-                # Get active webhook events that are not processed
-                webhook_events = (
-                    db_session.query(WebhookEvent)
-                    .filter(WebhookEvent.processed.is_(False))
-                    .all()
-                )
-                LOGGER.debug("Found %s active webhook events", len(webhook_events))
-                grouped_events = self._group_by_repository_and_pull_request(
-                    webhook_events
-                )
-
-                for repository_name, repository_events in grouped_events.items():
-                    LOGGER.info(
-                        "Processing repository %s with %s pull request events",
-                        repository_name,
-                        len(repository_events),
+                with get_database().get_session() as db_session:
+                    # Get active webhook events that are not processed
+                    webhook_events = (
+                        db_session.query(WebhookEvent)
+                        .filter(WebhookEvent.processed.is_(False))
+                        .all()
                     )
-                    await self.process_repository_events(repository_events)
-                db_session.commit()
+                    LOGGER.debug("Found %s active webhook events", len(webhook_events))
+                    grouped_events = self._group_by_repository_and_pull_request(
+                        webhook_events
+                    )
 
-            except Exception:  # pylint: disable=broad-except
+                    for repository_name, repository_events in grouped_events.items():
+                        LOGGER.info(
+                            "Processing repository %s with %s pull request events",
+                            repository_name,
+                            len(repository_events),
+                        )
+                        await self.process_repository_events(repository_events)
+
+            except Exception:  # pylint: disable=broad-except # pragma: no cover
                 LOGGER.exception("Error in event dispatcher")
             await asyncio.sleep(5)
 

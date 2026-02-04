@@ -65,17 +65,19 @@ def dispatcher() -> EventDispatcher:
 @patch(
     "operatorcert.webhook_dispatcher.dispatcher.EventDispatcher._group_by_repository_and_pull_request"
 )
-@patch("operatorcert.webhook_dispatcher.dispatcher.get_db_session")
+@patch("operatorcert.webhook_dispatcher.dispatcher.get_database")
 async def test_event_dispatcher_run(
-    mock_get_db_session: MagicMock,
+    mock_get_database: MagicMock,
     mock_group_by_repository_and_pull_request: MagicMock,
     mock_process_repository_events: MagicMock,
     mock_time_sleep: MagicMock,
     dispatcher: EventDispatcher,
 ) -> None:
     mock_db_session = MagicMock()
-    mock_get_db_session.return_value.__iter__.return_value = iter([mock_db_session])
-    mock_get_db_session.return_value.__next__.return_value = mock_db_session
+    mock_context = MagicMock()
+    mock_context.__enter__.return_value = mock_db_session
+    mock_context.__exit__.return_value = None
+    mock_get_database.return_value.get_session.return_value = mock_context
 
     mock_group_by_repository_and_pull_request.return_value = {
         "test/test": {
@@ -97,7 +99,6 @@ async def test_event_dispatcher_run(
     # To break from the loop
     mock_time_sleep.side_effect = Exception("test")
 
-    mock_db_session.commit.side_effect = Exception("test")
     with pytest.raises(Exception):
         await dispatcher.run()
 
