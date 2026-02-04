@@ -10,7 +10,7 @@ import flask
 from flask import jsonify, request
 
 from operatorcert.webhook_dispatcher.config import load_config
-from operatorcert.webhook_dispatcher.database import get_database, get_db_session
+from operatorcert.webhook_dispatcher.database import get_database
 from operatorcert.webhook_dispatcher.models import (
     WebhookEvent,
     convert_to_webhook_event,
@@ -73,16 +73,17 @@ def github_pipeline_webhook() -> Any:
     if webhook_event is None:
         return jsonify({"status": "rejected", "message": "Unsupported event"}), 400
 
-    db_session = next(get_db_session())
-    db_session.add(webhook_event)
-    db_session.commit()
+    with get_database().get_session() as db_session:
+        db_session.add(webhook_event)
+        event_data = event_to_dict(webhook_event)
 
+    LOGGER.info("Received GitHub webhook event: %s", webhook_event)
     return (
         jsonify(
             {
                 "status": "ok",
                 "message": "Event received",
-                **event_to_dict(webhook_event),
+                **event_data,
             }
         ),
         200,
@@ -108,21 +109,20 @@ def events_status() -> Any:
             key, val = item.split("=")
             db_filter.append(getattr(WebhookEvent, key) == val)
 
-    db_session = next(get_db_session())
+    with get_database().get_session() as db_session:
+        events = (
+            db_session.query(WebhookEvent)
+            .filter(*db_filter)
+            .order_by(WebhookEvent.received_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+        total_count = db_session.query(WebhookEvent).filter(*db_filter).count()
 
-    events = (
-        db_session.query(WebhookEvent)
-        .filter(*db_filter)
-        .order_by(WebhookEvent.received_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
-    )
-    total_count = db_session.query(WebhookEvent).filter(*db_filter).count()
-
-    output = []
-    for event in events:
-        output.append(event_to_dict(event))
+        output = []
+        for event in events:
+            output.append(event_to_dict(event))
 
     return (
         jsonify(

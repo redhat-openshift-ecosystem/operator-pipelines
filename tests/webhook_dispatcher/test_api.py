@@ -76,16 +76,19 @@ def test_event_to_dict() -> None:
 @patch("operatorcert.webhook_dispatcher.api.convert_to_webhook_event")
 @patch("operatorcert.webhook_dispatcher.api.validate_github_webhook")
 @patch("operatorcert.webhook_dispatcher.api.get_config")
-@patch("operatorcert.webhook_dispatcher.api.get_db_session")
+@patch("operatorcert.webhook_dispatcher.api.get_database")
 def test_github_pipeline_webhook(
-    mock_get_db_session: MagicMock,
+    mock_get_database: MagicMock,
     mock_get_config: MagicMock,
     mock_validate_github_webhook: MagicMock,
     mock_convert_to_webhook_event: MagicMock,
 ) -> None:
     mock_validate_github_webhook.return_value = True
-    mock_get_db_session.return_value.__iter__.return_value = iter([MagicMock()])
-    mock_get_db_session.return_value.__next__.return_value = MagicMock()
+    mock_session = MagicMock()
+    mock_context = MagicMock()
+    mock_context.__enter__.return_value = mock_session
+    mock_context.__exit__.return_value = None
+    mock_get_database.return_value.get_session.return_value = mock_context
 
     mock_get_config.return_value = WebhookDispatcherConfig(
         dispatcher=DispatcherConfig(
@@ -140,9 +143,9 @@ def test_github_pipeline_webhook(
 
 @patch("operatorcert.webhook_dispatcher.api.validate_github_webhook")
 @patch("operatorcert.webhook_dispatcher.api.get_config")
-@patch("operatorcert.webhook_dispatcher.api.get_db_session")
+@patch("operatorcert.webhook_dispatcher.api.get_database")
 def test_github_pipeline_webhook_invalid_event(
-    mock_get_db_session: MagicMock,
+    mock_get_database: MagicMock,
     mock_get_config: MagicMock,
     mock_validate_github_webhook: MagicMock,
 ) -> None:
@@ -163,9 +166,9 @@ def test_github_pipeline_webhook_invalid_event(
 @patch("operatorcert.webhook_dispatcher.api.convert_to_webhook_event")
 @patch("operatorcert.webhook_dispatcher.api.validate_github_webhook")
 @patch("operatorcert.webhook_dispatcher.api.get_config")
-@patch("operatorcert.webhook_dispatcher.api.get_db_session")
+@patch("operatorcert.webhook_dispatcher.api.get_database")
 def test_github_pipeline_webhook_invalid_event_type(
-    mock_get_db_session: MagicMock,
+    mock_get_database: MagicMock,
     mock_get_config: MagicMock,
     mock_validate_github_webhook: MagicMock,
     mock_convert_to_webhook_event: MagicMock,
@@ -181,8 +184,8 @@ def test_github_pipeline_webhook_invalid_event_type(
         assert response.json == {"status": "rejected", "message": "Unsupported event"}
 
 
-@patch("operatorcert.webhook_dispatcher.api.get_db_session")
-def test_events_status(mock_get_db_session: MagicMock) -> None:
+@patch("operatorcert.webhook_dispatcher.api.get_database")
+def test_events_status(mock_get_database: MagicMock) -> None:
     mock_db_session = MagicMock()
     mock_events = [
         WebhookEvent(
@@ -197,8 +200,10 @@ def test_events_status(mock_get_db_session: MagicMock) -> None:
             status="pending",
         )
     ]
-    mock_get_db_session.return_value.__iter__.return_value = iter([mock_db_session])
-    mock_get_db_session.return_value.__next__.return_value = mock_db_session
+    mock_context = MagicMock()
+    mock_context.__enter__.return_value = mock_db_session
+    mock_context.__exit__.return_value = None
+    mock_get_database.return_value.get_session.return_value = mock_context
 
     mock_order_by = MagicMock()
     mock_order_by.offset.return_value.limit.return_value.all.return_value = mock_events

@@ -153,15 +153,3 @@ def get_database() -> DatabaseManager:
             "Database manager not initialized. Call init_database() first."
         )
     return _DB_MANAGER
-
-
-def get_db_session() -> Generator[Session, None, None]:
-    """
-    FastAPI dependency function to get database session.
-
-    Yields:
-        Session: SQLAlchemy session
-    """
-    db_manager = get_database()
-    with db_manager.get_session() as session:
-        yield session
