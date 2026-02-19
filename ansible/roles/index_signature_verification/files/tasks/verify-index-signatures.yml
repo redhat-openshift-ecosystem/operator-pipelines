@@ -32,6 +32,7 @@ spec:
         name: "$(params.keys_config_map)"
 
   stepTemplate:
+    imagePullPolicy: Always
     volumeMounts:
       - name: scratch
         mountPath: /mnt/scratch
@@ -91,9 +92,20 @@ spec:
       env:
         - name: STORAGE_DRIVER
           value: vfs
+        - name: SEQUOIA_CRYPTO_POLICY
+          value: /tmp/sequoia.policy
       script: |
         #!/usr/bin/env bash
         set +x -e -o pipefail
+
+        # Allow SHA1 algorithm in Sequoia crypto policy
+        # Newer Podman versions can use the Sequoia backend which
+        # disallows SHA1 by default
+        cat > /tmp/sequoia.policy <<EOF
+        [hash_algorithms]
+        sha1.collision_resistance = "always"
+        sha1.second_preimage_resistance = "always"
+        EOF
 
         cp /etc/containers/policy.json /tmp/
         podman image trust set --policypath=/tmp/policy.json -f /mnt/keys/pub.gpg registry.redhat.io
