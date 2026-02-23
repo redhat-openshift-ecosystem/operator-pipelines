@@ -33,7 +33,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Configure stage cluster
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@6c0a4f86519cc4a09ba95e5077ecfa2141deba9e # v7
         with:
           playbook: playbooks/config-ocp-cluster.yml
           directory: ./ansible
@@ -62,7 +62,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy dev environment
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@6c0a4f86519cc4a09ba95e5077ecfa2141deba9e # v7
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -92,7 +92,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy qa environment
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@6c0a4f86519cc4a09ba95e5077ecfa2141deba9e # v7
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -125,7 +125,7 @@ jobs:
           pipx inject ansible-core jmespath openshift pygithub
 
       - name: Deploy stage environment
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@6c0a4f86519cc4a09ba95e5077ecfa2141deba9e # v7
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -153,7 +153,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Configure prod cluster
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@6c0a4f86519cc4a09ba95e5077ecfa2141deba9e # v7
         with:
           playbook: playbooks/config-ocp-cluster.yml
           directory: ./ansible
@@ -180,7 +180,7 @@ jobs:
           # Install python packages needed from ansible
           pipx inject ansible-core jmespath openshift pygithub
       - name: Deploy prod environment
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@6c0a4f86519cc4a09ba95e5077ecfa2141deba9e # v7
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
