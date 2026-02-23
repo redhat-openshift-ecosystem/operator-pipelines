@@ -120,8 +120,8 @@ ruamel-yaml = ">=0.18.11"
 ruamel-yaml-clib = {version = ">=0.2.12", markers = "python_version < \"3.14\""}
 subprocess-tee = ">=0.4.1"
 wcmatch = [
-    {version = ">=8.1.2", markers = "python_version < \"3.12\""},
     {version = ">=8.5.0", markers = "python_version >= \"3.12\""},
+    {version = ">=8.1.2", markers = "python_version < \"3.12\""},
 ]
 yamllint = ">=1.38.0"
 
@@ -379,18 +379,21 @@ files = [
 
 [[package]]
 name = "cel-python"
-version = "0.4.0"
+version = "0.5.0"
 description = "Pure Python implementation of Google Common Expression Language"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "cel_python-0.4.0-py3-none-any.whl", hash = "sha256:9ddfad8ca4f5d54006dfb45fa46c5a937265173697c1a51fc8cdc645c6a4f4a7"},
-    {file = "cel_python-0.4.0.tar.gz", hash = "sha256:9d0da22ed083cb5d57f2127ec7af7bba60bcb8d0a4a23543fc6838e739839c68"},
+    {file = "cel_python-0.5.0-py3-none-any.whl", hash = "sha256:d0f85008b89655c2bb18d797d2fa3f96f2ed80f4a3b43b0e8138c6646581e5f6"},
+    {file = "cel_python-0.5.0.tar.gz", hash = "sha256:3eb0a619e8df0f338d0430cda01427a742e77e3c433a1c7c3ebd409cd804c45a"},
 ]
 
 [package.dependencies]
-google-re2 = {version = ">=1.1.20240702", markers = "python_version != \"3.13\" or sys_platform != \"darwin\" or platform_machine != \"arm64\""}
+google-re2 = [
+    {version = ">=1.1.20250722", markers = "python_version == \"3.13\""},
+    {version = ">=1.1.20240702", markers = "python_version != \"3.13\""},
+]
 jmespath = ">=1.0.1"
 lark = ">=1.2.2"
 pendulum = ">=3.1.0"
@@ -1088,7 +1091,6 @@ description = "RE2 Python bindings"
 optional = false
 python-versions = "~=3.9"
 groups = ["main"]
-markers = "python_version != \"3.13\" or sys_platform != \"darwin\" or platform_machine != \"arm64\""
 files = [
     {file = "google_re2-1.1.20251105-1-cp310-cp310-macosx_13_0_arm64.whl", hash = "sha256:88bd426c1904f3562049bf766301bbc4f7a4bcb8f61e92f8cc833faac1cf2a92"},
     {file = "google_re2-1.1.20251105-1-cp310-cp310-macosx_13_0_x86_64.whl", hash = "sha256:a486dc10bb07f3c34b9908541368e21ab6d77972569427200db077126668fbf3"},
@@ -2546,8 +2548,8 @@ files = [
 astroid = ">=4.0.2,<=4.1.dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
 dill = [
-    {version = ">=0.2", markers = "python_version < \"3.11\""},
     {version = ">=0.3.7", markers = "python_version >= \"3.12\""},
+    {version = ">=0.2", markers = "python_version < \"3.11\""},
     {version = ">=0.3.6", markers = "python_version == \"3.11\""},
 ]
 isort = ">=5,<5.13 || >5.13,<8"
