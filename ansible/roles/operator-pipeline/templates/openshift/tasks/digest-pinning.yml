@@ -46,7 +46,7 @@ spec:
           export REGISTRY_AUTH_FILE="$DOCKER_CONFIG/config-custom.json"
           mkdir -p $DOCKER_CONFIG
 
-          jq -s '.[0] * .[1]' \
+          jq -s '{auths: (.[0].auths * .[1].auths)}' \
             $(workspaces.registry-credentials.path)/.dockerconfigjson \
             $HOME/.docker/config.json \
             > "$REGISTRY_AUTH_FILE"
