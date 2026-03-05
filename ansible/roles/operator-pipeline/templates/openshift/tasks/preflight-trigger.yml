@@ -168,6 +168,12 @@ spec:
 
           if [ -f "$(workspaces.credentials.path)/project_dockerconfigjson" ];
           then
+              # sanitize the project_dockerconfigjson before encrypting;
+              # this ensures only the `auths` section gets passed to other CI systems/applications
+              jq '{auths: .auths}' \
+                "$(workspaces.credentials.path)/project_dockerconfigjson" > "$(workspaces.credentials.path)/project_dockerconfigjson.tmp" \
+                && mv "$(workspaces.credentials.path)/project_dockerconfigjson.tmp" "$(workspaces.credentials.path)/project_dockerconfigjson"
+
               preflight-trigger encrypt \
               --gpg-encryption-private-key "${PIPELINE_GPG_DECRYPTION_PRIVATE_KEY}" \
               --gpg-encryption-public-key "${PIPELINE_GPG_DECRYPTION_PUBLIC_KEY}" \
