@@ -6,6 +6,9 @@ metadata:
 spec:
   params:
     - name: pipeline_image
+    - name: operators_path
+      description: Path to the operators directory
+      default: "operators"
     - name: affected_operators
       description: Comma separated list of affected operators
       default: ""
@@ -64,7 +67,7 @@ spec:
 
 
         for operator_name in "${!ALL_AFFECTED_OPERATORS[@]}"; do
-          file_path="operators/$operator_name/ci.yaml"
+          file_path="$(params.operators_path)/$operator_name/ci.yaml"
 
           if [ ! -f "$file_path" ]; then
             echo "File '$file_path' not found."
