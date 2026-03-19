@@ -525,7 +525,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: index_images
-          value: "$(tasks.get-supported-versions.results.indices)"
+          value: "$(tasks.get-supported-versions.results.public_repository_mirrors_with_version)"
         - name: commit_sha
           value: "$(params.git_commit)"
         - name: catalogs_with_added_or_modified_operators
@@ -565,7 +565,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: index_images
-          value: "$(tasks.get-supported-versions.results.indices)"
+          value: "$(tasks.get-supported-versions.results.public_repository_mirrors_with_version)"
         - name: bundle_pullspec
           value: "$(tasks.copy-bundle-image-to-released-registry.results.image_pullspec)"
         - name: iib_url

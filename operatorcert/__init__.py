@@ -14,6 +14,7 @@ import yaml
 from dateutil.parser import isoparse
 from operatorcert import pyxis
 from operatorcert.utils import find_file
+from operatorcert.operator_repo import Repo
 
 # Bundle annotations
 OCP_VERSIONS_ANNOTATION = "com.redhat.openshift.versions"
@@ -107,6 +108,40 @@ def filter_out_eol_versions(indices: List[Dict[str, Any]]) -> List[Dict[str, Any
     return supported_indices
 
 
+def enrich_indices_with_repo_context(
+    indices: List[Dict[str, Any]], config: Dict[str, Any]
+) -> List[Dict[str, Any]]:
+    """
+    Enrich Pyxis index information with current repository config by adding
+    public, pending and index repository
+
+    Args:
+        indices (List[Dict[str, Any]]): A list of Pyxis indices
+        config (Dict[str, Any]): A repository config
+
+    Returns:
+        List[Dict[str, Any]]: Enriched indices list with repo context
+    """
+
+    pending_repo = config["index_image"]["pending_repository"]
+    public_repository_mirror = config["index_image"]["public_repository_mirror"]
+    repository = config["index_image"]["repository"]
+    for index in indices:
+        ocp_version = index["ocp_version"]
+
+        index["public_repository_mirror"] = public_repository_mirror
+        index["public_repository_mirror_with_version"] = (
+            f"{public_repository_mirror}:v{ocp_version}"
+        )
+        index["repository"] = repository
+        index["repository_with_version"] = f"{repository}:v{ocp_version}"
+
+        index["pending_repository"] = pending_repo
+        index["pending_repository_with_version"] = f"{pending_repo}:v{ocp_version}"
+
+    return indices
+
+
 def get_skipped_versions(
     all_indices: List[Dict[str, Any]], supported_indices: List[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
@@ -134,7 +169,7 @@ def get_skipped_versions(
 
 
 def ocp_version_info(
-    bundle_path: Optional[pathlib.Path], pyxis_url: str, organization: str
+    bundle_path: Optional[pathlib.Path], pyxis_url: str, repo: Repo
 ) -> Dict[str, Any]:
     """
     Gathers some information pertaining to the OpenShift versions defined in the
@@ -144,11 +179,13 @@ def ocp_version_info(
     Args:
         bundle_path (Path): A path to the root of the bundle
         pyxis_url (str): Base URL to Pyxis
-        organization (str): Organization of the index (e.g. "certified-operators")
+        repo (Repo): Repo object containing the operator repository context,
+        used to get the organization of the index.
 
     Returns:
         A dict of pertinent OCP version information
     """
+    organization = repo.config.get("organization")
     if bundle_path is None:
         ocp_versions_range: Any = None
     else:
@@ -165,6 +202,7 @@ def ocp_version_info(
 
     indices = get_supported_indices(pyxis_url, ocp_versions_range, organization)
     supported_indices = filter_out_eol_versions(indices)
+    supported_indices = enrich_indices_with_repo_context(supported_indices, repo.config)
 
     if not supported_indices:
         raise ValueError("No supported indices found")
@@ -175,9 +213,9 @@ def ocp_version_info(
         # We need to get all indices to determine which ones are not supported
         all_indices = get_supported_indices(pyxis_url, None, organization)
         all_indices = filter_out_eol_versions(all_indices)
+        all_indices = enrich_indices_with_repo_context(all_indices, repo.config)
 
     return {
-        "versions_annotation": ocp_versions_range,
         "indices": supported_indices,
         "max_version_index": supported_indices[0],
         "all_indices": all_indices,

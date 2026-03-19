@@ -832,7 +832,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: index_images
-          value: "$(tasks.get-supported-versions.results.indices)"
+          value: "$(tasks.get-supported-versions.results.public_repository_mirrors_with_version)"
         - name: commit_sha
           value: "$(params.git_commit)"
         - name: catalogs_with_added_or_modified_operators
@@ -871,7 +871,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: index_images
-          value: "$(tasks.get-supported-versions.results.max_supported_index)"
+          value: "$(tasks.get-supported-versions.results.max_supported_public_repository_mirror)"
         - name: bundle_pullspec
           value: *bundleImage
         - name: environment

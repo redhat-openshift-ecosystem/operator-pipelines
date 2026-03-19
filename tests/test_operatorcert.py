@@ -70,14 +70,22 @@ def test_get_supported_indices(mock_get: MagicMock) -> None:
     assert result == [{"foo": "bar"}]
 
 
+@patch("operatorcert.enrich_indices_with_repo_context")
 @patch("operatorcert.datetime")
 @patch("operatorcert.get_supported_indices")
 def test_ocp_version_info(
-    mock_indices: MagicMock, mock_datetime: MagicMock, bundle: Bundle
+    mock_indices: MagicMock,
+    mock_datetime: MagicMock,
+    mock_enrich: MagicMock,
+    bundle: Bundle,
 ) -> None:
+    mock_enrich.side_effect = lambda indices, config: indices
+
     timestamp = "2022-01-01T00:00:00.000000+00:00"
     mock_datetime.now.return_value = isoparse(timestamp).astimezone(timezone.utc)
-    organization = "certified-operators"
+
+    repo = MagicMock()
+    repo.config = {"organization": "certified-operators"}
     bundle_root = bundle["root"]
 
     supported_indices = [
@@ -92,10 +100,9 @@ def test_ocp_version_info(
 
     # Happy path
     mock_indices.side_effect = (supported_indices, all_indices)
-    info = operatorcert.ocp_version_info(bundle_root, "", organization)
+    info = operatorcert.ocp_version_info(bundle_root, "", repo)
 
     assert info == {
-        "versions_annotation": "4.6-4.8",
         "indices": supported_indices[:1],
         "max_version_index": supported_indices[0],
         "all_indices": all_indices,
@@ -105,10 +112,9 @@ def test_ocp_version_info(
     # No bundle path
     mock_indices.reset_mock()
     mock_indices.side_effect = (all_indices,)
-    info = operatorcert.ocp_version_info(None, "", organization)
+    info = operatorcert.ocp_version_info(None, "", repo)
 
     assert info == {
-        "versions_annotation": None,
         "indices": all_indices,
         "max_version_index": all_indices[0],
         "all_indices": all_indices,
@@ -119,7 +125,7 @@ def test_ocp_version_info(
     mock_indices.reset_mock()
     mock_indices.side_effect = [[], []]
     with pytest.raises(ValueError):
-        operatorcert.ocp_version_info(bundle_root, "", organization)
+        operatorcert.ocp_version_info(bundle_root, "", repo)
 
     # Index EOL reached
     mock_indices.return_value = [
@@ -129,8 +135,8 @@ def test_ocp_version_info(
             "end_of_life": timestamp,
         }
     ]
-    with pytest.raises(ValueError) as err_info:
-        operatorcert.ocp_version_info(bundle_root, "", organization)
+    with pytest.raises(ValueError):
+        operatorcert.ocp_version_info(bundle_root, "", repo)
 
     # Missing version range annotation
     annotations = {
@@ -142,7 +148,7 @@ def test_ocp_version_info(
         yaml.safe_dump(annotations, fh)
 
     with pytest.raises(ValueError) as err_info:
-        operatorcert.ocp_version_info(bundle_root, "", organization)
+        operatorcert.ocp_version_info(bundle_root, "", repo)
     assert (
         str(err_info.value) == "'com.redhat.openshift.versions' annotation not defined"
     )
@@ -153,10 +159,39 @@ def test_ocp_version_info(
         yaml.safe_dump(annotations, fh)
 
     with pytest.raises(ValueError) as err_info:
-        operatorcert.ocp_version_info(bundle_root, "", organization)
+        operatorcert.ocp_version_info(bundle_root, "", repo)
     assert (
         str(err_info.value)
         == "'operators.operatorframework.io.bundle.package.v1' annotation not defined"
+    )
+
+
+def test_enrich_indices_with_repo_context() -> None:
+    indices = [
+        {"ocp_version": "4.13"},
+        {"ocp_version": "4.14"},
+    ]
+    config = {
+        "index_image": {
+            "repository": "quay.io/redhat-pending/redhat----community-operator-index",
+            "pending_repository": "quay.io/redhat-pending/redhat----community-operator-index-pending",
+            "public_repository_mirror": "registry.stage.redhat.io/redhat/community-operator-index",
+        }
+    }
+
+    result = operatorcert.enrich_indices_with_repo_context(indices, config)
+
+    assert result[0] == {
+        "ocp_version": "4.13",
+        "repository": "quay.io/redhat-pending/redhat----community-operator-index",
+        "repository_with_version": "quay.io/redhat-pending/redhat----community-operator-index:v4.13",
+        "pending_repository": "quay.io/redhat-pending/redhat----community-operator-index-pending",
+        "pending_repository_with_version": "quay.io/redhat-pending/redhat----community-operator-index-pending:v4.13",
+        "public_repository_mirror": "registry.stage.redhat.io/redhat/community-operator-index",
+        "public_repository_mirror_with_version": "registry.stage.redhat.io/redhat/community-operator-index:v4.13",
+    }
+    assert result[1]["public_repository_mirror_with_version"] == (
+        "registry.stage.redhat.io/redhat/community-operator-index:v4.14"
     )
 
 
