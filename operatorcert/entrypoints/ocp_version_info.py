@@ -7,6 +7,7 @@ import pathlib
 
 from operatorcert import ocp_version_info
 from operatorcert.logger import setup_logger
+from operatorcert.operator_repo import Repo
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -25,9 +26,10 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
         "--bundle-path", type=pathlib.Path, help="Location of operator bundle"
     )
     parser.add_argument(
-        "organization",
-        choices=("certified-operators", "redhat-marketplace", "community-operators"),
-        help="Location of operator bundle",
+        "--repo-path",
+        type=pathlib.Path,
+        help="Path to local git repository to load config from",
+        required=True,
     )
     parser.add_argument(
         "--pyxis-url",
@@ -52,7 +54,9 @@ def main() -> None:
     log_level = "DEBUG" if args.verbose else "INFO"
     setup_logger(level=log_level, log_format="%(message)s")
 
-    version_info = ocp_version_info(args.bundle_path, args.pyxis_url, args.organization)
+    repo = Repo(args.repo_path)
+
+    version_info = ocp_version_info(args.bundle_path, args.pyxis_url, repo)
 
     LOGGER.info(json.dumps(version_info))
 
