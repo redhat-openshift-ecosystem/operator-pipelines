@@ -640,10 +640,10 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
-        - name: environment
-          value: "$(params.env)"
-        - name: organization
-          value: "$(tasks.get-organization.results.organization)"
+        - name: destination_repository
+          value: "$(tasks.get-supported-versions.results.repository)"
+        - name: public_repository_mirror
+          value: "$(tasks.get-supported-versions.results.public_repository_mirror)"
         - name: quay_push_final_index_secret
           value: "$(params.quay_push_final_index_secret)"
       workspaces:
