@@ -6,11 +6,15 @@ metadata:
 spec:
   params:
     - name: pipeline_image
-    - name: environment
+      description: A container image of operator-pipeline-images for the steps to run in.
+    - name: destination_repository
       description: |
-        Which environment the pipeline is running in. Can be one of [dev, qa, stage, prod]
-    - name: organization
-      description: Operator organization. Can be one of [certified-operators, redhat-marketplace, community-operators]
+        The destination repository where the index image will be published.
+        Example: quay.io/redhat/redhat----community-operator-index
+    - name: public_repository_mirror
+      description: |
+        The public repository mirror where the index image becomes available.
+        Example: registry.redhat.io/redhat/community-operator-index
     - name: quay_push_final_index_secret
       description: |
         Name of the Quay credentials secret:
@@ -35,63 +39,11 @@ spec:
             secretKeyRef:
               name: "$(params.quay_push_final_index_secret)"
               key: password
-        - name: ORGANIZATION
-          value: "$(params.organization)"
       script: |
         #! /usr/bin/env bash
         # DO NOT USE `set -x`, to avoid revealing the quay token in logs!
         set -e
 
-        # select the correct index
-        case "$(params.environment)" in
-            prod)
-                case $ORGANIZATION in
-                    certified-operators)
-                      FROM_INDEX="quay.io/redhat/redhat----certified-operator-index"
-                    ;;
-                    redhat-marketplace)
-                      FROM_INDEX="quay.io/redhat/redhat----redhat-marketplace-index"
-                    ;;
-                    community-operators)
-                      FROM_INDEX="quay.io/redhat/redhat----community-operator-index"
-                    ;;
-                    *)
-                      echo "Unknown value for organization: $ORGANIZATION"
-                      exit 1
-                    ;;
-                esac
-            ;;
-            stage | integration-tests)
-                case $ORGANIZATION in
-                    certified-operators)
-                      FROM_INDEX="quay.io/redhat-pending/redhat----certified-operator-index"
-                    ;;
-                    redhat-marketplace)
-                      FROM_INDEX="quay.io/redhat-pending/redhat----redhat-marketplace-index"
-                    ;;
-                    community-operators)
-                      FROM_INDEX="quay.io/redhat-pending/redhat----community-operator-index"
-                    ;;
-                    *)
-                      echo "Unknown value for organization: $ORGANIZATION"
-                      exit 1
-                    ;;
-                esac
-            ;;
-            *)
-                echo "Publishing bundle to an index is a NOOP for dev and qa environments at this time."
-                exit 0
-            ;;
-        esac
-
-        echo "FROM_INDEX: $FROM_INDEX"
-        # Replace internal registry with external address
-        INDEX_NAME="${FROM_INDEX#*----}"
-        if [[ "$(params.environment)" == "prod" ]]; then
-          FROM_INDEX_PROXY="registry.redhat.io/redhat/${INDEX_NAME}"
-        else
-          FROM_INDEX_PROXY="registry.stage.redhat.io/redhat/${INDEX_NAME}"
-        fi
         # Create folder for release info if it's non-existent
         RELEASE_INFO_DIR_PATH="$(workspaces.results.path)/summary/release_info"
         mkdir -p "$RELEASE_INFO_DIR_PATH"
@@ -108,12 +60,13 @@ spec:
           SRC_IMAGE=$(echo $i | awk -F '+' '{print $2}')
           echo "Source image: $SRC_IMAGE"
           VERSION=$(echo $i | awk -F '+' '{print $1}' | awk -F ':' '{print $2}')
-          DEST_IMAGE_VERSION_TAG="${FROM_INDEX}:${VERSION}"
-          DEST_IMAGE_PERMANENT_TAG="${DEST_IMAGE_VERSION_TAG}-${SUFFIX}"
+
+          DEST_REPO_WITH_VERSION_TAG="$(params.destination_repository):${VERSION}"
+          DEST_REPO_WITH_PERMANENT_TAG="${DEST_REPO_WITH_VERSION_TAG}-${SUFFIX}"
 
           echo "Dest images:"
-          echo " - $DEST_IMAGE_VERSION_TAG"
-          echo " - $DEST_IMAGE_PERMANENT_TAG"
+          echo " - $DEST_REPO_WITH_VERSION_TAG"
+          echo " - $DEST_REPO_WITH_PERMANENT_TAG"
 
           # Add version tag to an index
           retry 5 skopeo \
@@ -123,7 +76,7 @@ spec:
             --src-no-creds \
             --dest-creds $QUAY_USER:$QUAY_TOKEN \
             docker://$SRC_IMAGE \
-            docker://$DEST_IMAGE_VERSION_TAG
+            docker://$DEST_REPO_WITH_VERSION_TAG
 
           # Add permanent tag to an index
           retry 5 skopeo \
@@ -133,10 +86,10 @@ spec:
             --src-no-creds \
             --dest-creds $QUAY_USER:$QUAY_TOKEN \
             docker://$SRC_IMAGE \
-            docker://$DEST_IMAGE_PERMANENT_TAG
+            docker://$DEST_REPO_WITH_PERMANENT_TAG
 
           # Save data about updated indices to volume
-          echo "- ${FROM_INDEX_PROXY}:${VERSION}" | tee -a "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
+          echo "- \`$(params.public_repository_mirror):${VERSION}\` (stable tag: \`${VERSION}-${SUFFIX}\`)" | tee -a "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
         done
 
         sort -o "$RELEASE_INFO_DIR_PATH/updated_indices.txt" "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
