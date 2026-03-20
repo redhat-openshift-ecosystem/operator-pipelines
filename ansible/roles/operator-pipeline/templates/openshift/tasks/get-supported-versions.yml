@@ -10,28 +10,59 @@ spec:
       description: path indicating the location of the certified bundle within the repository
   results:
     - name: max_supported_ocp_version
-      description: Maximum version of OpenShift supported by this Operator
+      description: >-
+        Maximum version of OpenShift supported by this Operator.
+        Example: v4.15
 
-    - name: max_supported_index
-      description: Pull spec for the index corresponding to the max OCP version
+    - name: max_supported_public_repository_mirror
+      description: >-
+        Pull spec for the public repository mirror index image corresponding to the max OCP version.
+        Example: registry.redhat.io/redhat/community-operator-index:v4.15
 
-    - name: indices
-      description: All known supported index image pull specs (space separated)
+    - name: public_repository_mirror
+      description: >-
+        Pull spec for the public repository mirror index image.
+        Example: registry.redhat.io/redhat/community-operator-index
+
+    - name: public_repository_mirrors_with_version
+      description: >-
+        All known supported public repository mirror pull specs with version tag (space separated).
+        Example:
+        registry.redhat.io/redhat/community-operator-index:v4.13
+        registry.redhat.io/redhat/community-operator-index:v4.14
+
+    - name: pending_repository
+      description: >-
+        Known supported pending repository pull spec.
+        Example:
+        quay.io/redhat/redhat----community-operator-index-pending
+
+    - name: pending_repositories_with_version
+      description: >-
+        All known supported pending repository pull specs with version tag (space separated).
+        Example:
+        quay.io/redhat/redhat----community-operator-index-pending:v4.13
+        quay.io/redhat/redhat----community-operator-index-pending:v4.14
+        quay.io/redhat/redhat----community-operator-index-pending:v4.15
+
+    - name: repository
+      description: >-
+        Known supported repository url.
+        Example:
+        quay.io/redhat/redhat----community-operator-index
+
+    - name: repositories_with_version
+      description: >-
+        All known supported repository urls with version tag (space separated).
+        Example:
+        quay.io/redhat/redhat----community-operator-index:v4.13
+        quay.io/redhat/redhat----community-operator-index:v4.14
 
     - name: indices_ocp_versions
-      description: All known supported OCP versions (space separated)
+      description: >-
+        All known supported OCP versions (space separated).
+        Example: v4.13 v4.14 v4.15
 
-    - name: skipped_ocp_versions
-      description: All known ocp index image pull specs not supported by the operator (space separated)
-
-    - name: skipped_ocp_indices
-      description: All known ocp version not supported by the operator (space separated)
-
-    - name: max_version_indices
-      description: Latest known supported OCP indices
-
-    - name: ocp_version
-      description: OCP version annotation of the bundle
   workspaces:
     - name: source
   steps:
@@ -40,60 +71,83 @@ spec:
       workingDir: $(workspaces.source.path)
       script: |
         #! /usr/bin/env bash
-        set -xe
+        set -e
 
-        ORGANIZATION=$(cat config.yaml | yq -r '.organization')
         OCP_VERSIONS_OUTPUT_FILE="./ocp_versions.json"
+
         if [ -n "$(params.bundle_path)" ] ; then
             ocp-version-info \
               --output-file $OCP_VERSIONS_OUTPUT_FILE \
               --bundle-path "$(params.bundle_path)" \
-              $ORGANIZATION
+              --repo-path "$(workspaces.source.path)"
         else
             ocp-version-info \
               --output-file $OCP_VERSIONS_OUTPUT_FILE \
-              $ORGANIZATION
+              --repo-path "$(workspaces.source.path)"
         fi
 
         VERSION_INFO=$(cat $OCP_VERSIONS_OUTPUT_FILE)
         echo $VERSION_INFO | jq
 
+        echo "Max supported OCP version:"
         echo $VERSION_INFO \
           | jq -r '.max_version_index.ocp_version' \
           | tr -d '\n\r' \
           | tee $(results.max_supported_ocp_version.path)
+        echo
 
+        echo "Max supported public repository mirror pull spec:"
         echo $VERSION_INFO \
-          | jq -r '.max_version_index.path' \
+          | jq -r '.max_version_index.public_repository_mirror_with_version' \
           | tr -d '\n\r' \
-          | tee $(results.max_supported_index.path)
+          | tee $(results.max_supported_public_repository_mirror.path)
+        echo
 
+        echo "Public repository mirror pull specs with version:"
         echo $VERSION_INFO \
-          | jq -r '.indices | map(.path) | join(" ")' \
+          | jq -r '.indices[0].public_repository_mirror' \
           | tr -d '\n\r' \
-          | tee $(results.indices.path)
+          | tee $(results.public_repository_mirror.path)
+        echo
 
+        echo "All supported public repository mirror pull specs with version:"
+        echo $VERSION_INFO \
+          | jq -r '.indices | map(.public_repository_mirror_with_version) | join(" ")' \
+          | tr -d '\n\r' \
+          | tee $(results.public_repository_mirrors_with_version.path)
+        echo
+
+        echo "Supported pending repository pull spec:"
+        echo $VERSION_INFO \
+          | jq -r '.indices[0].pending_repository' \
+          | tr -d '\n\r' \
+          | tee $(results.pending_repository.path)
+        echo
+
+        echo "All supported pending repository pull specs with version:"
+        echo $VERSION_INFO \
+          | jq -r '.indices | map(.pending_repository_with_version) | join(" ")' \
+          | tr -d '\n\r' \
+          | tee $(results.pending_repositories_with_version.path)
+        echo
+
+        echo "Supported repository url:"
+        echo $VERSION_INFO \
+          | jq -r '.indices[0].repository' \
+          | tr -d '\n\r' \
+          | tee $(results.repository.path)
+        echo
+
+        echo "All supported repository urls with version:"
+        echo $VERSION_INFO \
+          | jq -r '.indices | map(.repository_with_version) | join(" ")' \
+          | tr -d '\n\r' \
+          | tee $(results.repositories_with_version.path)
+        echo
+
+        echo "All supported OCP versions:"
         echo $VERSION_INFO \
           | jq -r '.indices | map(.ocp_version) | join(" ")' \
           | tr -d '\n\r' \
           | tee $(results.indices_ocp_versions.path)
-
-        echo $VERSION_INFO \
-          | jq -r '.not_supported_indices | map(.path) | join(" ")' \
-          | tr -d '\n\r' \
-          | tee $(results.skipped_ocp_indices.path)
-
-        echo $VERSION_INFO \
-          | jq -r '.not_supported_indices | map(.ocp_version) | join(" ")' \
-          | tr -d '\n\r' \
-          | tee $(results.skipped_ocp_versions.path)
-
-        echo $VERSION_INFO \
-          | jq -r '.max_version_index.path' \
-          | tr -d '\n\r' \
-          | tee $(results.max_version_indices.path)
-
-        echo $VERSION_INFO \
-          | jq -r '.versions_annotation' \
-          | tr -d '\n\r' \
-          | tee $(results.ocp_version.path)
+        echo
