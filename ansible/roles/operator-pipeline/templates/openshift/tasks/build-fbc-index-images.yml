@@ -77,7 +77,7 @@ spec:
         INDEX_IMAGES="$(params.index_images)"
         if [[ $ENV != "prod" ]]; then
             # Replace registry urls with stage urls when in preprod
-            INDEX_IMAGES=${INDEX_IMAGES//registry.redhat.io/registry.stage.redhat.io}
+            INDEX_IMAGES=${INDEX_IMAGES//quay.io\/redhat\//quay.io\/redhat-pending\/}
         fi
 
         if [[ $ENV == "dev" || $ENV == "qa" ]]; then
@@ -121,7 +121,7 @@ spec:
         INDEX_IMAGES="$(params.index_images)"
         if [[ $ENV != "prod" ]]; then
             # Replace registry urls with stage urls when in preprod
-            INDEX_IMAGES=${INDEX_IMAGES//registry.redhat.io/registry.stage.redhat.io}
+            INDEX_IMAGES=${INDEX_IMAGES//quay.io\/redhat\//quay.io\/redhat-pending\/}
         fi
 
         if [[ $ENV == "dev" || $ENV == "qa" ]]; then
