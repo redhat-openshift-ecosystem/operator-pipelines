@@ -76,14 +76,12 @@ spec:
         OCP_VERSIONS_OUTPUT_FILE="./ocp_versions.json"
 
         if [ -n "$(params.bundle_path)" ] ; then
-            ocp-version-info \
+            ocp-version-info certified-operators \
               --output-file $OCP_VERSIONS_OUTPUT_FILE \
-              --bundle-path "$(params.bundle_path)" \
-              --repo-path "$(workspaces.source.path)"
+              --bundle-path "$(params.bundle_path)"
         else
-            ocp-version-info \
-              --output-file $OCP_VERSIONS_OUTPUT_FILE \
-              --repo-path "$(workspaces.source.path)"
+            ocp-version-info certified-operators \
+              --output-file $OCP_VERSIONS_OUTPUT_FILE
         fi
 
         VERSION_INFO=$(cat $OCP_VERSIONS_OUTPUT_FILE)
