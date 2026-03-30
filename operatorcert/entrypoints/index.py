@@ -5,7 +5,7 @@ IIB module for building a index images for a bundle
 import argparse
 import logging
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from operatorcert import iib, utils
 from operatorcert.logger import setup_logger
@@ -59,6 +59,16 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     )
     parser.add_argument("--authfile", help="")
 
+    parser.add_argument(
+        "--iib-overwrite-token",
+        help="Token for IIB to authenticate with from_index registry and enable overwrite (format: username:password)",
+    )
+
+    parser.add_argument(
+        "--build-tags-suffix",
+        help="Timestamp suffix for build tags (used with overwrite to ensure consistent tagging)",
+    )
+
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     return parser
@@ -70,6 +80,8 @@ def add_bundle_to_index(
     indices: List[str],
     image_output: str,
     mode: str,
+    overwrite_token: Optional[str] = None,
+    build_tags_suffix: Optional[str] = None,
 ) -> Any:
     """
     Add a bundle to index image using IIB
@@ -80,6 +92,8 @@ def add_bundle_to_index(
         indices (List[str]): list of original indices
         image_output (str): file name to output the location of the newly built images to
         mode (str): A mode that defines how the update graph will be updated
+        overwrite_token (str): Optional token for IIB to authenticate and overwrite from_index
+        build_tags_suffix (str): Optional timestamp suffix for build tags
     Returns:
         Any: Build response
     Raises:
@@ -96,6 +110,15 @@ def add_bundle_to_index(
         }
         if mode:
             build_request["graph_update_mode"] = mode
+
+        if build_tags_suffix:
+            version = index.split(":")[-1]
+            build_request["build_tags"] = [version, f"{version}-{build_tags_suffix}"]
+
+        if overwrite_token:
+            build_request["overwrite_from_index"] = True
+            build_request["overwrite_from_index_token"] = overwrite_token
+
         payload["build_requests"].append(build_request)
 
     resp = iib.add_builds(iib_url, payload)
@@ -154,6 +177,8 @@ def main() -> None:  # pragma: no cover
         args.indices,
         args.image_output,
         args.mode,
+        args.iib_overwrite_token,
+        args.build_tags_suffix,
     )
     if args.index_image_destination:
         utils.copy_images_to_destination(

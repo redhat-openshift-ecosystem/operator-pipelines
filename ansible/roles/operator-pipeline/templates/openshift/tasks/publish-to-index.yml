@@ -21,6 +21,8 @@ spec:
         - iib-quay-credentials (default) - for connect and marketplace repositories
         - community-push-final-index-quay-credentials - for community repositories
       default: iib-quay-credentials
+    - name: build_tags_suffix
+      description: Timestamp suffix for build tags (same as used in IIB builds for consistency)
   workspaces:
     - name: results
       description: A space for the task inputs and summary output
@@ -53,13 +55,14 @@ spec:
         INDEX_IMAGES_PATHS="$(workspaces.results.path)/paths/index-image-paths.txt"
         TEMP_IMAGES=$(cat $INDEX_IMAGES_PATHS | tr "," " ")
 
-        SUFFIX=`date +%s`
+        # Use the same timestamp suffix that was used for IIB builds
+        SUFFIX="$(params.build_tags_suffix)"
 
         for i in $TEMP_IMAGES
         do
-          SRC_IMAGE=$(echo $i | awk -F '+' '{print $2}')
+          SRC_IMAGE=$(echo $i | awk -F '+' '{print $1}')
           echo "Source image: $SRC_IMAGE"
-          VERSION=$(echo $i | awk -F '+' '{print $1}' | awk -F ':' '{print $2}')
+          VERSION=$(echo $SRC_IMAGE | awk -F ':' '{print $2}')
 
           DEST_REPO_WITH_VERSION_TAG="$(params.destination_repository):${VERSION}"
           DEST_REPO_WITH_PERMANENT_TAG="${DEST_REPO_WITH_VERSION_TAG}-${SUFFIX}"
@@ -73,7 +76,7 @@ spec:
             copy \
             --retry-times 5 \
             --format v2s2 --all \
-            --src-no-creds \
+            --src-creds $QUAY_USER:$QUAY_TOKEN \
             --dest-creds $QUAY_USER:$QUAY_TOKEN \
             docker://$SRC_IMAGE \
             docker://$DEST_REPO_WITH_VERSION_TAG
@@ -83,7 +86,7 @@ spec:
             copy \
             --retry-times 5 \
             --format v2s2 --all \
-            --src-no-creds \
+            --src-creds $QUAY_USER:$QUAY_TOKEN \
             --dest-creds $QUAY_USER:$QUAY_TOKEN \
             docker://$SRC_IMAGE \
             docker://$DEST_REPO_WITH_PERMANENT_TAG

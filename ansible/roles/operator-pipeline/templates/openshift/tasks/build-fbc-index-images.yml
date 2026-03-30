@@ -46,6 +46,17 @@ spec:
       description: >-
         The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
 
+    - name: iib_overwrite_token_secret
+      default: ""
+      description: |
+        Optional: Name of the secret containing Quay credentials for IIB to authenticate and overwrite from_index.
+        Required for release pipeline to enable IIB to push to pending repositories.
+
+    - name: build_tags_suffix
+      default: ""
+      description: |
+        Timestamp suffix for build tags (used with overwrite to ensure consistent tagging with publish task).
+
   volumes:
     - name: kerberos-volume
       secret:
@@ -60,13 +71,26 @@ spec:
       env:
         - name: KRB_KEYTAB_FILE
           value: "/etc/kerberos/$(params.kerberos_keytab_secret_key)"
+        - name: IIB_QUAY_USER
+          valueFrom:
+            secretKeyRef:
+              name: "$(params.iib_overwrite_token_secret)"
+              key: username
+              optional: true
+        - name: IIB_QUAY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: "$(params.iib_overwrite_token_secret)"
+              key: password
+              optional: true
       volumeMounts:
         - name: kerberos-volume
           readOnly: true
           mountPath: "/etc/kerberos"
       script: |
         #! /usr/bin/env bash
-        set -xe
+        # DO NOT USE set -x to avoid revealing credentials in logs!
+        set -e
 
         if [[ "$(params.catalogs_with_added_or_modified_operators)" == "" ]];then
           echo "No affected catalogs, skipping fragment image build"
@@ -76,6 +100,18 @@ spec:
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
 
+        # Build IIB token argument if credentials provided (for release pipeline)
+        TOKEN_ARG=""
+        if [[ -n "${IIB_QUAY_USER}" ]] && [[ -n "${IIB_QUAY_TOKEN}" ]]; then
+          TOKEN_ARG="--iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
+
+          # Add build tags suffix for consistent tagging with publish task
+          if [[ "$(params.build_tags_suffix)" != "" ]]; then
+            TOKEN_ARG+=" --build-tags-suffix $(params.build_tags_suffix)"
+          fi
+        fi
+
+        # DO NOT use `--verbose` to avoid auth headers appearing in logs
         add-fbc-fragments-to-index \
           --iib-url "$(params.iib_url)" \
           --indices $INDEX_IMAGES \
@@ -83,7 +119,7 @@ spec:
           --image-repository "$(params.image_repository)" \
           --commit-sha "$(params.commit_sha)" \
           --image-output index-image-paths.txt \
-          --verbose
+          $TOKEN_ARG
 
         cat index-image-paths.txt
 
@@ -93,13 +129,26 @@ spec:
       env:
         - name: KRB_KEYTAB_FILE
           value: "/etc/kerberos/$(params.kerberos_keytab_secret_key)"
+        - name: IIB_QUAY_USER
+          valueFrom:
+            secretKeyRef:
+              name: "$(params.iib_overwrite_token_secret)"
+              key: username
+              optional: true
+        - name: IIB_QUAY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: "$(params.iib_overwrite_token_secret)"
+              key: password
+              optional: true
       volumeMounts:
         - name: kerberos-volume
           readOnly: true
           mountPath: "/etc/kerberos"
       script: |
         #! /usr/bin/env bash
-        set -xe
+        # DO NOT USE set -x to avoid revealing credentials in logs!
+        set -e
 
         if [[ "$(params.deleted_catalog_operators)" == "" ]];then
           echo "No deleted operators, skipping operator removal from index"
@@ -109,12 +158,24 @@ spec:
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
 
+        # Build IIB token argument if credentials provided (for release pipeline)
+        TOKEN_ARG=""
+        if [[ -n "${IIB_QUAY_USER}" ]] && [[ -n "${IIB_QUAY_TOKEN}" ]]; then
+          TOKEN_ARG="--iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
+
+          # Add build tags suffix for consistent tagging with publish task
+          if [[ "$(params.build_tags_suffix)" != "" ]]; then
+            TOKEN_ARG+=" --build-tags-suffix $(params.build_tags_suffix)"
+          fi
+        fi
+
+        # DO NOT use `--verbose` to avoid auth headers appearing in logs
         rm-operator-from-index  \
           --iib-url "$(params.iib_url)" \
           --indices $INDEX_IMAGES \
           --fragment-builds-output index-image-paths.txt \
           --rm-catalog-operators "$(params.deleted_catalog_operators)" \
           --image-output index-image-paths.txt \
-          --verbose
+          $TOKEN_ARG
 
         cat index-image-paths.txt
