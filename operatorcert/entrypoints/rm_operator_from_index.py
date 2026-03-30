@@ -49,6 +49,16 @@ def setup_argparser() -> argparse.ArgumentParser:
         help="Base URL for IIB API",
     )
 
+    parser.add_argument(
+        "--iib-overwrite-token",
+        help="Token for IIB to authenticate with from_index registry and enable overwrite (format: username:password)",
+    )
+
+    parser.add_argument(
+        "--build-tags-suffix",
+        help="Timestamp suffix for build tags (used with overwrite to ensure consistent tagging)",
+    )
+
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     return parser
@@ -107,6 +117,8 @@ class IndexImage:
 def rm_operator_from_index(
     index_images: List[IndexImage],
     iib_url: str,
+    overwrite_token: Optional[str] = None,
+    build_tags_suffix: Optional[str] = None,
 ) -> Any:
     """
     Submit a batch build request to IIB to remove operators from the index images.
@@ -114,6 +126,8 @@ def rm_operator_from_index(
     Args:
         index_images (List[IndexImage]): List of index images objects
         iib_url (str): IIb API URL
+        overwrite_token (str): Optional token for IIB to authenticate and overwrite from_index
+        build_tags_suffix (str): Optional timestamp suffix for build tags
 
     Returns:
         Any: IIB batch build response
@@ -127,6 +141,15 @@ def rm_operator_from_index(
             "from_index": index_image.index_pullspec(),
             "operators": index_image.operators_to_remove,
         }
+
+        if build_tags_suffix:
+            version = index_image.index_pullspec().split(":")[-1]
+            build_request["build_tags"] = [version, f"{version}-{build_tags_suffix}"]
+
+        if overwrite_token:
+            build_request["overwrite_from_index"] = True
+            build_request["overwrite_from_index_token"] = overwrite_token
+
         payload["build_requests"].append(build_request)
 
     resp = iib.add_builds(iib_url, payload)
@@ -297,7 +320,9 @@ def main() -> None:  # pragma: no cover
     map_operators_to_indices(args.rm_catalog_operators, index_images)
 
     # Remove operators from the index images using IIB API
-    iib_rm_response = rm_operator_from_index(index_images, args.iib_url)
+    iib_rm_response = rm_operator_from_index(
+        index_images, args.iib_url, args.iib_overwrite_token, args.build_tags_suffix
+    )
 
     # Merge the output from the removal process with the output from the
     # fragment builds and use only the images that were built by IIB
