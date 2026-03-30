@@ -1,0 +1,20 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: generate-build-timestamp
+spec:
+  description: |-
+    Generate a Unix timestamp to be used for tagging index images consistently
+    across IIB builds and publish operations.
+  params:
+    - name: pipeline_image
+  results:
+    - name: timestamp
+      description: Unix timestamp for tagging index images
+  steps:
+    - name: generate-timestamp
+      image: "$(params.pipeline_image)"
+      script: |
+        #!/usr/bin/env bash
+        date +%s | tee "$(results.timestamp.path)"
