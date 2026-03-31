@@ -42,12 +42,6 @@ spec:
       default: ""
       description: "A graph update mode that defines how channel graphs are updated"
 
-    - name: iib_overwrite_token_secret
-      default: ""
-      description: |
-        Optional: Name of the secret containing Quay credentials for IIB to authenticate and overwrite from_index.
-        Required for release pipeline to enable IIB to push to pending repositories.
-
     - name: build_tags_suffix
       default: ""
       description: |
@@ -64,6 +58,12 @@ spec:
     - name: output
     - name: credentials
       optional: true
+    - name: iib-credentials
+      description: |
+        Optional workspace containing Quay credentials for IIB to authenticate and overwrite from_index.
+        Required for release pipeline to enable IIB to push to pending repositories.
+        Expected to contain 'username' and 'password' files.
+      optional: true
 
   steps:
     - name: add-bundle-to-index
@@ -72,18 +72,6 @@ spec:
       env:
         - name: KRB_KEYTAB_FILE
           value: "/etc/kerberos/$(params.kerberos_keytab_secret_key)"
-        - name: IIB_QUAY_USER
-          valueFrom:
-            secretKeyRef:
-              name: "$(params.iib_overwrite_token_secret)"
-              key: username
-              optional: true
-        - name: IIB_QUAY_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: "$(params.iib_overwrite_token_secret)"
-              key: password
-              optional: true
       volumeMounts:
         - name: kerberos-volume
           readOnly: true
@@ -109,8 +97,10 @@ spec:
           EXTRA_ARGS+=" --mode $(params.upgrade-graph-mode)"
         fi
 
-        # Add IIB overwrite token if provided (for release pipeline)
-        if [[ -n "${IIB_QUAY_USER}" ]] && [[ -n "${IIB_QUAY_TOKEN}" ]]; then
+        # Add IIB overwrite token if credentials workspace is provided (for release pipeline)
+        if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
+          IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
+          IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
           EXTRA_ARGS+=" --iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
 
           # Add build tags suffix for consistent tagging with publish task
