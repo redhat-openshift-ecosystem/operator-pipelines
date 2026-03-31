@@ -2,6 +2,8 @@
 IIB module for building a file based catalog for a bundle
 """
 
+# pylint: disable=duplicate-code
+
 import argparse
 import logging
 import os
@@ -63,7 +65,10 @@ def setup_argparser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "--iib-overwrite-token",
-        help="Token for IIB to authenticate with from_index registry and enable overwrite (format: username:password)",
+        help=(
+            "Token for IIB to authenticate with from_index registry "
+            "and enable overwrite (format: username:password)"
+        ),
     )
 
     parser.add_argument(
