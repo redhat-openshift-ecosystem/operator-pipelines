@@ -34,13 +34,15 @@ spec:
         IFS=, read -a TAGS <<<"$(params.tags)"
         AUTHFILE="$(workspaces.registry-credentials.path)/.dockerconfigjson"
 
-        for tag in "${TAGS[@]}" ; do
-            skopeo copy \
-              --retry-times 5 \
-              --authfile "${AUTHFILE}" \
-              "docker://${REF}" \
-              "docker://${UNTAGGED_REF}:${tag}"
-        done
+        if [[ -n "$(params.tags)" ]]; then
+            for tag in "${TAGS[@]}" ; do
+                skopeo copy \
+                  --retry-times 5 \
+                  --authfile "${AUTHFILE}" \
+                  "docker://${REF}" \
+                  "docker://${UNTAGGED_REF}:${tag}"
+            done
+        fi
 
         if [[ "$(params.add_timestamp_tag)" == "true" ]]; then
             CURRENT_TAG="${REF##*:}"
