@@ -12,6 +12,13 @@ spec:
       description: reference to the image
     - name: tags
       description: comma separated list of tags
+      default: ""
+    - name: add_timestamp_tag
+      description: |
+        When "true", also push a permanent tag in the form <version>-<unix_timestamp>,
+        e.g. 0.1.0-1700000000. The version is taken from the tag already present in
+        the image reference supplied via the image param.
+      default: "false"
   workspaces:
     - name: registry-credentials
       description: Docker config for the registry
@@ -27,10 +34,22 @@ spec:
         IFS=, read -a TAGS <<<"$(params.tags)"
         AUTHFILE="$(workspaces.registry-credentials.path)/.dockerconfigjson"
 
-        for tag in "${TAGS[@]}" ; do
+        if [[ -n "$(params.tags)" ]]; then
+            for tag in "${TAGS[@]}" ; do
+                skopeo copy \
+                  --retry-times 5 \
+                  --authfile "${AUTHFILE}" \
+                  "docker://${REF}" \
+                  "docker://${UNTAGGED_REF}:${tag}"
+            done
+        fi
+
+        if [[ "$(params.add_timestamp_tag)" == "true" ]]; then
+            CURRENT_TAG="${REF##*:}"
+            SUFFIX=$(date +%s)
             skopeo copy \
               --retry-times 5 \
               --authfile "${AUTHFILE}" \
               "docker://${REF}" \
-              "docker://${UNTAGGED_REF}:${tag}"
-        done
+              "docker://${UNTAGGED_REF}:${CURRENT_TAG}-${SUFFIX}"
+        fi
