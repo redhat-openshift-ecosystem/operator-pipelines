@@ -163,3 +163,6 @@
                     - name: ssh-dir
                       secret:
                         secretName: github-rh-operator-bundle-bot-ssh-credentials
+                    - name: iib-credentials
+                      secret:
+                        secretName: $(tt.params.quay_push_final_index_secret)
