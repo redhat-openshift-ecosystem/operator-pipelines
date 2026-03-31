@@ -53,6 +53,37 @@ def test_rm_operator_from_index(
         },
     )
 
+    # with overwrite_token and build_tags_suffix
+    mock_iib_add_builds.reset_mock()
+    mock_wait.reset_mock()
+    index_images_with_token = [
+        rm_operator_from_index.IndexImage("registry/index:v4.15", "iib-pullspec"),
+    ]
+    index_images_with_token[0].operators_to_remove = ["op1"]
+    mock_iib_add_builds.return_value = [{"batch": "batch2"}]
+    mock_wait.return_value = {"items": [{"state": "complete"}]}
+    rm_operator_from_index.rm_operator_from_index(
+        index_images_with_token,
+        "https://iib.foo.redhat.com",
+        "user:token123",
+        "1711883400",
+    )
+
+    mock_iib_add_builds.assert_called_once_with(
+        "https://iib.foo.redhat.com",
+        {
+            "build_requests": [
+                {
+                    "from_index": "iib-pullspec",
+                    "operators": ["op1"],
+                    "build_tags": ["v4.15", "v4.15-1711883400"],
+                    "overwrite_from_index": True,
+                    "overwrite_from_index_token": "user:token123",
+                }
+            ]
+        },
+    )
+
 
 @patch("operatorcert.entrypoints.rm_operator_from_index.iib.wait_for_batch_results")
 @patch("operatorcert.entrypoints.rm_operator_from_index.iib.add_builds")

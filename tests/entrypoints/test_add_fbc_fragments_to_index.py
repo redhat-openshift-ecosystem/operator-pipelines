@@ -207,6 +207,38 @@ def test_add_fbc_fragment_to_index(
             "test-image-path.txt",
         )
 
+    # with overwrite_token and build_tags_suffix
+    mock_iib_build.reset_mock()
+    mock_results.reset_mock()
+    mock_iib_build.side_effect = [
+        {"state": "pending", "id": 3},
+    ]
+    mock_results.return_value = [
+        {"state": "complete", "id": 3},
+    ]
+    index.add_fbc_fragment_to_index(
+        "https://iib.engineering.redhat.com",
+        [
+            (
+                "registry/index:v4.15",
+                "registry.foo/repo/foo:v4.15-fragment-sha256:1234",
+            ),
+        ],
+        "test-image-path.txt",
+        "user:token123",
+        "1711883400",
+    )
+    mock_iib_build.assert_called_once_with(
+        "https://iib.engineering.redhat.com",
+        {
+            "from_index": "registry/index:v4.15",
+            "fbc_fragment": "registry.foo/repo/foo:v4.15-fragment-sha256:1234",
+            "build_tags": ["v4.15", "v4.15-1711883400"],
+            "overwrite_from_index": True,
+            "overwrite_from_index_token": "user:token123",
+        },
+    )
+
 
 def test_output_index_image_paths() -> None:
     image_output = "test-image-path.txt"
@@ -253,6 +285,8 @@ def test_main(
     args.iib_url = "https://iib.engineering.redhat.com"
     args.image_output = "test-image-path.txt"
     args.hosted = True
+    args.iib_overwrite_token = None
+    args.build_tags_suffix = None
 
     mock_setup_argparser.return_value.parse_args.return_value = args
     mock_mapping.return_value = [("foo", "bar")]
@@ -270,6 +304,8 @@ def test_main(
         args.iib_url,
         mock_mapping.return_value,
         args.image_output,
+        args.iib_overwrite_token,
+        args.build_tags_suffix,
     )
 
 

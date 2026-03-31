@@ -51,7 +51,10 @@ def setup_argparser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "--iib-overwrite-token",
-        help="Token for IIB to authenticate with from_index registry and enable overwrite (format: username:password)",
+        help=(
+            "Token for IIB to authenticate with from_index registry "
+            "and enable overwrite (format: username:password)"
+        ),
     )
 
     parser.add_argument(
@@ -137,14 +140,16 @@ def rm_operator_from_index(
         if not index_image.operators_to_remove:
             continue
 
-        build_request = {
+        build_request: Dict[str, Any] = {
             "from_index": index_image.index_pullspec(),
             "operators": index_image.operators_to_remove,
         }
 
         if build_tags_suffix:
-            version = index_image.index_pullspec().split(":")[-1]
-            build_request["build_tags"] = [version, f"{version}-{build_tags_suffix}"]
+            build_request["build_tags"] = [
+                index_image.version,
+                f"{index_image.version}-{build_tags_suffix}",
+            ]
 
         if overwrite_token:
             build_request["overwrite_from_index"] = True
