@@ -46,12 +46,6 @@ spec:
       description: >-
         The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
 
-    - name: iib_overwrite_token_secret
-      default: ""
-      description: |
-        Optional: Name of the secret containing Quay credentials for IIB to authenticate and overwrite from_index.
-        Required for release pipeline to enable IIB to push to pending repositories.
-
     - name: build_tags_suffix
       default: ""
       description: |
@@ -63,6 +57,12 @@ spec:
         secretName: "$(params.kerberos_keytab_secret_name)"
   workspaces:
     - name: output
+    - name: iib-credentials
+      description: |
+        Optional workspace containing Quay credentials for IIB to authenticate and overwrite from_index.
+        Required for release pipeline to enable IIB to push to pending repositories.
+        Expected to contain 'username' and 'password' files.
+      optional: true
 
   steps:
     - name: add-fbc-fragments-to-index
@@ -71,18 +71,6 @@ spec:
       env:
         - name: KRB_KEYTAB_FILE
           value: "/etc/kerberos/$(params.kerberos_keytab_secret_key)"
-        - name: IIB_QUAY_USER
-          valueFrom:
-            secretKeyRef:
-              name: "$(params.iib_overwrite_token_secret)"
-              key: username
-              optional: true
-        - name: IIB_QUAY_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: "$(params.iib_overwrite_token_secret)"
-              key: password
-              optional: true
       volumeMounts:
         - name: kerberos-volume
           readOnly: true
@@ -100,9 +88,11 @@ spec:
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
 
-        # Build IIB token argument if credentials provided (for release pipeline)
+        # Build IIB token argument if credentials workspace is provided (for release pipeline)
         TOKEN_ARG=""
-        if [[ -n "${IIB_QUAY_USER}" ]] && [[ -n "${IIB_QUAY_TOKEN}" ]]; then
+        if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
+          IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
+          IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
           TOKEN_ARG="--iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
 
           # Add build tags suffix for consistent tagging with publish task
@@ -129,18 +119,6 @@ spec:
       env:
         - name: KRB_KEYTAB_FILE
           value: "/etc/kerberos/$(params.kerberos_keytab_secret_key)"
-        - name: IIB_QUAY_USER
-          valueFrom:
-            secretKeyRef:
-              name: "$(params.iib_overwrite_token_secret)"
-              key: username
-              optional: true
-        - name: IIB_QUAY_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: "$(params.iib_overwrite_token_secret)"
-              key: password
-              optional: true
       volumeMounts:
         - name: kerberos-volume
           readOnly: true
@@ -158,9 +136,11 @@ spec:
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
 
-        # Build IIB token argument if credentials provided (for release pipeline)
+        # Build IIB token argument if credentials workspace is provided (for release pipeline)
         TOKEN_ARG=""
-        if [[ -n "${IIB_QUAY_USER}" ]] && [[ -n "${IIB_QUAY_TOKEN}" ]]; then
+        if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
+          IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
+          IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
           TOKEN_ARG="--iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
 
           # Add build tags suffix for consistent tagging with publish task
