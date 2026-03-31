@@ -2,6 +2,8 @@
 IIB module for building a index images for a bundle
 """
 
+# pylint: disable=duplicate-code
+
 import argparse
 import logging
 import os
@@ -61,7 +63,10 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
 
     parser.add_argument(
         "--iib-overwrite-token",
-        help="Token for IIB to authenticate with from_index registry and enable overwrite (format: username:password)",
+        help=(
+            "Token for IIB to authenticate with from_index registry "
+            "and enable overwrite (format: username:password)"
+        ),
     )
 
     parser.add_argument(
@@ -74,7 +79,7 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     return parser
 
 
-def add_bundle_to_index(
+def add_bundle_to_index(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     bundle_pullspec: str,
     iib_url: str,
     indices: List[str],
@@ -103,7 +108,7 @@ def add_bundle_to_index(
     payload: Dict[str, Any] = {"build_requests": []}
 
     for index in indices:
-        build_request = {
+        build_request: Dict[str, Any] = {
             "from_index": index,
             "bundles": [bundle_pullspec],
             "add_arches": ["amd64", "s390x", "ppc64le"],
