@@ -85,6 +85,10 @@ spec:
     - name: registry-serve-credentials
     - name: hosted-registry-credentials
     - name: image-data
+    - name: iib-credentials
+      description: |
+        Quay credentials for IIB to authenticate and overwrite from_index.
+        Required for IIB to push to pending repositories.
 
   tasks:
 
@@ -491,11 +495,22 @@ spec:
         - name: credentials
           workspace: hosted-registry-credentials
 
+    # Generate timestamp for consistent tagging across IIB builds and publish
+    - name: generate-build-timestamp
+      runAfter:
+        - get-supported-versions
+      taskRef:
+        name: generate-build-timestamp
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+
     # acquire/lease the resource to resolve the conflict of concurrent pipelineruns
     - name: acquire-lease
       retries: 8
       runAfter:
         - build-fragment-images
+        - generate-build-timestamp
       when:
         - &notUndistributed
           input: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
@@ -525,7 +540,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: index_images
-          value: "$(tasks.get-supported-versions.results.public_repository_mirrors_with_version)"
+          value: "$(tasks.get-supported-versions.results.pending_repositories_with_version)"
         - name: commit_sha
           value: "$(params.git_commit)"
         - name: catalogs_with_added_or_modified_operators
@@ -542,10 +557,14 @@ spec:
           value: "$(params.kerberos_keytab_secret_name)"
         - name: kerberos_keytab_secret_key
           value: "$(params.kerberos_keytab_secret_key)"
+        - name: build_tags_suffix
+          value: "$(tasks.generate-build-timestamp.results.timestamp)"
       workspaces:
         - name: output
           workspace: results
           subPath: paths
+        - name: iib-credentials
+          workspace: iib-credentials
 
     # call IIB to add the bundle to index
     - name: add-bundle-to-index
@@ -565,7 +584,7 @@ spec:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
         - name: index_images
-          value: "$(tasks.get-supported-versions.results.public_repository_mirrors_with_version)"
+          value: "$(tasks.get-supported-versions.results.max_supported_pending_repository)"
         - name: bundle_pullspec
           value: "$(tasks.copy-bundle-image-to-released-registry.results.image_pullspec)"
         - name: iib_url
@@ -578,10 +597,14 @@ spec:
           value: "$(params.kerberos_keytab_secret_key)"
         - name: upgrade-graph-mode
           value: "$(tasks.read-config.results.upgrade-graph-mode)"
+        - name: build_tags_suffix
+          value: "$(tasks.generate-build-timestamp.results.timestamp)"
       workspaces:
         - name: output
           workspace: results
           subPath: paths
+        - name: iib-credentials
+          workspace: iib-credentials
 
     - name: sign-index-image
       runAfter:
@@ -646,6 +669,8 @@ spec:
           value: "$(tasks.get-supported-versions.results.public_repository_mirror)"
         - name: quay_push_final_index_secret
           value: "$(params.quay_push_final_index_secret)"
+        - name: build_tags_suffix
+          value: "$(tasks.generate-build-timestamp.results.timestamp)"
       workspaces:
         - name: results
           workspace: results

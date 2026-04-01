@@ -45,6 +45,37 @@ def test_add_bundle_to_index(
             "replaces",
         )
 
+    # with overwrite_token and build_tags_suffix
+    mock_iib_builds.reset_mock()
+    mock_results.reset_mock()
+    mock_iib_builds.return_value = [{"state": "complete", "batch": "batch2"}]
+    mock_results.return_value = {"items": [{"state": "complete", "batch": "batch2"}]}
+    index.add_bundle_to_index(
+        "redhat-isv/some-pullspec",
+        "https://iib.engineering.redhat.com",
+        ["registry/index:v4.9"],
+        "test-image-path.txt",
+        "replaces",
+        "user:token123",
+        "1711883400",
+    )
+    mock_iib_builds.assert_called_once_with(
+        "https://iib.engineering.redhat.com",
+        {
+            "build_requests": [
+                {
+                    "from_index": "registry/index:v4.9",
+                    "bundles": ["redhat-isv/some-pullspec"],
+                    "add_arches": ["amd64", "s390x", "ppc64le"],
+                    "graph_update_mode": "replaces",
+                    "build_tags": ["v4.9", "v4.9-1711883400"],
+                    "overwrite_from_index": True,
+                    "overwrite_from_index_token": "user:token123",
+                }
+            ]
+        },
+    )
+
 
 def test_output_index_image_paths() -> None:
     image_output = "test-image-path.txt"

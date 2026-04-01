@@ -2,12 +2,14 @@
 IIB module for building a file based catalog for a bundle
 """
 
+# pylint: disable=duplicate-code
+
 import argparse
 import logging
 import os
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 from operatorcert import iib, utils
 from operatorcert.logger import setup_logger
@@ -59,6 +61,19 @@ def setup_argparser() -> argparse.ArgumentParser:
         default="index-image-paths.txt",
         help="File name to output comma-separated list of temporary location of the "
         "unpublished index images built by IIB.",
+    )
+
+    parser.add_argument(
+        "--iib-overwrite-token",
+        help=(
+            "Token for IIB to authenticate with from_index registry "
+            "and enable overwrite (format: username:password)"
+        ),
+    )
+
+    parser.add_argument(
+        "--build-tags-suffix",
+        help="Timestamp suffix for build tags (used with overwrite to ensure consistent tagging)",
     )
 
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
@@ -169,6 +184,8 @@ def add_fbc_fragment_to_index(
     iib_url: str,
     index_fragment_mapping: List[Tuple[str, str]],
     image_output: str,
+    overwrite_token: Optional[str] = None,
+    build_tags_suffix: Optional[str] = None,
 ) -> Any:
     """
     Add a fragment image to index image using IIB
@@ -177,6 +194,8 @@ def add_fbc_fragment_to_index(
         iib_url (str): url of IIB instance
         index_fragment_mapping (List[Tuple[str, str]]): List of tuples with index and fragment
         image_output (str): file name to output the location of the newly built images to
+        overwrite_token (str): Optional token for IIB to authenticate and overwrite from_index
+        build_tags_suffix (str): Optional timestamp suffix for build tags
     Returns:
         List[Any]: Build responses
     Raises:
@@ -185,10 +204,19 @@ def add_fbc_fragment_to_index(
 
     request_ids = []
     for index, fragment in index_fragment_mapping:
-        payload = {
+        payload: dict[str, Any] = {
             "from_index": index,
             "fbc_fragment": fragment,
         }
+
+        if build_tags_suffix:
+            version = index.split(":")[-1]
+            payload["build_tags"] = [version, f"{version}-{build_tags_suffix}"]
+
+        if overwrite_token:
+            payload["overwrite_from_index"] = True
+            payload["overwrite_from_index_token"] = overwrite_token
+
         resp = iib.add_fbc_build(iib_url, payload)
         request_ids.append(resp["id"])
 
@@ -249,6 +277,8 @@ def main() -> None:
         args.iib_url,
         index_fragment_mapping,
         args.image_output,
+        args.iib_overwrite_token,
+        args.build_tags_suffix,
     )
 
 

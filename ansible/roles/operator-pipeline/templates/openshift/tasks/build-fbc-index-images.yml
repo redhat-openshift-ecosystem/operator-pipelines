@@ -46,12 +46,23 @@ spec:
       description: >-
         The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
 
+    - name: build_tags_suffix
+      default: ""
+      description: |
+        Timestamp suffix for build tags (used with overwrite to ensure consistent tagging with publish task).
+
   volumes:
     - name: kerberos-volume
       secret:
         secretName: "$(params.kerberos_keytab_secret_name)"
   workspaces:
     - name: output
+    - name: iib-credentials
+      description: |
+        Optional workspace containing Quay credentials for IIB to authenticate and overwrite from_index.
+        Required for release pipeline to enable IIB to push to pending repositories.
+        Expected to contain 'username' and 'password' files.
+      optional: true
 
   steps:
     - name: add-fbc-fragments-to-index
@@ -66,7 +77,8 @@ spec:
           mountPath: "/etc/kerberos"
       script: |
         #! /usr/bin/env bash
-        set -xe
+        # DO NOT USE set -x to avoid revealing credentials in logs!
+        set -e
 
         if [[ "$(params.catalogs_with_added_or_modified_operators)" == "" ]];then
           echo "No affected catalogs, skipping fragment image build"
@@ -75,18 +87,21 @@ spec:
 
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
-        if [[ $ENV != "prod" ]]; then
-            # Replace registry urls with stage urls when in preprod
-            INDEX_IMAGES=${INDEX_IMAGES//registry.redhat.io/registry.stage.redhat.io}
+
+        # Build IIB token argument if credentials workspace is provided (for release pipeline)
+        TOKEN_ARG=""
+        if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
+          IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
+          IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
+          TOKEN_ARG="--iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
+
+          # Add build tags suffix for consistent tagging with publish task
+          if [[ "$(params.build_tags_suffix)" != "" ]]; then
+            TOKEN_ARG+=" --build-tags-suffix $(params.build_tags_suffix)"
+          fi
         fi
 
-        if [[ $ENV == "dev" || $ENV == "qa" ]]; then
-            echo "Adding FBC fragment to an index is a NOOP for dev and qa environments at this time."
-            # output dummy/test values for following tasks
-            echo -n "placeholder" | tee "$(workspaces.output.path)/index-image-paths.txt"
-            exit 0
-        fi
-
+        # DO NOT use `--verbose` to avoid auth headers appearing in logs
         add-fbc-fragments-to-index \
           --iib-url "$(params.iib_url)" \
           --indices $INDEX_IMAGES \
@@ -94,7 +109,7 @@ spec:
           --image-repository "$(params.image_repository)" \
           --commit-sha "$(params.commit_sha)" \
           --image-output index-image-paths.txt \
-          --verbose
+          $TOKEN_ARG
 
         cat index-image-paths.txt
 
@@ -110,7 +125,8 @@ spec:
           mountPath: "/etc/kerberos"
       script: |
         #! /usr/bin/env bash
-        set -xe
+        # DO NOT USE set -x to avoid revealing credentials in logs!
+        set -e
 
         if [[ "$(params.deleted_catalog_operators)" == "" ]];then
           echo "No deleted operators, skipping operator removal from index"
@@ -119,24 +135,27 @@ spec:
 
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
-        if [[ $ENV != "prod" ]]; then
-            # Replace registry urls with stage urls when in preprod
-            INDEX_IMAGES=${INDEX_IMAGES//registry.redhat.io/registry.stage.redhat.io}
+
+        # Build IIB token argument if credentials workspace is provided (for release pipeline)
+        TOKEN_ARG=""
+        if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
+          IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
+          IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
+          TOKEN_ARG="--iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
+
+          # Add build tags suffix for consistent tagging with publish task
+          if [[ "$(params.build_tags_suffix)" != "" ]]; then
+            TOKEN_ARG+=" --build-tags-suffix $(params.build_tags_suffix)"
+          fi
         fi
 
-        if [[ $ENV == "dev" || $ENV == "qa" ]]; then
-            echo "Adding FBC fragment to an index is a NOOP for dev and qa environments at this time."
-            # output dummy/test values for following tasks
-            echo -n "placeholder" | tee "$(workspaces.output.path)/index-image-paths.txt"
-            exit 0
-        fi
-
+        # DO NOT use `--verbose` to avoid auth headers appearing in logs
         rm-operator-from-index  \
           --iib-url "$(params.iib_url)" \
           --indices $INDEX_IMAGES \
           --fragment-builds-output index-image-paths.txt \
           --rm-catalog-operators "$(params.deleted_catalog_operators)" \
           --image-output index-image-paths.txt \
-          --verbose
+          $TOKEN_ARG
 
         cat index-image-paths.txt
