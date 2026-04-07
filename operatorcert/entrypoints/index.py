@@ -62,14 +62,6 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     parser.add_argument("--authfile", help="")
 
     parser.add_argument(
-        "--iib-overwrite-token",
-        help=(
-            "Token for IIB to authenticate with from_index registry "
-            "and enable overwrite (format: username:password)"
-        ),
-    )
-
-    parser.add_argument(
         "--build-tags-suffix",
         help="Timestamp suffix for build tags (used with overwrite to ensure consistent tagging)",
     )
@@ -175,6 +167,7 @@ def main() -> None:  # pragma: no cover
     setup_logger(level=log_level)
 
     utils.set_client_keytab(os.environ.get("KRB_KEYTAB_FILE", "/etc/krb5.krb"))
+    overwrite_token = os.environ.get("IIB_OVERWRITE_TOKEN")
 
     iib_response = add_bundle_to_index(
         args.bundle_pullspec,
@@ -182,7 +175,7 @@ def main() -> None:  # pragma: no cover
         args.indices,
         args.image_output,
         args.mode,
-        args.iib_overwrite_token,
+        overwrite_token,
         args.build_tags_suffix,
     )
     if args.index_image_destination:
