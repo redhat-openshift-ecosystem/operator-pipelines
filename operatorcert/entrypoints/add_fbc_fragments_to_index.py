@@ -2,8 +2,6 @@
 IIB module for building a file based catalog for a bundle
 """
 
-# pylint: disable=duplicate-code
-
 import argparse
 import logging
 import os
@@ -61,14 +59,6 @@ def setup_argparser() -> argparse.ArgumentParser:
         default="index-image-paths.txt",
         help="File name to output comma-separated list of temporary location of the "
         "unpublished index images built by IIB.",
-    )
-
-    parser.add_argument(
-        "--iib-overwrite-token",
-        help=(
-            "Token for IIB to authenticate with from_index registry "
-            "and enable overwrite (format: username:password)"
-        ),
     )
 
     parser.add_argument(
@@ -265,6 +255,7 @@ def main() -> None:
     setup_logger(level=log_level)
 
     utils.set_client_keytab(os.environ.get("KRB_KEYTAB_FILE", "/etc/krb5.krb"))
+    overwrite_token = os.environ.get("IIB_OVERWRITE_TOKEN")
 
     index_fragment_mapping = map_index_to_fragment(
         args.indices,
@@ -277,7 +268,7 @@ def main() -> None:
         args.iib_url,
         index_fragment_mapping,
         args.image_output,
-        args.iib_overwrite_token,
+        overwrite_token,
         args.build_tags_suffix,
     )
 

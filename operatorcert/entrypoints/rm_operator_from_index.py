@@ -50,14 +50,6 @@ def setup_argparser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--iib-overwrite-token",
-        help=(
-            "Token for IIB to authenticate with from_index registry "
-            "and enable overwrite (format: username:password)"
-        ),
-    )
-
-    parser.add_argument(
         "--build-tags-suffix",
         help="Timestamp suffix for build tags (used with overwrite to ensure consistent tagging)",
     )
@@ -305,6 +297,7 @@ def main() -> None:  # pragma: no cover
     setup_logger(level=log_level)
 
     utils.set_client_keytab(os.environ.get("KRB_KEYTAB_FILE", "/etc/krb5.krb"))
+    overwrite_token = os.environ.get("IIB_OVERWRITE_TOKEN")
 
     # In case there was a previous run of fragment builds, read the output and use
     # it as a base for removal process. In case the file does not exist, set it to
@@ -326,7 +319,7 @@ def main() -> None:  # pragma: no cover
 
     # Remove operators from the index images using IIB API
     iib_rm_response = rm_operator_from_index(
-        index_images, args.iib_url, args.iib_overwrite_token, args.build_tags_suffix
+        index_images, args.iib_url, overwrite_token, args.build_tags_suffix
     )
 
     # Merge the output from the removal process with the output from the
