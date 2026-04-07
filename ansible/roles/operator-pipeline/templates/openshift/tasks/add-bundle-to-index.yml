@@ -101,7 +101,7 @@ spec:
         if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
           IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
           IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
-          EXTRA_ARGS+=" --iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
+          export IIB_OVERWRITE_TOKEN="${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
 
           # Add build tags suffix for consistent tagging with publish task
           if [[ "$(params.build_tags_suffix)" != "" ]]; then
