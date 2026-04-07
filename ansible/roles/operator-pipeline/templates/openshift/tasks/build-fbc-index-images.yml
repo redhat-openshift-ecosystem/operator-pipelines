@@ -88,20 +88,19 @@ spec:
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
 
-        # Build IIB token argument if credentials workspace is provided (for release pipeline)
-        TOKEN_ARG=""
+        # Add IIB overwrite token if credentials workspace is provided (for release pipeline)
+        EXTRA_ARGS=""
         if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
           IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
           IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
-          TOKEN_ARG="--iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
+          export IIB_OVERWRITE_TOKEN="${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
 
           # Add build tags suffix for consistent tagging with publish task
           if [[ "$(params.build_tags_suffix)" != "" ]]; then
-            TOKEN_ARG+=" --build-tags-suffix $(params.build_tags_suffix)"
+            EXTRA_ARGS+=" --build-tags-suffix $(params.build_tags_suffix)"
           fi
         fi
 
-        # DO NOT use `--verbose` to avoid auth headers appearing in logs
         add-fbc-fragments-to-index \
           --iib-url "$(params.iib_url)" \
           --indices $INDEX_IMAGES \
@@ -109,7 +108,8 @@ spec:
           --image-repository "$(params.image_repository)" \
           --commit-sha "$(params.commit_sha)" \
           --image-output index-image-paths.txt \
-          $TOKEN_ARG
+          --verbose \
+          $EXTRA_ARGS
 
         cat index-image-paths.txt
 
@@ -136,26 +136,26 @@ spec:
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
 
-        # Build IIB token argument if credentials workspace is provided (for release pipeline)
-        TOKEN_ARG=""
+        # Add IIB overwrite token if credentials workspace is provided (for release pipeline)
+        EXTRA_ARGS=""
         if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
           IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
           IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
-          TOKEN_ARG="--iib-overwrite-token ${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
+          export IIB_OVERWRITE_TOKEN="${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
 
           # Add build tags suffix for consistent tagging with publish task
           if [[ "$(params.build_tags_suffix)" != "" ]]; then
-            TOKEN_ARG+=" --build-tags-suffix $(params.build_tags_suffix)"
+            EXTRA_ARGS+=" --build-tags-suffix $(params.build_tags_suffix)"
           fi
         fi
 
-        # DO NOT use `--verbose` to avoid auth headers appearing in logs
         rm-operator-from-index  \
           --iib-url "$(params.iib_url)" \
           --indices $INDEX_IMAGES \
           --fragment-builds-output index-image-paths.txt \
           --rm-catalog-operators "$(params.deleted_catalog_operators)" \
           --image-output index-image-paths.txt \
-          $TOKEN_ARG
+          --verbose \
+          $EXTRA_ARGS
 
         cat index-image-paths.txt
