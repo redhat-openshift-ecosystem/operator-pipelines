@@ -85,7 +85,6 @@ spec:
           exit 0
         fi
 
-        ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
 
         # Add IIB overwrite token if credentials workspace is provided (for release pipeline)
@@ -133,7 +132,6 @@ spec:
           exit 0
         fi
 
-        ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
 
         # Add IIB overwrite token if credentials workspace is provided (for release pipeline)
