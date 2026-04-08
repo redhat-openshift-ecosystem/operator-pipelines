@@ -75,17 +75,6 @@ spec:
 
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
-        if [[ $ENV != "prod" ]]; then
-            # Replace registry urls with stage urls when in preprod
-            INDEX_IMAGES=${INDEX_IMAGES//registry.redhat.io/registry.stage.redhat.io}
-        fi
-
-        if [[ $ENV == "dev" || $ENV == "qa" ]]; then
-            echo "Adding FBC fragment to an index is a NOOP for dev and qa environments at this time."
-            # output dummy/test values for following tasks
-            echo -n "placeholder" | tee "$(workspaces.output.path)/index-image-paths.txt"
-            exit 0
-        fi
 
         add-fbc-fragments-to-index \
           --iib-url "$(params.iib_url)" \
@@ -119,17 +108,6 @@ spec:
 
         ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
-        if [[ $ENV != "prod" ]]; then
-            # Replace registry urls with stage urls when in preprod
-            INDEX_IMAGES=${INDEX_IMAGES//registry.redhat.io/registry.stage.redhat.io}
-        fi
-
-        if [[ $ENV == "dev" || $ENV == "qa" ]]; then
-            echo "Adding FBC fragment to an index is a NOOP for dev and qa environments at this time."
-            # output dummy/test values for following tasks
-            echo -n "placeholder" | tee "$(workspaces.output.path)/index-image-paths.txt"
-            exit 0
-        fi
 
         rm-operator-from-index  \
           --iib-url "$(params.iib_url)" \
