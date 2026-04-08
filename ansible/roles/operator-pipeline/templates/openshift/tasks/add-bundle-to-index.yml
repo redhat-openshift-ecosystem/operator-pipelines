@@ -81,7 +81,6 @@ spec:
         # DO NOT USE set -x to avoid revealing credentials in logs!
         set -e
 
-        ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
 
         EXTRA_ARGS=""
