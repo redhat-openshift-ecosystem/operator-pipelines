@@ -2,8 +2,6 @@
 IIB module for building a index images for a bundle
 """
 
-# pylint: disable=duplicate-code
-
 import argparse
 import logging
 import os
@@ -23,6 +21,8 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
         Any: Initialized argument parser
     """
     parser = argparse.ArgumentParser(description="Add bundle to index image")
+
+    # pylint: disable=duplicate-code
     parser.add_argument(
         "--bundle-pullspec", required=True, help="Operator bundle pullspec"
     )
@@ -71,7 +71,7 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     return parser
 
 
-def add_bundle_to_index(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def add_bundle_to_index(  # pylint: disable=too-many-arguments,too-many-positional-arguments,duplicate-code
     bundle_pullspec: str,
     iib_url: str,
     indices: List[str],
