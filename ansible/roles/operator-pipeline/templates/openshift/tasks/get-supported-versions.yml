@@ -19,6 +19,11 @@ spec:
         Pull spec for the public repository mirror index image corresponding to the max OCP version.
         Example: registry.redhat.io/redhat/community-operator-index:v4.15
 
+    - name: max_supported_pending_repository
+      description: >-
+        Pull spec for the pending repository index image corresponding to the max OCP version.
+        Example: quay.io/redhat/redhat----community-operator-index-pending:v4.15
+
     - name: public_repository_mirror
       description: >-
         Pull spec for the public repository mirror index image.
@@ -101,6 +106,13 @@ spec:
           | jq -r '.max_version_index.public_repository_mirror_with_version' \
           | tr -d '\n\r' \
           | tee $(results.max_supported_public_repository_mirror.path)
+        echo
+
+        echo "Max supported pending repository pull spec:"
+        echo $VERSION_INFO \
+          | jq -r '.max_version_index.pending_repository_with_version' \
+          | tr -d '\n\r' \
+          | tee $(results.max_supported_pending_repository.path)
         echo
 
         echo "Public repository mirror pull specs with version:"
