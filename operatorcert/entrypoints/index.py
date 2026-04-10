@@ -113,8 +113,11 @@ def add_bundle_to_index(  # pylint: disable=too-many-arguments,too-many-position
             build_request["build_tags"] = [version, f"{version}-{build_tags_suffix}"]
 
         if overwrite_token:
-            build_request["overwrite_from_index"] = True
-            build_request["overwrite_from_index_token"] = overwrite_token
+            # WORKAROUND: Manually overwriting index images using skopeo
+            # TODO: uncomment when overwrite token is fixed, delete pass
+            # build_request["overwrite_from_index"] = True
+            # build_request["overwrite_from_index_token"] = overwrite_token
+            pass
 
         payload["build_requests"].append(build_request)
 

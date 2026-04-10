@@ -77,8 +77,10 @@ def test_rm_operator_from_index(
                     "from_index": "iib-pullspec",
                     "operators": ["op1"],
                     "build_tags": ["v4.15", "v4.15-1711883400"],
-                    "overwrite_from_index": True,
-                    "overwrite_from_index_token": "user:token123",
+                    # WORKAROUND: Manually overwriting index images using skopeo
+                    # TODO: uncomment when overwrite token is fixed
+                    # "overwrite_from_index": True,
+                    # "overwrite_from_index_token": "user:token123",
                 }
             ]
         },
