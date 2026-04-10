@@ -69,8 +69,10 @@ def test_add_bundle_to_index(
                     "add_arches": ["amd64", "s390x", "ppc64le"],
                     "graph_update_mode": "replaces",
                     "build_tags": ["v4.9", "v4.9-1711883400"],
-                    "overwrite_from_index": True,
-                    "overwrite_from_index_token": "user:token123",
+                    # WORKAROUND: Manually overwriting index images using skopeo
+                    # TODO: uncomment when overwrite token is fixed
+                    # "overwrite_from_index": True,
+                    # "overwrite_from_index_token": "user:token123",
                 }
             ]
         },
