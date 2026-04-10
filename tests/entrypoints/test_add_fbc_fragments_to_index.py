@@ -234,8 +234,10 @@ def test_add_fbc_fragment_to_index(
             "from_index": "registry/index:v4.15",
             "fbc_fragment": "registry.foo/repo/foo:v4.15-fragment-sha256:1234",
             "build_tags": ["v4.15", "v4.15-1711883400"],
-            "overwrite_from_index": True,
-            "overwrite_from_index_token": "user:token123",
+            # WORKAROUND: Manually overwriting index images using skopeo
+            # TODO: uncomment when overwrite token is fixed
+            # "overwrite_from_index": True,
+            # "overwrite_from_index_token": "user:token123",
         },
     )
 
