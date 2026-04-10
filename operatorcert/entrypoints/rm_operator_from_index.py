@@ -144,8 +144,11 @@ def rm_operator_from_index(
             ]
 
         if overwrite_token:
-            build_request["overwrite_from_index"] = True
-            build_request["overwrite_from_index_token"] = overwrite_token
+            # WORKAROUND: Manually overwriting index images using skopeo
+            # TODO: uncomment when overwrite token is fixed, delete pass
+            # build_request["overwrite_from_index"] = True
+            # build_request["overwrite_from_index_token"] = overwrite_token
+            pass
 
         payload["build_requests"].append(build_request)
 
