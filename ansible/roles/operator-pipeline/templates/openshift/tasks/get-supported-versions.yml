@@ -29,13 +29,6 @@ spec:
         Pull spec for the public repository mirror index image.
         Example: registry.redhat.io/redhat/community-operator-index
 
-    - name: public_repository_mirrors_with_version
-      description: >-
-        All known supported public repository mirror pull specs with version tag (space separated).
-        Example:
-        registry.redhat.io/redhat/community-operator-index:v4.13
-        registry.redhat.io/redhat/community-operator-index:v4.14
-
     - name: pending_repository
       description: >-
         Known supported pending repository pull spec.
@@ -55,13 +48,6 @@ spec:
         Known supported repository url.
         Example:
         quay.io/redhat/redhat----community-operator-index
-
-    - name: repositories_with_version
-      description: >-
-        All known supported repository urls with version tag (space separated).
-        Example:
-        quay.io/redhat/redhat----community-operator-index:v4.13
-        quay.io/redhat/redhat----community-operator-index:v4.14
 
     - name: indices_ocp_versions
       description: >-
@@ -122,13 +108,6 @@ spec:
           | tee $(results.public_repository_mirror.path)
         echo
 
-        echo "All supported public repository mirror pull specs with version:"
-        echo $VERSION_INFO \
-          | jq -r '.indices | map(.public_repository_mirror_with_version) | join(" ")' \
-          | tr -d '\n\r' \
-          | tee $(results.public_repository_mirrors_with_version.path)
-        echo
-
         echo "Supported pending repository pull spec:"
         echo $VERSION_INFO \
           | jq -r '.indices[0].pending_repository' \
@@ -148,13 +127,6 @@ spec:
           | jq -r '.indices[0].repository' \
           | tr -d '\n\r' \
           | tee $(results.repository.path)
-        echo
-
-        echo "All supported repository urls with version:"
-        echo $VERSION_INFO \
-          | jq -r '.indices | map(.repository_with_version) | join(" ")' \
-          | tr -d '\n\r' \
-          | tee $(results.repositories_with_version.path)
         echo
 
         echo "All supported OCP versions:"
