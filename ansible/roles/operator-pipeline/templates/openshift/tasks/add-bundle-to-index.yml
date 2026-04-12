@@ -118,4 +118,5 @@ spec:
 
 
         echo -n "success" | tee "$(results.status.path)"
+        echo
         cat index-image-paths.txt
