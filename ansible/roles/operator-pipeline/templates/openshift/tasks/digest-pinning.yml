@@ -12,6 +12,9 @@ spec:
     - name: digest_pinning_tool_image
       description: Digest pinning tool image
       default: "quay.io/redhat-isv/digest-pinning-tool@sha256:7e9dd84000e597e5591d94e791e7c0be1f1efe7e60ab915b200c5c0dff2fa6ba"
+    - name: enforce_pinning
+      description: A flag to enforce digest pinning
+      default: "true"
   results:
     - name: dirty_flag
     - name: related_images_flag
@@ -104,6 +107,10 @@ spec:
         if [[ $REPLACEMENT_COUNT -gt 0 ]]; then
           echo "Manifests were not pinned."
           echo -n "true" | tee $(results.dirty_flag.path)
+          if  [[ "$(params.enforce_pinning)" == "true" ]]; then
+            echo "Digest pinning is enforced. Failing the task."
+            exit 1
+          fi
         else
           echo "Manifests are pinned."
           echo -n "false" | tee $(results.dirty_flag.path)
@@ -135,13 +142,20 @@ spec:
         CSVFILE=$(find $BUNDLE_PATH -name "*clusterserviceversion.yaml" -o -name "*clusterserviceversion.yml")
         RELATED_IMAGE_COUNT=$(yq -e '.spec.relatedImages | length' $CSVFILE)
 
+        PASS=true
         if [[ $RELATED_IMAGE_COUNT -ge $REFERENCE_COUNT ]]; then
           echo -n "Related images section exists." | tee $(results.related_images_message.path)
-          echo -n "true" | tee $(results.related_images_flag.path)
-        elif [[ $RELATED_IMAGE_COUNT -lt $REFERENCE_COUNT && $RELATED_IMAGE_COUNT -gt 0 ]]; then
+        elif [[ $RELATED_IMAGE_COUNT -gt 0 ]]; then
           echo -n "The relatedImages section in your CSV covers only $RELATED_IMAGE_COUNT of the $REFERENCE_COUNT images detected in your CSV." | tee $(results.related_images_message.path)
-          echo -n "false" | tee $(results.related_images_flag.path)
+          PASS=false
         else
           echo -n "The relatedImages section is missing from the CSV" | tee $(results.related_images_message.path)
-          echo -n "false" | tee $(results.related_images_flag.path)
+          PASS=false
+        fi
+
+        echo -n "$PASS" | tee $(results.related_images_flag.path)
+
+        if [[ "$PASS" == "false" && "$(params.enforce_pinning)" == "true" ]]; then
+          echo "Digest pinning is enforced. Failing the task."
+          exit 1
         fi

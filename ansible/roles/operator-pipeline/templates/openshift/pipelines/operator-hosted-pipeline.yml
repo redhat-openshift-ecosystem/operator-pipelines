@@ -315,7 +315,8 @@ spec:
       taskRef:
         name: yaml-lint
       when:
-        - input: "$(tasks.detect-changes.results.bundle_path)"
+        - &isBundlePathAvailable
+          input: "$(tasks.detect-changes.results.bundle_path)"
           operator: notin
           values: [""]
       params:
@@ -409,30 +410,12 @@ spec:
           workspace: results
           subPath: summary
 
-    - name: resolve-pr-type
-      taskRef:
-        name: resolve-pr-type
-        kind: Task
-      runAfter:
-        - read-config
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: bundle_path
-          value: "$(tasks.detect-changes.results.bundle_path)"
-        - name: affected_catalogs
-          value: "$(tasks.detect-changes.results.affected_catalogs)"
-        - name: affected_catalog_operators
-          value: "$(tasks.detect-changes.results.affected_catalog_operators)"
-        - name: fbc-enabled
-          value: "$(tasks.read-config.results.fbc-enabled)"
-
     - name: validate-catalog-format
       taskRef:
         name: validate-catalog-format
         kind: Task
       runAfter:
-        - resolve-pr-type
+        - read-config
       when:
         - input: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
           operator: notin
@@ -695,6 +678,11 @@ spec:
         - static-tests
       taskRef:
         name: merge-registry-credentials
+      when:
+        - &isCertProjectRequired
+          input: "$(params.cert_project_required)"
+          operator: in
+          values: ["true"]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -717,6 +705,8 @@ spec:
         - merge-registry-credentials
       taskRef:
         name: digest-pinning
+      when:
+        - *isCertProjectRequired
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -732,26 +722,15 @@ spec:
         - name: registry-credentials
           workspace: registry-credentials-all
 
-    - name: verify-pinned-digest
-      runAfter:
-        - digest-pinning
-      taskRef:
-        name: verify-pinned-digest
-      params:
-        - name: dirty_flag
-          value: "$(tasks.digest-pinning.results.dirty_flag)"
-        - name: related_images_flag
-          value: "$(tasks.digest-pinning.results.related_images_flag)"
-        - name: related_images_message
-          value: "$(tasks.digest-pinning.results.related_images_message)"
-
     # Build images- bundle and index and push them to registry.
     # Those steps are also a part of the CI pipeline.
     - name: dockerfile-creation
       runAfter:
-        - verify-pinned-digest
+        - digest-pinning
       taskRef:
         name: dockerfile-creation
+      when:
+        - *isBundlePathAvailable
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -771,6 +750,8 @@ spec:
       taskRef:
         name: buildah
         kind: Task
+      when:
+        - *isBundlePathAvailable
       params:
         - name: IMAGE
           value: &bundleImage "$(params.registry)/$(params.image_namespace)/$(tasks.detect-changes.results.added_operator):$(tasks.detect-changes.results.added_bundle)"
@@ -1172,6 +1153,10 @@ spec:
         - get-ci-results
       taskRef:
         name: link-pull-request
+      when:
+        - input: "$(tasks.get-ci-results.results.test_result_id)"
+          operator: notin
+          values: [""]
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
@@ -1197,9 +1182,7 @@ spec:
       taskRef:
         name: query-publishing-checklist
       when:
-        - input: "$(tasks.certification-project-check.results.certification_project_id)"
-          operator: "notin"
-          values: [""]
+        - *certProjectExists
         - input: "$(tasks.detect-changes.results.affected_catalogs)"
           operator: in
           values: [""]
@@ -1293,6 +1276,9 @@ spec:
         - input: $(tasks.merge-pr.results.pr_merged)
           operator: in
           values: ["true"]
+        - input: $(tasks.get-ci-results.results.test_result_id)
+          operator: notin
+          values: [""]
       taskRef:
         name: link-pull-request
       params:
