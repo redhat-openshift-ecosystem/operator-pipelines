@@ -122,10 +122,18 @@ def enrich_indices_with_repo_context(
     Returns:
         List[Dict[str, Any]]: Enriched indices list with repo context
     """
+    try:
+        pending_repo = config["index_image"]["pending_repository"]
+        public_repository_mirror = config["index_image"]["public_repository_mirror"]
+        repository = config["index_image"]["repository"]
+    except KeyError as exc:
+        raise KeyError(
+            "Missing configuration of key 'index_image' in config.yaml. "
+            "Your repository configuration is likely outdated. "
+            "To fix, please update your branch so it's up to date "
+            "with the main branch of upstream repository, then retry."
+        ) from exc
 
-    pending_repo = config["index_image"]["pending_repository"]
-    public_repository_mirror = config["index_image"]["public_repository_mirror"]
-    repository = config["index_image"]["repository"]
     for index in indices:
         ocp_version = index["ocp_version"]
 

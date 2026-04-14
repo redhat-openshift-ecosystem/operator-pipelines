@@ -2,7 +2,7 @@ from datetime import timezone
 from pathlib import Path
 from unittest import mock
 from unittest.mock import patch, MagicMock, call
-from typing import Dict
+from typing import Dict, Any
 
 import pytest
 import yaml
@@ -193,6 +193,17 @@ def test_enrich_indices_with_repo_context() -> None:
     assert result[1]["public_repository_mirror_with_version"] == (
         "registry.stage.redhat.io/redhat/community-operator-index:v4.14"
     )
+
+
+def test_enrich_indices_with_repo_context_missing_index_image() -> None:
+    indices = [{"ocp_version": "4.13"}]
+    config: Dict[str, Any] = {}
+
+    with pytest.raises(KeyError) as err_info:
+        operatorcert.enrich_indices_with_repo_context(indices, config)
+
+    assert "Missing configuration of key 'index_image'" in str(err_info.value)
+    assert "up to date with the main branch" in str(err_info.value)
 
 
 def test_get_repo_and_org_from_github_url() -> None:
