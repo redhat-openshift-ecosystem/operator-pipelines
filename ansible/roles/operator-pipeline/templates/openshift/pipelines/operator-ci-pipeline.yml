@@ -143,6 +143,8 @@ spec:
           value: "$(params.pin_digests)"
         - name: pipeline_image
           value: "$(params.pipeline_image)"
+        - name: enforce_pinning
+          value: "false"
       workspaces:
         - name: source
           workspace: pipeline
