@@ -344,6 +344,14 @@ def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
         x.csv_operator_version: x.operator_version
         for x in bundle.operator.all_bundles()
     }
+
+    if replaces_version not in ver_to_dir:
+        yield Fail(
+            f"{bundle} attempts to replace version '{replaces_version}' which"
+            f" does not exist. Available versions: {sorted(ver_to_dir.keys())}"
+        )
+        return
+
     replaces_bundle = bundle.operator.bundle(ver_to_dir[replaces_version])
 
     ocp_versions_str = bundle.annotations.get("com.redhat.openshift.versions")

@@ -606,6 +606,34 @@ def test_check_replaces_availability(
     assert set(errors) == expected
 
 
+def test_check_replaces_availability_nonexistent_version(
+    tmp_path: Path,
+) -> None:
+    """Test that attempting to replace a non-existent version produces a clear error message"""
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1"),
+        bundle_files(
+            "hello",
+            "0.0.2",
+            csv={"spec": {"replaces": "hello.v0.0.5"}},  # 0.0.5 doesn't exist
+        ),
+    )
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle = operator.bundle("0.0.2")
+    errors = list(check_replaces_availability(bundle))
+
+    assert len(errors) == 1
+    assert isinstance(errors[0], Fail)
+    assert (
+        "Bundle(hello/0.0.2) attempts to replace version '0.0.5' which does not exist"
+        in errors[0].reason
+    )
+    assert "Available versions:" in errors[0].reason
+
+
 @pytest.mark.parametrize(
     "files, bundle_to_check, expected",
     [
