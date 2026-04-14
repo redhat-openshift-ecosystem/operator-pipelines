@@ -6,8 +6,10 @@ from collections.abc import Iterator
 from typing import Any
 
 from jsonschema.validators import Draft202012Validator
+from operatorcert import utils
 from operatorcert.operator_repo import Bundle
 from operatorcert.operator_repo.checks import CheckResult, Fail, Warn
+from operatorcert.static_tests.helpers import skip_fbc
 
 
 def _check_consistency(
@@ -225,3 +227,63 @@ def check_operator_version_directory_name(bundle: Bundle) -> Iterator[CheckResul
             f"the expected operator CSV version '{csv_version}' from "
             f"./{bundle.csv_file_name.relative_to(bundle.operator.repo.root)}."
         )
+
+
+@skip_fbc
+def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Check if the current bundle and the replaced bundle support the same OCP versions
+
+    Args:
+        bundle (Bundle): Operator bundle
+
+    Yields:
+        Iterator[CheckResult]: Failure if the version of the replaced bundle
+        does not match with the current bundle
+    """
+
+    replaces = bundle.csv.get("spec", {}).get("replaces")
+    if not replaces:
+        return
+    delimiter = ".v" if ".v" in replaces else "."
+    replaces_version = replaces.split(delimiter, 1)[1]
+
+    ver_to_dir = {
+        x.csv_operator_version: x.operator_version
+        for x in bundle.operator.all_bundles()
+    }
+
+    if replaces_version not in ver_to_dir:
+        yield Fail(
+            f"{bundle} attempts to replace version '{replaces_version}' which"
+            f" does not exist. Available versions: {sorted(ver_to_dir.keys())}"
+        )
+        return
+
+    replaces_bundle = bundle.operator.bundle(ver_to_dir[replaces_version])
+
+    ocp_versions_str = bundle.annotations.get("com.redhat.openshift.versions")
+    replaces_ocp_version_str = replaces_bundle.annotations.get(
+        "com.redhat.openshift.versions"
+    )
+    if ocp_versions_str == replaces_ocp_version_str:
+        return
+    organization = bundle.operator.repo.config.get("organization")
+
+    indexes = set(utils.get_ocp_supported_versions(organization, ocp_versions_str))
+    replaces_indexes = set(
+        utils.get_ocp_supported_versions(organization, replaces_ocp_version_str)
+    )
+
+    if indexes - replaces_indexes == set():
+        return
+    yield Fail(
+        f"Replaces bundle {replaces_bundle} {sorted(replaces_indexes)} does not support "
+        f"the same OCP versions as bundle {bundle} {sorted(indexes)}. In order to fix this issue, "
+        "align the OCP version range to match the range of the replaced bundle. "
+        "This can be done by setting the `com.redhat.openshift.versions` annotation in the "
+        "`metadata/annotations.yaml` file.\n"
+        f"`{bundle}` - `{ocp_versions_str}`\n"
+        f"`{replaces_bundle}` - `{replaces_ocp_version_str}`"
+    )
+    yield from []

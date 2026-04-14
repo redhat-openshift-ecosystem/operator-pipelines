@@ -108,6 +108,7 @@ The test aims to verify if a bundle referenced by the `replaces` value is availa
 catalog version where the given bundle is going to be released to. The list of
 catalog version is determined by the `com.redhat.openshift.versions` annotation if present.
 If the annotation is not present the bundle targets all supported ocp version.
+It also check that specified bundle version exists in operator directory structure.
 
 To fix the issue either change a range of versions where a bundle is going to be
 released by updating the annotation or change the `replaces` value.
