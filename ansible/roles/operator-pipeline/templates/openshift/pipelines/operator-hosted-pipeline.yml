@@ -410,53 +410,6 @@ spec:
           workspace: results
           subPath: summary
 
-    - name: validate-catalog-format
-      taskRef:
-        name: validate-catalog-format
-        kind: Task
-      runAfter:
-        - get-pyxis-certification-data
-      when:
-        - input: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
-          operator: notin
-          values: [""]
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: affected_catalogs
-          value: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-
-    - name: build-fragment-images
-      taskRef:
-        name: build-fragment-images
-        kind: Task
-      runAfter:
-        - validate-catalog-format
-      when:
-        - &catalogFileChange
-          input: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
-          operator: notin
-          values: [""]
-      params:
-        - name: pipeline_image
-          value: "$(params.pipeline_image)"
-        - name: commit_sha
-          value: $(params.git_commit)
-        - name: affected_catalog_operators
-          value: "$(tasks.detect-changes.results.added_or_modified_catalog_operators)"
-        - name: fragment_repository
-          value: "$(params.registry)/$(params.image_namespace)/catalog"
-      workspaces:
-        - name: source
-          workspace: repository
-          subPath: src
-        - name: credentials
-          workspace: registry-credentials
-
     - name: apply-test-waivers
       taskRef:
         name: apply-test-waivers
@@ -596,6 +549,53 @@ spec:
           subPath: src
         - name: results
           workspace: results
+
+    - name: validate-catalog-format
+      taskRef:
+        name: validate-catalog-format
+        kind: Task
+      runAfter:
+        - get-pyxis-certification-data
+      when:
+        - input: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
+          operator: notin
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: affected_catalogs
+          value: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: build-fragment-images
+      taskRef:
+        name: build-fragment-images
+        kind: Task
+      runAfter:
+        - validate-catalog-format
+      when:
+        - &catalogFileChange
+          input: "$(tasks.detect-changes.results.added_or_modified_catalogs)"
+          operator: notin
+          values: [""]
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: commit_sha
+          value: $(params.git_commit)
+        - name: affected_catalog_operators
+          value: "$(tasks.detect-changes.results.added_or_modified_catalog_operators)"
+        - name: fragment_repository
+          value: "$(params.registry)/$(params.image_namespace)/catalog"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+        - name: credentials
+          workspace: registry-credentials
 
     - name: verify-project
       runAfter:
