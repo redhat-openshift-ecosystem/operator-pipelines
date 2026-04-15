@@ -59,10 +59,11 @@ jobs:
       - name: Set variables
         id: set-vars
         run: |
-          if [[ $GITHUB_REF_NAME == 'main' ]]; then
-            echo "tags=latest ${{ github.sha }}" >> $GITHUB_OUTPUT
+          COMMIT_SHA=${{ github.event.pull_request.head.sha || github.sha }}
+          if [[ "${{ github.event_name }}" == "push" && "$GITHUB_REF_NAME" == "main" ]]; then
+            echo "tags=latest $COMMIT_SHA" >> $GITHUB_OUTPUT
           else
-            echo "tags=${{ github.sha }}">> $GITHUB_OUTPUT
+            echo "tags=$COMMIT_SHA" >> $GITHUB_OUTPUT
           fi
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -112,7 +113,8 @@ jobs:
       - name: Prepare
         id: prepare
         run: |
-          echo "suffix=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          COMMIT_SHA=${{ github.event.pull_request.head.sha || github.sha }}
+          echo "suffix=${COMMIT_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: |
@@ -157,7 +159,7 @@ jobs:
             -e "test_type=${{ matrix.test_type }}"
             -e "oc_namespace=int-tests-${{ matrix.test_type }}-${{ github.run_number }}-${{ github.run_attempt }}"
             -e "integration_tests_operator_bundle_version=0.2.${{ github.run_number }}-${{ github.run_attempt }}"
-            -e "operator_pipeline_image_tag=${{ github.sha }}"
+            -e "operator_pipeline_image_tag=${{ github.event.pull_request.head.sha || github.sha }}"
             -e "suffix=${{ steps.prepare.outputs.suffix }}"
             -e "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
             --skip-tags=signing-pipeline
