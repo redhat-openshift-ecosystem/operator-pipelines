@@ -609,7 +609,7 @@ def test_check_replaces_availability(
 def test_check_replaces_availability_nonexistent_version(
     tmp_path: Path,
 ) -> None:
-    """Test that attempting to replace a non-existent version produces a clear error message"""
+    """Test that check_replaces_availability returns early when version doesn't exist"""
     create_files(
         tmp_path,
         bundle_files("hello", "0.0.1"),
@@ -625,13 +625,8 @@ def test_check_replaces_availability_nonexistent_version(
     bundle = operator.bundle("0.0.2")
     errors = list(check_replaces_availability(bundle))
 
-    assert len(errors) == 1
-    assert isinstance(errors[0], Fail)
-    assert (
-        "Bundle(hello/0.0.2) attempts to replace version '0.0.5' which does not exist"
-        in errors[0].reason
-    )
-    assert "Available versions:" in errors[0].reason
+    # Should return early without errors - check_replaces_exists will handle this
+    assert len(errors) == 0
 
 
 @pytest.mark.parametrize(
