@@ -27,6 +27,10 @@
             "minItems": 1,
             "uniqueItems": true
           },
+          "defaultChannel": {
+            "description": "default channel for this template (optional, defaults to first channel)",
+            "type": "string"
+          },
           "replaces": {
             "description": "operator version which this PR replaces (optional)",
             "type": "string"
