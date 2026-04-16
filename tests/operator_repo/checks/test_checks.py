@@ -66,7 +66,10 @@ def test_get_checks_skip_check(mock_import_module: MagicMock) -> None:
 
 @patch("importlib.import_module")
 def test_get_checks_missing_modules(mock_import_module: MagicMock) -> None:
-    mock_import_module.side_effect = ModuleNotFoundError()
+    def side_effect(module_name: str) -> None:
+        raise ModuleNotFoundError(f"No module named '{module_name}'")
+
+    mock_import_module.side_effect = side_effect
     assert get_checks("suite.name") == {
         "operator": [],
         "bundle": [],
@@ -75,6 +78,40 @@ def test_get_checks_missing_modules(mock_import_module: MagicMock) -> None:
     mock_import_module.assert_has_calls(
         [call("suite.name.operator"), call("suite.name.bundle")], any_order=True
     )
+
+
+@patch("importlib.import_module")
+def test_get_checks_missing_dependency(mock_import_module: MagicMock) -> None:
+    """Test that missing dependencies cause a RuntimeError"""
+
+    def side_effect(module_name: str) -> None:
+        # Simulate a missing dependency (e.g., jsonschema)
+        raise ModuleNotFoundError("No module named 'jsonschema'")
+
+    mock_import_module.side_effect = side_effect
+    try:
+        get_checks("suite.name")
+        assert False, "Expected RuntimeError to be raised"
+    except RuntimeError as e:
+        assert "Failed to import suite.name.operator due to error" in str(e)
+        assert "jsonschema" in str(e)
+
+
+@patch("importlib.import_module")
+def test_get_checks_unexpected_error(mock_import_module: MagicMock) -> None:
+    """Test that unexpected errors during module loading cause a RuntimeError"""
+
+    def side_effect(module_name: str) -> None:
+        # Simulate an unexpected error (e.g., SyntaxError, AttributeError)
+        raise ValueError("Unexpected error during import")
+
+    mock_import_module.side_effect = side_effect
+    try:
+        get_checks("suite.name")
+        assert False, "Expected RuntimeError to be raised"
+    except RuntimeError as e:
+        assert "Unexpected error loading module suite.name.operator" in str(e)
+        assert "Unexpected error during import" in str(e)
 
 
 def test_run_check(mock_bundle: Bundle) -> None:
