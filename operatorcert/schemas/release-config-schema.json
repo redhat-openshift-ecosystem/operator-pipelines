@@ -8,10 +8,6 @@
       "description": "whether the PR should be auto-merged (optional, default=true)",
       "type": "boolean"
     },
-    "defaultChannel": {
-      "description": "the default channel for the operator package (optional, defaults to first channel in catalog_templates)",
-      "type": "string"
-    },
     "catalog_templates": {
       "description": "catalog templates (required)",
       "type": "array",
@@ -30,6 +26,10 @@
             },
             "minItems": 1,
             "uniqueItems": true
+          },
+          "defaultChannel": {
+            "description": "default channel for this template (optional, defaults to first channel)",
+            "type": "string"
           },
           "replaces": {
             "description": "operator version which this PR replaces (optional)",

@@ -40,13 +40,13 @@ the OCP version and the place in the update graph.
 
 ```yaml
 ---
-defaultChannel: stable
 catalog_templates:
   - template_name: basic.yaml
     channels: [my-channel]
     replaces: aqua.0.0.1
   - template_name: semver.yaml
     channels: [Fast, Stable]
+    defaultChannel: Stable
 ```
 The example above shows a release configuration where operator bundle is going to be
 released to the `my-channel` channel in the `basic.yaml` catalog template and to the
@@ -55,9 +55,8 @@ released to the `my-channel` channel in the `basic.yaml` catalog template and to
 The `replaces` field is optional and it specifies the bundle that the new bundle
 replaces in the update graph.
 
-The `defaultChannel` field allows to specify which channel should be the default for 
-installing an operator. This eliminates the need to manually edit catalog templates 
-after the auto-release process.
+The `defaultChannel` field is optional and it specifies which channel should be 
+the default for installing an operator.
 
 ### File structure
 The schema of the file is available here: [release-config.yaml schema](https://github.com/redhat-openshift-ecosystem/operator-pipelines/blob/main/operatorcert/schemas/release-config-schema.json).
@@ -65,12 +64,12 @@ The schema is validated automatically in the pipeline and the PR will fail with 
 
 Here is a summary of the file structure:
 
-* `defaultChannel` - the default channel for the operator package (**Optional**). If not specified, defaults to the first channel listed in the first catalog template.
 * The top-level key is `catalog_templates` which is a list of objects.
 * Each object has the following keys:
     * `template_name` - the name of the catalog template file in the `catalog-templates` directory.
     * `channels` - a list of channels where the bundle should be released.
         * In case of using `SemVer` a user can pick from allowed values: `Fast`, `Stable` and `Candidate`.
+    * `defaultChannel` - the default channel for the operator package (**Optional**). If not specified, defaults to the first channel listed in the channels list.
     * `replaces` - the bundle that the new bundle replaces in the update graph. (**Optional**, only for the basic templates)
     * `skips` - a list of bundles that should be skipped in the update graph. (**Optional**, only for the basic templates)
     * `skipRange` - a range of bundles that should be skipped in the update graph. (**Optional**, only for the basic templates)

@@ -466,6 +466,13 @@ def release_bundle_to_fbc(args: argparse.Namespace, bundle: Bundle) -> None:
     for release_config_template in bundle.release_config["catalog_templates"]:
         template_name = release_config_template["template_name"]
         template_mapping = get_catalog_mapping(bundle.operator.config, template_name)
+        default_channel = release_config_template.get("defaultChannel")
+        template_channels = release_config_template["channels"]
+        if default_channel and default_channel not in template_channels:
+            raise ValueError(
+                f"defaultChannel '{default_channel}' not found in '{template_name}' "
+                f"channels: {template_channels}"
+            )
         if not template_mapping:
             raise ValueError(
                 f"Template mapping not found for '{template_name}' in ci.yaml."
