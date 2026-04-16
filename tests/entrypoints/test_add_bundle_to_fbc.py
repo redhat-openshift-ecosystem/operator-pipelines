@@ -416,7 +416,9 @@ def test_release_bundle_to_fbc(
         add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
 
     bundle.release_config = {
-        "catalog_templates": [{"template_name": "fake-template.yaml"}]
+        "catalog_templates": [
+            {"template_name": "fake-template.yaml", "channels": ["alpha"]},
+        ]
     }
     mock_catalog_mapping.return_value = None
     with pytest.raises(ValueError):
@@ -434,8 +436,25 @@ def test_release_bundle_to_fbc(
 
     bundle.release_config = {
         "catalog_templates": [
-            {"template_name": "fake-basic.yaml"},
-            {"template_name": "fake-semver.yaml"},
+            {
+                "template_name": "fake-template.yaml",
+                "channels": ["alpha"],
+                "defaultChannel": "stable",
+            },
+        ]
+    }
+    mock_catalog_mapping.side_effect = {
+        "template_name": "fake-template.yaml",
+        "catalog_names": ["v4.12-fake"],
+        "type": "olm.template.basic",
+    }
+    with pytest.raises(ValueError, match="defaultChannel 'stable' not found"):
+        add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
+
+    bundle.release_config = {
+        "catalog_templates": [
+            {"template_name": "fake-basic.yaml", "channels": ["alpha"]},
+            {"template_name": "fake-semver.yaml", "channels": ["Fast", "Candidate"]},
         ]
     }
     mock_catalog_mapping.side_effect = [
