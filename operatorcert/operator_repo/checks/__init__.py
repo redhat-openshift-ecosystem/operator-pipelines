@@ -103,6 +103,7 @@ def get_checks(
     """
     if skip_tests is None:
         skip_tests = []
+    log.debug("Loading checks from suite: %s", suite_name)
     result: dict[str, list[Check]] = {}
     for module_name, _ in SUPPORTED_TYPES:
         result[module_name] = []
@@ -120,8 +121,36 @@ def get_checks(
                         log.debug("Skipping %s check", check_name)
                         continue
                     result[module_name].append(check)
-        except ModuleNotFoundError:
-            pass
+        except ModuleNotFoundError as e:
+            # ModuleNotFoundError can be caused by two different reasons:
+            # - file doesn't exist (e.g. community/operator_catalogs.py) - OK
+            # - module exists but has a missing import dependency - SHOULD FAIL
+
+            module_path = f"{suite_name}.{module_name}"
+            error_message = str(e)
+            if f"No module named '{module_path}'" in error_message:
+                # Nonexistent module
+                log.debug("Module %s not found: %s", module_path, e)
+            else:
+                # Issue with missing dependency
+                error_msg = f"Failed to import {module_path} due to error: {e}"
+                log.debug(error_msg)
+                traceback.print_exc()
+                raise RuntimeError(error_msg) from e
+        except Exception as e:
+            # Unexpected error - SHOULD FAIL
+            error_msg = (
+                f"Unexpected error loading module {suite_name}.{module_name}: {e}"
+            )
+            log.debug(error_msg)
+            traceback.print_exc()
+            raise RuntimeError(error_msg) from e
+
+    num_loaded = len([checks for checks in result.values() if checks])
+    log.debug("Loaded %d check types from %s", num_loaded, suite_name)
+    for module_type, checks in result.items():
+        if checks:
+            log.debug("  %s: %d checks", module_type, len(checks))
     return result
 
 
