@@ -40,6 +40,7 @@ the OCP version and the place in the update graph.
 
 ```yaml
 ---
+defaultChannel: stable
 catalog_templates:
   - template_name: basic.yaml
     channels: [my-channel]
@@ -54,12 +55,17 @@ released to the `my-channel` channel in the `basic.yaml` catalog template and to
 The `replaces` field is optional and it specifies the bundle that the new bundle
 replaces in the update graph.
 
+The `defaultChannel` field allows to specify which channel should be the default for 
+installing an operator. This eliminates the need to manually edit catalog templates 
+after the auto-release process.
+
 ### File structure
 The schema of the file is available here: [release-config.yaml schema](https://github.com/redhat-openshift-ecosystem/operator-pipelines/blob/main/operatorcert/schemas/release-config-schema.json).
 The schema is validated automatically in the pipeline and the PR will fail with explanations if the file is not valid.
 
 Here is a summary of the file structure:
 
+* `defaultChannel` - the default channel for the operator package (**Optional**). If not specified, defaults to the first channel listed in the first catalog template.
 * The top-level key is `catalog_templates` which is a list of objects.
 * Each object has the following keys:
     * `template_name` - the name of the catalog template file in the `catalog-templates` directory.
