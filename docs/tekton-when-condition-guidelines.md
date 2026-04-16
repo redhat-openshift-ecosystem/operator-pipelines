@@ -116,8 +116,16 @@ A task result can be used as a `when` condition input when **all three** of the 
 ## Rule 4 — `when` input is a task result, guarded task also consumes task results in params ❌
 
 This combination is **not allowed**. When the `when` condition is based on a task result and the
-guarded task also consumes task results in its own params, skipping the task creates an ambiguous
-state in the result propagation chain:
+guarded task also consumes task results in its own params, the pipeline can fail regardless of
+whether the `when` condition evaluates to true or false.
+
+The critical case: even when the `when` source task ran successfully and the condition evaluates
+to **false** (meaning the guarded task should be skipped), Tekton still resolves all param
+references before the skip takes effect. If any param references a task result from a skipped
+upstream task, the pipeline fails — the clean skip never happens.
+
+More generally, skipping the guarded task creates an ambiguous state in the result propagation
+chain:
 
 1. The upstream tasks that produced the param results ran and completed.
 2. The guarded task is skipped — those results are not consumed and not transformed.
