@@ -299,7 +299,7 @@ class BasicTemplate(CatalogTemplate):
         package = {
             "schema": "olm.package",
             "name": self.operator.operator_name,
-            "defaultChannel": channels[0]["name"],
+            "defaultChannel": release_config.get("defaultChannel", channels[0]["name"]),
         }
         bundle_obj = {"schema": "olm.bundle", "image": bundle_pullspec}
 
