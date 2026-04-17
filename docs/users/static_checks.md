@@ -200,6 +200,10 @@ metadata:
   name: <operator_name>.v<version>
 ```
 
+#### check_replaces_exists
+The test validates that the version specified in the `replaces` field of the
+CSV actually exists in the operator.
+
 ## Running tests locally
 
 ```bash

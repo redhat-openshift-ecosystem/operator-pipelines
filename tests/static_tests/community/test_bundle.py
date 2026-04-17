@@ -606,6 +606,29 @@ def test_check_replaces_availability(
     assert set(errors) == expected
 
 
+def test_check_replaces_availability_nonexistent_version(
+    tmp_path: Path,
+) -> None:
+    """Test that check_replaces_availability returns early when version doesn't exist"""
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1"),
+        bundle_files(
+            "hello",
+            "0.0.2",
+            csv={"spec": {"replaces": "hello.v0.0.5"}},  # 0.0.5 doesn't exist
+        ),
+    )
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle = operator.bundle("0.0.2")
+    errors = list(check_replaces_availability(bundle))
+
+    # Should return early without errors - check_replaces_exists will handle this
+    assert len(errors) == 0
+
+
 @pytest.mark.parametrize(
     "files, bundle_to_check, expected",
     [

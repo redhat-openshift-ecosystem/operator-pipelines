@@ -225,3 +225,32 @@ def check_operator_version_directory_name(bundle: Bundle) -> Iterator[CheckResul
             f"the expected operator CSV version '{csv_version}' from "
             f"./{bundle.csv_file_name.relative_to(bundle.operator.repo.root)}."
         )
+
+
+def check_replaces_exists(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Check if the version specified in the 'replaces' field exists in the operator.
+
+    Args:
+        bundle (Bundle): Operator bundle
+
+    Yields:
+        Iterator[CheckResult]: Failure if the replaced version does not exist
+    """
+    replaces = bundle.csv.get("spec", {}).get("replaces")
+    if not replaces:
+        return
+
+    delimiter = ".v" if ".v" in replaces else "."
+    replaces_version = replaces.split(delimiter, 1)[1]
+
+    ver_to_dir = {
+        x.csv_operator_version: x.operator_version
+        for x in bundle.operator.all_bundles()
+    }
+
+    if replaces_version not in ver_to_dir:
+        yield Fail(
+            f"{bundle} attempts to replace version '{replaces_version}' which"
+            f" does not exist. Available versions: {sorted(ver_to_dir.keys())}"
+        )

@@ -10,6 +10,7 @@ from operatorcert.static_tests.common.bundle import (
     check_validate_schema_bundle_release_config,
     check_network_policy_presence,
     check_operator_version_directory_name,
+    check_replaces_exists,
 )
 from tests.utils import bundle_files, create_files
 
@@ -752,3 +753,31 @@ def test_check_operator_version_directory_name(
     assert {
         (x.__class__, x.reason) for x in check_operator_version_directory_name(bundle)
     } == expected_results
+
+
+def test_check_replaces_exists(
+    tmp_path: Path,
+) -> None:
+    """Test that attempting to replace a non-existent version produces a clear error message"""
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1"),
+        bundle_files(
+            "hello",
+            "0.0.2",
+            csv={"spec": {"replaces": "hello.v0.0.5"}},  # 0.0.5 doesn't exist
+        ),
+    )
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle = operator.bundle("0.0.2")
+    errors = list(check_replaces_exists(bundle))
+
+    assert len(errors) == 1
+    assert isinstance(errors[0], Fail)
+    assert (
+        "Bundle(hello/0.0.2) attempts to replace version '0.0.5' which does not exist"
+        in errors[0].reason
+    )
+    assert "Available versions:" in errors[0].reason
