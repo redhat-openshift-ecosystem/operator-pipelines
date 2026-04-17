@@ -618,6 +618,8 @@ spec:
       params:
         - name: pipeline_image
           value: "$(params.pipeline_image)"
+        - name: public_repository_mirror
+          value: "$(tasks.get-supported-versions.results.public_repository_mirror)"
         - name: requester
           value: "araszka"
         - name: sig_key_id

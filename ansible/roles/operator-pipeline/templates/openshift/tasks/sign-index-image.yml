@@ -9,6 +9,10 @@ spec:
   params:
     - name: pipeline_image
       description: A docker image of operator-pipeline-images for the steps to run in.
+    - name: public_repository_mirror
+      description: |
+        The public repository mirror where the index image becomes available.
+        Example: registry.redhat.io/redhat/community-operator-index
 
     # Signing configuration
     - name: requester
@@ -106,7 +110,10 @@ spec:
         MANIFEST_DIGESTS=""
         for i in $DIGEST_LIST
         do
-            REFERENCE=$(echo $i | awk -F '+' '{print $1}')
+            PENDING_INDEX_WITH_VERSION=$(echo $i | awk -F '+' '{print $1}')
+            VERSION=$(echo $PENDING_INDEX_WITH_VERSION | awk -F ':' '{print $2}')
+
+            REFERENCE="$(params.public_repository_mirror):${VERSION}"
 
             DIGEST=$(echo $i | awk -F '+' '{print $2}')
 
