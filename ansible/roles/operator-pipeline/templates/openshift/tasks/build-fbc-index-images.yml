@@ -46,12 +46,23 @@ spec:
       description: >-
         The key within the Kubernetes Secret that contains the kerberos keytab for submitting IIB builds.
 
+    - name: build_tags_suffix
+      default: ""
+      description: |
+        Timestamp suffix for build tags (used with overwrite to ensure consistent tagging with publish task).
+
   volumes:
     - name: kerberos-volume
       secret:
         secretName: "$(params.kerberos_keytab_secret_name)"
   workspaces:
     - name: output
+    - name: iib-credentials
+      description: |
+        Optional workspace containing Quay credentials for IIB to authenticate and overwrite from_index.
+        Required for release pipeline to enable IIB to push to pending repositories.
+        Expected to contain 'username' and 'password' files.
+      optional: true
 
   steps:
     - name: add-fbc-fragments-to-index
@@ -66,15 +77,28 @@ spec:
           mountPath: "/etc/kerberos"
       script: |
         #! /usr/bin/env bash
-        set -xe
+        # DO NOT USE set -x to avoid revealing credentials in logs!
+        set -e
 
         if [[ "$(params.catalogs_with_added_or_modified_operators)" == "" ]];then
           echo "No affected catalogs, skipping fragment image build"
           exit 0
         fi
 
-        ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
+
+        # Add IIB overwrite token if credentials workspace is provided (for release pipeline)
+        EXTRA_ARGS=""
+        if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
+          IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
+          IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
+          export IIB_OVERWRITE_TOKEN="${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
+
+          # Add build tags suffix for consistent tagging with publish task
+          if [[ "$(params.build_tags_suffix)" != "" ]]; then
+            EXTRA_ARGS+=" --build-tags-suffix $(params.build_tags_suffix)"
+          fi
+        fi
 
         add-fbc-fragments-to-index \
           --iib-url "$(params.iib_url)" \
@@ -83,9 +107,36 @@ spec:
           --image-repository "$(params.image_repository)" \
           --commit-sha "$(params.commit_sha)" \
           --image-output index-image-paths.txt \
-          --verbose
+          --verbose \
+          $EXTRA_ARGS
 
         cat index-image-paths.txt
+        echo
+
+        # WORKAROUND: Manually overwrite index images using skopeo (TODO: remove when IIB fixed)
+        if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
+          TEMP_IMAGES=$(cat index-image-paths.txt | tr "," " ")
+          for i in $TEMP_IMAGES
+          do
+            SRC_IMAGE=$(echo $i | awk -F '+' '{print $2}')
+            DEST_IMAGE=$(echo $i | awk -F '+' '{print $1}')
+            echo "1. Version tag: copying $SRC_IMAGE to $DEST_IMAGE"
+            skopeo copy --format v2s2 --all --src-no-creds \
+              --dest-creds $IIB_QUAY_USER:$IIB_QUAY_TOKEN \
+              docker://$SRC_IMAGE \
+              docker://$DEST_IMAGE
+
+            # Also copy with permanent tag if build_tags_suffix is set
+            if [[ "$(params.build_tags_suffix)" != "" ]]; then
+              DEST_IMAGE_PERMANENT="${DEST_IMAGE}-$(params.build_tags_suffix)"
+              echo "2. Permanent tag: copying $SRC_IMAGE to $DEST_IMAGE_PERMANENT"
+              skopeo copy --format v2s2 --all --src-no-creds \
+                --dest-creds $IIB_QUAY_USER:$IIB_QUAY_TOKEN \
+                docker://$SRC_IMAGE \
+                docker://$DEST_IMAGE_PERMANENT
+            fi
+          done
+        fi
 
     - name: rm-operator-from-index
       image: "$(params.pipeline_image)"
@@ -99,15 +150,28 @@ spec:
           mountPath: "/etc/kerberos"
       script: |
         #! /usr/bin/env bash
-        set -xe
+        # DO NOT USE set -x to avoid revealing credentials in logs!
+        set -e
 
         if [[ "$(params.deleted_catalog_operators)" == "" ]];then
           echo "No deleted operators, skipping operator removal from index"
           exit 0
         fi
 
-        ENV=$(params.environment)
         INDEX_IMAGES="$(params.index_images)"
+
+        # Add IIB overwrite token if credentials workspace is provided (for release pipeline)
+        EXTRA_ARGS=""
+        if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
+          IIB_QUAY_USER=$(cat $(workspaces.iib-credentials.path)/username)
+          IIB_QUAY_TOKEN=$(cat $(workspaces.iib-credentials.path)/password)
+          export IIB_OVERWRITE_TOKEN="${IIB_QUAY_USER}:${IIB_QUAY_TOKEN}"
+
+          # Add build tags suffix for consistent tagging with publish task
+          if [[ "$(params.build_tags_suffix)" != "" ]]; then
+            EXTRA_ARGS+=" --build-tags-suffix $(params.build_tags_suffix)"
+          fi
+        fi
 
         rm-operator-from-index  \
           --iib-url "$(params.iib_url)" \
@@ -115,6 +179,33 @@ spec:
           --fragment-builds-output index-image-paths.txt \
           --rm-catalog-operators "$(params.deleted_catalog_operators)" \
           --image-output index-image-paths.txt \
-          --verbose
+          --verbose \
+          $EXTRA_ARGS
 
         cat index-image-paths.txt
+        echo
+
+        # WORKAROUND: Manually overwrite index images using skopeo (TODO: remove when IIB fixed)
+        if [[ "$(workspaces.iib-credentials.bound)" == "true" ]]; then
+          TEMP_IMAGES=$(cat index-image-paths.txt | tr "," " ")
+          for i in $TEMP_IMAGES
+          do
+            SRC_IMAGE=$(echo $i | awk -F '+' '{print $2}')
+            DEST_IMAGE=$(echo $i | awk -F '+' '{print $1}')
+            echo "1. Version tag: copying $SRC_IMAGE to $DEST_IMAGE"
+            skopeo copy --format v2s2 --all --src-no-creds \
+              --dest-creds $IIB_QUAY_USER:$IIB_QUAY_TOKEN \
+              docker://$SRC_IMAGE \
+              docker://$DEST_IMAGE
+
+            # Also copy with permanent tag if build_tags_suffix is set
+            if [[ "$(params.build_tags_suffix)" != "" ]]; then
+              DEST_IMAGE_PERMANENT="${DEST_IMAGE}-$(params.build_tags_suffix)"
+              echo "2. Permanent tag: copying $SRC_IMAGE to $DEST_IMAGE_PERMANENT"
+              skopeo copy --format v2s2 --all --src-no-creds \
+                --dest-creds $IIB_QUAY_USER:$IIB_QUAY_TOKEN \
+                docker://$SRC_IMAGE \
+                docker://$DEST_IMAGE_PERMANENT
+            fi
+          done
+        fi
