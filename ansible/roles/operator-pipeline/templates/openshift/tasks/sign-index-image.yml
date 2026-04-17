@@ -111,13 +111,15 @@ spec:
         for i in $DIGEST_LIST
         do
             PENDING_INDEX_WITH_VERSION=$(echo $i | awk -F '+' '{print $1}')
+            PENDING_INDEX=$(echo $PENDING_INDEX_WITH_VERSION | awk -F ':' '{print $1}')
             VERSION=$(echo $PENDING_INDEX_WITH_VERSION | awk -F ':' '{print $2}')
+            DIGEST_SHA=$(echo $i | awk -F '@' '{print $2}')
 
             REFERENCE="$(params.public_repository_mirror):${VERSION}"
 
-            DIGEST=$(echo $i | awk -F '+' '{print $2}')
+            PENDING_INDEX_WITH_DIGEST_SHA="${PENDING_INDEX}@${DIGEST_SHA}"
 
-            MANIFEST_LIST=$(skopeo inspect --retry-times 5 $SKOPEO_EXTRA_ARGS --raw docker://$DIGEST)
+            MANIFEST_LIST=$(skopeo inspect --retry-times 5 $SKOPEO_EXTRA_ARGS --raw docker://$PENDING_INDEX_WITH_DIGEST_SHA)
             MANIFEST_LIST=$(echo $MANIFEST_LIST | jq -r '.manifests[].digest')
 
             # create comma separated index images that match each digest
