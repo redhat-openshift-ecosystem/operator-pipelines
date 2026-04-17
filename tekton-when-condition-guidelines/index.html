@@ -19,7 +19,7 @@
     
     
       
-        <title>Preflight invalidation CronJob - Red Hat OpenShift Operators</title>
+        <title>Guidelines for Using Tekton when Conditions - Red Hat OpenShift Operators</title>
       
     
     
@@ -60,7 +60,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#preflight-invalidation-cronjob" class="md-skip">
+        <a href="#guidelines-for-using-tekton-when-conditions" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Preflight invalidation CronJob
+              Guidelines for Using Tekton when Conditions
             
           </span>
         </div>
@@ -1114,18 +1114,184 @@
   
 
 
-<h1 id="preflight-invalidation-cronjob">Preflight invalidation CronJob</h1>
-<p>The repository contains a CronJob that updates enabled preflight versions
-weekly. https://issues.redhat.com/browse/ISV-4964</p>
-<p>After changes, the CronJob can be deployed using Ansible.</p>
-<pre><code class="language-bash">ansible-playbook \
-    -i ansible/inventory/clusters \
-    -e &quot;clusters=prod-cluster&quot; \
-    -e &quot;ocp_token=[TOKEN]&quot; \
-    -e &quot;env=prod&quot; \
-    --vault-password-file [PWD_FILE] \
-    playbooks/preflight-invalidation.yml
+<h1 id="guidelines-for-using-tekton-when-conditions">Guidelines for Using Tekton <code>when</code> Conditions</h1>
+<p>This document defines when pipeline-level <code>when</code> conditions can and cannot be used in this
+project's Tekton pipelines. These rules exist because a skipped task still participates in the
+pipeline graph: its results become empty strings, <code>runAfter</code> dependents still execute, and any
+downstream task that consumes those empty results may silently misbehave or fail.</p>
+<hr />
+<h2 id="rules-at-a-glance">Rules at a Glance</h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Allowed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Task has no downstream dependents</td>
+<td>✅ Yes</td>
+</tr>
+<tr>
+<td><code>when</code> input is a pipeline parameter</td>
+<td>✅ Yes</td>
+</tr>
+<tr>
+<td><code>when</code> input is a task result, the source task cannot be skipped, AND the guarded task has no task results in its own params</td>
+<td>✅ Yes</td>
+</tr>
+<tr>
+<td><code>when</code> input is a task result AND the source task can itself be skipped</td>
+<td>❌ No</td>
+</tr>
+<tr>
+<td><code>when</code> input is a task result AND the guarded task also consumes task results in its params</td>
+<td>❌ No</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="rule-1-no-downstream-dependents">Rule 1 — No downstream dependents</h2>
+<p>A <code>when</code> condition is always safe when no other task depends on the guarded task's results or
+uses it in a <code>runAfter</code> chain. There is no cascading effect if the task is skipped.</p>
+<pre><code class="language-yaml"># Safe: nothing downstream reads this task's results
+- name: notify-slack
+  taskRef:
+    name: send-slack-notification
+  when:
+    - input: $(tasks.check.results.failed)
+      operator: in
+      values: [&quot;true&quot;]
+  params:
+    - name: message
+      value: &quot;Pipeline failed&quot;
 </code></pre>
+<hr />
+<h2 id="rule-2-when-input-is-a-pipeline-parameter">Rule 2 — <code>when</code> input is a pipeline parameter</h2>
+<p>Using a pipeline parameter as the <code>when</code> condition input is always safe. Pipeline parameters are
+resolved before any task runs and are guaranteed to be non-empty (or have a known default). No
+task result propagation is involved.</p>
+<pre><code class="language-yaml"># Safe: condition is a pipeline param, not a task result
+- name: publish-pyxis-data
+  taskRef:
+    name: publish-pyxis-data
+  when:
+    - input: $(params.cert_project_required)
+      operator: in
+      values: [&quot;true&quot;]
+  params:
+    - name: cert_project_id
+      value: $(params.cert_project_id)
+</code></pre>
+<hr />
+<h2 id="rule-3-when-input-is-a-task-result-source-task-cannot-be-skipped-guarded-task-has-no-task-results-in-params">Rule 3 — <code>when</code> input is a task result, source task cannot be skipped, guarded task has no task results in params</h2>
+<p>A task result can be used as a <code>when</code> condition input when <strong>all three</strong> of the following hold:</p>
+<ol>
+<li>The task that produces the result <strong>cannot itself be skipped</strong> — it has no <code>when</code> condition and
+   always runs. If the source task can be skipped, its result becomes an empty string, making the
+   <code>when</code> condition unreliable (it may silently evaluate as if the condition were false, with no
+   indication that the source task was skipped rather than producing a genuine empty value).</li>
+<li>The guarded task's own params <strong>contain no task results</strong> — all param values come from pipeline
+   parameters, literal strings, or workspace references.</li>
+<li>Downstream tasks that receive the guarded task's results must already handle empty values (via
+   their own <code>when</code> conditions or inner script guards), since a skipped task's results become empty
+   strings.</li>
+</ol>
+<pre><code class="language-yaml"># NOT allowed: source task (some-upstream-task) has its own when condition and can be skipped.
+# If it is skipped, its result is &quot;&quot;, and the when condition below becomes meaningless.
+- name: some-upstream-task
+  when:
+    - input: $(params.flag)
+      operator: in
+      values: [&quot;true&quot;]
+  ...
+
+- name: guarded-task
+  when:
+    - input: $(tasks.some-upstream-task.results.value)  # ❌ source can be skipped
+      operator: notin
+      values: [&quot;&quot;]
+  ...
+</code></pre>
+<pre><code class="language-yaml"># Safe: when uses a task result, source task always runs (no when condition), guarded task
+# params are all pipeline params
+- name: link-pull-request-with-open-status
+  taskRef:
+    name: link-pull-request
+  when:
+    - input: $(tasks.get-ci-results.results.test_result_id)  # get-ci-results always runs ✓
+      operator: notin
+      values: [&quot;&quot;]
+  params:
+    - name: pipeline_image
+      value: $(params.pipeline_image)   # pipeline param — OK
+    - name: pyxis_url
+      value: $(params.pyxis_url)        # pipeline param — OK
+</code></pre>
+<hr />
+<h2 id="rule-4-when-input-is-a-task-result-guarded-task-also-consumes-task-results-in-params">Rule 4 — <code>when</code> input is a task result, guarded task also consumes task results in params ❌</h2>
+<p>This combination is <strong>not allowed</strong>. When the <code>when</code> condition is based on a task result and the
+guarded task also consumes task results in its own params, the pipeline can fail regardless of
+whether the <code>when</code> condition evaluates to true or false.</p>
+<p>The critical case: even when the <code>when</code> source task ran successfully and the condition evaluates
+to <strong>false</strong> (meaning the guarded task should be skipped), Tekton still resolves all param
+references before the skip takes effect. If any param references a task result from a skipped
+upstream task, the pipeline fails — the clean skip never happens.</p>
+<p>More generally, skipping the guarded task creates an ambiguous state in the result propagation
+chain:</p>
+<ol>
+<li>The upstream tasks that produced the param results ran and completed.</li>
+<li>The guarded task is skipped — those results are not consumed and not transformed.</li>
+<li>Any downstream task expecting the guarded task's output receives empty strings, with no clear
+   signal about whether the skip was intentional.</li>
+</ol>
+<p>This makes the pipeline hard to reason about and can cause silent failures downstream.</p>
+<pre><code class="language-yaml"># NOT allowed: when uses a task result, AND params also reference task results
+- name: get-pyxis-certification-data
+  taskRef:
+    name: get-pyxis-certification-data
+  when:
+    - input: $(tasks.certification-project-check.results.certification_project_id)  # task result
+      operator: notin
+      values: [&quot;&quot;]
+  params:
+    - name: cert_project_id
+      value: $(tasks.certification-project-check.results.certification_project_id)  # also task result ❌
+    - name: pyxis_url
+      value: $(tasks.set-env.results.pyxis_url)                                     # also task result ❌
+</code></pre>
+<p><strong>How to fix this:</strong> instead, add an inner guard in the task script and rely on the task's own
+early-exit logic to handle the empty-input case, as was the established workaround pattern in
+this project.</p>
+<pre><code class="language-bash"># In the task script — guard against empty cert_project_id at the script level
+if [ &quot;$(params.cert_project_id)&quot; == &quot;&quot; ]; then
+  echo -n | tee &quot;$(results.foo.path)&quot;
+  exit 0
+fi
+</code></pre>
+<hr />
+<h2 id="summary-decision-tree">Summary Decision Tree</h2>
+<pre><code>Is the task being considered for a when condition?
+│
+├── Does it have no downstream dependents?
+│   └── YES → ✅ Use when condition freely
+│
+├── Is the when condition input a pipeline parameter?
+│   └── YES → ✅ Use when condition freely
+│
+└── Is the when condition input a task result?
+    │
+    ├── Can the source task itself be skipped (does it have a when condition)?
+    │   └── YES → ❌ Do NOT use when condition
+    │               Use an inner script guard (exit 0) instead
+    │
+    └── Does the guarded task's params contain any task results?
+        ├── NO  → ✅ Use when condition (self-contained skip)
+        └── YES → ❌ Do NOT use when condition
+                    Use an inner script guard (exit 0) instead
+</code></pre>
+<hr />
 
 
 
