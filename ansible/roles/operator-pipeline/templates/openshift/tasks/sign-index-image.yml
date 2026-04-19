@@ -106,6 +106,8 @@ spec:
         if [[ -f /tmp/registry-auth/config.json ]]; then
           echo "Registry auth file found. Using it for skopeo."
           SKOPEO_EXTRA_ARGS="--authfile /tmp/registry-auth/config.json"
+        else
+          echo "WARNING: No registry auth found. Skopeo will use no --authfile."
         fi
 
         DOCKER_REFERENCES=""
