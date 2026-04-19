@@ -12,7 +12,9 @@ spec:
     - name: public_repository_mirror
       description: |
         The public repository mirror where the index image becomes available.
+        Used by release pipeline to reference the public mirror in signatures.
         Example: registry.redhat.io/redhat/community-operator-index
+      default: ""
 
     # Signing configuration
     - name: requester
@@ -110,16 +112,22 @@ spec:
         MANIFEST_DIGESTS=""
         for i in $DIGEST_LIST
         do
-            PENDING_INDEX_WITH_VERSION=$(echo $i | awk -F '+' '{print $1}')
-            PENDING_INDEX=$(echo $PENDING_INDEX_WITH_VERSION | awk -F ':' '{print $1}')
-            VERSION=$(echo $PENDING_INDEX_WITH_VERSION | awk -F ':' '{print $2}')
+            INDEX_WITH_VERSION=$(echo $i | awk -F '+' '{print $1}')
+            INDEX=$(echo $INDEX_WITH_VERSION | awk -F ':' '{print $1}')
+            VERSION=$(echo $INDEX_WITH_VERSION | awk -F ':' '{print $2}')
             DIGEST_SHA=$(echo $i | awk -F '@' '{print $2}')
 
-            REFERENCE="$(params.public_repository_mirror):${VERSION}"
+            if [[ -n "$(params.public_repository_mirror)" ]]; then
+              # release pipeline
+              INSPECT_TARGET="${INDEX}@${DIGEST_SHA}" # pending repository
+              REFERENCE="$(params.public_repository_mirror):${VERSION}"
+            else
+              # index image bootstrap signing pipeline
+              INSPECT_TARGET="${INDEX_WITH_VERSION}" # public repository mirror
+              REFERENCE="${INDEX_WITH_VERSION}"
+            fi
 
-            PENDING_INDEX_WITH_DIGEST_SHA="${PENDING_INDEX}@${DIGEST_SHA}"
-
-            MANIFEST_LIST=$(skopeo inspect --retry-times 5 $SKOPEO_EXTRA_ARGS --raw docker://$PENDING_INDEX_WITH_DIGEST_SHA)
+            MANIFEST_LIST=$(skopeo inspect --retry-times 5 $SKOPEO_EXTRA_ARGS --raw docker://$INSPECT_TARGET)
             MANIFEST_LIST=$(echo $MANIFEST_LIST | jq -r '.manifests[].digest')
 
             # create comma separated index images that match each digest
