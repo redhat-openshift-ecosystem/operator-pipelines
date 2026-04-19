@@ -25,6 +25,7 @@ operator_pipeline_private_cert_local_path: ../../vaults/{{ env }}/operator-pipel
 
 operator_hosted_pipeline_registry_auth_path: ../../vaults/{{ env }}/registry-auth/hosted-pipeline.json
 operator_release_pipeline_registry_auth_pull_path: ../../vaults/{{ env }}/registry-auth/release-pipeline-pull.json
+operator_release_pipeline_registry_auth_pull_pending_path: ../../vaults/{{ env }}/registry-auth/release-pipeline-pull-pending.json
 operator_release_pipeline_registry_auth_push_path: ../../vaults/{{ env }}/registry-auth/release-pipeline-push.json
 operator_release_pipeline_registry_auth_serve_path: ../../vaults/{{ env }}/registry-auth/release-pipeline-serve.json
 

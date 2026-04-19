@@ -65,6 +65,9 @@ spec:
     - name: signing_pub_secret_key
       description: The key within the Kubernetes Secret that contains the public key for verifying signatures.
       default: sig-key.pub
+    - name: registry_pull_pending_secret_name
+      description: The name of the Kubernetes Secret that contains registry credentials for pulling from pending repositories.
+      default: release-pipeline-pull-pending-registry-auth
     - name: cert_project_required
       description: >-
         A flag determines whether a cert project identifier is required
@@ -607,6 +610,9 @@ spec:
           value: "$(params.signing_pub_secret_name)"
         - name: signing_pub_secret_key
           value: "$(params.signing_pub_secret_key)"
+
+        - name: registry_auth_secret_name
+          value: "$(params.registry_pull_pending_secret_name)"
       workspaces:
         - name: results
           workspace: results
