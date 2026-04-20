@@ -470,8 +470,8 @@ def release_bundle_to_fbc(args: argparse.Namespace, bundle: Bundle) -> None:
         template_channels = release_config_template["channels"]
         if default_channel and default_channel not in template_channels:
             raise ValueError(
-                f"defaultChannel '{default_channel}' not found in '{template_name}' "
-                f"channels: {template_channels}"
+                f"defaultChannel '{default_channel}' not found in '{template_name}'. "
+                f"Available channels: {template_channels}"
             )
         if not template_mapping:
             raise ValueError(

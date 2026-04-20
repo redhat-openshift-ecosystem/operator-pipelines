@@ -443,11 +443,13 @@ def test_release_bundle_to_fbc(
             },
         ]
     }
-    mock_catalog_mapping.side_effect = {
-        "template_name": "fake-template.yaml",
-        "catalog_names": ["v4.12-fake"],
-        "type": "olm.template.basic",
-    }
+    mock_catalog_mapping.side_effect = [
+        {
+            "template_name": "fake-template.yaml",
+            "catalog_names": ["v4.12-fake"],
+            "type": "olm.template.basic",
+        }
+    ]
     with pytest.raises(ValueError, match="defaultChannel 'stable' not found"):
         add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
 
