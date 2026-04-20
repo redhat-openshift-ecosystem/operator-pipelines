@@ -40,7 +40,7 @@
   until: >
     postgres_db_info.resources[0].status.readyReplicas is defined and
     postgres_db_info.resources[0].status.readyReplicas > 0
-  retries: 20
+  retries: 40
   delay: 3
 
 - name: Create a webhook dispatcher service account
@@ -80,5 +80,5 @@
     method: GET
   register: webhook_dispatcher_status
   until: webhook_dispatcher_status.status == 200
-  retries: 20
+  retries: 40
   delay: 3
