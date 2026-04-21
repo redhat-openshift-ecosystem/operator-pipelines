@@ -1247,12 +1247,15 @@ catalog_templates:
     replaces: aqua.0.0.1
   - template_name: semver.yaml
     channels: [Fast, Stable]
+    defaultChannel: Stable
 </code></pre>
 <p>The example above shows a release configuration where operator bundle is going to be
 released to the <code>my-channel</code> channel in the <code>basic.yaml</code> catalog template and to the
 <code>Fast</code> and <code>Stable</code> channels in the <code>semver.yaml</code> catalog template.</p>
 <p>The <code>replaces</code> field is optional and it specifies the bundle that the new bundle
 replaces in the update graph.</p>
+<p>The <code>defaultChannel</code> field is optional and it specifies which channel should be 
+the default for installing an operator.</p>
 <h3 id="file-structure">File structure</h3>
 <p>The schema of the file is available here: <a href="https://github.com/redhat-openshift-ecosystem/operator-pipelines/blob/main/operatorcert/schemas/release-config-schema.json">release-config.yaml schema</a>.
 The schema is validated automatically in the pipeline and the PR will fail with explanations if the file is not valid.</p>
@@ -1265,6 +1268,7 @@ The schema is validated automatically in the pipeline and the PR will fail with 
 <li>In case of using <code>SemVer</code> a user can pick from allowed values: <code>Fast</code>, <code>Stable</code> and <code>Candidate</code>.</li>
 </ul>
 </li>
+<li><code>defaultChannel</code> - the default channel for the operator package (<strong>Optional</strong>). If not specified, defaults to the first channel listed in the channels list.</li>
 <li><code>replaces</code> - the bundle that the new bundle replaces in the update graph. (<strong>Optional</strong>, only for the basic templates)</li>
 <li><code>skips</code> - a list of bundles that should be skipped in the update graph. (<strong>Optional</strong>, only for the basic templates)</li>
 <li><code>skipRange</code> - a range of bundles that should be skipped in the update graph. (<strong>Optional</strong>, only for the basic templates)</li>
