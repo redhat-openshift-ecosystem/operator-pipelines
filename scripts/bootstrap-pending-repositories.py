@@ -13,9 +13,9 @@ from operatorcert.operator_repo import Repo
 
 LOGGER = logging.getLogger(__name__)
 
+PYXIS_URL = "https://catalog.redhat.com/api/containers/"
 ENV_CONFIG = {
     "stage": {
-        "pyxis_url": "https://pyxis.stage.engineering.redhat.com/",
         "git_repositories": [
             "https://github.com/redhat-openshift-ecosystem/certified-operators-preprod.git",
             "https://github.com/redhat-openshift-ecosystem/community-operators-pipeline-preprod.git",
@@ -23,7 +23,6 @@ ENV_CONFIG = {
         ],
     },
     "prod": {
-        "pyxis_url": "https://catalog.redhat.com/api/containers/",
         "git_repositories": [
             "https://github.com/redhat-openshift-ecosystem/certified-operators.git",
             "https://github.com/redhat-openshift-ecosystem/community-operators-prod.git",
@@ -275,20 +274,6 @@ def setup_argparser() -> Any:
     """
     parser = argparse.ArgumentParser(
         description="Bootstrap pending repositories by copying index images from public repository mirrors",
-        epilog="""
-Setup required before running:
-
-Stage environment:
-  1. Export certificate paths for Pyxis authentication:
-     export PYXIS_CERT_PATH="/path/to/operator-pipeline.pem"
-     export PYXIS_KEY_PATH="/path/to/operator-pipeline.key"
-  2. In operatorcert/__init__.py, in function get_supported_indices():
-     Change auth_required=False to auth_required=True temporarily,
-     to allow for authenticated GET request.
-
-Prod environment:
-  No setup required.
-        """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
@@ -347,7 +332,7 @@ def main() -> None:
         LOGGER.info("[DRY RUN] No actual copying will occur")
 
     config = ENV_CONFIG[args.env]
-    pyxis_url = args.pyxis_url or config["pyxis_url"]
+    pyxis_url = args.pyxis_url or PYXIS_URL
     git_repositories = config["git_repositories"]
 
     LOGGER.info(f"Using env: {args.env}, Pyxis URL: {pyxis_url}")
