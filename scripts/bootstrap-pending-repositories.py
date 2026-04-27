@@ -5,14 +5,20 @@ import logging
 import os
 import subprocess
 import tempfile
+import time
+from datetime import datetime, timezone
 from subprocess import CalledProcessError
 from typing import Any, List, Optional, Tuple
 
+from kubernetes import client, config
 from operatorcert import ocp_version_info
 from operatorcert.operator_repo import Repo
 
 LOGGER = logging.getLogger(__name__)
 
+LEASE_RETRY_INTERVAL_SECONDS = 20
+LEASE_TIMEOUT_SECONDS = 3600
+LEASE_DURATION_SECONDS = 7200
 PYXIS_URL = "https://catalog.redhat.com/api/containers/"
 ENV_CONFIG = {
     "stage": {
@@ -138,6 +144,138 @@ def validate_image_access(image: str, authfile: Optional[str]) -> bool:
     return True
 
 
+def acquire_lease(
+    coordination_v1: client.CoordinationV1Api,
+    organization: str,
+    namespace: str,
+    lease_owner: str,
+    lease_duration_seconds: int,
+) -> None:
+    """
+    Acquire a lease for the given organization with retry logic
+
+    Args:
+        coordination_v1 (CoordinationV1Api): Kubernetes coordination API client
+        organization (str): Organization name (used as lease name)
+        namespace (str): OpenShift namespace
+        lease_owner (str): Unique identifier of the lease owner
+        lease_duration_seconds (int): Lease duration in seconds
+    """
+    lease_name = organization
+    start_time = datetime.now(timezone.utc)
+
+    LOGGER.info(f"Acquiring lease for {organization}")
+
+    while True:
+        elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
+        if elapsed > LEASE_TIMEOUT_SECONDS:
+            raise TimeoutError(
+                f"Timeout waiting for lease {lease_name} after {LEASE_TIMEOUT_SECONDS}s"
+            )
+
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        lease_body = client.V1Lease(
+            api_version="coordination.k8s.io/v1",
+            kind="Lease",
+            metadata=client.V1ObjectMeta(
+                name=lease_name, labels={"owner-id": lease_owner}
+            ),
+            spec=client.V1LeaseSpec(
+                acquire_time=now,
+                holder_identity=lease_name,
+                lease_duration_seconds=lease_duration_seconds,
+            ),
+        )
+
+        try:
+            coordination_v1.create_namespaced_lease(
+                namespace=namespace, body=lease_body
+            )
+            LOGGER.info(f"Acquired lease for {organization}")
+            break
+        except client.exceptions.ApiException as e:
+            if e.status == 409:
+                LOGGER.info(
+                    f"Lease for {organization} already exists, "
+                    f"waiting {LEASE_RETRY_INTERVAL_SECONDS}s before retry"
+                )
+                time.sleep(LEASE_RETRY_INTERVAL_SECONDS)
+            else:
+                raise
+
+
+def acquire_all_leases(
+    coordination_v1: client.CoordinationV1Api,
+    organizations: List[str],
+    namespace: str,
+    lease_owner: str,
+    lease_duration_seconds: int,
+) -> None:
+    """
+    Acquire leases for all organizations. If any acquisition fails, release
+    already acquired leases and raise the error.
+
+    After all leases are acquired, updates their acquire_time to the current
+    moment so they all expire at the same time (preventing early expiration
+    of leases acquired first).
+
+    Args:
+        coordination_v1 (CoordinationV1Api): Kubernetes coordination API client
+        organizations (List[str]): List of organization names
+        namespace (str): OpenShift namespace
+        lease_owner (str): Unique identifier of the lease owner
+        lease_duration_seconds (int): Lease duration in seconds
+    """
+    acquired_count = 0
+    try:
+        for org in organizations:
+            acquire_lease(
+                coordination_v1, org, namespace, lease_owner, lease_duration_seconds
+            )
+            acquired_count += 1
+
+        # update all lease acquire times to now so they expire together
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+        for org in organizations:
+            lease = coordination_v1.read_namespaced_lease(name=org, namespace=namespace)
+            lease.spec.acquire_time = now
+            coordination_v1.replace_namespaced_lease(
+                name=org, namespace=namespace, body=lease
+            )
+
+        LOGGER.info(f"Updated all {len(organizations)} leases to expire together")
+    except Exception:
+        if acquired_count > 0:
+            LOGGER.error(
+                f"Failed to acquire all leases (acquired {acquired_count}/{len(organizations)}), "
+                "releasing already acquired leases"
+            )
+            release_lease(coordination_v1, lease_owner, namespace)
+        raise
+
+
+def release_lease(
+    coordination_v1: client.CoordinationV1Api, lease_owner: str, namespace: str
+) -> None:
+    """
+    Release all leases owned by the given owner
+
+    Args:
+        coordination_v1 (CoordinationV1Api): Kubernetes coordination API client
+        lease_owner (str): Unique identifier of the lease owner
+        namespace (str): OpenShift namespace
+    """
+    LOGGER.info(f"Releasing leases for owner {lease_owner}")
+    try:
+        coordination_v1.delete_collection_namespaced_lease(
+            namespace=namespace, label_selector=f"owner-id={lease_owner}"
+        )
+        LOGGER.info("Released all leases")
+    except client.exceptions.ApiException as e:
+        LOGGER.warning(f"Error releasing leases: {e}")
+
+
 def clone_repository(git_url: str, temp_dir: str) -> str:
     """
     Clone a git repository to a temporary directory
@@ -162,7 +300,7 @@ def clone_repository(git_url: str, temp_dir: str) -> str:
 
 def collect_copy_pairs(
     git_repositories: List[str], pyxis_url: str
-) -> List[Tuple[str, str]]:
+) -> Tuple[List[Tuple[str, str]], List[str]]:
     """
     Collect all copy pairs from git repositories
 
@@ -171,15 +309,18 @@ def collect_copy_pairs(
         pyxis_url (str): Pyxis URL to query for supported OCP versions
 
     Returns:
-        List[Tuple[str, str]]: List of (source, destination) tuples
+        Tuple[List[Tuple[str, str]], List[str]]: (copy_pairs, organizations)
     """
     all_copy_pairs = []
+    organizations = []
 
     with tempfile.TemporaryDirectory() as temp_dir:
         for git_repo_url in git_repositories:
-            # clone repos to get config.yaml files used by ocp_version_info()
             local_repo_path = clone_repository(git_repo_url, temp_dir)
             repo = Repo(local_repo_path)
+
+            # get organization to use as a lease name
+            organizations.append(repo.config["organization"])
 
             version_info = ocp_version_info(
                 bundle_path=None, pyxis_url=pyxis_url, repo=repo
@@ -195,7 +336,7 @@ def collect_copy_pairs(
             for src, dest in zip(sources, destinations):
                 all_copy_pairs.append((src, dest))
 
-    return all_copy_pairs
+    return all_copy_pairs, organizations
 
 
 def perform_copies(
@@ -309,6 +450,12 @@ def setup_argparser() -> Any:
         "--dest-authfile",
         help="Path to destination authentication file (Docker config.json format)",
     )
+    parser.add_argument(
+        "--lease-duration",
+        type=int,
+        default=LEASE_DURATION_SECONDS,
+        help=f"Lease duration in seconds (default: {LEASE_DURATION_SECONDS})",
+    )
     return parser
 
 
@@ -331,13 +478,14 @@ def main() -> None:
     if args.dry_run:
         LOGGER.info("[DRY RUN] No actual copying will occur")
 
-    config = ENV_CONFIG[args.env]
+    env_config = ENV_CONFIG[args.env]
     pyxis_url = args.pyxis_url or PYXIS_URL
-    git_repositories = config["git_repositories"]
+    git_repositories = env_config["git_repositories"]
+    namespace = f"operator-pipeline-{args.env}"
 
     LOGGER.info(f"Using env: {args.env}, Pyxis URL: {pyxis_url}")
 
-    all_copy_pairs = collect_copy_pairs(git_repositories, pyxis_url)
+    all_copy_pairs, organizations = collect_copy_pairs(git_repositories, pyxis_url)
     if not all_copy_pairs:
         LOGGER.info("No copies to perform. No source + destination pairs found.")
         return
@@ -346,11 +494,9 @@ def main() -> None:
     for src, dest in all_copy_pairs:
         LOGGER.info(f"  {src} -> {dest}")
 
-    # try skopeo inspect on one source to ensure script has read access
     if not validate_image_access(all_copy_pairs[0][0], args.src_authfile):
         return
 
-    # ask user for explicit confirmation before performing the copy commands
     if not args.dry_run and not args.skip_confirmation:
         LOGGER.warning(
             "If you proceed, writing operations to destination repositories will be performed."
@@ -360,11 +506,33 @@ def main() -> None:
             LOGGER.info("Aborted by user")
             return
 
-    successful_copies, failed_copies = perform_copies(
-        all_copy_pairs, args.src_authfile, args.dest_authfile, args.dry_run
+    lease_owner = (
+        f"bootstrap-{args.env}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
     )
 
-    print_summary(successful_copies, failed_copies)
+    coordination_v1 = None
+    if not args.dry_run:
+        config.load_kube_config()
+        coordination_v1 = client.CoordinationV1Api()
+
+    try:
+        if not args.dry_run:
+            acquire_all_leases(
+                coordination_v1,
+                organizations,
+                namespace,
+                lease_owner,
+                args.lease_duration,
+            )
+
+        successful_copies, failed_copies = perform_copies(
+            all_copy_pairs, args.src_authfile, args.dest_authfile, args.dry_run
+        )
+
+        print_summary(successful_copies, failed_copies)
+    finally:
+        if not args.dry_run:
+            release_lease(coordination_v1, lease_owner, namespace)
 
 
 if __name__ == "__main__":
