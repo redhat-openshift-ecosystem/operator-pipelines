@@ -121,7 +121,7 @@ spec:
             SRC_IMAGE=$(echo $i | awk -F '+' '{print $2}')
             DEST_IMAGE=$(echo $i | awk -F '+' '{print $1}')
             echo "1. Version tag: copying $SRC_IMAGE to $DEST_IMAGE"
-            skopeo copy --format v2s2 --all --src-no-creds \
+            skopeo copy --retry-times 5 --format v2s2 --all --src-no-creds \
               --dest-creds $IIB_QUAY_USER:$IIB_QUAY_TOKEN \
               docker://$SRC_IMAGE \
               docker://$DEST_IMAGE
@@ -130,7 +130,7 @@ spec:
             if [[ "$(params.build_tags_suffix)" != "" ]]; then
               DEST_IMAGE_PERMANENT="${DEST_IMAGE}-$(params.build_tags_suffix)"
               echo "2. Permanent tag: copying $SRC_IMAGE to $DEST_IMAGE_PERMANENT"
-              skopeo copy --format v2s2 --all --src-no-creds \
+              skopeo copy --retry-times 5 --format v2s2 --all --src-no-creds \
                 --dest-creds $IIB_QUAY_USER:$IIB_QUAY_TOKEN \
                 docker://$SRC_IMAGE \
                 docker://$DEST_IMAGE_PERMANENT
@@ -193,7 +193,7 @@ spec:
             SRC_IMAGE=$(echo $i | awk -F '+' '{print $2}')
             DEST_IMAGE=$(echo $i | awk -F '+' '{print $1}')
             echo "1. Version tag: copying $SRC_IMAGE to $DEST_IMAGE"
-            skopeo copy --format v2s2 --all --src-no-creds \
+            skopeo copy --retry-times 5 --format v2s2 --all --src-no-creds \
               --dest-creds $IIB_QUAY_USER:$IIB_QUAY_TOKEN \
               docker://$SRC_IMAGE \
               docker://$DEST_IMAGE
@@ -202,7 +202,7 @@ spec:
             if [[ "$(params.build_tags_suffix)" != "" ]]; then
               DEST_IMAGE_PERMANENT="${DEST_IMAGE}-$(params.build_tags_suffix)"
               echo "2. Permanent tag: copying $SRC_IMAGE to $DEST_IMAGE_PERMANENT"
-              skopeo copy --format v2s2 --all --src-no-creds \
+              skopeo copy --retry-times 5 --format v2s2 --all --src-no-creds \
                 --dest-creds $IIB_QUAY_USER:$IIB_QUAY_TOKEN \
                 docker://$SRC_IMAGE \
                 docker://$DEST_IMAGE_PERMANENT
