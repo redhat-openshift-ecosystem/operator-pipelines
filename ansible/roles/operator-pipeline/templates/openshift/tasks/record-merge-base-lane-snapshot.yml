@@ -1,0 +1,51 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: record-merge-base-lane-snapshot
+spec:
+  description: |
+    Record upstream base OID and a fingerprint of operator/catalog paths on the base
+    branch clone for merge-time race detection (ISV-7093).
+  params:
+    - name: pipeline_image
+    - name: git_commit_base
+      description: OID of the base branch at pipeline start (matches clone-repository-base revision).
+    - name: added_bundle
+      description: >
+        From detect-changes; with added_or_modified_catalog_operators gates whether
+        the snapshot step runs the CLI.
+      default: ""
+    - name: operator_path
+      default: ""
+    - name: added_or_modified_catalog_operators
+      description: >
+        Comma-separated version/operator paths from detect-changes
+        (added_or_modified_catalog_operators).
+      default: ""
+  workspaces:
+    - name: base
+      description: Clone of the repo at git_commit_base (repository/subPath base).
+    - name: output
+      description: Writes snapshot.json (e.g. results workspace subPath merge-base-guard).
+  steps:
+    - name: record-snapshot
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.base.path)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        if [[ -z "$(params.added_bundle)$(params.added_or_modified_catalog_operators)" ]]; then
+          echo "No added bundle or modified catalog operators; skipping merge-base lane snapshot"
+          exit 0
+        fi
+
+        git config --global --add safe.directory "$(workspaces.base.path)"
+
+        merge-base-lane-fingerprint record \
+          --git-dir "$(workspaces.base.path)" \
+          --tree-ish "$(params.git_commit_base)" \
+          --operator-path "$(params.operator_path)" \
+          --added-or-modified-catalog-operators "$(params.added_or_modified_catalog_operators)" \
+          --output "$(workspaces.output.path)/snapshot.json"

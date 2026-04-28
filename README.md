@@ -142,6 +142,20 @@ To ignore the results of the publishing checklist, pass the following argument:
 There are some quay specific tasks for configuring the repositories where
 the bundle and index images are pushed.
 
+#### Merge base lane guard (ISV-7093)
+
+Before `gh pr merge`, the hosted pipeline can block the merge when the
+default branch has advanced **and** the operator/catalog paths touched by the
+PR changed on that branch since `git_commit_base` (file-level fingerprint via
+`git ls-tree`, not a second IIB or `opm` validation). The lane is
+`operator_path` plus each path from `added_or_modified_catalog_operators`
+(normalized to `catalogs/<ocp_version>/<operator>`), not whole OCP version
+trees under `catalogs/`. If the branch tip is
+unchanged, the check is a no-op. **Limitations:** guard step can prevent
+merge in situations with no conflict (e.g. handling different channels)
+making the process more restrictive. From user perspective hosted pipeline
+re-run will fix the guard issue.
+
 ### Operator Release Pipeline
 
 The release pipeline is responsible for releasing a bundle image which has passed certification.

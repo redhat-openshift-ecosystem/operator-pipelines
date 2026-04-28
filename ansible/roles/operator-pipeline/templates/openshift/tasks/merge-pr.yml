@@ -19,10 +19,37 @@ spec:
     - name: github_token_secret_key
       description: The key within the Kubernetes Secret that contains the GitHub token.
       default: token
+    - name: enable_merge_base_lane_guard
+      description: If true, run merge-base lane fingerprint check when snapshot.json exists.
+      default: "true"
+    - name: git_repo_url
+      description: Upstream git URL (same as clone-repository-base) for ls-remote/fetch.
+      default: ""
+    - name: git_base_branch
+      description: Target branch name (e.g. main).
+      default: ""
+    - name: userHome
+      description: >
+        HOME for git/SSH during merge-base guard; match git-clone / add-bundle-to-fbc
+        so optional ssh-directory and basic-auth workspaces are honored.
+      type: string
+      default: "/tekton/home"
   workspaces:
     - name: source
     - name: output
       description: Scratch space and storage for the comment and related data
+    - name: merge-base-guard
+      description: Snapshot from record-merge-base-lane-snapshot (snapshot.json).
+      optional: true
+    - name: ssh-directory
+      optional: true
+      description: >
+        Same as git-clone: .ssh with known_hosts and private key. Required for
+        merge-base-lane-fingerprint verify when git_repo_url uses SSH.
+    - name: basic-auth
+      optional: true
+      description: >
+        Same as git-clone: .gitconfig and .git-credentials for HTTPS git_repo_url.
   results:
     - name: bool_merge
     - name: pr_merged
@@ -47,11 +74,21 @@ spec:
     - name: merge-pull-request
       image: "$(params.pipeline_image)"
       env:
+        - name: HOME
+          value: "$(params.userHome)"
         - name: GITHUB_TOKEN
           valueFrom:
             secretKeyRef:
               name: $(params.github_token_secret_name)
               key: $(params.github_token_secret_key)
+        - name: WORKSPACE_SSH_DIRECTORY_BOUND
+          value: $(workspaces.ssh-directory.bound)
+        - name: WORKSPACE_SSH_DIRECTORY_PATH
+          value: $(workspaces.ssh-directory.path)
+        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND
+          value: $(workspaces.basic-auth.bound)
+        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_PATH
+          value: $(workspaces.basic-auth.path)
       script: |
         #! /usr/bin/env bash
         set -x +e
@@ -64,12 +101,51 @@ spec:
           exit 0
         fi
 
+        # Merge-base lane guard before approval so base-drift is visible even when PR is unapproved.
+        if [[ "$(params.enable_merge_base_lane_guard)" == "true" ]] \
+            && [[ "$(workspaces.merge-base-guard.bound)" == "true" ]] \
+            && [[ -f "$(workspaces.merge-base-guard.path)/snapshot.json" ]]; then
+            mkdir -p "${HOME}"
+            if [[ "${WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND}" == "true" ]]; then
+              cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.git-credentials" "${HOME}/.git-credentials"
+              cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.gitconfig" "${HOME}/.gitconfig"
+              chmod 400 "${HOME}/.git-credentials" "${HOME}/.gitconfig"
+            fi
+            if [[ "${WORKSPACE_SSH_DIRECTORY_BOUND}" == "true" ]]; then
+              cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" "${HOME}/.ssh"
+              chmod 700 "${HOME}/.ssh"
+              chmod -R 400 "${HOME}/.ssh"/*
+              eval "$(ssh-agent -s)"
+              for key in "${HOME}/.ssh/id_rsa" "${HOME}/.ssh/id_ed25519"; do
+                if [[ -f "${key}" ]]; then
+                  ssh-add "${key}"
+                fi
+              done
+            fi
+            git config --global --add safe.directory "$(workspaces.source.path)"
+            VERIFY_RC=0
+            merge-base-lane-fingerprint verify \
+              --git-dir "$(workspaces.source.path)" \
+              --git-repo-url "$(params.git_repo_url)" \
+              --git-base-branch "$(params.git_base_branch)" \
+              --snapshot-file "$(workspaces.merge-base-guard.path)/snapshot.json" \
+              || VERIFY_RC=$?
+            if [[ "$VERIFY_RC" -eq 10 ]]; then
+              MSG="The default branch changed for this operator or catalog since the pipeline started, so results may differ. "
+              MSG+="If those changes are related to this PR, sync with the latest base branch and re-run; if unrelated, restarting the hosted pipeline should be enough."
+              echo -n "$MSG" | tee "$(workspaces.output.path)/merge_error.txt"
+              echo -n "false" > "$(results.pr_merged.path)"
+              exit 0
+            elif [[ "$VERIFY_RC" -ne 0 ]]; then
+              echo "merge-base-lane-fingerprint verify failed (rc=$VERIFY_RC)"
+              exit 1
+            fi
+        fi
+
         # we are not using GH reviews for approval, so the only thing we need to check is the presence
         # of 'approved' label (added by reviewer through '/approve' comment or by the pipeline)
         gh pr view "$(params.git_pr_url)" --json labels >/tmp/pr.json
         IS_APPROVED=$(jq -r '[.labels[].name == "approved"] | any' /tmp/pr.json || echo "false")
-
-
         if [ "$IS_APPROVED" = "true" ]; then
             echo "PR is approved and can be merged"
         else
