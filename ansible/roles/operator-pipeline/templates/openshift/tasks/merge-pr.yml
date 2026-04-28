@@ -122,7 +122,10 @@ spec:
                 fi
               done
             fi
-            git config --global --add safe.directory "$(workspaces.source.path)"
+            # Inject safe.directory without mutating $HOME/.gitconfig (can be read-only from basic-auth).
+            export GIT_CONFIG_COUNT=1
+            export GIT_CONFIG_KEY_0=safe.directory
+            export GIT_CONFIG_VALUE_0="$(workspaces.source.path)"
             VERIFY_RC=0
             merge-base-lane-fingerprint verify \
               --git-dir "$(workspaces.source.path)" \
