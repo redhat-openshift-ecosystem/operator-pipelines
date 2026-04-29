@@ -321,6 +321,10 @@ spec:
           value: "$(params.pipeline_image)"
         - name: git_commit_base
           value: "$(params.git_commit_base)"
+        - name: git_repo_url
+          value: "$(params.git_repo_url)"
+        - name: git_base_branch
+          value: "$(params.git_base_branch)"
         - name: added_bundle
           value: "$(tasks.detect-changes.results.added_bundle)"
         - name: operator_path
@@ -334,6 +338,8 @@ spec:
         - name: output
           workspace: results
           subPath: merge-base-guard
+        - name: ssh-directory
+          workspace: ssh-dir
 
     - name: yaml-lint
       runAfter:

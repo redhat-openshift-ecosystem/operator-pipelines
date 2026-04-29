@@ -5,12 +5,20 @@ metadata:
   name: record-merge-base-lane-snapshot
 spec:
   description: |
-    Record upstream base OID and a fingerprint of operator/catalog paths on the base
-    branch clone for merge-time race detection (ISV-7093).
+    Record the live target-branch tip OID and a fingerprint of operator/catalog paths
+    for merge-time race detection (ISV-7093). Fingerprinting uses the live branch tip;
+    when that OID matches git_commit_base, the detect-changes base workspace clone is
+    reused; otherwise a shallow clone of git_repo_url at git_base_branch is created.
   params:
     - name: pipeline_image
     - name: git_commit_base
-      description: OID of the base branch at pipeline start (matches clone-repository-base revision).
+      description: >
+        OID of the base branch used for detect-changes (clone-repository-base revision).
+        Logged for traceability only; snapshot fingerprint uses live target tip.
+    - name: git_repo_url
+      description: Upstream repository URL (same as clone-repository-base) for tip clone.
+    - name: git_base_branch
+      description: Target branch name (e.g. main) to resolve live tip for fingerprinting.
     - name: added_bundle
       description: >
         From detect-changes; with added_or_modified_catalog_operators gates whether
@@ -23,15 +31,42 @@ spec:
         Comma-separated version/operator paths from detect-changes
         (added_or_modified_catalog_operators).
       default: ""
+    - name: userHome
+      description: >
+        HOME for git/SSH during tip clone; match merge-pr / git-clone so optional
+        ssh-directory and basic-auth workspaces are honored.
+      type: string
+      default: "/tekton/home"
   workspaces:
     - name: base
-      description: Clone of the repo at git_commit_base (repository/subPath base).
+      description: >
+        Clone of the repo at git_commit_base (detect-changes). Reused for fingerprinting
+        when the live remote tip still matches git_commit_base (no second clone).
     - name: output
-      description: Writes snapshot.json (e.g. results workspace subPath merge-base-guard).
+      description: Writes snapshot.json and ephemeral tip clone (e.g. results/merge-base-guard).
+    - name: ssh-directory
+      optional: true
+      description: >
+        Same as git-clone / merge-pr. Required for SSH git_repo_url when cloning target tip.
+    - name: basic-auth
+      optional: true
+      description: >
+        Same as git-clone / merge-pr. Optional .gitconfig and .git-credentials for HTTPS.
   steps:
     - name: record-snapshot
       image: "$(params.pipeline_image)"
-      workingDir: $(workspaces.base.path)
+      workingDir: $(workspaces.output.path)
+      env:
+        - name: HOME
+          value: "$(params.userHome)"
+        - name: WORKSPACE_SSH_DIRECTORY_BOUND
+          value: $(workspaces.ssh-directory.bound)
+        - name: WORKSPACE_SSH_DIRECTORY_PATH
+          value: $(workspaces.ssh-directory.path)
+        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND
+          value: $(workspaces.basic-auth.bound)
+        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_PATH
+          value: $(workspaces.basic-auth.path)
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -41,11 +76,69 @@ spec:
           exit 0
         fi
 
-        git config --global --add safe.directory "$(workspaces.base.path)"
+        if [[ -z "$(params.git_repo_url)" || -z "$(params.git_base_branch)" ]]; then
+          echo "ERROR: git_repo_url and git_base_branch are required for merge-base lane snapshot"
+          exit 1
+        fi
+
+        mkdir -p "${HOME}"
+        if [[ "${WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND}" == "true" ]]; then
+          cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.git-credentials" "${HOME}/.git-credentials"
+          cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.gitconfig" "${HOME}/.gitconfig"
+          chmod 400 "${HOME}/.git-credentials" "${HOME}/.gitconfig"
+        fi
+        if [[ "${WORKSPACE_SSH_DIRECTORY_BOUND}" == "true" ]]; then
+          cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" "${HOME}/.ssh"
+          chmod 700 "${HOME}/.ssh"
+          chmod -R 400 "${HOME}/.ssh"/*
+          eval "$(ssh-agent -s)"
+          for key in "${HOME}/.ssh/id_rsa" "${HOME}/.ssh/id_ed25519"; do
+            if [[ -f "${key}" ]]; then
+              ssh-add "${key}"
+            fi
+          done
+        fi
+
+        BASE_CLONE="$(workspaces.base.path)"
+        TIP_CLONE="$(workspaces.output.path)/tip-clone"
+
+        REMOTE_URL="$(params.git_repo_url)"
+        if [[ "${REMOTE_URL}" == git@* ]] || [[ "${REMOTE_URL}" == ssh://* ]]; then
+          export GIT_SSH_COMMAND="ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
+        fi
+
+        TIP_REF="refs/heads/$(params.git_base_branch)"
+        TIP_OID_REMOTE="$(git ls-remote "${REMOTE_URL}" "${TIP_REF}" | awk '{print $1; exit}')"
+        if [[ -z "${TIP_OID_REMOTE}" ]]; then
+          echo "ERROR: could not resolve ${TIP_REF} on remote"
+          exit 1
+        fi
+
+        # shared git config no matter which base used
+        export GIT_CONFIG_COUNT=1
+        export GIT_CONFIG_KEY_0=safe.directory
+
+        if [[ "${TIP_OID_REMOTE}" == "$(params.git_commit_base)" ]]; then
+          echo "Live target tip matches git_commit_base; reusing base workspace clone."
+          rm -rf "${TIP_CLONE}"
+          TIP_CLONE="${BASE_CLONE}"
+          TIP_OID="${TIP_OID_REMOTE}"
+          # safe.directory for base workspace (merge-base-lane-fingerprint); env only, no $HOME writes.
+          export GIT_CONFIG_VALUE_0="${TIP_CLONE}"
+        else
+          rm -rf "${TIP_CLONE}"
+          # safe.directory before git -C on the new clone (ownership vs step user).
+          export GIT_CONFIG_VALUE_0="${TIP_CLONE}"
+          git clone --depth 1 -b "$(params.git_base_branch)" "${REMOTE_URL}" "${TIP_CLONE}"
+          TIP_OID="$(git -C "${TIP_CLONE}" rev-parse HEAD)"
+        fi
+
+        echo "detect-changes base OID (reference): $(params.git_commit_base)"
+        echo "merge-base lane snapshot at live target tip: ${TIP_OID}"
 
         merge-base-lane-fingerprint record \
-          --git-dir "$(workspaces.base.path)" \
-          --tree-ish "$(params.git_commit_base)" \
+          --git-dir "${TIP_CLONE}" \
+          --tree-ish "${TIP_OID}" \
           --operator-path "$(params.operator_path)" \
           --added-or-modified-catalog-operators "$(params.added_or_modified_catalog_operators)" \
           --output "$(workspaces.output.path)/snapshot.json"
