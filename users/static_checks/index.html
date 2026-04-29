@@ -874,7 +874,8 @@ a loop in the graph.</p>
 <p>The test aims to verify if a bundle referenced by the <code>replaces</code> value is available in all
 catalog version where the given bundle is going to be released to. The list of
 catalog version is determined by the <code>com.redhat.openshift.versions</code> annotation if present.
-If the annotation is not present the bundle targets all supported ocp version.</p>
+If the annotation is not present the bundle targets all supported ocp version.
+It also check that specified bundle version exists in operator directory structure.</p>
 <p>To fix the issue either change a range of versions where a bundle is going to be
 released by updating the annotation or change the <code>replaces</code> value.</p>
 <h4 id="check_operator_name_unique">check_operator_name_unique</h4>
