@@ -93,7 +93,7 @@ spec:
         status=$(cat payload.json | grep -oP "Status: (?=\*).\K.*(?=\*)")
 
         # Skip notifications for operator-hosted-pipeline and passed pipelines
-        if cat payload.json | grep -oP "PipelineRun: operator-hosted-pipeline*" > /dev/null || [ "$status" != "Failed" ];
+        if cat payload.json | grep -oP "PipelineRun: operator-hosted-pipeline*" > /dev/null || [[ "$status" != "Failed" && "$status" != "PipelineRunTimeout" && "$status" != "TaskRunCancelled" ]];
         then
           echo "Skipping Slack notification"
         else

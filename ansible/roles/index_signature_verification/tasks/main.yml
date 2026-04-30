@@ -95,7 +95,7 @@
               generateName: index-signature-verification-pipeline-run-
             spec:
               timeouts:
-                pipeline: 30m
+                pipeline: 90m
               pipelineRef:
                 name: index-signature-verification-pipeline
               workspaces:
@@ -131,7 +131,7 @@
       metadata:
         name: index-signature-verification-scheduler
       spec:
-        schedule: "0 * * * *"
+        schedule: "0 */2 * * *"
         jobTemplate:
           spec:
             template:
