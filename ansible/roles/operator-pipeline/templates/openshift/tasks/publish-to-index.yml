@@ -92,7 +92,8 @@ spec:
             docker://$DEST_REPO_WITH_PERMANENT_TAG
 
           # Save data about updated indices to volume
-          echo "- \`$(params.public_repository_mirror):${VERSION}\` (stable tag: \`${VERSION}-${SUFFIX}\`)" | tee -a "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
+          # Use printf with single quotes to avoid backtick escaping issues in YAML/Tekton context, which differs from normal shell.
+          printf -- '- `%s:%s` (stable tag: `%s-%s`)\n' "$(params.public_repository_mirror)" "${VERSION}" "${VERSION}" "${SUFFIX}" | tee -a "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
         done
 
         sort -o "$RELEASE_INFO_DIR_PATH/updated_indices.txt" "$RELEASE_INFO_DIR_PATH/updated_indices.txt"
