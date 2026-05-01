@@ -2,7 +2,7 @@
   "title": "ci.yaml validation schema",
   "description": "json schema validating the ci.yaml",
   "type": "object",
-  "additionaProperties": true,
+  "additionalProperties": true,
   "properties": {
     "updateGraph": {
       "description": "Name of the update strategy for the operator",
@@ -36,6 +36,15 @@
         "enabled": {
           "description": "Flag that determines whether the operator uses FBC delivery method",
           "type": "boolean"
+        },
+        "version_promotion_strategy": {
+          "description": "Strategy for promoting the operator into a next OCP version",
+          "type": "string",
+          "enum": [
+            "review-needed",
+            "always",
+            "never"
+          ]
         },
         "catalog_mapping": {
           "description": "Catalog Mapping according to provided templates types",
