@@ -34,7 +34,7 @@ spec:
     - name: userHome
       description: >
         HOME for git/SSH during tip clone; match merge-pr / git-clone so optional
-        ssh-directory and basic-auth workspaces are honored.
+        ssh-directory workspace is honored.
       type: string
       default: "/tekton/home"
   workspaces:
@@ -48,10 +48,6 @@ spec:
       optional: true
       description: >
         Same as git-clone / merge-pr. Required for SSH git_repo_url when cloning target tip.
-    - name: basic-auth
-      optional: true
-      description: >
-        Same as git-clone / merge-pr. Optional .gitconfig and .git-credentials for HTTPS.
   steps:
     - name: record-snapshot
       image: "$(params.pipeline_image)"
@@ -63,10 +59,6 @@ spec:
           value: $(workspaces.ssh-directory.bound)
         - name: WORKSPACE_SSH_DIRECTORY_PATH
           value: $(workspaces.ssh-directory.path)
-        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND
-          value: $(workspaces.basic-auth.bound)
-        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_PATH
-          value: $(workspaces.basic-auth.path)
       script: |
         #! /usr/bin/env bash
         set -xe
@@ -82,11 +74,6 @@ spec:
         fi
 
         mkdir -p "${HOME}"
-        if [[ "${WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND}" == "true" ]]; then
-          cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.git-credentials" "${HOME}/.git-credentials"
-          cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.gitconfig" "${HOME}/.gitconfig"
-          chmod 400 "${HOME}/.git-credentials" "${HOME}/.gitconfig"
-        fi
         if [[ "${WORKSPACE_SSH_DIRECTORY_BOUND}" == "true" ]]; then
           cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" "${HOME}/.ssh"
           chmod 700 "${HOME}/.ssh"

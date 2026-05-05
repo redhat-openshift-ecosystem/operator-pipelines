@@ -31,7 +31,7 @@ spec:
     - name: userHome
       description: >
         HOME for git/SSH during merge-base guard; match git-clone / add-bundle-to-fbc
-        so optional ssh-directory and basic-auth workspaces are honored.
+        so optional ssh-directory workspace is honored.
       type: string
       default: "/tekton/home"
   workspaces:
@@ -46,10 +46,6 @@ spec:
       description: >
         Same as git-clone: .ssh with known_hosts and private key. Required for
         merge-base-lane-fingerprint verify when git_repo_url uses SSH.
-    - name: basic-auth
-      optional: true
-      description: >
-        Same as git-clone: .gitconfig and .git-credentials for HTTPS git_repo_url.
   results:
     - name: bool_merge
     - name: pr_merged
@@ -85,10 +81,6 @@ spec:
           value: $(workspaces.ssh-directory.bound)
         - name: WORKSPACE_SSH_DIRECTORY_PATH
           value: $(workspaces.ssh-directory.path)
-        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND
-          value: $(workspaces.basic-auth.bound)
-        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_PATH
-          value: $(workspaces.basic-auth.path)
       script: |
         #! /usr/bin/env bash
         set -x +e
@@ -106,11 +98,6 @@ spec:
             && [[ "$(workspaces.merge-base-guard.bound)" == "true" ]] \
             && [[ -f "$(workspaces.merge-base-guard.path)/snapshot.json" ]]; then
             mkdir -p "${HOME}"
-            if [[ "${WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND}" == "true" ]]; then
-              cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.git-credentials" "${HOME}/.git-credentials"
-              cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.gitconfig" "${HOME}/.gitconfig"
-              chmod 400 "${HOME}/.git-credentials" "${HOME}/.gitconfig"
-            fi
             if [[ "${WORKSPACE_SSH_DIRECTORY_BOUND}" == "true" ]]; then
               cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" "${HOME}/.ssh"
               chmod 700 "${HOME}/.ssh"
@@ -122,7 +109,7 @@ spec:
                 fi
               done
             fi
-            # Inject safe.directory without mutating $HOME/.gitconfig (can be read-only from basic-auth).
+            # Inject safe.directory without mutating $HOME/.gitconfig.
             export GIT_CONFIG_COUNT=1
             export GIT_CONFIG_KEY_0=safe.directory
             export GIT_CONFIG_VALUE_0="$(workspaces.source.path)"
@@ -134,10 +121,10 @@ spec:
               --snapshot-file "$(workspaces.merge-base-guard.path)/snapshot.json" \
               || VERIFY_RC=$?
             if [[ "$VERIFY_RC" -eq 10 ]]; then
-              MSG="The target branch moved after this run recorded its merge-guard snapshot, "
-              MSG+="and operator or catalog paths in the guard lane changed at the new tip. "
-              MSG+="Restart the pipeline if your change still fits the current base, or rebase or merge "
-              MSG+="the latest target branch into your PR and re-run for a fresher baseline—use whichever fits your case."
+              MSG="The target branch advanced and the same operator/catalog directories were modified "
+              MSG+="there since this pipeline run began. That creates a possible race between what we tested "
+              MSG+="and what would be merged. Re-run the pipeline to validate with the new context "
+              MSG+="or update/rebase you PR to reflect the current state of the target branch."
               echo -n "$MSG" | tee "$(workspaces.output.path)/merge_error.txt"
               echo -n "false" > "$(results.pr_merged.path)"
               exit 0
