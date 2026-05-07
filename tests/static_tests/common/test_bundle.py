@@ -804,6 +804,19 @@ def test_check_operator_version_directory_name(
             },
             id="Nonexistent replaces version",
         ),
+        pytest.param(
+            None,
+            None,
+            "hello.v0.0.2",
+            [],
+            {
+                Fail(
+                    "Bundle(hello/0.0.2) attempts to replace itself. Please set "
+                    "'spec.replaces' field to a different version in the CSV."
+                )
+            },
+            id="Bundle attempts to replace itself",
+        ),
     ],
 )
 @patch("operatorcert.static_tests.common.bundle.utils.get_ocp_supported_versions")
