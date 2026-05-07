@@ -16,12 +16,18 @@ _UNSAFE_PATH = re.compile(r"(^|/)\.\.(/|$)")
 
 def _git_global_args_for_ssh_remote(remote_url: str) -> list[str]:
     """
-    Extra `git -c ...` options so SSH matches Tekton git-clone (git-init) behavior.
+    Build optional git config args for SSH remotes.
 
-    git-init uses StrictHostKeyChecking=accept-new, so clone works when the
-    ssh-directory secret has a key but no known_hosts. Plain `git ls-remote` /
-    `git fetch` in the pipeline image use OpenSSH defaults and fail with
-    "Host key verification failed" in that setup.
+    Adds `git -c ...` options so SSH behavior matches Tekton git-init. This
+    keeps host key checking compatible with setups where the ssh-directory
+    secret has keys but no `known_hosts` file.
+
+    Args:
+        remote_url (str): Git remote URL.
+
+    Returns:
+        list[str]: Extra arguments for a git command, or an empty list for
+            non-SSH remotes.
     """
     u = remote_url.strip()
     if u.startswith("git@") or u.startswith("ssh://"):
@@ -33,7 +39,15 @@ def _git_global_args_for_ssh_remote(remote_url: str) -> list[str]:
 
 
 def split_csv(value: str) -> list[str]:
-    """Split comma-separated Tekton params into stripped non-empty segments."""
+    """
+    Split a comma-separated value into normalized segments.
+
+    Args:
+        value (str): Comma-separated text.
+
+    Returns:
+        list[str]: Non-empty, whitespace-trimmed segments.
+    """
     if not value or not value.strip():
         return []
     return [p.strip() for p in value.split(",") if p.strip()]
@@ -41,11 +55,20 @@ def split_csv(value: str) -> list[str]:
 
 def catalog_operator_segment_to_repo_path(segment: str) -> str:
     """
-    Map detect-changes catalog operator segments to repo-root-relative paths.
+    Map a detect-changes catalog segment to a repo-relative path.
 
-    `detect-changed-operators` emits `version/operator` (e.g. `v4.14/foo`)
-    without the `catalogs/` prefix. Entries may also already be under
-    `catalogs/...` in which case they are normalized as-is.
+    `detect-changed-operators` emits `version/operator` values (for example
+    `v4.14/foo`) without a `catalogs/` prefix. Inputs already under
+    `catalogs/...` are normalized and returned as-is.
+
+    Args:
+        segment (str): Catalog operator segment.
+
+    Returns:
+        str: Normalized path under `catalogs/`.
+
+    Raises:
+        ValueError: If the segment is empty, absolute, unsafe, or malformed.
     """
     s = segment.strip()
     if not s:
@@ -71,10 +94,22 @@ def build_lane_paths(
     operator_path: str, added_or_modified_catalog_operators: str
 ) -> list[str]:
     """
-    Union and de-duplicate path prefixes that define the merge guard lane on the base tree.
+    Build sorted unique path prefixes for the merge guard lane.
 
-    Uses `operator_path` (`operators/...`) and `added_or_modified_catalog_operators`
-    from detect-changes (comma-separated `version/operator` or `catalogs/...`).
+    Combines `operator_path` (`operators/...`) and
+    `added_or_modified_catalog_operators` from detect-changes
+    (comma-separated `version/operator` or `catalogs/...`).
+
+    Args:
+        operator_path (str): Operator path reported by detect-changes.
+        added_or_modified_catalog_operators (str): Comma-separated catalog
+            operator segments from detect-changes.
+
+    Returns:
+        list[str]: Sorted, de-duplicated lane paths.
+
+    Raises:
+        ValueError: If any resolved path is unsafe.
     """
     paths: set[str] = set()
 
@@ -102,7 +137,18 @@ def build_lane_paths(
 
 def git_ls_tree_lines(git_dir: Path, tree_ish: str, paths: Sequence[str]) -> list[str]:
     """
-    Return sorted lines from `git ls-tree -r` for the given paths (stable fingerprint input).
+    Return sorted `git ls-tree -r` output lines for selected paths.
+
+    Args:
+        git_dir (Path): Repository directory.
+        tree_ish (str): Commit, ref, or tree expression to inspect.
+        paths (Sequence[str]): Path prefixes to include.
+
+    Returns:
+        list[str]: Sorted non-empty `git ls-tree` lines.
+
+    Raises:
+        RuntimeError: If `git ls-tree` fails.
     """
     if not paths:
         return []
@@ -125,7 +171,15 @@ def git_ls_tree_lines(git_dir: Path, tree_ish: str, paths: Sequence[str]) -> lis
 
 def fingerprint_lane(git_dir: Path, tree_ish: str, paths: Sequence[str]) -> str:
     """
-    SHA256 hex digest of canonical ls-tree output for paths at tree_ish.
+    Compute a SHA256 fingerprint for the lane paths at a tree-ish.
+
+    Args:
+        git_dir (Path): Repository directory.
+        tree_ish (str): Commit, ref, or tree expression to fingerprint.
+        paths (Sequence[str]): Path prefixes that define the lane.
+
+    Returns:
+        str: Hex-encoded SHA256 digest of canonical `git ls-tree` output.
     """
     lines = git_ls_tree_lines(git_dir, tree_ish, paths)
     blob = "\n".join(lines).encode("utf-8")
@@ -134,14 +188,24 @@ def fingerprint_lane(git_dir: Path, tree_ish: str, paths: Sequence[str]) -> str:
 
 def git_ls_remote_tip(remote_url: str, branch: str) -> str:
     """
-    Resolve refs/heads/<branch> OID via `git ls-remote`.
+    Resolve the current object ID for a remote branch tip.
 
-    Uses the current process environment (`HOME`, `SSH_AUTH_SOCK`, etc.).
-    For SSH `remote_url` values, callers must install the same credentials as
-    `git-clone` (for example Tekton `ssh-directory` copied to `$HOME/.ssh`)
-    before invoking the CLI. SSH host-key handling matches Tekton git-init
-    (`StrictHostKeyChecking=accept-new`) so missing `known_hosts` in the secret
-    does not break verify after a successful clone.
+    Uses `git ls-remote` against `refs/heads/<branch>` in the current process
+    environment (`HOME`, `SSH_AUTH_SOCK`, and related settings).
+
+    For SSH remotes, callers must provide credentials equivalent to the clone
+    step (for example Tekton `ssh-directory` copied to `$HOME/.ssh`). SSH host
+    key handling mirrors Tekton git-init (`StrictHostKeyChecking=accept-new`).
+
+    Args:
+        remote_url (str): Git remote URL.
+        branch (str): Branch name.
+
+    Returns:
+        str: Object ID for `refs/heads/<branch>`.
+
+    Raises:
+        RuntimeError: If `git ls-remote` fails or the branch ref is missing.
     """
     ref = f"refs/heads/{branch}"
     cmd = [
@@ -173,10 +237,40 @@ def git_fetch_branch_tip(
     git_dir: Path, remote_name: str, remote_url: str, branch: str, local_ref: str
 ) -> None:
     """
-    Shallow-fetch branch tip from `remote_url` into `local_ref`.
+    Shallow-fetch a remote branch tip into a local ref.
 
-    Same SSH/HTTPS credential requirements as :func:`git_ls_remote_tip`.
+    This uses the same SSH/HTTPS credential requirements as
+    `git_ls_remote_tip()`.
+
+    Args:
+        git_dir (Path): Repository directory.
+        remote_name (str): Temporary remote name to create.
+        remote_url (str): Git remote URL.
+        branch (str): Branch name to fetch.
+        local_ref (str): Destination local ref.
+
+    Raises:
+        RuntimeError: If remote add or fetch fails.
     """
+    git_dir.mkdir(parents=True, exist_ok=True)
+    probe = subprocess.run(
+        ["git", "-C", str(git_dir), "rev-parse", "--git-dir"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if probe.returncode != 0:
+        init = subprocess.run(
+            ["git", "init", str(git_dir)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if init.returncode != 0:
+            raise RuntimeError(
+                f"git init failed ({init.returncode}): "
+                f"{init.stderr.strip() or init.stdout.strip()}"
+            )
     # remove the local remote if it exists
     subprocess.run(
         ["git", "-C", str(git_dir), "remote", "remove", remote_name],
@@ -221,13 +315,27 @@ def git_fetch_branch_tip(
 
 
 def load_snapshot(path: Path) -> Any:
-    """Load a snapshot from a file."""
+    """
+    Load a snapshot JSON file.
+
+    Args:
+        path (Path): Snapshot file path.
+
+    Returns:
+        Any: Parsed JSON snapshot data.
+    """
     with path.open(encoding="utf-8") as f:
         return json.load(f)
 
 
 def write_snapshot(path: Path, data: dict[str, Any]) -> None:
-    """Write a snapshot to a file."""
+    """
+    Write snapshot data to a JSON file.
+
+    Args:
+        path (Path): Output snapshot path.
+        data (dict[str, Any]): Snapshot payload to serialize.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, sort_keys=True)
@@ -241,7 +349,17 @@ def record_snapshot(
     added_or_modified_catalog_operators: str,
     output: Path,
 ) -> None:
-    """Record a snapshot of the merge-base lane fingerprint."""
+    """
+    Record a snapshot of the merge-base lane fingerprint.
+
+    Args:
+        git_dir (Path): Repository directory.
+        tree_ish (str): Commit or ref used as the base snapshot point.
+        operator_path (str): Operator path from detect-changes.
+        added_or_modified_catalog_operators (str): Comma-separated catalog
+            operator segments from detect-changes.
+        output (Path): Snapshot JSON output path.
+    """
     paths = build_lane_paths(operator_path, added_or_modified_catalog_operators)
     if not paths:
         write_snapshot(
@@ -275,11 +393,26 @@ def verify_snapshot(
     snapshot_file: Path,
 ) -> int:
     """
-    Returns 0 if merge is allowed, EXIT_LANE_MISMATCH if lane changed on base, 1 on error.
+    Verify snapshot validity against the current base branch lane.
 
-    When `remote_url` is not reachable from the local clone alone, `git ls-remote` /
-    `git fetch` run in the process environment; configure git credentials accordingly
-    (see :func:`git_ls_remote_tip`).
+    Returns 0 if merge is allowed, `EXIT_LANE_MISMATCH` if the lane changed on
+    the base branch, and 1 when verification fails.
+
+    If `remote_url` is not reachable from clone-local configuration alone,
+    configure git credentials in the process environment as required by
+    `git_ls_remote_tip()`.
+
+    Args:
+        git_dir (Path): Repository directory.
+        remote_url (str): Upstream repository URL.
+        branch (str): Base branch name.
+        snapshot_file (Path): Snapshot JSON path written during record.
+
+    Returns:
+        int: Verification status code.
+
+    Raises:
+        ValueError: If snapshot content is structurally invalid.
     """
     try:
         snap = load_snapshot(snapshot_file)

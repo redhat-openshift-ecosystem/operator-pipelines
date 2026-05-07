@@ -69,6 +69,9 @@ spec:
 
     - name: merge-pull-request
       image: "$(params.pipeline_image)"
+      volumeMounts:
+        - name: merge-guard-git-scratch
+          mountPath: /tmp/merge-guard-git
       env:
         - name: HOME
           value: "$(params.userHome)"
@@ -97,6 +100,8 @@ spec:
         if [[ "$(params.enable_merge_base_lane_guard)" == "true" ]] \
             && [[ "$(workspaces.merge-base-guard.bound)" == "true" ]] \
             && [[ -f "$(workspaces.merge-base-guard.path)/snapshot.json" ]]; then
+            SCRATCH_GIT_DIR="/tmp/merge-guard-git/repo"
+            rm -rf "${SCRATCH_GIT_DIR}"
             mkdir -p "${HOME}"
             if [[ "${WORKSPACE_SSH_DIRECTORY_BOUND}" == "true" ]]; then
               cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" "${HOME}/.ssh"
@@ -112,10 +117,10 @@ spec:
             # Inject safe.directory without mutating $HOME/.gitconfig.
             export GIT_CONFIG_COUNT=1
             export GIT_CONFIG_KEY_0=safe.directory
-            export GIT_CONFIG_VALUE_0="$(workspaces.source.path)"
+            export GIT_CONFIG_VALUE_0="${SCRATCH_GIT_DIR}"
             VERIFY_RC=0
             merge-base-lane-fingerprint verify \
-              --git-dir "$(workspaces.source.path)" \
+              --git-dir "${SCRATCH_GIT_DIR}" \
               --git-repo-url "$(params.git_repo_url)" \
               --git-base-branch "$(params.git_base_branch)" \
               --snapshot-file "$(workspaces.merge-base-guard.path)/snapshot.json" \
@@ -170,3 +175,6 @@ spec:
               exit 1
             fi
         fi
+  volumes:
+    - name: merge-guard-git-scratch
+      emptyDir: {}

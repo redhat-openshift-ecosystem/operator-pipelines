@@ -43,7 +43,7 @@ spec:
         Clone of the repo at git_commit_base (detect-changes). Reused for fingerprinting
         when the live remote tip still matches git_commit_base (no second clone).
     - name: output
-      description: Writes snapshot.json and ephemeral tip clone (e.g. results/merge-base-guard).
+      description: Writes snapshot.json for merge-pr guard input.
     - name: ssh-directory
       optional: true
       description: >
@@ -52,6 +52,9 @@ spec:
     - name: record-snapshot
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.output.path)
+      volumeMounts:
+        - name: merge-guard-git-scratch
+          mountPath: /tmp/merge-guard-git
       env:
         - name: HOME
           value: "$(params.userHome)"
@@ -87,7 +90,7 @@ spec:
         fi
 
         BASE_CLONE="$(workspaces.base.path)"
-        TIP_CLONE="$(workspaces.output.path)/tip-clone"
+        TIP_CLONE="/tmp/merge-guard-git/tip-clone"
 
         REMOTE_URL="$(params.git_repo_url)"
         if [[ "${REMOTE_URL}" == git@* ]] || [[ "${REMOTE_URL}" == ssh://* ]]; then
@@ -129,3 +132,6 @@ spec:
           --operator-path "$(params.operator_path)" \
           --added-or-modified-catalog-operators "$(params.added_or_modified_catalog_operators)" \
           --output "$(workspaces.output.path)/snapshot.json"
+  volumes:
+    - name: merge-guard-git-scratch
+      emptyDir: {}

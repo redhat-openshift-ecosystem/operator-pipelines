@@ -15,6 +15,13 @@ LOGGER = logging.getLogger("operator-cert")
 
 
 def _parser() -> argparse.ArgumentParser:
+    """
+    Create the CLI argument parser.
+
+    Returns:
+        argparse.ArgumentParser: Configured parser with `record` and `verify`
+            subcommands.
+    """
     parser = argparse.ArgumentParser(
         description="Record or verify a fingerprint of operator/catalog paths on the base branch."
     )
@@ -85,7 +92,12 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    """CLI entrypoint for record or verify merge-base lane fingerprint snapshots."""
+    """
+    Run the merge-base lane fingerprint CLI entrypoint.
+
+    Parses arguments, configures logging, and dispatches to either
+    `record_snapshot` or `verify_snapshot`.
+    """
     parser = _parser()
     args = parser.parse_args()
     setup_logger(level="DEBUG" if args.verbose else "INFO")

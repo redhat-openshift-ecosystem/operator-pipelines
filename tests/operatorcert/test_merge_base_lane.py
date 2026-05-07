@@ -142,7 +142,7 @@ def test_git_ls_tree_lines_git_fails(mock_run: MagicMock, tmp_path: Path) -> Non
         git_ls_tree_lines(tmp_path, "nope", ["x"])
 
 
-def test_git_ls_tree_lines_sorted(tmp_path: Path) -> None:
+def test_git_ls_tree_lines_happy_path_filters_and_sorts(tmp_path: Path) -> None:
     git_dir = tmp_path / "repo"
     git_dir.mkdir()
     subprocess.run(["git", "init"], cwd=git_dir, check=True, capture_output=True)
@@ -158,8 +158,13 @@ def test_git_ls_tree_lines_sorted(tmp_path: Path) -> None:
         check=True,
         capture_output=True,
     )
-    for name in ("a.txt", "b.txt"):
-        (git_dir / name).write_text(name, encoding="utf-8")
+    lane_dir = git_dir / "operators" / "o1"
+    lane_dir.mkdir(parents=True)
+    (lane_dir / "z.txt").write_text("z", encoding="utf-8")
+    (lane_dir / "a.txt").write_text("a", encoding="utf-8")
+    # file outside selected lane path; should be excluded by path filtering
+    (git_dir / "operators" / "o2").mkdir(parents=True)
+    (git_dir / "operators" / "o2" / "x.txt").write_text("x", encoding="utf-8")
     subprocess.run(["git", "add", "."], cwd=git_dir, check=True, capture_output=True)
     subprocess.run(
         ["git", "commit", "-m", "m"],
@@ -174,8 +179,12 @@ def test_git_ls_tree_lines_sorted(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
     ).stdout.strip()
-    lines = git_ls_tree_lines(git_dir, head, ["."])
+    lines = git_ls_tree_lines(git_dir, head, ["operators/o1"])
     assert lines == sorted(lines)
+    assert lines
+    assert len(lines) == 2
+    assert lines[0].endswith("\toperators/o1/a.txt")
+    assert lines[1].endswith("\toperators/o1/z.txt")
 
 
 def test_record_snapshot_disabled_no_paths(tmp_path: Path) -> None:
@@ -289,7 +298,43 @@ def test_git_fetch_branch_tip_success(mock_run: MagicMock, tmp_path: Path) -> No
     git_fetch_branch_tip(
         tmp_path, "up", "https://example.com/r.git", "main", "refs/local/tip"
     )
-    assert mock_run.call_count == 3
+    assert mock_run.call_count == 4
+    commands = [call.args[0] for call in mock_run.call_args_list]
+    assert commands[0][:5] == ["git", "-C", str(tmp_path), "rev-parse", "--git-dir"]
+    assert all(cmd[:2] != ["git", "init"] for cmd in commands)
+
+
+@patch("operatorcert.merge_base_lane.subprocess.run")
+def test_git_fetch_branch_tip_initializes_repo_when_missing(
+    mock_run: MagicMock, tmp_path: Path
+) -> None:
+    def _side_effect(cmd: list[str], **_k: object) -> MagicMock:
+        if cmd[:5] == ["git", "-C", str(tmp_path), "rev-parse", "--git-dir"]:
+            return MagicMock(returncode=1, stderr="not a git repository", stdout="")
+        return MagicMock(returncode=0, stderr="", stdout="")
+
+    mock_run.side_effect = _side_effect
+    git_fetch_branch_tip(
+        tmp_path, "up", "https://example.com/r.git", "main", "refs/local/tip"
+    )
+    commands = [call.args[0] for call in mock_run.call_args_list]
+    assert ["git", "init", str(tmp_path)] in commands
+
+
+@patch("operatorcert.merge_base_lane.subprocess.run")
+def test_git_fetch_branch_tip_init_fails(mock_run: MagicMock, tmp_path: Path) -> None:
+    def _side_effect(cmd: list[str], **_k: object) -> MagicMock:
+        if cmd[:5] == ["git", "-C", str(tmp_path), "rev-parse", "--git-dir"]:
+            return MagicMock(returncode=1, stderr="not a git repository", stdout="")
+        if cmd[:2] == ["git", "init"]:
+            return MagicMock(returncode=1, stderr="init failed", stdout="")
+        return MagicMock(returncode=0, stderr="", stdout="")
+
+    mock_run.side_effect = _side_effect
+    with pytest.raises(RuntimeError, match="git init failed"):
+        git_fetch_branch_tip(
+            tmp_path, "up", "https://example.com/r.git", "main", "refs/local/tip"
+        )
 
 
 @patch("operatorcert.merge_base_lane.subprocess.run")
@@ -310,12 +355,8 @@ def test_git_fetch_branch_tip_remote_add_fails(
 
 @patch("operatorcert.merge_base_lane.subprocess.run")
 def test_git_fetch_branch_tip_fetch_fails(mock_run: MagicMock, tmp_path: Path) -> None:
-    call_n = 0
-
-    def _side_effect(*_a: object, **_k: object) -> MagicMock:
-        nonlocal call_n
-        call_n += 1
-        if call_n >= 3:
+    def _side_effect(cmd: list[str], **_k: object) -> MagicMock:
+        if "fetch" in cmd:
             return MagicMock(returncode=1, stderr="fetch failed", stdout="")
         return MagicMock(returncode=0, stderr="", stdout="")
 
