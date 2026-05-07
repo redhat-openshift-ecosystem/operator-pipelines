@@ -248,6 +248,13 @@ def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
     delimiter = ".v" if ".v" in replaces else "."
     replaces_version = replaces.split(delimiter, 1)[1]
 
+    if replaces_version == bundle.csv_operator_version:
+        yield Fail(
+            f"{bundle} attempts to replace itself. Please set "
+            "'spec.replaces' field to a different version in the CSV."
+        )
+        return
+
     ver_to_dir = {
         x.csv_operator_version: x.operator_version
         for x in bundle.operator.all_bundles()
