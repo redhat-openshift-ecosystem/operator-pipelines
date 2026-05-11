@@ -1,5 +1,7 @@
 """Tests for merge_base_lane path building and fingerprinting."""
 
+import hashlib
+import json
 import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -16,6 +18,7 @@ from operatorcert.merge_base_lane import (
     record_snapshot,
     split_csv,
     verify_snapshot,
+    write_snapshot,
 )
 
 
@@ -44,6 +47,12 @@ def test_split_csv() -> None:
             "operators/foo",
             "catalogs/v4.14/foo",
             ["catalogs/v4.14/foo", "operators/foo"],
+        ),
+        pytest.param(
+            "operators/foo",
+            "v4.14/bar,v4.14/bar,v4.14/bar",
+            ["catalogs/v4.14/bar", "operators/foo"],
+            id="deduplicates_repeated_catalog_segments_in_csv",
         ),
     ],
 )
@@ -125,10 +134,73 @@ def test_fingerprint_lane_deterministic(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
     ).stdout.strip()
-    fp1 = fingerprint_lane(git_dir, head, ["operators/o1"])
-    fp2 = fingerprint_lane(git_dir, head, ["operators/o1"])
-    assert fp1 == fp2
-    assert len(fp1) == 64
+    lane_paths = ["operators/o1"]
+    first_fingerprint = fingerprint_lane(git_dir, head, lane_paths)
+    second_fingerprint = fingerprint_lane(git_dir, head, lane_paths)
+    assert first_fingerprint == second_fingerprint
+    assert len(first_fingerprint) == 64
+    tree_lines = git_ls_tree_lines(git_dir, head, lane_paths)
+    expected_digest = hashlib.sha256("\n".join(tree_lines).encode("utf-8")).hexdigest()
+    assert first_fingerprint == expected_digest
+
+
+def test_fingerprint_lane_changes_when_tree_content_under_lane_changes(
+    tmp_path: Path,
+) -> None:
+    git_dir = tmp_path / "repo"
+    git_dir.mkdir()
+    subprocess.run(["git", "init"], cwd=git_dir, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "t@e.st"],
+        cwd=git_dir,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "test"],
+        cwd=git_dir,
+        check=True,
+        capture_output=True,
+    )
+    operator_directory = git_dir / "operators" / "o1"
+    operator_directory.mkdir(parents=True)
+    lane_file = operator_directory / "content.txt"
+    lane_file.write_text("first revision", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=git_dir, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "first"],
+        cwd=git_dir,
+        check=True,
+        capture_output=True,
+    )
+    first_commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=git_dir,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    lane_paths = ["operators/o1"]
+    fingerprint_before = fingerprint_lane(git_dir, first_commit, lane_paths)
+
+    lane_file.write_text("second revision", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=git_dir, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "second"],
+        cwd=git_dir,
+        check=True,
+        capture_output=True,
+    )
+    second_commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=git_dir,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    fingerprint_after = fingerprint_lane(git_dir, second_commit, lane_paths)
+
+    assert fingerprint_before != fingerprint_after
 
 
 def test_git_ls_tree_lines_empty_paths(tmp_path: Path) -> None:
@@ -227,17 +299,40 @@ def test_record_snapshot_enabled(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
     ).stdout.strip()
-    out = tmp_path / "snap.json"
+    output_path = tmp_path / "snap.json"
+    operator_path = "operators/o1"
+    catalog_operators_csv = ""
     record_snapshot(
         git_dir,
         head,
-        "operators/o1",
-        "",
-        out,
+        operator_path,
+        catalog_operators_csv,
+        output_path,
     )
-    data = out.read_text(encoding="utf-8")
-    assert '"enabled": true' in data
-    assert head in data
+    snapshot = json.loads(output_path.read_text(encoding="utf-8"))
+    assert snapshot["enabled"] is True
+    assert snapshot["base_oid"] == head
+    expected_paths = build_lane_paths(operator_path, catalog_operators_csv)
+    assert snapshot["paths"] == expected_paths
+    expected_fingerprint = fingerprint_lane(git_dir, head, expected_paths)
+    assert snapshot["lane_fp"] == expected_fingerprint
+    snapshot_keys = list(snapshot.keys())
+    assert snapshot_keys == sorted(snapshot_keys)
+
+
+def test_write_snapshot_writes_sorted_keys_and_trailing_newline(
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "nested" / "snapshot.json"
+    write_snapshot(
+        output_path,
+        {"zebra": 1, "alpha": 2, "nested": {"b": 3, "a": 4}},
+    )
+    raw_text = output_path.read_text(encoding="utf-8")
+    assert raw_text.endswith("\n")
+    parsed = json.loads(raw_text)
+    assert list(parsed.keys()) == sorted(parsed.keys())
+    assert list(parsed["nested"].keys()) == sorted(parsed["nested"].keys())
 
 
 @patch("operatorcert.merge_base_lane.subprocess.run")
@@ -258,6 +353,27 @@ def test_git_ls_remote_tip_does_not_pass_env_so_credentials_inherit(
     c_idx = cmd.index("-c")
     assert "core.sshCommand=" in cmd[c_idx + 1]
     assert "StrictHostKeyChecking=accept-new" in cmd[c_idx + 1]
+
+
+@patch("operatorcert.merge_base_lane.subprocess.run")
+def test_git_ls_remote_tip_uses_ssh_config_for_ssh_protocol_url(
+    mock_run: MagicMock,
+) -> None:
+    object_identifier = "b" * 40
+    remote_url = "ssh://git@example.com/org/r.git"
+    mock_run.return_value = MagicMock(
+        returncode=0,
+        stdout=f"{object_identifier}\trefs/heads/main\n",
+        stderr="",
+    )
+    assert git_ls_remote_tip(remote_url, "main") == object_identifier
+    command, keyword_arguments = mock_run.call_args[0][0], mock_run.call_args[1]
+    assert keyword_arguments.get("env") is None
+    assert "-c" in command
+    configuration_index = command.index("-c")
+    ssh_command_value = command[configuration_index + 1]
+    assert "core.sshCommand=" in ssh_command_value
+    assert "StrictHostKeyChecking=accept-new" in ssh_command_value
 
 
 @patch("operatorcert.merge_base_lane.subprocess.run")
@@ -293,15 +409,96 @@ def test_git_ls_remote_tip_no_matching_ref(mock_run: MagicMock) -> None:
 
 
 @patch("operatorcert.merge_base_lane.subprocess.run")
-def test_git_fetch_branch_tip_success(mock_run: MagicMock, tmp_path: Path) -> None:
+def test_git_fetch_branch_tip_runs_rev_parse_remote_remove_add_and_fetch_for_https(
+    mock_run: MagicMock, tmp_path: Path
+) -> None:
     mock_run.return_value = MagicMock(returncode=0, stderr="", stdout="")
+    repository_directory = tmp_path
+    remote_name = "upstream-temporary"
+    remote_url = "https://example.com/r.git"
+    branch_name = "main"
+    local_reference = "refs/local/tip"
     git_fetch_branch_tip(
-        tmp_path, "up", "https://example.com/r.git", "main", "refs/local/tip"
+        repository_directory,
+        remote_name,
+        remote_url,
+        branch_name,
+        local_reference,
     )
     assert mock_run.call_count == 4
     commands = [call.args[0] for call in mock_run.call_args_list]
-    assert commands[0][:5] == ["git", "-C", str(tmp_path), "rev-parse", "--git-dir"]
-    assert all(cmd[:2] != ["git", "init"] for cmd in commands)
+
+    assert commands[0] == [
+        "git",
+        "-C",
+        str(repository_directory),
+        "rev-parse",
+        "--git-dir",
+    ]
+    assert commands[1] == [
+        "git",
+        "-C",
+        str(repository_directory),
+        "remote",
+        "remove",
+        remote_name,
+    ]
+    assert commands[2] == [
+        "git",
+        "-C",
+        str(repository_directory),
+        "remote",
+        "add",
+        remote_name,
+        remote_url,
+    ]
+    expected_refspec = f"+refs/heads/{branch_name}:{local_reference}"
+    assert commands[3] == [
+        "git",
+        "-C",
+        str(repository_directory),
+        "fetch",
+        "--depth",
+        "1",
+        remote_name,
+        expected_refspec,
+    ]
+    assert all(command[:2] != ["git", "init"] for command in commands)
+
+
+@patch("operatorcert.merge_base_lane.subprocess.run")
+def test_git_fetch_branch_tip_fetch_includes_ssh_config_for_git_at_remote(
+    mock_run: MagicMock, tmp_path: Path
+) -> None:
+    mock_run.return_value = MagicMock(returncode=0, stderr="", stdout="")
+    repository_directory = tmp_path
+    remote_url = "git@example.com:org/r.git"
+    git_fetch_branch_tip(
+        repository_directory,
+        "upstream-temporary",
+        remote_url,
+        "main",
+        "refs/local/tip",
+    )
+    commands = [call.args[0] for call in mock_run.call_args_list]
+    fetch_command = commands[3]
+    assert fetch_command[0] == "git"
+    assert "-c" in fetch_command
+    configuration_flag_index = fetch_command.index("-c")
+    assert "core.sshCommand=" in fetch_command[configuration_flag_index + 1]
+    assert (
+        "StrictHostKeyChecking=accept-new"
+        in fetch_command[configuration_flag_index + 1]
+    )
+    assert fetch_command[configuration_flag_index + 2] == "-C"
+    assert fetch_command[configuration_flag_index + 3] == str(repository_directory)
+    assert fetch_command[configuration_flag_index + 4 :] == [
+        "fetch",
+        "--depth",
+        "1",
+        "upstream-temporary",
+        "+refs/heads/main:refs/local/tip",
+    ]
 
 
 @patch("operatorcert.merge_base_lane.subprocess.run")
@@ -395,9 +592,9 @@ def test_verify_snapshot_paths_not_strings_raises(tmp_path: Path) -> None:
 @patch("operatorcert.merge_base_lane.git_ls_remote_tip")
 @patch("operatorcert.merge_base_lane.fingerprint_lane")
 def test_verify_snapshot_fingerprint_unchanged_after_tip_moves(
-    mock_fp: MagicMock,
-    mock_ls_remote: MagicMock,
-    mock_fetch: MagicMock,
+    mock_fingerprint_lane: MagicMock,
+    mock_git_ls_remote_tip: MagicMock,
+    mock_git_fetch_branch_tip: MagicMock,
     tmp_path: Path,
 ) -> None:
     snap = tmp_path / "snap.json"
@@ -405,21 +602,21 @@ def test_verify_snapshot_fingerprint_unchanged_after_tip_moves(
         '{"enabled": true, "base_oid": "aaa", "lane_fp": "samefp", "paths": ["p"]}',
         encoding="utf-8",
     )
-    mock_ls_remote.return_value = "bbb"
-    mock_fp.return_value = "samefp"
+    mock_git_ls_remote_tip.return_value = "bbb"
+    mock_fingerprint_lane.return_value = "samefp"
     rc = verify_snapshot(tmp_path, "https://example.invalid/repo.git", "main", snap)
     assert rc == 0
-    mock_fetch.assert_called_once()
-    mock_fp.assert_called_once()
+    mock_git_fetch_branch_tip.assert_called_once()
+    mock_fingerprint_lane.assert_called_once()
 
 
 @patch("operatorcert.merge_base_lane.git_fetch_branch_tip")
 @patch("operatorcert.merge_base_lane.git_ls_remote_tip")
 @patch("operatorcert.merge_base_lane.fingerprint_lane")
 def test_verify_snapshot_fast_path_same_oid(
-    mock_fp: MagicMock,
-    mock_ls_remote: MagicMock,
-    mock_fetch: MagicMock,
+    mock_fingerprint_lane: MagicMock,
+    mock_git_ls_remote_tip: MagicMock,
+    mock_git_fetch_branch_tip: MagicMock,
     tmp_path: Path,
 ) -> None:
     snap = tmp_path / "snap.json"
@@ -427,11 +624,11 @@ def test_verify_snapshot_fast_path_same_oid(
         '{"enabled": true, "base_oid": "abc123", "lane_fp": "dead", "paths": ["p"]}',
         encoding="utf-8",
     )
-    mock_ls_remote.return_value = "abc123"
+    mock_git_ls_remote_tip.return_value = "abc123"
     rc = verify_snapshot(tmp_path, "https://example.invalid/repo.git", "main", snap)
     assert rc == 0
-    mock_fetch.assert_not_called()
-    mock_fp.assert_not_called()
+    mock_git_fetch_branch_tip.assert_not_called()
+    mock_fingerprint_lane.assert_not_called()
 
 
 def test_verify_invalid_snapshot_raises(tmp_path: Path) -> None:
@@ -445,9 +642,9 @@ def test_verify_invalid_snapshot_raises(tmp_path: Path) -> None:
 @patch("operatorcert.merge_base_lane.git_ls_remote_tip")
 @patch("operatorcert.merge_base_lane.fingerprint_lane")
 def test_verify_snapshot_mismatch_returns_10(
-    mock_fp: MagicMock,
-    mock_ls_remote: MagicMock,
-    mock_fetch: MagicMock,
+    mock_fingerprint_lane: MagicMock,
+    mock_git_ls_remote_tip: MagicMock,
+    mock_git_fetch_branch_tip: MagicMock,
     tmp_path: Path,
 ) -> None:
     snap = tmp_path / "snap.json"
@@ -455,8 +652,8 @@ def test_verify_snapshot_mismatch_returns_10(
         '{"enabled": true, "base_oid": "aaa", "lane_fp": "expect", "paths": ["p"]}',
         encoding="utf-8",
     )
-    mock_ls_remote.return_value = "bbb"
-    mock_fp.return_value = "different"
+    mock_git_ls_remote_tip.return_value = "bbb"
+    mock_fingerprint_lane.return_value = "different"
     rc = verify_snapshot(tmp_path, "https://example.invalid/repo.git", "main", snap)
     assert rc == 10
-    mock_fetch.assert_called_once()
+    mock_git_fetch_branch_tip.assert_called_once()
