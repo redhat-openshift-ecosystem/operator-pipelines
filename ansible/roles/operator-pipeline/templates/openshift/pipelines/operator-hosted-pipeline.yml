@@ -309,6 +309,38 @@ spec:
           workspace: results
           subPath: changes
 
+    # Create merge-base snapshot, used in merge-pr as a merge guard
+    - name: record-merge-base-lane-snapshot
+      runAfter:
+        - detect-changes
+      taskRef:
+        name: record-merge-base-lane-snapshot
+        kind: Task
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_commit_base
+          value: "$(params.git_commit_base)"
+        - name: git_repo_url
+          value: "$(params.git_repo_url)"
+        - name: git_base_branch
+          value: "$(params.git_base_branch)"
+        - name: added_bundle
+          value: "$(tasks.detect-changes.results.added_bundle)"
+        - name: operator_path
+          value: "$(tasks.detect-changes.results.operator_path)"
+        - name: added_or_modified_catalog_operators
+          value: "$(tasks.detect-changes.results.added_or_modified_catalog_operators)"
+      workspaces:
+        - name: base
+          workspace: repository
+          subPath: base
+        - name: output
+          workspace: results
+          subPath: merge-base-guard
+        - name: ssh-directory
+          workspace: ssh-dir
+
     - name: yaml-lint
       runAfter:
         - detect-changes
@@ -1251,6 +1283,7 @@ spec:
     # merge PR
     - name: merge-pr
       runAfter:
+        - record-merge-base-lane-snapshot
         - add-bundle-to-fbc-dryrun
         - build-fbc-index-images
       taskRef:
@@ -1268,6 +1301,12 @@ spec:
           value: "$(params.github_token_secret_name)"
         - name: github_token_secret_key
           value: "$(params.github_token_secret_key)"
+        - name: enable_merge_base_lane_guard
+          value: "true"
+        - name: git_repo_url
+          value: "$(params.git_repo_url)"
+        - name: git_base_branch
+          value: "$(params.git_base_branch)"
       workspaces:
         - name: source
           workspace: repository
@@ -1275,6 +1314,11 @@ spec:
         - name: output
           workspace: results
           subPath: summary
+        - name: merge-base-guard
+          workspace: results
+          subPath: merge-base-guard
+        - name: ssh-directory
+          workspace: ssh-dir
 
     # link pull request details to test results
     - name: link-pull-request-with-merged-status

@@ -142,6 +142,27 @@ To ignore the results of the publishing checklist, pass the following argument:
 There are some quay specific tasks for configuring the repositories where
 the bundle and index images are pushed.
 
+#### Merge base lane guard (ISV-7093)
+
+Before `gh pr merge`, the hosted pipeline can block the merge when the
+default branch tip has advanced **after** the run recorded its snapshot **and**
+the operator/catalog paths in the guard lane changed at the new tip
+(file-level fingerprint via `git ls-tree`, not a second IIB or `opm`
+validation). The snapshot baseline is the **live target-branch tip** at
+snapshot time (shallow clone of `git_repo_url` at `git_base_branch` when the
+tip differs from `git_commit_base`, otherwise the existing base clone), while
+`detect-changes` still compares PR head to the clone at `git_commit_base`.
+The lane is `operator_path` plus each path from
+`added_or_modified_catalog_operators` (normalized to
+`catalogs/<ocp_version>/<operator>`), not whole OCP version trees under
+`catalogs/`. If the branch tip is unchanged between snapshot and merge, the
+check is a no-op. **Limitations:** the guard can prevent merge in situations
+with no actual conflict (e.g. different channels), making the process more
+restrictive. If the guard fails due to base drift, either **restart the hosted
+pipeline** (when your change still fits the current base tip) or **rebase or
+merge the latest target branch into the PR branch and re-run** for a fresher
+baseline. Pick the option that matches your situation.
+
 ### Operator Release Pipeline
 
 The release pipeline is responsible for releasing a bundle image which has passed certification.
