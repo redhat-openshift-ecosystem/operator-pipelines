@@ -294,3 +294,70 @@ def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
         f"`{replaces_bundle}` - `{replaces_ocp_version_str}`"
     )
     yield from []
+
+
+def _build_ocp_version_to_bundles_map(
+    bundles: set[Bundle], organization: str
+) -> dict[str, list[Bundle]]:
+    """
+    Helper function to build a mapping of OCP versions to bundles that support them.
+    """
+    ocp_version_to_bundles: dict[str, list[Bundle]] = {}
+    for bundle in bundles:
+        ocp_versions_str = bundle.annotations.get("com.redhat.openshift.versions")
+        supported_ocp_versions = utils.get_ocp_supported_versions(
+            organization, ocp_versions_str
+        )
+        for ocp_version in supported_ocp_versions:
+            ocp_version_to_bundles.setdefault(ocp_version, []).append(bundle)
+
+    return ocp_version_to_bundles
+
+
+@skip_fbc
+def check_bundle_higher_than_channel_head(bundle: Bundle) -> Iterator[CheckResult]:
+    """
+    Check if the current bundle version is higher than existing channel heads
+    in all target OCP index versions.
+
+    Args:
+        bundle (Bundle): Operator bundle
+
+    Yields:
+        Iterator[CheckResult]: Failure if a higher or equal version exists in any target index
+    """
+    organization = bundle.operator.repo.config.get("organization")
+    ocp_versions_str = bundle.annotations.get("com.redhat.openshift.versions")
+    target_ocp_versions = utils.get_ocp_supported_versions(
+        organization, ocp_versions_str
+    )
+
+    all_channels: set[str] = set(bundle.channels)
+    if bundle.default_channel is not None:
+        all_channels.add(bundle.default_channel)
+
+    operator = bundle.operator
+    for channel in all_channels:
+        other_bundles = set(operator.channel_bundles(channel)) - {bundle}
+        higher_or_equal_bundles = {b for b in other_bundles if b >= bundle}
+
+        if not higher_or_equal_bundles:
+            continue
+
+        ocp_version_to_bundles = _build_ocp_version_to_bundles_map(
+            higher_or_equal_bundles, organization
+        )
+
+        for target_ocp_version in target_ocp_versions:
+            bundles_in_ocp = ocp_version_to_bundles.get(target_ocp_version, [])
+            if not bundles_in_ocp:
+                continue
+
+            channel_head = max(bundles_in_ocp)
+            if bundle <= channel_head:
+                yield Fail(
+                    f"Cannot add bundle {bundle} to channel '{channel}' for index version "
+                    f"{target_ocp_version}. The head of the channel is {channel_head}. It is not "
+                    f"possible to add new versions lower than or equal to the head of the channel. "
+                    f"Consider increasing the new bundle version above {channel_head}."
+                )
