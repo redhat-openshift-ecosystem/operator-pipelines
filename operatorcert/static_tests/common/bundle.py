@@ -354,10 +354,9 @@ def check_bundle_higher_than_channel_head(bundle: Bundle) -> Iterator[CheckResul
                 continue
 
             channel_head = max(bundles_in_ocp)
-            if bundle <= channel_head:
-                yield Fail(
-                    f"Cannot add bundle {bundle} to channel '{channel}' for index version "
-                    f"{target_ocp_version}. The head of the channel is {channel_head}. It is not "
-                    f"possible to add new versions lower than or equal to the head of the channel. "
-                    f"Consider increasing the new bundle version above {channel_head}."
-                )
+            yield Fail(
+                f"Cannot add bundle {bundle} to channel '{channel}' for index version "
+                f"{target_ocp_version}. The head of the channel is {channel_head}. It is not "
+                f"possible to add new versions lower than or equal to the head of the channel. "
+                f"Consider increasing the new bundle version above {channel_head}."
+            )
