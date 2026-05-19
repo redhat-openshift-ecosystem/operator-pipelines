@@ -12,6 +12,7 @@ from operatorcert.static_tests.common.bundle import (
     check_network_policy_presence,
     check_operator_version_directory_name,
     check_replaces_availability,
+    check_bundle_higher_than_channel_head,
 )
 from tests.utils import bundle_files, create_files
 
@@ -853,5 +854,140 @@ def test_check_replaces_availability(
     operator = repo.operator("hello")
     bundle = operator.bundle("0.0.2")
     errors = list(check_replaces_availability(bundle))
+
+    assert set(errors) == expected
+
+
+@pytest.mark.parametrize(
+    "bundles_data,bundle_to_check,ocp_versions_mock,expected",
+    [
+        pytest.param(
+            [
+                ("0.0.1", "v4.14-v4.16", "beta"),
+                ("0.0.3", "v4.14-v4.18", "beta"),
+            ],
+            "0.0.3",
+            [
+                ["v4.14", "v4.15", "v4.16", "v4.17", "v4.18"],
+            ],
+            set(),
+            id="pass: new bundle is higher than existing",
+        ),
+        pytest.param(
+            [
+                ("0.0.1", "v4.14", "beta"),
+                ("0.0.2", "v4.15", "beta"),
+            ],
+            "0.0.2",
+            [["v4.15"]],
+            set(),
+            id="pass: different OCP versions, no overlap",
+        ),
+        pytest.param(
+            [
+                ("0.0.5", "v4.14-v4.16", "beta"),
+                ("0.0.3", "v4.14-v4.18", "beta"),
+            ],
+            "0.0.3",
+            [
+                ["v4.14", "v4.15", "v4.16", "v4.17", "v4.18"],
+                ["v4.14", "v4.15", "v4.16"],
+            ],
+            {
+                Fail(
+                    "Cannot add bundle Bundle(hello/0.0.3) to channel 'beta' for index version "
+                    "v4.14. The head of the channel is Bundle(hello/0.0.5). It is not "
+                    "possible to add new versions lower than or equal to the head of the channel. "
+                    "Consider increasing the new bundle version above Bundle(hello/0.0.5)."
+                ),
+                Fail(
+                    "Cannot add bundle Bundle(hello/0.0.3) to channel 'beta' for index version "
+                    "v4.15. The head of the channel is Bundle(hello/0.0.5). It is not "
+                    "possible to add new versions lower than or equal to the head of the channel. "
+                    "Consider increasing the new bundle version above Bundle(hello/0.0.5)."
+                ),
+                Fail(
+                    "Cannot add bundle Bundle(hello/0.0.3) to channel 'beta' for index version "
+                    "v4.16. The head of the channel is Bundle(hello/0.0.5). It is not "
+                    "possible to add new versions lower than or equal to the head of the channel. "
+                    "Consider increasing the new bundle version above Bundle(hello/0.0.5)."
+                ),
+            },
+            id="fail: new bundle is lower than existing",
+        ),
+        pytest.param(
+            [
+                ("0.0.1", "v4.14", "beta"),
+                ("0.0.9", "v4.14-v4.16", "beta"),
+                ("0.0.5", "v4.17-v4.18", "beta"),
+            ],
+            "0.0.5",
+            [
+                ["v4.17", "v4.18"],
+                ["v4.14", "v4.15", "v4.16"],
+            ],
+            set(),
+            id="pass: higher bundle exists but for different OCP version",
+        ),
+        pytest.param(
+            [("0.0.1", "v4.14", "beta")],
+            "0.0.1",
+            [["v4.14"]],
+            set(),
+            id="pass: first bundle in channel",
+        ),
+        pytest.param(
+            [
+                ("0.0.1", "v4.14", "stable"),
+                ("0.0.9", "v4.14", "beta"),
+                ("0.0.5", "v4.14", "beta,stable"),
+            ],
+            "0.0.5",
+            [
+                ["v4.14"],
+                ["v4.14"],
+            ],
+            {
+                Fail(
+                    "Cannot add bundle Bundle(hello/0.0.5) to channel 'beta' for index version "
+                    "v4.14. The head of the channel is Bundle(hello/0.0.9). It is not "
+                    "possible to add new versions lower than or equal to the head of the channel. "
+                    "Consider increasing the new bundle version above Bundle(hello/0.0.9)."
+                ),
+            },
+            id="fail: multiple channels, fails for one channel only",
+        ),
+    ],
+)
+@patch("operatorcert.static_tests.common.bundle.utils.get_ocp_supported_versions")
+def test_check_bundle_higher_than_channel_head(
+    mock_get_ocp_supported_versions: MagicMock,
+    bundles_data: list[tuple[str, str, str]],
+    bundle_to_check: str,
+    ocp_versions_mock: list[list[str]],
+    expected: set[Fail],
+    tmp_path: Path,
+) -> None:
+    create_files(
+        tmp_path,
+        {"config.yaml": {"organization": "certified-operators"}},
+    )
+
+    for version, ocp_annotation, channel in bundles_data:
+        annotations = {
+            "operators.operatorframework.io.bundle.channels.v1": channel,
+            "com.redhat.openshift.versions": ocp_annotation,
+        }
+        create_files(
+            tmp_path,
+            bundle_files("hello", version, annotations=annotations),
+        )
+
+    mock_get_ocp_supported_versions.side_effect = ocp_versions_mock
+
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    bundle = operator.bundle(bundle_to_check)
+    errors = list(check_bundle_higher_than_channel_head(bundle))
 
     assert set(errors) == expected
