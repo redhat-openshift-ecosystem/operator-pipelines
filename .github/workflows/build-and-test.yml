@@ -119,7 +119,7 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          pipx inject ansible-core jmespath openshift pygithub 'kubernetes>=33.1.0,<36.0.0'
+          pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
 
           # Add certificates to trusted list
           sudo cp  certs/* /usr/local/share/ca-certificates
