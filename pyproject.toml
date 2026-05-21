@@ -32,7 +32,7 @@ dependencies = [
     "flask (>=3.1.1)",
     "psycopg2-binary (>=2.9.10)",
     "httpx (>=0.28.1)",
-    "kubernetes (>=33.1.0)",
+    "kubernetes (<36.0.0)",
     "cel-python (>=0.4.0)",
     "jsonschema (>=4.0.0)",
 ]

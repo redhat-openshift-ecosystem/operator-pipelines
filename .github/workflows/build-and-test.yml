@@ -119,7 +119,7 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          pipx inject ansible-core jmespath openshift pygithub
+          pipx inject ansible-core jmespath openshift pygithub 'kubernetes<36.0.0'
 
           # Add certificates to trusted list
           sudo cp  certs/* /usr/local/share/ca-certificates
@@ -139,7 +139,6 @@ jobs:
             --vault-password-file "$HOME"/.vault-password \
             --output "$HOME"/.kube/config \
             ansible/vaults/integration-tests/ci-pipeline-kubeconfig
-          echo "KUBECONFIG=$HOME/.kube/config" >> "$GITHUB_ENV"
 
           # secret used also in hosted pipeline for enabling
           # cloning of the repository
@@ -151,8 +150,6 @@ jobs:
 
       - name: Run the integration tests ansible playbook
         uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
-        env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
         with:
           playbook: playbooks/operator-pipeline-integration-tests.yml
           directory: ./ansible
