@@ -1,13 +1,10 @@
 ---
 - name: Execute integration tests
   hosts: operator-pipeline-integration-tests-{{ test_type }}
-  vars_files:
-    - ../vaults/{{ env }}/secret-vars.yml
-    - ../vaults/{{ env }}/ocp-token.yml
 
-  environment:
-    K8S_AUTH_API_KEY: '{{ ocp_token }}'
-    K8S_AUTH_HOST: '{{ ocp_host }}'
+  module_defaults:
+    group/kubernetes.core.k8s:
+      kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/config"
 
   tasks:
     - name: Deploy environment and run tests
