@@ -9,9 +9,9 @@
 
   module_defaults:
     kubernetes.core.k8s:
-      kubeconfig: "{{ ansible_env.HOME }}/.kube/config"
+      kubeconfig: "{{ ci_pipeline_kubeconfig_path }}"
     kubernetes.core.k8s_info:
-      kubeconfig: "{{ ansible_env.HOME }}/.kube/config"
+      kubeconfig: "{{ ci_pipeline_kubeconfig_path }}"
 
   environment:
     K8S_AUTH_API_KEY: '{{ ocp_token }}'
