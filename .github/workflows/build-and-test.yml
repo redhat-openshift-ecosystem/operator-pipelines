@@ -119,8 +119,8 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          # TODO: pipx inject --force with kubernetes==35.0.0: forces the pin over any 
-          # existing venv deps; temporary workaround for v36.0.0 auth breakage until 
+          # TODO: pipx inject --force with kubernetes==35.0.0: forces the pin over any
+          # existing venv deps; temporary workaround for v36.0.0 auth breakage until
           # kubernetes/collection is compatible.
           pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
 
