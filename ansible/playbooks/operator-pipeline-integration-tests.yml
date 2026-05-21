@@ -7,11 +7,9 @@
 
   module_defaults:
     kubernetes.core.k8s:
-      host: "{{ ocp_host }}"
-      api_key: "{{ ocp_token }}"
+      kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/config"
     kubernetes.core.k8s_info:
-      host: "{{ ocp_host }}"
-      api_key: "{{ ocp_token }}"
+      kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/config"
 
   environment:
     K8S_AUTH_API_KEY: '{{ ocp_token }}'
