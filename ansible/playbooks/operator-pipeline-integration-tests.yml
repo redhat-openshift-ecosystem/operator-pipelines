@@ -1,6 +1,8 @@
 ---
 - name: Execute integration tests
   hosts: operator-pipeline-integration-tests-{{ test_type }}
+  vars:
+    env: integration-tests
   vars_files:
     - ../vaults/{{ env }}/secret-vars.yml
     - ../vaults/{{ env }}/ocp-token.yml
