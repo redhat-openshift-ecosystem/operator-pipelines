@@ -31,7 +31,10 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          pipx inject ansible-core jmespath openshift pygithub
+          # TODO: pipx inject --force with kubernetes==35.0.0: forces the pin over any
+          # existing venv deps; temporary workaround for v36.0.0 auth breakage until
+          # kubernetes/collection is compatible.
+          pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Configure stage cluster
         uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
         with:
@@ -60,7 +63,10 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          pipx inject ansible-core jmespath openshift pygithub
+          # TODO: pipx inject --force with kubernetes==35.0.0: forces the pin over any
+          # existing venv deps; temporary workaround for v36.0.0 auth breakage until
+          # kubernetes/collection is compatible.
+          pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Deploy dev environment
         uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
         with:
@@ -90,7 +96,10 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          pipx inject ansible-core jmespath openshift pygithub
+          # TODO: pipx inject --force with kubernetes==35.0.0: forces the pin over any
+          # existing venv deps; temporary workaround for v36.0.0 auth breakage until
+          # kubernetes/collection is compatible.
+          pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Deploy qa environment
         uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
         with:
@@ -122,7 +131,10 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          pipx inject ansible-core jmespath openshift pygithub
+          # TODO: pipx inject --force with kubernetes==35.0.0: forces the pin over any
+          # existing venv deps; temporary workaround for v36.0.0 auth breakage until
+          # kubernetes/collection is compatible.
+          pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
 
       - name: Deploy stage environment
         uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
@@ -151,7 +163,10 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          pipx inject ansible-core jmespath openshift pygithub
+          # TODO: pipx inject --force with kubernetes==35.0.0: forces the pin over any
+          # existing venv deps; temporary workaround for v36.0.0 auth breakage until
+          # kubernetes/collection is compatible.
+          pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Configure prod cluster
         uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
         with:
@@ -178,7 +193,10 @@ jobs:
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
-          pipx inject ansible-core jmespath openshift pygithub
+          # TODO: pipx inject --force with kubernetes==35.0.0: forces the pin over any
+          # existing venv deps; temporary workaround for v36.0.0 auth breakage until
+          # kubernetes/collection is compatible.
+          pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Deploy prod environment
         uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
         with:
