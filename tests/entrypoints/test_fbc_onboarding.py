@@ -1,9 +1,10 @@
 import os
 from unittest import mock
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from operatorcert.entrypoints import fbc_onboarding
+from operatorcert.operator_repo.exceptions import InvalidBundleException
 
 
 def test_setup_argparser() -> None:
@@ -160,6 +161,62 @@ def test_generate_and_save_base_templates_no_content(
         mock_yaml_dump.assert_not_called()
 
 
+def test_get_package_name_from_operator() -> None:
+    # Test normal case: bundle with metadata_operator_name
+    operator = MagicMock()
+    bundle = MagicMock()
+    bundle.metadata_operator_name = "my-package-name"
+    bundle.csv_operator_name = "different-csv-name"
+    operator.all_bundles.return_value = [bundle]
+    operator.operator_name = "my-folder-name"
+
+    result = fbc_onboarding.get_package_name_from_operator(operator)
+    assert result == "my-package-name"
+
+
+def test_get_package_name_from_operator_csv_fallback() -> None:
+    # Test fallback case: bundle with only CSV operator name (no metadata)
+    operator = MagicMock()
+    bundle = MagicMock()
+    bundle.metadata_operator_name = ""  # Empty metadata
+    bundle.csv_operator_name = "csv-package-name"
+    operator.all_bundles.return_value = [bundle]
+    operator.operator_name = "my-folder-name"
+
+    result = fbc_onboarding.get_package_name_from_operator(operator)
+    assert result == "csv-package-name"
+
+
+def test_get_package_name_from_operator_no_bundles() -> None:
+    # Test case: no bundles exist, should return folder name
+    operator = MagicMock()
+    operator.all_bundles.return_value = []
+    operator.operator_name = "my-folder-name"
+
+    result = fbc_onboarding.get_package_name_from_operator(operator)
+    assert result == "my-folder-name"
+
+
+def test_get_package_name_from_operator_csv_raises_exception() -> None:
+    # Test case: metadata is empty and CSV parsing raises InvalidBundleException
+    # Should gracefully fall back to folder name instead of crashing
+    operator = MagicMock()
+    bundle = MagicMock()
+    bundle.metadata_operator_name = ""  # Empty metadata, so will try CSV fallback
+
+    # Simulate csv_operator_name property raising InvalidBundleException (e.g., invalid CSV)
+    type(bundle).csv_operator_name = PropertyMock(
+        side_effect=InvalidBundleException("CSV for bundle has invalid .metadata.name")
+    )
+
+    operator.all_bundles.return_value = [bundle]
+    operator.operator_name = "my-folder-name"
+
+    # Should fall back to folder name instead of raising an exception
+    result = fbc_onboarding.get_package_name_from_operator(operator)
+    assert result == "my-folder-name"
+
+
 @patch("operatorcert.entrypoints.fbc_onboarding.yaml.safe_dump")
 def test_update_operator_config(mock_yaml_dump: MagicMock) -> None:
     operator = MagicMock()
@@ -239,9 +296,11 @@ def test_render_fbc_from_template(
 @patch(
     "operatorcert.entrypoints.fbc_onboarding.create_catalog_template_dir_if_not_exists"
 )
+@patch("operatorcert.entrypoints.fbc_onboarding.get_package_name_from_operator")
 @patch("operatorcert.entrypoints.fbc_onboarding.get_supported_catalogs")
 def test_onboard_operator_to_fbc(
     mock_catalogs: MagicMock,
+    mock_get_package_name: MagicMock,
     mock_template_dir: MagicMock,
     mock_cache: MagicMock,
     mock_base_template: MagicMock,
@@ -256,12 +315,36 @@ def test_onboard_operator_to_fbc(
         {"ocp_version": "1", "path": "registry.com/foo"},
         {"ocp_version": "2", "path": "registry.com/foo"},
     ]
+    # Mock the package name extraction - simulating folder name != package name
+    mock_get_package_name.return_value = "my-package-name"
+
     fbc_onboarding.onboard_operator_to_fbc("op1", repo, "/tmp", False)
+
     mock_catalogs.assert_called_once_with("org", False)
+    repo.operator.assert_called_once_with("op1")
+    mock_get_package_name.assert_called_once_with(operator)
     mock_template_dir.assert_called_once_with(operator)
 
     assert mock_cache.call_count == 2
     assert mock_base_template.call_count == 2
+
+    # Verify that package_name (not operator folder name) is passed to generate_and_save_base_templates
+    # Check the actual arguments passed to the function
+    assert len(mock_base_template.call_args_list) == 2
+    # First call should be for version "1" with package name
+    assert mock_base_template.call_args_list[0][0] == (
+        "1",
+        "my-package-name",
+        "/tmp",
+        mock.ANY,
+    )
+    # Second call should be for version "2" with package name
+    assert mock_base_template.call_args_list[1][0] == (
+        "2",
+        "my-package-name",
+        "/tmp",
+        mock.ANY,
+    )
 
     mock_render.assert_has_calls([mock.call(operator, "1"), mock.call(operator, "2")])
 
