@@ -9,6 +9,7 @@ import requests
 import yaml
 from operatorcert.logger import setup_logger
 from operatorcert.operator_repo import Operator, Repo
+from operatorcert.operator_repo.exceptions import InvalidBundleException
 from operatorcert.utils import run_command
 
 LOGGER = logging.getLogger("operator-cert")
@@ -34,7 +35,7 @@ def setup_argparser() -> Any:
     )
     parser.add_argument(
         "--operator-name",
-        help="Name of the operator",
+        help="Name of the operator folder (package name will be auto-detected from bundles)",
         required=True,
     )
     parser.add_argument(
@@ -231,6 +232,52 @@ def update_operator_config(
         yaml.safe_dump(config, f, explicit_start=True)
 
 
+def get_package_name_from_operator(operator: Operator) -> str:
+    """
+    Get the package name from the operator's bundles.
+    The package name may differ from the operator folder name.
+
+    Args:
+        operator (Operator): Operator object
+
+    Returns:
+        str: The package name as defined in the operator's bundle metadata
+    """
+    # Get any bundle from the operator to extract the package name
+    bundles = list(operator.all_bundles())
+    if not bundles:
+        # If no bundles exist, fall back to the folder name
+        LOGGER.warning(
+            "No bundles found for operator '%s', using folder name as package name",
+            operator.operator_name,
+        )
+        return operator.operator_name
+
+    # Use the metadata_operator_name from the first bundle
+    # (all bundles should have the same package name)
+    package_name = bundles[0].metadata_operator_name
+    if not package_name:
+        # Fallback to CSV operator name if metadata is missing
+        try:
+            package_name = bundles[0].csv_operator_name
+            LOGGER.warning(
+                "Package name not found in bundle metadata for '%s', using CSV name: %s",
+                operator.operator_name,
+                package_name,
+            )
+        except InvalidBundleException as exc:
+            # If CSV is also invalid, fall back to folder name
+            LOGGER.warning(
+                "Could not extract package name from bundle metadata or CSV for '%s' (%s). "
+                "Using folder name as package name.",
+                operator.operator_name,
+                exc,
+            )
+            package_name = operator.operator_name
+
+    return package_name
+
+
 def render_fbc_from_template(operator: Operator, version: str) -> None:
     """
     Render catalog from templates
@@ -276,7 +323,7 @@ def onboard_operator_to_fbc(
     Onboard operator to FBC and generates templates, catalogs and config
 
     Args:
-        operator_name (str): Name of the operator that will be onboarded
+        operator_name (str): Name of the operator folder that will be onboarded
         repository (Repo): A repository object with operators
         cache_dir (str): A directory where the catalog cache will be stored
     """
@@ -292,6 +339,12 @@ def onboard_operator_to_fbc(
     operator = repository.operator(operator_name)
     template_dir = create_catalog_template_dir_if_not_exists(operator)
 
+    # Get the package name from the operator's bundles (may differ from folder name)
+    package_name = get_package_name_from_operator(operator)
+    LOGGER.info(
+        "Using package name '%s' for operator folder '%s'", package_name, operator_name
+    )
+
     catalog_mapping = []
 
     for catalog in supported_catalogs:
@@ -301,7 +354,7 @@ def onboard_operator_to_fbc(
 
         build_cache(version, image, cache_dir)
         template = generate_and_save_base_templates(
-            version, operator_name, cache_dir, template_dir
+            version, package_name, cache_dir, template_dir
         )
         if template:
             # Render a catalog only if basic template was generated
