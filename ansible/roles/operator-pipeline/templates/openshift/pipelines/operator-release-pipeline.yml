@@ -685,6 +685,31 @@ spec:
 
   finally:
 
+    # Log when acquire lease was skipped because the partner chose 'undistributed' in pyxis
+    - name: log-distribution-skip-notice
+      when:
+        - input: "$(tasks.acquire-lease.status)"
+          operator: in
+          values:
+            - "None"
+      taskSpec:
+        params:
+          - name: pipeline_image
+            type: string
+          - name: operator-distribution
+            type: string
+        steps:
+          - name: log
+            image: "$(params.pipeline_image)"
+            script: |
+              echo "Operator distribution value: $(params.operator-distribution)"
+              echo "Operator will not be released to any indexes/catalogs"
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: operator-distribution
+          value: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
+
     # Release the acquired resource
     - name: release-leases
       taskRef:
