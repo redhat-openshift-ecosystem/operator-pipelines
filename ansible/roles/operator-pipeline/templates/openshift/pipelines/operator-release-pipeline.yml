@@ -882,6 +882,8 @@ spec:
           value: "$(context.pipeline.name)"
         - name: pipeline_status
           value: "$(tasks.status)"
+        - name: operator_distribution
+          value: "$(tasks.get-pyxis-certification-data.results.operator_distribution)"
       workspaces:
         - name: base
           workspace: repository

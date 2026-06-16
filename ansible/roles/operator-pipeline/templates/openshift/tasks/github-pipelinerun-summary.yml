@@ -53,6 +53,14 @@ spec:
         A flag that determines whether pipeline logs should be uploaded to Github gists
       type: string
 
+    - name: operator_distribution
+      description: |
+        Only applies to certified/marketplace operators.
+        Valid values: connect, marketplace, undistributed.
+        Defaults to empty string for all other operator types.
+      type: string
+      default: ""
+
   steps:
     - name: gather-info
       workingDir: $(workspaces.output.path)
@@ -152,6 +160,11 @@ spec:
             if [[ -f "$RELEASE_INFO_DIR_PATH/updated_indices.txt" ]]; then
               echo -e "\n*Updated indices:* \n" >> "$PR_NAME/comment.md"
               cat "$RELEASE_INFO_DIR_PATH/updated_indices.txt" >> "$PR_NAME/comment.md"
+            fi
+            if [[ "$(params.operator_distribution)" == "undistributed" ]]; then
+              echo -e "\n*Operator Distribution:* \n" >> "$PR_NAME/comment.md"
+              echo "Operator distribution value: $(params.operator_distribution)" >> "$PR_NAME/comment.md"
+              echo "Operator will **not** be released to any indexes/catalogs" >> "$PR_NAME/comment.md"
             fi
           else
             echo -e "\nNothing was released.\n" >> "$PR_NAME/comment.md"
