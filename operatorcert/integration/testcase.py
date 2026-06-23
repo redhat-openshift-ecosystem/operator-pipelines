@@ -66,7 +66,7 @@ class BaseTestCase:
             self.cleanup()
 
 
-_test_cases = []
+_test_cases: list[type] = []
 
 
 _T = TypeVar("_T", bound=type)
