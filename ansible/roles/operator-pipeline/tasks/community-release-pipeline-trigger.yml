@@ -131,7 +131,7 @@
                             - ReadWriteOnce
                           resources:
                             requests:
-                              storage: 7Gi
+                              storage: 8Gi
                     - name: results
                       volumeClaimTemplate:
                         spec:
