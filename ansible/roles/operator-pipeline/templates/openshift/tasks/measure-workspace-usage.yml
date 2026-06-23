@@ -1,0 +1,47 @@
+# Temporary PVC sizing diagnostics. Remove before merge.
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: measure-workspace-usage
+spec:
+  description: Report workspace and Git object storage usage.
+  params:
+    - name: pipeline_image
+      description: The common pipeline image.
+  workspaces:
+    - name: source
+      description: The repository workspace to measure.
+  steps:
+    - name: measure
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.source.path)
+      script: |
+        #! /usr/bin/env bash
+        set -u
+
+        REPO="$(workspaces.source.path)"
+        if [[ ! -d "$REPO" ]]; then
+          echo "Source workspace is not available; skipping measurement"
+          exit 0
+        fi
+
+        echo "Filesystem usage:"
+        df -h "$REPO" || echo "Unable to read filesystem usage"
+
+        echo "Top-level workspace usage:"
+        du -x -h --max-depth=1 "$REPO" 2>&1 | sort -h || \
+          echo "Unable to read workspace usage"
+
+        if [[ -e "$REPO/.git" ]]; then
+          echo "Git object usage:"
+          for path in "$REPO/.git" "$REPO/.git/objects" "$REPO/.git/objects/pack"; do
+            if [[ -e "$path" ]]; then
+              du -x -sh "$path" || echo "Unable to read $path"
+            fi
+          done
+          if command -v git >/dev/null 2>&1; then
+            git -c safe.directory="$REPO" -C "$REPO" count-objects -vH \
+              || echo "Unable to read Git object counts"
+          fi
+        fi

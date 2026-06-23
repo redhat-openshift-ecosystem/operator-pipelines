@@ -151,10 +151,27 @@ spec:
         - name: access_type
           value: "internal"
 
+    # Resolve sparse checkout directories from PR changed files
+    - name: resolve-sparse-dirs
+      runAfter:
+        - set-env
+      taskRef:
+        name: resolve-sparse-checkout-dirs
+        kind: Task
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_pr_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # Git clone
     - name: clone-repository
       runAfter:
-        - set-env
+        - resolve-sparse-dirs
       taskRef:
         name: git-clone
         kind: Task
@@ -163,6 +180,8 @@ spec:
           value: $(params.git_repo_url)
         - name: revision
           value: $(params.git_commit)
+        - name: sparseCheckoutDirectories
+          value: "$(tasks.resolve-sparse-dirs.results.sparse_dirs)"
         - name: gitInitImage
           value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:56e27c58ded3b0d8aab1a585ef55aa543f7cf78f36060086fec00d0a1c42bc18
       workspaces:
@@ -178,12 +197,14 @@ spec:
         name: git-clone
         kind: Task
       runAfter:
-        - set-env
+        - resolve-sparse-dirs
       params:
         - name: url
           value: "$(params.git_repo_url)"
         - name: revision
           value: "$(params.git_commit_base)"
+        - name: sparseCheckoutDirectories
+          value: "$(tasks.resolve-sparse-dirs.results.sparse_dirs)"
         - name: gitInitImage
           value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:56e27c58ded3b0d8aab1a585ef55aa543f7cf78f36060086fec00d0a1c42bc18
       workspaces:
@@ -192,6 +213,37 @@ spec:
           subPath: base
         - name: ssh-directory
           workspace: ssh-dir
+
+    # Temporary PVC sizing diagnostics. Remove before merge; GitHub CI does not expose this usage.
+    - name: measure-src-checkout-usage
+      runAfter:
+        - clone-repository
+        - clone-repository-base
+      taskRef:
+        name: measure-workspace-usage
+        kind: Task
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: measure-base-checkout-usage
+      runAfter:
+        - clone-repository
+        - clone-repository-base
+      taskRef:
+        name: measure-workspace-usage
+        kind: Task
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: base
 
     # Parse operator bundle repository changes
     - name: detect-changes
@@ -689,6 +741,30 @@ spec:
           workspace: registry-pull-credentials
 
   finally:
+
+    - name: measure-final-src-usage
+      taskRef:
+        name: measure-workspace-usage
+        kind: Task
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: src
+
+    - name: measure-final-base-usage
+      taskRef:
+        name: measure-workspace-usage
+        kind: Task
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+      workspaces:
+        - name: source
+          workspace: repository
+          subPath: base
 
     # Release the acquired resource
     - name: release-leases
