@@ -1,0 +1,93 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: resolve-sparse-checkout-dirs
+spec:
+  description: >-
+    Queries the GitHub API for a pull request's changed files and computes
+    the minimal set of directories needed for a sparse checkout. This
+    allows the pipeline to clone only the affected operator directories
+    plus shared resources (config.yaml, catalogs) instead of the entire
+    repository.
+  params:
+    - name: pipeline_image
+
+    - name: git_pr_url
+      description: URL of the GitHub pull request
+      type: string
+
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
+
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: github_bot_token
+
+  results:
+    - name: sparse_dirs
+      description: >-
+        Comma-separated list of directories for sparse checkout.
+        Always includes config.yaml and catalogs; dynamically adds
+        operators/<name> for each affected operator.
+
+  steps:
+    - name: resolve-dirs
+      image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #! /usr/bin/env bash
+        set -xe
+
+        PR_URL="$(params.git_pr_url)"
+
+        REPO_PATH=$(echo "$PR_URL" | sed -n 's|.*github\.com/\([^/]*/[^/]*\)/pull/.*|\1|p')
+        PR_NUM=$(echo "$PR_URL" | sed -n 's|.*github\.com/[^/]*/[^/]*/pull/\([0-9]*\).*|\1|p')
+
+        if [[ -z "$REPO_PATH" || -z "$PR_NUM" ]]; then
+          echo "ERROR: Could not parse repo and PR number from URL: $PR_URL"
+          exit 1
+        fi
+
+        echo "Fetching changed files for $REPO_PATH PR #$PR_NUM"
+
+        ALL_FILES=""
+        PAGE=1
+        while true; do
+          RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${REPO_PATH}/pulls/${PR_NUM}/files?per_page=100&page=${PAGE}")
+
+          FILES=$(echo "$RESPONSE" | jq -r '.[].filename // empty')
+          if [ -z "$FILES" ]; then
+            break
+          fi
+          ALL_FILES="${ALL_FILES}
+        ${FILES}"
+          PAGE=$((PAGE + 1))
+        done
+
+        # Always include config.yaml (get-organization, pipelinerun-summary)
+        # and catalogs (add-bundle-to-fbc validation, build-fragment-images)
+        declare -A DIRS
+        DIRS["config.yaml"]=1
+        DIRS["catalogs"]=1
+
+        for filepath in $ALL_FILES; do
+          if [[ "$filepath" == operators/* ]]; then
+            # Extract operators/<name> (the operator root directory)
+            dir=$(echo "$filepath" | cut -d'/' -f1,2)
+            DIRS["$dir"]=1
+          fi
+        done
+
+        RESULT=$(printf '%s\n' "${!DIRS[@]}" | sort | paste -sd ',' -)
+
+        echo "Sparse checkout directories: $RESULT"
+        echo -n "$RESULT" > "$(results.sparse_dirs.path)"
