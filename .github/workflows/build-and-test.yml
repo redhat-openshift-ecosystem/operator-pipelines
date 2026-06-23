@@ -12,9 +12,13 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   tox:
-    name: Run unit tests and linters
+    name: ${{ matrix.tox-env }}
     runs-on: ubuntu-latest
     environment: ${{ github.event.pull_request.head.repo.fork && 'build-and-test' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        tox-env: [test, black, yamllint, bandit, mypy, pylint, ansible-lint]
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -35,20 +39,82 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y libkrb5-dev
 
-      - name: Install Hadolint via Brew
+      - name: Install dependencies
         run: |
-          NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          /home/linuxbrew/.linuxbrew/bin/brew install hadolint
-          sudo ln -s /home/linuxbrew/.linuxbrew/bin/hadolint /usr/bin/
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
+
+      - name: Run ${{ matrix.tox-env }}
+        run: |
+          poetry run tox -e ${{ matrix.tox-env }}
+
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.pull_request.head.repo.fork && 'build-and-test' || '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check for poetry.lock changes
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96  # v47.0.6
+        with:
+          files: poetry.lock
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+
+      - name: Set up poetry
+        uses: Gr1N/setup-poetry@48b0f77c8c1b1b19cb962f0f00dff7b4be8f81ec # v9
+        with:
+          poetry-version: "2.3.1"
+
+      - name: Install non-python dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y libkrb5-dev
 
       - name: Install dependencies
         run: |
           poetry config virtualenvs.in-project true
           poetry install --no-interaction
 
-      - name: Run Tests
+      - name: Run pip-audit
+        continue-on-error: ${{ steps.changed-files.outputs.any_changed != 'true' }}
         run: |
-          poetry run tox
+          poetry run tox -e pip-audit
+
+  hadolint:
+    name: hadolint
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.pull_request.head.repo.fork && 'build-and-test' || '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Install Hadolint
+        run: |
+          curl -sSL https://github.com/hadolint/hadolint/releases/download/v2.14.0/hadolint-Linux-x86_64 \
+            -o /usr/local/bin/hadolint
+          chmod +x /usr/local/bin/hadolint
+
+      - name: Run hadolint
+        run: |
+          tox -e hadolint
 
   build:
     name: Build and push image
