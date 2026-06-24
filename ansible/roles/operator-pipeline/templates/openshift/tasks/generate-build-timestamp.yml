@@ -17,4 +17,4 @@ spec:
       image: "$(params.pipeline_image)"
       script: |
         #!/usr/bin/env bash
-        date +%s | tee "$(results.timestamp.path)"
+        date +%s | tr -d '\n\r' | tee "$(results.timestamp.path)"
