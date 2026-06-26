@@ -63,6 +63,27 @@ def test_submit_image_request_error(
         publish_pyxis_image.submit_image_request(args)
 
 
+@patch("operatorcert.entrypoints.publish_pyxis_image.pyxis.wait_for_image_request")
+@patch("operatorcert.entrypoints.publish_pyxis_image.pyxis.post_image_request")
+def test_submit_image_request_error_no_status_message(
+    mock_post_image_request: MagicMock, mock_wait_for_image_request: MagicMock
+) -> None:
+    """Test that a timeout response without status_message does not raise KeyError."""
+    args = MagicMock()
+    args.pyxis_url = "https://catalog.redhat.com/api/containers/"
+    args.cert_project_id = "project_id"
+    args.image_identifier = "image_id"
+
+    mock_post_image_request.return_value = {"_id": "123"}
+    mock_wait_for_image_request.return_value = {
+        "status": "pending",
+        "_id": "123",
+    }
+
+    with pytest.raises(SystemExit):
+        publish_pyxis_image.submit_image_request(args)
+
+
 @patch("operatorcert.entrypoints.publish_pyxis_image.submit_image_request")
 @patch("operatorcert.entrypoints.publish_pyxis_image.setup_logger")
 @patch("operatorcert.entrypoints.publish_pyxis_image.setup_argparser")

@@ -54,7 +54,7 @@ def submit_image_request(args: Any) -> Any:
         LOGGER.error(
             "Image request failed: %s - %s",
             image_request["status"],
-            image_request["status_message"],
+            image_request.get("status_message", "N/A"),
         )
         sys.exit(1)
     return image_request

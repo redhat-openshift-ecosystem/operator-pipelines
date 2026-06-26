@@ -378,7 +378,7 @@ def wait_for_image_request(
                 "Image request %s finished with status %s - %s",
                 image_request_id,
                 status,
-                image_request["status_message"],
+                image_request.get("status_message", "N/A"),
             )
             return image_request
         if now() - start_time > timedelta(seconds=timeout):
