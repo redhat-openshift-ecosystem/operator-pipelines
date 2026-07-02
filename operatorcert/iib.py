@@ -161,7 +161,7 @@ def get_build(base_url: str, request_id: int) -> Any:
 
 
 def wait_for_batch_results(
-    iib_url: str, batch_id: int, timeout: float = 60 * 60, delay: float = 20
+    iib_url: str, batch_id: int, timeout: float = 90 * 60, delay: float = 20
 ) -> Any:
     """
     Wait for IIB build till it finishes
@@ -169,7 +169,7 @@ def wait_for_batch_results(
     Args:
         iib_url (Any): CLI arguments
         batch_id (int): IIB batch identifier
-        timeout ([type], optional): Maximum wait time. Defaults to 60*60 (3600 seconds/1 hour)
+        timeout ([type], optional): Maximum wait time. Defaults to 90*60 (5400 seconds/90 minutes)
         delay (int, optional): Delay between build pollin. Defaults to 20.
 
     Returns:

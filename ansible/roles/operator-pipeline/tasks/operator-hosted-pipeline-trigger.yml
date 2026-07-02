@@ -93,8 +93,8 @@
                     git_pull_request_url: $(tt.params.git_pr_url)
                 spec:
                   timeouts:
-                    pipeline: "2h"
-                    tasks: "1h50m"
+                    pipeline: "2h30m"
+                    tasks: "2h20m"
                   pipelineRef:
                     name: operator-hosted-pipeline
                   params:

@@ -72,7 +72,7 @@ def setup_argparser() -> argparse.ArgumentParser:
 
 
 def wait_for_results(
-    iib_url: str, request_ids: List[int], timeout: float = 60 * 60, delay: float = 20
+    iib_url: str, request_ids: List[int], timeout: float = 90 * 60, delay: float = 20
 ) -> Any:
     """
     Wait for IIB build till it finishes
@@ -80,7 +80,7 @@ def wait_for_results(
     Args:
         iib_url (Any): CLI arguments
         request_ids (List[int]): IIB identifiers
-        timeout ([type], optional): Maximum wait time. Defaults to 60*60 (3600 seconds/1 hour)
+        timeout ([type], optional): Maximum wait time. Defaults to 90*60 (5400 seconds/90 minutes)
         delay (int, optional): Delay between build pollin. Defaults to 20.
 
     Returns:
