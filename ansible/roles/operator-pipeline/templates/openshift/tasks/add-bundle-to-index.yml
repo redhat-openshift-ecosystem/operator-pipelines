@@ -68,6 +68,7 @@ spec:
   steps:
     - name: add-bundle-to-index
       image: "$(params.pipeline_image)"
+      timeout: "1h30m0s"
       workingDir: $(workspaces.output.path)
       env:
         - name: KRB_KEYTAB_FILE

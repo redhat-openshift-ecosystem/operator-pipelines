@@ -67,6 +67,7 @@ spec:
   steps:
     - name: add-fbc-fragments-to-index
       image: "$(params.pipeline_image)"
+      timeout: "1h30m0s"
       workingDir: $(workspaces.output.path)
       env:
         - name: KRB_KEYTAB_FILE
@@ -140,6 +141,7 @@ spec:
 
     - name: rm-operator-from-index
       image: "$(params.pipeline_image)"
+      timeout: "1h30m0s"
       workingDir: $(workspaces.output.path)
       env:
         - name: KRB_KEYTAB_FILE
