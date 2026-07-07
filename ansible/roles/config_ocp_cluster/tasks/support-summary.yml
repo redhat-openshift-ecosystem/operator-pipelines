@@ -40,7 +40,7 @@
           metadata:
             name: pipeline-summary-bot
           spec:
-            schedule: "0 9 * * 1-5"  # At 09:00 on every day-of-week from Monday through Friday
+            schedule: "0 8,14 * * 1-5"  # At 08:00 and 14:00 on every day-of-week from Monday through Friday
             jobTemplate:
               spec:
                 template:
