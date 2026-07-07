@@ -491,6 +491,7 @@ spec:
     - name: build-fbc-index-images
       runAfter:
         - acquire-lease
+      timeout: "1h30m0s"
       when:
         - *catalogUpdated
         - *notUndistributed
@@ -531,6 +532,7 @@ spec:
     - name: add-bundle-to-index
       runAfter:
         - acquire-lease
+      timeout: "1h30m0s"
       when:
         - *catalogUpdated
         - *notUndistributed
