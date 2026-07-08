@@ -346,7 +346,8 @@ python3 -m pip install ansible-lint
 To run unit tests and code style checkers:
 
 ```bash
-tox
+poetry run tox -p  # all tests in paralel
+poetry run tox -e bandit  # single check 
 ```
 
 ### Local development

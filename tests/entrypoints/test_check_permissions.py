@@ -576,7 +576,7 @@ def test_check_permissions(
         "deleted_operators": ["operator3"],
         "added_catalog_operators": ["c1/operator4"],
         "modified_catalog_operators": ["c2/operator5"],
-        "removed_catalog_operators": ["c3/operator6"],
+        "deleted_catalog_operators": ["c3/operator6"],
     }
     head_repo.operator.side_effect = [
         MagicMock(name="operator1"),

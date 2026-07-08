@@ -39,9 +39,11 @@ Depending on your use case, you may:
 
 To remove the operator completely from the catalog:
 
-- Delete the your operator directory from the `operators/` folder.
+- Delete your operator directory from the `operators/` folder.
 - Remove all catalog files related to your operator from the `catalogs/` directory.
 - Open a **single** pull request that includes these changes. Follow our contribution guidelines on how to [open a PR](users/contributing-via-pr.md).
+
+Community and certified (ISV) operators follow the same removal steps above. You do not need to keep a `ci.yaml` stub in the pull request for certified operators. When the operator directory is removed in the PR, the ISV pipeline reads `cert_project_id` from the `ci.yaml` on the target branch to authorize and process the removal.
 
 For reference, here’s an [example PR](https://github.com/redhat-openshift-ecosystem/community-operators-prod/pull/5955/files) demonstrating these steps.
 

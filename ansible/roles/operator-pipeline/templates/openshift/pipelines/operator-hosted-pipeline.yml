@@ -536,6 +536,9 @@ spec:
         - name: source
           workspace: repository
           subPath: src
+        - name: base
+          workspace: repository
+          subPath: base
 
     - name: get-organization
       runAfter:

@@ -562,9 +562,9 @@ def check_permissions(
     operators = operators.union(
         extract_operators_from_catalog(head_repo, affected_catalog_operators)
     )
-    removed_catalog_operators = changes.get("removed_catalog_operators", [])
+    deleted_catalog_operators = changes.get("deleted_catalog_operators", [])
     operators = operators.union(
-        extract_operators_from_catalog(base_repo, removed_catalog_operators)
+        extract_operators_from_catalog(base_repo, deleted_catalog_operators)
     )
 
     is_approved = []

@@ -20,6 +20,9 @@ spec:
       description: Identifier of certification project from Red Hat Connect
   workspaces:
     - name: source
+    - name: base
+      description: Clone of the repo at head of the base branch
+      optional: true
   steps:
     - name: certification-project-check
       image: "$(params.pipeline_image)"
@@ -27,56 +30,17 @@ spec:
       script: |
         #! /usr/bin/env bash
         set -xe
-        echo "Checking availability of cert project identifier"
 
-        if [ "$(params.cert_project_required)" != "true" ]; then
-          echo "Cert project ID is not required."
-          echo -n "" | tee $(results.certification_project_id.path)
-          exit 0
+        EXTRA_ARGS=""
+        if [[ "$(workspaces.base.bound)" == "true" ]]; then
+          EXTRA_ARGS+=" --repo-base-path $(workspaces.base.path)"
         fi
 
-        if [[ -z "$(params.affected_operators)" && -z "$(params.affected_catalog_operators)" ]]; then
-          echo "No operator is affected."
-          exit 1
-        fi
-
-        # Create dictionary of all affected operators to serve as a set
-        declare -A ALL_AFFECTED_OPERATORS
-
-        # Add operators from affected_operators
-        if [ -n "$(params.affected_operators)" ]; then
-          IFS=',' read -ra affected_ops_array <<< "$(params.affected_operators)"
-          for op in "${affected_ops_array[@]}"; do
-            ALL_AFFECTED_OPERATORS["$op"]=1
-          done
-        fi
-
-        # Add operators from affected_catalog_operators
-        if [ -n "$(params.affected_catalog_operators)" ]; then
-          IFS=',' read -ra affected_catalog_ops_array <<< "$(params.affected_catalog_operators)"
-          for op in "${affected_catalog_ops_array[@]}"; do
-            operator_name=$(echo "$op" | cut -d'/' -f2) # Parse operator name from its catalog path
-            if [ -n "$operator_name" ]; then
-              ALL_AFFECTED_OPERATORS["$operator_name"]=1
-            fi
-          done
-        fi
-
-
-        for operator_name in "${!ALL_AFFECTED_OPERATORS[@]}"; do
-          file_path="operators/$operator_name/ci.yaml"
-
-          if [ ! -f "$file_path" ]; then
-            echo "File '$file_path' not found."
-            exit 1
-          fi
-
-          CERT_PROJECT_ID=$(cat "$file_path" | yq -r '.cert_project_id | select (.!=null)')
-
-          if [ -z "$CERT_PROJECT_ID" ]; then
-            echo "Certification project ID is missing in '$file_path' file (cert_project_id)"
-            exit 1
-          fi
-        done
-
-        echo -n "$CERT_PROJECT_ID" | tee "$(results.certification_project_id.path)"
+        certification-project-check \
+          --repo-head-path "$(workspaces.source.path)" \
+          --affected-operators "$(params.affected_operators)" \
+          --affected-catalog-operators "$(params.affected_catalog_operators)" \
+          --cert-project-required "$(params.cert_project_required)" \
+          --output-file "$(results.certification_project_id.path)" \
+          --verbose \
+          $EXTRA_ARGS
