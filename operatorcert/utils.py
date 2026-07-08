@@ -130,7 +130,14 @@ class SplitArgs(argparse.Action):
     def __call__(
         self, parser: Any, namespace: Any, values: Any, option_string: Any = None
     ) -> None:
-        setattr(namespace, self.dest, values.split(","))
+        if not values or values.strip() == "":
+            setattr(namespace, self.dest, [])
+        else:
+            setattr(
+                namespace,
+                self.dest,
+                [v.strip() for v in values.split(",") if v.strip()],
+            )
 
 
 def run_command(

@@ -1,3 +1,4 @@
+import argparse
 import os
 import subprocess
 from pathlib import Path
@@ -7,9 +8,26 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 from operatorcert import utils
-from operatorcert.utils import store_results
+from operatorcert.utils import SplitArgs, store_results
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
+
+
+@pytest.mark.parametrize(
+    ("values", "expected"),
+    [
+        ("", []),
+        ("   ", []),
+        ("op-a,op-b", ["op-a", "op-b"]),
+        (" op-a , op-b ", ["op-a", "op-b"]),
+        ("op-a,,op-b", ["op-a", "op-b"]),
+    ],
+)
+def test_split_args(values: str, expected: list[str]) -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--items", action=SplitArgs)
+    namespace = parser.parse_args(["--items", values])
+    assert namespace.items == expected
 
 
 def test_find_file(tmp_path: Path) -> None:

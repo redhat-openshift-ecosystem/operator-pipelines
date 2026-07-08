@@ -23,6 +23,43 @@ def test_collect_affected_operators_skips_invalid_catalog_paths() -> None:
     assert result == {"op-c"}
 
 
+def test_collect_affected_operators_ignores_empty_operator_names() -> None:
+    result = certification_project_check.collect_affected_operators(
+        ["", "  "],
+        ["v4.15/catalog-op"],
+    )
+    assert result == {"catalog-op"}
+
+
+def test_main_ignores_empty_affected_operators_with_catalog_operators(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    operator_dir = tmp_path / "operators" / "catalog-op"
+    operator_dir.mkdir(parents=True)
+    (operator_dir / "ci.yaml").write_text(
+        "cert_project_id: cert-789\n", encoding="utf-8"
+    )
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "certification-project-check",
+            "--repo-head-path",
+            str(tmp_path),
+            "--affected-operators",
+            "",
+            "--affected-catalog-operators",
+            "v4.15/catalog-op",
+            "--cert-project-required",
+            "true",
+        ],
+    )
+
+    certification_project_check.main()
+
+    assert capsys.readouterr().out.strip() == "cert-789"
+
+
 def test_resolve_operator_ci_yaml_path_from_head(tmp_path: Path) -> None:
     operator_dir = tmp_path / "operators" / "my-operator"
     operator_dir.mkdir(parents=True)

@@ -72,13 +72,13 @@ def collect_affected_operators(
     Returns:
         set[str]: Unique affected operator names
     """
-    operators = set(affected_operators)
+    operators = {op.strip() for op in affected_operators if op and op.strip()}
     for catalog_operator in affected_catalog_operators:
-        if "/" not in catalog_operator:
+        if not catalog_operator or "/" not in catalog_operator:
             continue
         _, operator_name = catalog_operator.split("/", 1)
-        if operator_name:
-            operators.add(operator_name)
+        if operator_name.strip():
+            operators.add(operator_name.strip())
     return operators
 
 
