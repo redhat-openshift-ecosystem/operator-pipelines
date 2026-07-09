@@ -1,0 +1,19 @@
+{
+  "apiVersion": "tekton.dev/v1",
+  "kind": "PipelineRun",
+  "metadata": {
+    "name": "long-running-pipeline-run",
+    "labels": {
+      "tekton.dev/pipeline": "test-pipeline"
+    }
+  },
+  "status": {
+    "startTime": "2021-11-10T18:00:00Z",
+    "pipelineSpec": {
+      "tasks": [
+        {"name": "build-fbc-index-images"}
+      ],
+      "finally": []
+    }
+  }
+}

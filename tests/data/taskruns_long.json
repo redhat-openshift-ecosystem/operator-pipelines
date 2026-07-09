@@ -1,0 +1,21 @@
+[
+  {
+    "apiVersion": "tekton.dev/v1",
+    "kind": "TaskRun",
+    "metadata": {
+      "labels": {
+        "tekton.dev/pipelineTask": "build-fbc-index-images"
+      }
+    },
+    "status": {
+      "startTime": "2021-11-10T18:00:00Z",
+      "completionTime": "2021-11-10T19:07:12Z",
+      "conditions": [
+        {
+          "type": "Succeeded",
+          "reason": "Succeeded"
+        }
+      ]
+    }
+  }
+]

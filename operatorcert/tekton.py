@@ -4,7 +4,6 @@ import datetime
 import json
 from typing import Any, Dict
 
-import humanize
 from dateutil.parser import isoparse
 
 
@@ -50,14 +49,20 @@ class TaskRun:
         return isoparse(self.obj["status"]["completionTime"])
 
     @property
-    def duration(self) -> Any:
+    def duration(self) -> str:
         """
         Get the duration of the TaskRun.
 
         Returns:
-            Any: A human readable duration of the TaskRun
+            str: A human readable duration of the TaskRun.
         """
-        return humanize.naturaldelta(self.completion_time - self.start_time)
+        # Avoid humanize.naturaldelta() which rounds e.g. 67 min to "an hour"
+        delta = self.completion_time - self.start_time
+        total_seconds = int(delta.total_seconds())
+        if total_seconds >= 60:
+            minutes = round(total_seconds / 60)
+            return f"{minutes} minute{'s' if minutes != 1 else ''}"
+        return f"{total_seconds} second{'s' if total_seconds != 1 else ''}"
 
     @property
     def status(self) -> str:

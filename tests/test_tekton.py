@@ -6,6 +6,8 @@ from operatorcert.tekton import PipelineRun, TaskRun
 PARENT_DIR = pathlib.Path(__file__).parent.resolve()
 PIPELINERUN_PATH = PARENT_DIR.joinpath("data/pipelinerun.json")
 TASKRUNS_PATH = PARENT_DIR.joinpath("data/taskruns.json")
+PIPELINERUN_LONG_PATH = PARENT_DIR.joinpath("data/pipelinerun_long.json")
+TASKRUNS_LONG_PATH = PARENT_DIR.joinpath("data/taskruns_long.json")
 
 
 def test_taskrun() -> None:
@@ -30,6 +32,17 @@ def test_taskrun() -> None:
     # Failed TaskRun
     tr = pr.taskruns[3]
     assert tr.status == TaskRun.FAILED
+
+
+def test_taskrun_long_duration() -> None:
+    pr = PipelineRun.from_files(str(PIPELINERUN_LONG_PATH), str(TASKRUNS_LONG_PATH))
+
+    tr = pr.taskruns[0]
+    assert tr.pipelinetask == "build-fbc-index-images"
+    assert str(tr.start_time) == "2021-11-10 18:00:00+00:00"
+    assert str(tr.completion_time) == "2021-11-10 19:07:12+00:00"
+    assert tr.duration == "67 minutes"
+    assert tr.status == TaskRun.SUCCEEDED
 
 
 def test_pipelinerun() -> None:
