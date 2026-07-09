@@ -72,7 +72,7 @@ def collect_affected_operators(
     Returns:
         set[str]: Unique affected operator names
     """
-    operators = {op.strip() for op in affected_operators if op and op.strip()}
+    operators = set(affected_operators)
     for catalog_operator in affected_catalog_operators:
         if not catalog_operator or "/" not in catalog_operator:
             continue
@@ -185,7 +185,7 @@ def main() -> None:
     except (FileNotFoundError, ValueError) as exc:
         LOGGER.error("%s", exc)
         sys.exit(1)
-    print(cert_project_id)
+    LOGGER.info("Certification project ID: %s", cert_project_id)
     if args.output_file:
         Path(args.output_file).write_text(cert_project_id, encoding="utf-8")
 

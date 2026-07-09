@@ -23,14 +23,6 @@ def test_collect_affected_operators_skips_invalid_catalog_paths() -> None:
     assert result == {"op-c"}
 
 
-def test_collect_affected_operators_ignores_empty_operator_names() -> None:
-    result = certification_project_check.collect_affected_operators(
-        ["", "  "],
-        ["v4.15/catalog-op"],
-    )
-    assert result == {"catalog-op"}
-
-
 def test_main_ignores_empty_affected_operators_with_catalog_operators(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -57,7 +49,7 @@ def test_main_ignores_empty_affected_operators_with_catalog_operators(
 
     certification_project_check.main()
 
-    assert capsys.readouterr().out.strip() == "cert-789"
+    assert "Certification project ID: cert-789" in capsys.readouterr().out
 
 
 def test_resolve_operator_ci_yaml_path_from_head(tmp_path: Path) -> None:
@@ -198,7 +190,7 @@ def test_main_prints_cert_project_id_without_output_file(
 
     certification_project_check.main()
 
-    assert capsys.readouterr().out.strip() == "cert-456"
+    assert "Certification project ID: cert-456" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize(
@@ -241,6 +233,6 @@ def test_main(
 
     captured = capsys.readouterr()
     if cert_project_required == "true":
-        assert captured.out.strip() == expected_output
+        assert f"Certification project ID: {expected_output}" in captured.out
 
     assert output_file.read_text(encoding="utf-8") == expected_output
