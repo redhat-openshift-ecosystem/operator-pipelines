@@ -18,7 +18,7 @@
 
     - name: Download and extract the opm binary
       ansible.builtin.unarchive:
-        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest-4.20/opm-linux.tar.gz
+        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest-4.20/opm-linux-rhel9.tar.gz
         dest: "{{ integration_tests_temp_tools_dir.path }}"
         remote_src: true
         include:
