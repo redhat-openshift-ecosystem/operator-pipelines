@@ -55,7 +55,7 @@ COPY config/krb5.conf /etc/krb5.conf
 COPY hacks/retry-command.sh /usr/local/bin/retry
 
 # Install oc, opm and operator-sdk CLI
-RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.46.0/linux-${ARCH}-opm && \
+RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.71.0/linux-${ARCH}-opm && \
   chmod +x linux-${ARCH}-opm && \
   mv linux-${ARCH}-opm /usr/local/bin/opm && \
   curl -LO https://mirror.openshift.com/pub/openshift-v4/${ARCH}/clients/ocp/stable-4.20/openshift-client-linux.tar.gz && \
