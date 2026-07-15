@@ -1403,7 +1403,8 @@ python3 -m pip install ansible-lint
 </code></pre>
 <h4 id="run-the-local-tests">Run the local tests</h4>
 <p>To run unit tests and code style checkers:</p>
-<pre><code class="language-bash">tox
+<pre><code class="language-bash">poetry run tox -p  # all tests in paralel
+poetry run tox -e bandit  # single check 
 </code></pre>
 <h3 id="local-development">Local development</h3>
 <p>Setup python virtual environment using poetry.</p>

@@ -1310,10 +1310,11 @@ For non-FBC (bundle-based) operators, refer to the <a href="users/fbc_onboarding
 <h3 id="remove-the-entire-operator-from-the-catalog">Remove the Entire Operator from the Catalog</h3>
 <p>To remove the operator completely from the catalog:</p>
 <ul>
-<li>Delete the your operator directory from the <code>operators/</code> folder.</li>
+<li>Delete your operator directory from the <code>operators/</code> folder.</li>
 <li>Remove all catalog files related to your operator from the <code>catalogs/</code> directory.</li>
 <li>Open a <strong>single</strong> pull request that includes these changes. Follow our contribution guidelines on how to <a href="users/contributing-via-pr/">open a PR</a>.</li>
 </ul>
+<p>Community and certified (ISV) operators follow the same removal steps above. You do not need to keep a <code>ci.yaml</code> stub in the pull request for certified operators. When the operator directory is removed in the PR, the ISV pipeline reads <code>cert_project_id</code> from the <code>ci.yaml</code> on the target branch to authorize and process the removal.</p>
 <p>For reference, here’s an <a href="https://github.com/redhat-openshift-ecosystem/community-operators-prod/pull/5955/files">example PR</a> demonstrating these steps.</p>
 <h3 id="remove-the-operator-from-specific-catalog-versions">Remove the Operator from Specific Catalog Version(s)</h3>
 <p>To remove your operator from selected catalog versions:</p>
