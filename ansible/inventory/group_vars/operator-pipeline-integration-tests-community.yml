@@ -17,6 +17,8 @@ operator_pipeline_dispatcher_config:
       pipeline_name: "operator-hosted-pipeline"
       max_capacity: "{{ operator_pipeline_dispatcher_hosted_capacity }}"
       namespace: "{{ oc_namespace }}"
+      annotation_selector:
+        operator-pipelines.redhat.com/repository: "{{ integration_tests_git_upstream_repo }}"
     callback_url: "{{ operator_pipeline_community_pipeline_callback_url }}"
     filter:
       cel_expression: "{{ operator_pipeline_hosted_pipeline_cel_filter | replace('\n', '') }}"
@@ -29,6 +31,8 @@ operator_pipeline_dispatcher_config:
       pipeline_name: "operator-release-pipeline"
       max_capacity: "{{ operator_pipeline_dispatcher_release_capacity }}"
       namespace: "{{ oc_namespace }}"
+      annotation_selector:
+        operator-pipelines.redhat.com/repository: "{{ integration_tests_git_upstream_repo }}"
     callback_url: "{{ operator_pipeline_community_pipeline_callback_url }}"
     filter:
       cel_expression: "{{ operator_pipeline_release_pipeline_cel_filter | replace('\n', '') }}"
