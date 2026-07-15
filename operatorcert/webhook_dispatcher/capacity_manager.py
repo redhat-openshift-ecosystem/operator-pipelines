@@ -31,11 +31,17 @@ class OCPTektonCapacityManager(CapacityManager):
 
     """
 
-    def __init__(self, pipeline_name: str, max_capacity: int, namespace: str):
+    def __init__(
+        self,
+        pipeline_name: str,
+        max_capacity: int,
+        namespace: str,
+        annotation_selector: dict[str, str] | None = None,
+    ):
         self.pipeline_name = pipeline_name
         self.max_capacity = max_capacity
         self.namespace = namespace
-
+        self.annotation_selector = annotation_selector
         self._k8s_client = None
 
     @property
@@ -82,6 +88,22 @@ class OCPTektonCapacityManager(CapacityManager):
         )
         return is_free
 
+    def _matches_annotation_selector(self, item: dict) -> bool:  # type: ignore[type-arg]
+        """
+        Check whether a PipelineRun item matches the configured annotation selector.
+        If no annotation_selector is configured, all items match.
+
+        Args:
+            item (dict): A PipelineRun item from the Kubernetes API response.
+
+        Returns:
+            bool: True if the item matches the annotation selector, False otherwise.
+        """
+        if not self.annotation_selector:
+            return True
+        annotations = item.get("metadata", {}).get("annotations", {})
+        return all(annotations.get(k) == v for k, v in self.annotation_selector.items())
+
     async def _get_running_tekton_pipelines_count(self) -> int:
         """
         Get the count of currently running Tekton pipelines for the specified
@@ -107,6 +129,9 @@ class OCPTektonCapacityManager(CapacityManager):
             for item in pipeline_runs.get("items", []):
                 pipeline_name = item.get("spec", {}).get("pipelineRef", {}).get("name")
                 if pipeline_name != self.pipeline_name:
+                    continue
+
+                if not self._matches_annotation_selector(item):
                     continue
 
                 status = item.get("status", {})

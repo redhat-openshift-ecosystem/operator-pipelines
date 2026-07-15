@@ -121,3 +121,65 @@ async def test_ocptekton_capacity_manager__get_running_tekton_pipelines_count_er
     )
     with pytest.raises(Exception):  # pylint: disable=broad-exception-raised
         await capacity_manager._get_running_tekton_pipelines_count()
+
+
+@pytest.mark.asyncio
+@patch(
+    "operatorcert.webhook_dispatcher.capacity_manager.OCPTektonCapacityManager.k8s_client"
+)
+@patch("operatorcert.webhook_dispatcher.capacity_manager.client.CustomObjectsApi")
+async def test_ocptekton_capacity_manager__get_running_tekton_pipelines_count_with_annotation_selector(
+    mock_custom_objects_api: MagicMock,
+    mock_k8s_client: MagicMock,
+) -> None:
+    capacity_manager = OCPTektonCapacityManager(
+        pipeline_name="test-pipeline",
+        max_capacity=10,
+        namespace="test-namespace",
+        annotation_selector={"operator-pipelines.redhat.com/repository": "org/repo-a"},
+    )
+    mock_custom_objects_api.return_value.list_namespaced_custom_object.return_value = {
+        "items": [
+            {
+                # matches pipeline name AND annotation → counted
+                "metadata": {
+                    "name": "test-pipeline-1",
+                    "annotations": {
+                        "operator-pipelines.redhat.com/repository": "org/repo-a"
+                    },
+                },
+                "spec": {"pipelineRef": {"name": "test-pipeline"}},
+                "status": {
+                    "conditions": [
+                        {"type": "Succeeded", "status": "Unknown", "reason": "Running"}
+                    ]
+                },
+            },
+            {
+                # matches pipeline name but annotation value differs → not counted
+                "metadata": {
+                    "name": "test-pipeline-2",
+                    "annotations": {
+                        "operator-pipelines.redhat.com/repository": "org/repo-b"
+                    },
+                },
+                "spec": {"pipelineRef": {"name": "test-pipeline"}},
+                "status": {
+                    "conditions": [
+                        {"type": "Succeeded", "status": "Unknown", "reason": "Running"}
+                    ]
+                },
+            },
+            {
+                # matches pipeline name but annotation key absent → not counted
+                "metadata": {"name": "test-pipeline-3", "annotations": {}},
+                "spec": {"pipelineRef": {"name": "test-pipeline"}},
+                "status": {
+                    "conditions": [
+                        {"type": "Succeeded", "status": "Unknown", "reason": "Running"}
+                    ]
+                },
+            },
+        ],
+    }
+    assert await capacity_manager._get_running_tekton_pipelines_count() == 1

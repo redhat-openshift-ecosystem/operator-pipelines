@@ -60,6 +60,7 @@ class CapacityConfig(BaseModel):
     pipeline_name: str
     max_capacity: int
     namespace: str
+    annotation_selector: Optional[dict[str, str]] = None
 
 
 class Filter(BaseModel):

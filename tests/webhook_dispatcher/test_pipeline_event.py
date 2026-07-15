@@ -56,6 +56,19 @@ def test_capacity_manager(pipeline_event: PipelineEvent) -> None:
         pipeline_event.capacity_manager
 
 
+def test_capacity_manager_passes_annotation_selector(
+    pipeline_event: PipelineEvent,
+) -> None:
+    pipeline_event._config_item.capacity.annotation_selector = {  # type: ignore
+        "operator-pipelines.redhat.com/repository": "test/test"
+    }
+    manager = pipeline_event.capacity_manager
+    assert isinstance(manager, OCPTektonCapacityManager)
+    assert manager.annotation_selector == {
+        "operator-pipelines.redhat.com/repository": "test/test"
+    }
+
+
 @pytest.mark.asyncio
 @patch(
     "operatorcert.webhook_dispatcher.pipeline_event.OCPTektonCapacityManager.is_capacity_available"
