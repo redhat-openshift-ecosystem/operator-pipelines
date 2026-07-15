@@ -50,6 +50,8 @@
                 value: operatorcert.static_tests.community,operatorcert.static_tests.common
               - name: cert_project_required
                 value: "false"
+              - name: git_repository_full_name
+                value: $(body.repository.full_name)
 
     - name: Create Community hosted pipeline Trigger template
       kubernetes.core.k8s:
@@ -82,6 +84,7 @@
               - name: hydra_sso_token_url
               - name: static_test_suites
               - name: cert_project_required
+              - name: git_repository_full_name
             resourcetemplates:
               - apiVersion: tekton.dev/v1
                 kind: PipelineRun
@@ -94,6 +97,7 @@
                     git_commit: $(tt.params.git_commit)
                   annotations:
                     git_pull_request_url: $(tt.params.git_pr_url)
+                    operator-pipelines.redhat.com/repository: $(tt.params.git_repository_full_name)
                 spec:
                   timeouts:
                     pipeline: "2h30m"
