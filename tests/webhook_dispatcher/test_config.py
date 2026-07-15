@@ -23,6 +23,9 @@ def test_load_config(mock_open: MagicMock, mock_yaml_load: MagicMock) -> None:
                         "type": "ocp_tekton",
                         "pipeline_name": "test",
                         "namespace": "test",
+                        "annotation_selector": {
+                            "operator-pipelines.redhat.com/repository": "test/test"
+                        },
                     },
                     "filter": {
                         "cel_expression": "body.action == 'push'",
@@ -40,6 +43,9 @@ def test_load_config(mock_open: MagicMock, mock_yaml_load: MagicMock) -> None:
     assert config.dispatcher.items[0].name == "test"
     assert config.dispatcher.items[0].events == ["push"]
     assert config.dispatcher.items[0].full_repository_name == "test/test"
+    assert config.dispatcher.items[0].capacity.annotation_selector == {
+        "operator-pipelines.redhat.com/repository": "test/test"
+    }
 
 
 def test_cel_expression_compilation() -> None:

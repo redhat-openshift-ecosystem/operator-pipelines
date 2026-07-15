@@ -61,6 +61,7 @@ class PipelineEvent:
                 self.config_item.capacity.pipeline_name,
                 self.config_item.capacity.max_capacity,
                 self.config_item.capacity.namespace,
+                self.config_item.capacity.annotation_selector,
             )
         raise ValueError(f"Unsupported capacity type: {self.config_item.capacity.type}")
 
