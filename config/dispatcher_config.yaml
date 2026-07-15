@@ -15,6 +15,8 @@ dispatcher:
         pipeline_name: "operator-hosted-pipeline"
         max_capacity: 2
         namespace: "operator-pipeline-stage"
+        annotation_selector:
+          operator-pipelines.redhat.com/repository: "redhat-openshift-ecosystem/community-operators-preprod"
       callback_url: "https://example.com/foo" # Placeholder URL
 
 security:

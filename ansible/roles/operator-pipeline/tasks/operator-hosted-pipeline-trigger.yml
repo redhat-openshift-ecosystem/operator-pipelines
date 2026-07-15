@@ -50,6 +50,8 @@
                 value: "{{ operator_pipeline_hydra_sso_token_url }}"
               - name: static_test_suites
                 value: operatorcert.static_tests.isv,operatorcert.static_tests.common
+              - name: git_repository_full_name
+                value: $(body.repository.full_name)
 
     - name: Create Hosted pipeline Trigger Template
       kubernetes.core.k8s:
@@ -79,6 +81,7 @@
               - name: image_namespace
               - name: hydra_sso_token_url
               - name: static_test_suites
+              - name: git_repository_full_name
             resourcetemplates:
               - apiVersion: tekton.dev/v1
                 kind: PipelineRun
@@ -91,6 +94,7 @@
                     git_commit: $(tt.params.git_commit)
                   annotations:
                     git_pull_request_url: $(tt.params.git_pr_url)
+                    operator-pipelines.redhat.com/repository: $(tt.params.git_repository_full_name)
                 spec:
                   timeouts:
                     pipeline: "2h30m"
