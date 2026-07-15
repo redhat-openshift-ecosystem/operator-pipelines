@@ -71,12 +71,7 @@ async def test_ocptekton_capacity_manager__get_running_tekton_pipelines_count(
     mock_custom_objects_api.return_value.list_namespaced_custom_object.return_value = {
         "items": [
             {
-                "metadata": {"name": "unknown-pipeline"},
-                "spec": {"pipelineRef": {"name": "unknown-pipeline"}},
-            },
-            {
                 "metadata": {"name": "test-pipeline-1"},
-                "spec": {"pipelineRef": {"name": "test-pipeline"}},
                 "status": {
                     "conditions": [
                         {"type": "Succeeded", "status": "Unknown", "reason": "Running"}
@@ -85,7 +80,6 @@ async def test_ocptekton_capacity_manager__get_running_tekton_pipelines_count(
             },
             {
                 "metadata": {"name": "test-pipeline-2"},
-                "spec": {"pipelineRef": {"name": "test-pipeline"}},
                 "status": {
                     "conditions": [
                         {"type": "Succeeded", "status": "Unknown", "reason": "Running"}
@@ -94,12 +88,18 @@ async def test_ocptekton_capacity_manager__get_running_tekton_pipelines_count(
             },
             {
                 "metadata": {"name": "test-pipeline-3"},
-                "spec": {"pipelineRef": {"name": "test-pipeline"}},
                 "status": {"conditions": [{"type": "Succeeded", "status": "True"}]},
             },
         ],
     }
     assert await capacity_manager._get_running_tekton_pipelines_count() == 2
+    mock_custom_objects_api.return_value.list_namespaced_custom_object.assert_called_once_with(
+        group="tekton.dev",
+        version="v1beta1",
+        namespace="test-namespace",
+        plural="pipelineruns",
+        label_selector="tekton.dev/pipeline=test-pipeline",
+    )
 
 
 @pytest.mark.asyncio
@@ -183,3 +183,10 @@ async def test_ocptekton_capacity_manager__get_running_tekton_pipelines_count_wi
         ],
     }
     assert await capacity_manager._get_running_tekton_pipelines_count() == 1
+    mock_custom_objects_api.return_value.list_namespaced_custom_object.assert_called_once_with(
+        group="tekton.dev",
+        version="v1beta1",
+        namespace="test-namespace",
+        plural="pipelineruns",
+        label_selector="tekton.dev/pipeline=test-pipeline",
+    )
