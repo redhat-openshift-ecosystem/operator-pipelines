@@ -113,24 +113,20 @@ class OCPTektonCapacityManager(CapacityManager):
             int: A count of running pipelines
         """
         try:
-            # Use the Kubernetes custom objects API to query Tekton PipelineRuns
             custom_objects_api = client.CustomObjectsApi(self.k8s_client)
 
-            # Query PipelineRuns in the Tekton namespace
+            # Tekton automatically sets tekton.dev/pipeline on every PipelineRun
+            # created via pipelineRef, enabling server-side filtering by pipeline name.
             pipeline_runs = custom_objects_api.list_namespaced_custom_object(
                 group="tekton.dev",
                 version="v1beta1",
                 namespace=self.namespace,
                 plural="pipelineruns",
+                label_selector=f"tekton.dev/pipeline={self.pipeline_name}",
             )
 
-            # Count running pipelines
             running_count = 0
             for item in pipeline_runs.get("items", []):
-                pipeline_name = item.get("spec", {}).get("pipelineRef", {}).get("name")
-                if pipeline_name != self.pipeline_name:
-                    continue
-
                 if not self._matches_annotation_selector(item):
                     continue
 
