@@ -65,13 +65,19 @@ spec:
     - name: add-bundle-to-fbc
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)
-      env:
-        # The registry auth file for opm render catalog command
-        - name: REGISTRY_AUTH_FILE
-          value: "$(workspaces.registry-credentials.path)/.dockerconfigjson"
       script: |
         #! /usr/bin/env bash
         set -xe
+
+        # OPM 1.53+ (containers/image) expects a Docker-style auth layout:
+        # DOCKER_CONFIG/config.json and/or REGISTRY_AUTH_FILE pointing at that file.
+        # K8s dockerconfigjson secrets mount as .dockerconfigjson; reshape for OPM.
+        if [[ "$(workspaces.registry-credentials.bound)" == "true" ]]; then
+          export DOCKER_CONFIG="$(mktemp -d)"
+          cp "$(workspaces.registry-credentials.path)/.dockerconfigjson" \
+            "$DOCKER_CONFIG/config.json"
+          export REGISTRY_AUTH_FILE="$DOCKER_CONFIG/config.json"
+        fi
 
         RELEASE_CONFIG_PATH="operators/$(params.operator_name)/$(params.operator_version)/release-config.yaml"
 
