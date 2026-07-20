@@ -63,11 +63,15 @@ spec:
         EXTRA_ARGS=""
         if [[ "$(workspaces.credentials.bound)" == "true" ]]; then
           DOCKERCONFIGJSON="$(workspaces.credentials.path)/.dockerconfigjson"
+          # buildah accepts the K8s-mounted .dockerconfigjson path directly
           EXTRA_ARGS+=" --authfile $DOCKERCONFIGJSON"
 
-          # OPM reads the config location from env var and cannot be provided as a parameter
-          # this will expose the config path to the OPM tool
-          export REGISTRY_AUTH_FILE=$DOCKERCONFIGJSON
+          # OPM 1.53+ (containers/image) expects a Docker-style auth layout:
+          # DOCKER_CONFIG/config.json and/or REGISTRY_AUTH_FILE pointing at that file.
+          # K8s dockerconfigjson secrets mount as .dockerconfigjson; reshape for OPM.
+          export DOCKER_CONFIG="$(mktemp -d)"
+          cp "$DOCKERCONFIGJSON" "$DOCKER_CONFIG/config.json"
+          export REGISTRY_AUTH_FILE="$DOCKER_CONFIG/config.json"
         fi
 
         # The registry pull-spec is in following format:
