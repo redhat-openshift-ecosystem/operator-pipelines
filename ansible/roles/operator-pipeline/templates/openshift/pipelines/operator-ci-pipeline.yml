@@ -15,7 +15,7 @@ spec:
     - name: gitInitImage
       description: The image providing the git-init binary that the checkout task runs.
       type: string
-      default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:a538c423e7a11aae6ae582a411fdb090936458075f99af4ce5add038bb6983e8"
+      default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:56e27c58ded3b0d8aab1a585ef55aa543f7cf78f36060086fec00d0a1c42bc18"
     - name: upstream_repo_name
       default: ""
       description: Upstream repository where the pull request will be opened (namespace/name)

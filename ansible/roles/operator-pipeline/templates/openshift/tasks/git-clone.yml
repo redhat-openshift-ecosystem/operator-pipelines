@@ -93,13 +93,13 @@ spec:
     - name: gitInitImage
       description: The image providing the git-init binary that this Task runs.
       type: string
-      default: "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0"
+      default: "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:56e27c58ded3b0d8aab1a585ef55aa543f7cf78f36060086fec00d0a1c42bc18"
     - name: userHome
       description: |
         Absolute path to the user's home directory. Set this explicitly if you are running the image as a non-root user or have overridden
         the gitInitImage param with an image containing custom user configuration.
       type: string
-      default: "/tekton/home"
+      default: "/home/git"
   results:
     - name: commit
       description: The precise commit SHA that was fetched by this Task.
@@ -109,8 +109,6 @@ spec:
     - name: clone
       image: "$(params.gitInitImage)"
       env:
-        - name: HOME
-          value: "$(params.userHome)"
         - name: PARAM_URL
           value: $(params.url)
         - name: PARAM_REVISION
