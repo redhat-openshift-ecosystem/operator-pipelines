@@ -136,6 +136,11 @@ spec:
         # Replace status words with corresponding symbols
         sed -ie 's/^|warning|/|:warning:|/g;s/^|error|/|:x:|/g' "$MESSAGE_FILE"
 
+        # Redact any potential leaks
+        tempfile=$(mktemp)
+        leaktk redact --kind Stdio < "$MESSAGE_FILE" > "$tempfile"
+        mv -f "$tempfile" "$MESSAGE_FILE"
+
         echo "Posting GitHub comment to issue (or PR) $(params.pull_request_url)"
 
         github-add-comment \

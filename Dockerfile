@@ -64,6 +64,9 @@ RUN curl -LO https://github.com/operator-framework/operator-registry/releases/do
   chmod +x operator-sdk_linux_${ARCH} && \
   mv operator-sdk_linux_${ARCH} /usr/local/bin/operator-sdk
 
+# Install leaktkt
+COPY --from=quay.io/leaktk/leaktk:0.3.5@sha256:47f6120b372bc29629f00812ab363496321f1ab412b4d4a908516d50a2443617  /usr/local/bin/leaktk /usr/local/bin/
+
 # Create users
 RUN useradd -lms /bin/bash -u "${USER_UID}" user && \
   useradd -lu "${PODMAN_USER_UID}" podman; \
