@@ -263,7 +263,11 @@ def check_replaces_availability(bundle: Bundle) -> Iterator[CheckResult]:
     if replaces_version not in ver_to_dir:
         yield Fail(
             f"{bundle} attempts to replace version '{replaces_version}' which"
-            f" does not exist. Available versions: {sorted(ver_to_dir.keys())}"
+            f" does not exist in the submitted PR branch."
+            f" Available versions: {sorted(ver_to_dir.keys())}."
+            f" If you are submitting multiple versions in sequence,"
+            f" make sure your fork is up to date with origin (rebased)"
+            f" before each submission to include all previously merged versions."
         )
         return
 

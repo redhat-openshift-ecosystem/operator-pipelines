@@ -799,7 +799,11 @@ def test_check_operator_version_directory_name(
             {
                 Fail(
                     "Bundle(hello/0.0.2) attempts to replace version '0.0.5' which"
-                    " does not exist. Available versions: ['0.0.1', '0.0.2']"
+                    " does not exist in the submitted PR branch."
+                    " Available versions: ['0.0.1', '0.0.2']."
+                    " If you are submitting multiple versions in sequence,"
+                    " make sure your fork is up to date with origin (rebased)"
+                    " before each submission to include all previously merged versions."
                 )
             },
             id="Nonexistent replaces version",
