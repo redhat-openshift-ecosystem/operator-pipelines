@@ -81,6 +81,11 @@ spec:
           ssh-add $HOME/.ssh/id_rsa
         fi
 
+        # Inject safe.directory without mutating $HOME/.gitconfig.
+        export GIT_CONFIG_COUNT=1
+        export GIT_CONFIG_KEY_0=safe.directory
+        export GIT_CONFIG_VALUE_0="$(workspaces.source.path)"
+
         # Setting up the config for the git.
         git config --global user.email "$(params.git_user_email)"
         git config --global user.name "$(params.git_user_name)"
