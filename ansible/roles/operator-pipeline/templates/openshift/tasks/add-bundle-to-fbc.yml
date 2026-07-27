@@ -137,14 +137,14 @@ spec:
         fi
 
 
-        # Inject safe.directory without mutating $HOME/.gitconfig.
+        # Inject Git ENVS without mutating $HOME/.gitconfig.
         export GIT_CONFIG_COUNT=1
         export GIT_CONFIG_KEY_0=safe.directory
         export GIT_CONFIG_VALUE_0="$(workspaces.source.path)"
-
-        git config --global user.email "exd-guild-isv+operators@redhat.com"
-        git config --global user.name "rh-operator-bundle-bot"
-
+        export GIT_AUTHOR_EMAIL="exd-guild-isv+operators@redhat.com"
+        export GIT_AUTHOR_NAME="rh-operator-bundle-bot"
+        export GIT_COMMITTER_EMAIL="exd-guild-isv+operators@redhat.com"
+        export GIT_COMMITTER_NAME="rh-operator-bundle-bot"
 
         # Add catalogs and templates changes to a gii and push to a new branch
         git add operators/$(params.operator_name)/catalog-templates
