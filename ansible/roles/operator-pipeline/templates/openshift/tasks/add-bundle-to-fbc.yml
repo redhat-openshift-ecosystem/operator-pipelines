@@ -137,7 +137,11 @@ spec:
         fi
 
 
-        git config --global --add safe.directory $(workspaces.source.path)
+        # Inject safe.directory without mutating $HOME/.gitconfig.
+        export GIT_CONFIG_COUNT=1
+        export GIT_CONFIG_KEY_0=safe.directory
+        export GIT_CONFIG_VALUE_0="$(workspaces.source.path)"
+
         git config --global user.email "exd-guild-isv+operators@redhat.com"
         git config --global user.name "rh-operator-bundle-bot"
 
