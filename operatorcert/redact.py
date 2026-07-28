@@ -7,9 +7,9 @@ and then redacts.
 """
 
 import logging
+import subprocess
 import tempfile
 from pathlib import Path
-from subprocess import Popen, PIPE
 import json
 
 from pydantic import BaseModel
@@ -47,16 +47,19 @@ def scan(*input_paths: Path) -> list[ResultSetModel]:
     Returns:
         Parsed scan results.
     """
-    results = []
-    for input_path in input_paths:
-        with Popen(
-            ["leaktk", "scan", "--kind", "Files", str(input_path.absolute())],
-            stdout=PIPE,
-        ) as scan_proc:
-            result_bytes = scan_proc.stdout.read()  # type: ignore[union-attr]
-        loaded_dict = json.loads(result_bytes)
-        results.append(ResultSetModel.model_validate(loaded_dict))
-    return results
+    requests = "".join(
+        json.dumps(
+            {"id": str(i), "kind": "Files", "resource": str(input_path.absolute())}
+        )
+        + "\n"
+        for i, input_path in enumerate(input_paths)
+    )
+    results_jsonl = subprocess.check_output(
+        ["leaktk", "listen"], input=requests, text=True
+    )
+    return list(
+        map(ResultSetModel.model_validate, map(json.loads, results_jsonl.splitlines()))
+    )
 
 
 def _redact(
@@ -78,20 +81,20 @@ def _redact(
             delete=False
         )
         with open(input_path, "rb") as input_file:
-            with Popen(
+            redact_proc = subprocess.run(
                 ["leaktk", "redact", "--kind", "Stdio"],
                 stdin=input_file,
                 stdout=tmp_file.file,
-                stderr=PIPE,
-            ) as redact_proc:
-                redact_proc.wait()
-                if redact_proc.returncode != 0:
-                    raise RuntimeError(
-                        f"Redact failed with return code: "
-                        f"{redact_proc.returncode}. STDERR: "
-                        f"{redact_proc.stderr.read().decode('utf-8')}"  # type: ignore[union-attr]
-                    )
-                file_mapping[input_path.absolute()] = Path(tmp_file.name).absolute()
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            if redact_proc.returncode != 0:
+                raise RuntimeError(
+                    f"Redact failed with return code: "
+                    f"{redact_proc.returncode}. STDERR: "
+                    f"{redact_proc.stderr.decode('utf-8')}"
+                )
+            file_mapping[input_path.absolute()] = Path(tmp_file.name).absolute()
         tmp_file.close()
     return file_mapping
 
