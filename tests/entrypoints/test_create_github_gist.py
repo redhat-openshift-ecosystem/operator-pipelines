@@ -12,6 +12,7 @@ from operatorcert.entrypoints.create_github_gist import (
 from tests.utils import create_files
 
 
+@patch("operatorcert.entrypoints.create_github_gist.scan_and_redact")
 @patch("operatorcert.entrypoints.create_github_gist.json.dump")
 @patch("operatorcert.entrypoints.create_github_gist.share_github_gist")
 @patch("operatorcert.entrypoints.create_github_gist.create_github_gist")
@@ -25,6 +26,7 @@ def test_main(
     mock_create_github_gist: MagicMock,
     mock_share_github_gist: MagicMock,
     mock_json_dump: MagicMock,
+    mock_scan_and_redact: MagicMock,
     monkeypatch: Any,
     tmp_path: Path,
 ) -> None:
@@ -35,6 +37,7 @@ def test_main(
     args.pull_request_url = "https://github.com/foo/bar/pull/123"
     args.comment_prefix = "prefix:"
     mock_setup_argparser.return_value.parse_args.return_value = args
+    mock_scan_and_redact.return_value = {}
 
     monkeypatch.setenv("GITHUB_TOKEN", "foo_api_token")
     main()
@@ -50,22 +53,32 @@ def test_main(
     )
 
 
+@patch("operatorcert.entrypoints.create_github_gist.scan_and_redact")
 @patch("operatorcert.entrypoints.create_github_gist.InputFileContent")
 def test_create_github_gist(
     mock_input_file_content: MagicMock,
+    mock_scan_and_redact: MagicMock,
     tmp_path: Path,
 ) -> None:
     create_files(
         tmp_path,
         {
             "some_file": "foo",
-            "file2": "bar",
+            "file2": "SECRET",
             "subdir/nested/file3": "baz",
             "subdir/nested/file4": "qux",
             "subdir/nested/empty": "",
+            # Would be created by the redact function,
+            # but that is mocked so the leaktk does not need
+            # to be installed in the host system
+            "redacted_file2": "bar",
+            # bar will be in the output instead of SECRET.
         },
     )
     mock_github = MagicMock()
+    mock_scan_and_redact.return_value = {
+        tmp_path / "file2": tmp_path / "redacted_file2"
+    }
 
     github_user = MagicMock()
     mock_github.get_user.return_value = github_user

@@ -12,6 +12,7 @@ from typing import Any, List, Iterator
 
 from github import Auth, Gist, Github, InputFileContent, IssueComment
 from operatorcert.logger import setup_logger
+from operatorcert.redact import scan_and_redact
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -85,13 +86,24 @@ def create_github_gist(github_api: Github, input_path: List[Path]) -> Gist.Gist:
         else:
             LOGGER.warning("Skipping %s, not a file or directory", input_item)
 
+    # Redact any potential leaks if needed
+    redacted_file_mapping = scan_and_redact(
+        *[file_path for file_path, _ in files_for_gist]
+    )
+
     for file_path, relative_path in files_for_gist:
-        content = file_path.read_text(encoding="utf-8")
+        # Content path is either directly the file or its redacted version
+        content_path = redacted_file_mapping.get(file_path.absolute(), file_path)
+        content = content_path.read_text(encoding="utf-8")
         if content.strip() == "":
-            LOGGER.warning("Skipping empty file %s", file_path)
+            LOGGER.warning("Skipping empty file %s", content_path)
             continue
         LOGGER.info("Adding file %s to gist", relative_path)
         gist_content[relative_path] = InputFileContent(content)
+
+    # cleanup of temporary redacted files
+    for redacted_file in redacted_file_mapping.values():
+        os.unlink(redacted_file)
 
     LOGGER.info("Creating gist from %s", gist_content.keys())
     gist = github_auth_user.create_gist(
@@ -141,6 +153,7 @@ def main() -> None:
 
     github_auth = Auth.Token(os.environ.get("GITHUB_TOKEN") or "")
     github = Github(auth=github_auth)
+
     gist = create_github_gist(github, args.input_path)
 
     if args.pull_request_url:
