@@ -7,6 +7,7 @@ import os
 import pathlib
 import re
 import subprocess
+import tempfile
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -15,6 +16,8 @@ from packaging.version import Version
 from requests import Session
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
+
+from operatorcert.integration.external_tools import RegistryAuthMixin
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -235,8 +238,6 @@ def copy_images_to_destination(
         cmd = [
             "skopeo",
             "copy",
-            "--retry-times",
-            "5",
             f"docker://{response.get('index_image_resolved')}",
             f"docker://{destination}:{version}{tag_suffix}",
         ]
@@ -246,6 +247,55 @@ def copy_images_to_destination(
         LOGGER.info("Copying image to destination: %s", cmd)
 
         run_command(cmd, retries=5)
+
+
+def copy_permanent_tags(
+    iib_responses: Any,
+    build_tags_suffix: str,
+) -> None:
+    """
+    Copy IIB-built index images to permanent tags in the pending repository.
+
+    IIB pushes the version tag (e.g. :v4.12) via overwrite, but does not
+    push the permanent tag (e.g. :v4.12-1711883400). This function creates
+    the permanent tag by copying from the IIB-built image directly.
+
+    Args:
+        iib_responses: IIB build response items
+        build_tags_suffix: Timestamp suffix for the permanent tag
+    """
+    overwrite_token = os.environ.get("IIB_OVERWRITE_TOKEN")
+    auth_file_path = None
+
+    if overwrite_token:
+        user, password = overwrite_token.split(":", 1)
+        auth = RegistryAuthMixin({"quay.io": (user, password)})
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as auth_file:
+            auth.save_auth(auth_file)
+            auth_file_path = auth_file.name
+
+    try:
+        for response in iib_responses:
+            from_index = response.get("from_index", "")
+            src_image = response.get("index_image_resolved", "")
+            dest_image = f"{from_index}-{build_tags_suffix}"
+
+            cmd = [
+                "skopeo",
+                "copy",
+                "--all",
+            ]
+            if auth_file_path:
+                cmd.extend(["--authfile", auth_file_path])
+            cmd.extend([f"docker://{src_image}", f"docker://{dest_image}"])
+
+            LOGGER.info("Copying permanent tag: %s", cmd)
+            run_command(cmd, retries=5)
+    finally:
+        if auth_file_path:
+            os.remove(auth_file_path)
 
 
 def sort_versions(version_list: list[Any]) -> list[Any]:
