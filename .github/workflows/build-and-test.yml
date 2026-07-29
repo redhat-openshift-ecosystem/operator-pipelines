@@ -5,7 +5,7 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
@@ -14,7 +14,6 @@ jobs:
   tox:
     name: ${{ matrix.tox-env }}
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.repo.fork && 'build-and-test' || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -51,7 +50,6 @@ jobs:
   pip-audit:
     name: pip-audit
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.repo.fork && 'build-and-test' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -91,7 +89,6 @@ jobs:
   hadolint:
     name: hadolint
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.repo.fork && 'build-and-test' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -119,7 +116,6 @@ jobs:
   build:
     name: Build and push image
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.repo.fork && 'build-and-test' || '' }}
 
     steps:
       - name: Set variables
