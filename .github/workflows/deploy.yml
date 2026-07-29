@@ -215,7 +215,8 @@ jobs:
   release:
     name: Github release
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      contents: write
     needs:
       - deploy-prod
     steps:
