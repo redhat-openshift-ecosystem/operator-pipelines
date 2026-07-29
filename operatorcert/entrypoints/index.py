@@ -108,10 +108,6 @@ def add_bundle_to_index(  # pylint: disable=too-many-arguments,too-many-position
         if mode:
             build_request["graph_update_mode"] = mode
 
-        if build_tags_suffix:
-            version = index.split(":")[-1]
-            build_request["build_tags"] = [version, f"{version}-{build_tags_suffix}"]
-
         if overwrite_token:
             build_request["overwrite_from_index"] = True
             build_request["overwrite_from_index_token"] = overwrite_token
@@ -126,6 +122,9 @@ def add_bundle_to_index(  # pylint: disable=too-many-arguments,too-many-position
         build.get("state") == "complete" for build in response["items"]
     ):
         raise RuntimeError("IIB build failed")
+
+    if build_tags_suffix:
+        utils.copy_permanent_tags(response["items"], build_tags_suffix)
 
     output_index_image_paths(image_output, response)
 
