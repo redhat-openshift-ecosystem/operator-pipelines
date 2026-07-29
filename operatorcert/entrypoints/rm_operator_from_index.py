@@ -137,12 +137,6 @@ def rm_operator_from_index(
             "operators": index_image.operators_to_remove,
         }
 
-        if build_tags_suffix:
-            build_request["build_tags"] = [
-                index_image.version,
-                f"{index_image.version}-{build_tags_suffix}",
-            ]
-
         if overwrite_token:
             build_request["overwrite_from_index"] = True
             build_request["overwrite_from_index_token"] = overwrite_token
@@ -157,6 +151,9 @@ def rm_operator_from_index(
         build.get("state") == "complete" for build in response["items"]
     ):
         raise RuntimeError("IIB build failed")
+
+    if build_tags_suffix:
+        utils.copy_permanent_tags(response["items"], build_tags_suffix)
 
     return response
 

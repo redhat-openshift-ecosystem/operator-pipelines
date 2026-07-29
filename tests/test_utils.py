@@ -215,8 +215,6 @@ def test_copy_images_to_destination(mock_run_command: MagicMock) -> None:
         [
             "skopeo",
             "copy",
-            "--retry-times",
-            "5",
             "docker://quay.io/qwe/asd@sha256:1234",
             "docker://quay.io/foo/bar:v4.12-foo",
             "--authfile",
@@ -224,6 +222,53 @@ def test_copy_images_to_destination(mock_run_command: MagicMock) -> None:
         ],
         retries=5,
     )
+
+
+@patch("operatorcert.utils.run_command")
+def test_copy_permanent_tags(mock_run_command: MagicMock) -> None:
+    iib_responses = [
+        {
+            "from_index": "quay.io/foo/operator-index-pending:v4.12",
+            "index_image_resolved": "quay.io/foo/operator-index-pending@sha256:aaa",
+        },
+        {
+            "from_index": "quay.io/foo/operator-index-pending:v4.13",
+            "index_image_resolved": "quay.io/foo/operator-index-pending@sha256:bbb",
+        },
+    ]
+
+    with patch.dict(os.environ, {"IIB_OVERWRITE_TOKEN": "user:token123"}):
+        utils.copy_permanent_tags(iib_responses, "1711883400")
+
+    assert mock_run_command.call_count == 2
+
+    expected_pairs = [
+        (
+            "docker://quay.io/foo/operator-index-pending@sha256:aaa",
+            "docker://quay.io/foo/operator-index-pending:v4.12-1711883400",
+        ),
+        (
+            "docker://quay.io/foo/operator-index-pending@sha256:bbb",
+            "docker://quay.io/foo/operator-index-pending:v4.13-1711883400",
+        ),
+    ]
+    for call_args, (expected_src, expected_dest) in zip(
+        mock_run_command.call_args_list, expected_pairs
+    ):
+        cmd = call_args[0][0]
+        assert "--dest-creds" not in cmd
+        assert "user:token123" not in cmd
+        auth_file_path = cmd[cmd.index("--authfile") + 1]
+        assert auth_file_path.endswith(".json")
+        assert cmd == [
+            "skopeo",
+            "copy",
+            "--all",
+            "--authfile",
+            auth_file_path,
+            expected_src,
+            expected_dest,
+        ]
 
 
 def test_is_catalog_v4_17_plus() -> None:

@@ -62,12 +62,19 @@ def test_rm_operator_from_index(
     index_images_with_token[0].operators_to_remove = ["op1"]
     mock_iib_add_builds.return_value = [{"batch": "batch2"}]
     mock_wait.return_value = {"items": [{"state": "complete"}]}
-    rm_operator_from_index.rm_operator_from_index(
-        index_images_with_token,
-        "https://iib.foo.redhat.com",
-        "user:token123",
-        "1711883400",
-    )
+    with patch(
+        "operatorcert.entrypoints.rm_operator_from_index.utils.copy_permanent_tags"
+    ) as mock_copy:
+        rm_operator_from_index.rm_operator_from_index(
+            index_images_with_token,
+            "https://iib.foo.redhat.com",
+            "user:token123",
+            "1711883400",
+        )
+        mock_copy.assert_called_once_with(
+            [{"state": "complete"}],
+            "1711883400",
+        )
 
     mock_iib_add_builds.assert_called_once_with(
         "https://iib.foo.redhat.com",
@@ -76,7 +83,6 @@ def test_rm_operator_from_index(
                 {
                     "from_index": "iib-pullspec",
                     "operators": ["op1"],
-                    "build_tags": ["v4.15", "v4.15-1711883400"],
                     "overwrite_from_index": True,
                     "overwrite_from_index_token": "user:token123",
                 }
