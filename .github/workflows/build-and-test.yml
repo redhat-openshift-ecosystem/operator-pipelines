@@ -9,6 +9,8 @@ on:  # yamllint disable-line rule:truthy
     types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
+permissions:
+  contents: read
 
 jobs:
   tox:
