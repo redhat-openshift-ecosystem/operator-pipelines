@@ -6,7 +6,7 @@ import logging
 import sys
 from typing import Any
 
-STREAM_FORMAT = "%(asctime)s [%(name)s] %(levelname)s %(message)s"
+STREAM_FORMAT = "%(message)s"
 
 
 def setup_logger(level: str = "INFO", log_format: Any = None) -> Any:

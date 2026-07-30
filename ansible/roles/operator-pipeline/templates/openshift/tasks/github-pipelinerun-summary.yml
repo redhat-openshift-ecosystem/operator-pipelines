@@ -73,7 +73,9 @@ spec:
         mkdir $PR_NAME
 
         echo "Getting pipeline logs"
-        tkn pipelinerun logs "$(params.pipelinerun)" > $PR_NAME/$(params.pipelinerun).log
+        tkn pipelinerun logs "$(params.pipelinerun)" --timestamps \
+          | sed -E 's/(\.[0-9]{2})[0-9]+/\1/' \
+          > $PR_NAME/$(params.pipelinerun).log
 
         echo "Getting PipelineRun details"
         tkn pipelinerun describe $PR_NAME -o json > $PR_NAME/pipelinerun.json
