@@ -56,7 +56,7 @@ spec:
       image: "$(params.pipelines_cli_tkn_image)"
       script: |
         #! /usr/bin/env bash
-        set -xe
+        set -xe -o pipefail
 
         echo "Getting pipeline logs"
 
