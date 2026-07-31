@@ -340,14 +340,17 @@ def test_OperatorReview_pr_owner_can_write(
 
 
 @pytest.mark.parametrize(
-    ["project", "catalog_promotion_pr", "approved", "valid"],
+    ["project", "catalog_promotion_pr", "labels", "approved", "valid"],
     [
-        pytest.param(None, False, False, False, id="no project"),
-        pytest.param({}, False, False, False, id="no container"),
-        pytest.param({"container": {}}, False, False, False, id="no github_usernames"),
+        pytest.param(None, False, set(), False, False, id="no project"),
+        pytest.param({}, False, set(), False, False, id="no container"),
+        pytest.param(
+            {"container": {}}, False, set(), False, False, id="no github_usernames"
+        ),
         pytest.param(
             {"container": {"github_usernames": None}},
             False,
+            set(),
             False,
             False,
             id="no github_usernames",
@@ -355,6 +358,7 @@ def test_OperatorReview_pr_owner_can_write(
         pytest.param(
             {"container": {"github_usernames": ["user123"]}},
             False,
+            set(),
             False,
             False,
             id="user not in github_usernames",
@@ -362,6 +366,7 @@ def test_OperatorReview_pr_owner_can_write(
         pytest.param(
             {"container": {"github_usernames": ["owner"]}},
             False,
+            set(),
             True,
             True,
             id="user in github_usernames",
@@ -369,11 +374,24 @@ def test_OperatorReview_pr_owner_can_write(
         pytest.param(
             {"container": {"github_usernames": ["owner"]}},
             True,
+            set(),
             False,
             True,
-            id="user in github_usernames",
+            id="catalog promotion not approved",
+        ),
+        pytest.param(
+            {"container": {"github_usernames": ["owner"]}},
+            True,
+            {"approved"},
+            True,
+            True,
+            id="catalog promotion approved",
         ),
     ],
+)
+@patch(
+    "operatorcert.entrypoints.check_permissions.OperatorReview.pr_labels",
+    new_callable=mock.PropertyMock,
 )
 @patch(
     "operatorcert.entrypoints.check_permissions.OperatorReview.request_review_from_partners"
@@ -382,20 +400,25 @@ def test_OperatorReview_pr_owner_can_write(
 def test_OperatorReview_check_permission_for_partner(
     mock_pyxis_project: MagicMock,
     mock_request_review_from_partners: MagicMock,
+    mock_pr_labels: MagicMock,
     review_partner: check_permissions.OperatorReview,
     project: dict[str, Any],
     catalog_promotion_pr: bool,
+    labels: set[str],
     approved: bool,
     valid: bool,
 ) -> None:
     mock_pyxis_project.return_value = project
+    mock_pr_labels.return_value = labels
     if valid:
         assert (
             review_partner.check_permission_for_partner(catalog_promotion_pr)
             == approved
         )
-        if catalog_promotion_pr:
+        if catalog_promotion_pr and not approved:
             mock_request_review_from_partners.assert_called_once()
+        elif catalog_promotion_pr and approved:
+            mock_request_review_from_partners.assert_not_called()
     else:
         with pytest.raises(check_permissions.NoPermissionError):
             review_partner.check_permission_for_partner(catalog_promotion_pr)
@@ -497,19 +520,33 @@ def test_OperatorReview_request_review_from_partners(
     review_community: check_permissions.OperatorReview,
 ) -> None:
     review_community.request_review_from_partners(["user1", "user2"])
-    mock_command.assert_called_once_with(
+    mock_command.assert_has_calls(
         [
-            "gh",
-            "pr",
-            "comment",
-            review_community.pull_request_url,
-            "--body",
-            "The author of the PR is not listed as one of the reviewers in certification project.\n"
-            f"@user1, @user2: please review the PR and approve it with an "
-            "`/approve` comment.\n\n"
-            "Consider adding the author of the PR to the list of reviewers in "
-            "the certification project if you want automated merge without explicit "
-            "approval.",
+            call(
+                [
+                    "gh",
+                    "pr",
+                    "edit",
+                    review_community.pull_request_url,
+                    "--add-reviewer",
+                    "user1,user2",
+                ]
+            ),
+            call(
+                [
+                    "gh",
+                    "pr",
+                    "comment",
+                    review_community.pull_request_url,
+                    "--body",
+                    "The author of the PR is not listed as one of the reviewers in certification project.\n"
+                    "@user1, @user2: please review the PR and approve it with an "
+                    "`/approve` comment.\n\n"
+                    "Consider adding the author of the PR to the list of reviewers in "
+                    "the certification project if you want automated merge without explicit "
+                    "approval.",
+                ]
+            ),
         ]
     )
 

@@ -378,6 +378,9 @@ class OperatorReview:
         container = project.get("container") or {}
         usernames = container.get("github_usernames") or []
         if is_catalog_promotion_pr:
+            if "approved" in self.pr_labels:
+                LOGGER.info("Catalog promotion PR is approved by a reviewer")
+                return True
             LOGGER.info(
                 "Pull request is a catalog promotion PR. Asking for review from partners.."
             )
@@ -478,8 +481,20 @@ class OperatorReview:
 
     def request_review_from_partners(self, reviewers: list[str]) -> None:
         """
-        Request review from the partner by adding a comment to the PR.
+        Request review from the partner by adding them as PR reviewers
+        and posting a comment to the PR.
         """
+        run_command(
+            [
+                "gh",
+                "pr",
+                "edit",
+                self.pull_request_url,
+                "--add-reviewer",
+                ",".join(reviewers),
+            ]
+        )
+
         reviewers_with_at = ", ".join(map(lambda x: f"@{x}", reviewers))
         comment_text = (
             "The author of the PR is not listed as one of the reviewers in certification project.\n"
