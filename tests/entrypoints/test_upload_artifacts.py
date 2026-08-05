@@ -1,4 +1,6 @@
 import os.path
+import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from operatorcert.entrypoints import upload_artifacts
@@ -14,9 +16,16 @@ def test_main(
     mock_upload.assert_called_once()
 
 
+@patch("operatorcert.entrypoints.upload_artifacts.scan_and_redact")
+@patch("operatorcert.entrypoints.upload_artifacts.os.unlink")
 @patch("operatorcert.entrypoints.upload_artifacts.base64.b64encode")
 @patch("operatorcert.entrypoints.upload_artifacts.pyxis.post")
-def test_upload_artifact(mock_post: MagicMock, mock_b64: MagicMock) -> None:
+def test_upload_artifact(
+    mock_post: MagicMock,
+    mock_b64: MagicMock,
+    mock_unlink: MagicMock,
+    mock_scan_and_redact: MagicMock,
+) -> None:
     args = MagicMock()
     args.pyxis_url = "http://foo.com/"
     args.certification_hash = "hashhash"
@@ -27,7 +36,14 @@ def test_upload_artifact(mock_post: MagicMock, mock_b64: MagicMock) -> None:
 
     mock_b64.return_value = b"a"
     filename = "tests/data/preflight.log"
-    upload_artifacts.upload_artifact(args, filename, 1)
+    # Simulate leaks
+    with tempfile.NamedTemporaryFile() as temp_redacted_file:
+        mock_scan_and_redact.return_value = {
+            Path(filename).absolute(): Path(temp_redacted_file.name)
+        }
+        upload_artifacts.upload_artifact(args, filename, 1)
+    # Assert cleanup for the temp redaction file was performed
+    mock_unlink.assert_called_once_with(temp_redacted_file.name)
 
     mock_post.assert_called_once_with(
         "http://foo.com/v1/projects/certification/id/123123/artifacts",

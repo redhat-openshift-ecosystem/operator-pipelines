@@ -5,12 +5,14 @@ import base64
 import json
 import logging
 import os
+from pathlib import Path
 from typing import Any, Dict, List
 from urllib.parse import urljoin
 
 import magic
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
+from operatorcert.redact import scan_and_redact
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -103,11 +105,23 @@ def upload_artifact(args: Any, file_path: str, org_id: Any = None) -> Any:
     )
     file_name = os.path.basename(file_path)
     file_size = os.path.getsize(file_path)
+    mime = magic.from_file(file_path, mime=True)
+
+    # Redact potential leaks
+    absolute_file_path = Path(file_path).absolute()
+    leaks_found = False
+    redacted_file_mapping = scan_and_redact(absolute_file_path)
+    if redacted_file_mapping:
+        leaks_found = True
+        file_path = str(redacted_file_mapping[absolute_file_path])
+
     with open(file_path, "rb") as artifact:
         content = artifact.read()
     base64_content = base64.b64encode(content).decode("utf8")
+    # cleanup of temp redacted files
+    if leaks_found:
+        os.unlink(file_path)
 
-    mime = magic.from_file(file_path, mime=True)
     artifact_payload = {
         "content": base64_content,
         "certification_hash": args.certification_hash,
