@@ -27,7 +27,7 @@ jobs:
     needs:
       - prepare-env
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -59,7 +59,7 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -92,7 +92,7 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -127,7 +127,7 @@ jobs:
       - deploy-qa
       - deploy-dev
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -159,7 +159,7 @@ jobs:
     environment:
       name: prod
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -189,7 +189,7 @@ jobs:
       - prepare-env
       - configure-prod-cluster
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -220,7 +220,7 @@ jobs:
     needs:
       - deploy-prod
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Bump version and push tag
         id: tag_version
