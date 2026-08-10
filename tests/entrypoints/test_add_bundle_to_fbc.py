@@ -1,6 +1,7 @@
 from pathlib import Path
+from subprocess import CalledProcessError
 from unittest import mock
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from operatorcert.entrypoints import add_bundle_to_fbc
@@ -401,19 +402,25 @@ def test_get_catalog_mapping() -> None:
     }
 
 
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.opm.validate_catalog")
 @patch("operatorcert.entrypoints.add_bundle_to_fbc.SemverTemplate")
 @patch("operatorcert.entrypoints.add_bundle_to_fbc.BasicTemplate")
 @patch("operatorcert.entrypoints.add_bundle_to_fbc.get_catalog_mapping")
 def test_release_bundle_to_fbc(
-    mock_catalog_mapping: MagicMock, mock_basic: MagicMock, mock_semver: MagicMock
+    mock_catalog_mapping: MagicMock,
+    mock_basic: MagicMock,
+    mock_semver: MagicMock,
+    mock_validate_catalog: MagicMock,
 ) -> None:
     bundle = MagicMock()
     args = MagicMock()
+    args.repo_path = "/repo"
 
     bundle.release_config = None
     with pytest.raises(ValueError):
         # release config is missing
         add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
+    mock_validate_catalog.assert_not_called()
 
     bundle.release_config = {
         "catalog_templates": [
@@ -424,6 +431,7 @@ def test_release_bundle_to_fbc(
     with pytest.raises(ValueError):
         # A catalog mapping is missing
         add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
+    mock_validate_catalog.assert_not_called()
 
     mock_catalog_mapping.return_value = {
         "template_name": "fake-template.yaml",
@@ -433,6 +441,7 @@ def test_release_bundle_to_fbc(
     with pytest.raises(ValueError):
         # Unknown template type
         add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
+    mock_validate_catalog.assert_not_called()
 
     bundle.release_config = {
         "catalog_templates": [
@@ -452,6 +461,7 @@ def test_release_bundle_to_fbc(
     ]
     with pytest.raises(ValueError, match="defaultChannel 'stable' not found"):
         add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
+    mock_validate_catalog.assert_not_called()
 
     bundle.release_config = {
         "catalog_templates": [
@@ -471,6 +481,8 @@ def test_release_bundle_to_fbc(
             "type": "olm.semver",
         },
     ]
+    mock_basic.return_value.catalog_names = ["v4.12-fake"]
+    mock_semver.return_value.catalog_names = ["v4.13-fake"]
     add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
 
     mock_basic.assert_called_once()
@@ -484,6 +496,91 @@ def test_release_bundle_to_fbc(
 
     mock_basic.return_value.render.assert_called_once()
     mock_semver.return_value.render.assert_called_once()
+
+    catalogs_path = Path("/repo") / "catalogs"
+    mock_validate_catalog.assert_has_calls(
+        [
+            call(catalogs_path, "v4.12-fake"),
+            call(catalogs_path, "v4.13-fake"),
+        ]
+    )
+
+
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.opm.validate_catalog")
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.BasicTemplate")
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.get_catalog_mapping")
+def test_release_bundle_to_fbc_deduplicates_catalogs(
+    mock_catalog_mapping: MagicMock,
+    mock_basic: MagicMock,
+    mock_validate_catalog: MagicMock,
+) -> None:
+    bundle = MagicMock()
+    args = MagicMock()
+    args.repo_path = "/repo"
+    bundle.release_config = {
+        "catalog_templates": [
+            {"template_name": "template-a.yaml", "channels": ["alpha"]},
+            {"template_name": "template-b.yaml", "channels": ["alpha"]},
+        ]
+    }
+    mock_catalog_mapping.side_effect = [
+        {
+            "template_name": "template-a.yaml",
+            "catalog_names": ["v4.14", "v4.15"],
+            "type": "olm.template.basic",
+        },
+        {
+            "template_name": "template-b.yaml",
+            "catalog_names": ["v4.14", "v4.16"],
+            "type": "olm.template.basic",
+        },
+    ]
+    # Two template instances; overlapping catalog_names across templates
+    first_template = MagicMock()
+    first_template.catalog_names = ["v4.14", "v4.15"]
+    second_template = MagicMock()
+    second_template.catalog_names = ["v4.14", "v4.16"]
+    mock_basic.side_effect = [first_template, second_template]
+
+    add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
+
+    catalogs_path = Path("/repo") / "catalogs"
+    assert mock_validate_catalog.call_count == 3
+    mock_validate_catalog.assert_has_calls(
+        [
+            call(catalogs_path, "v4.14"),
+            call(catalogs_path, "v4.15"),
+            call(catalogs_path, "v4.16"),
+        ]
+    )
+
+
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.opm.validate_catalog")
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.BasicTemplate")
+@patch("operatorcert.entrypoints.add_bundle_to_fbc.get_catalog_mapping")
+def test_release_bundle_to_fbc_validate_failure_propagates(
+    mock_catalog_mapping: MagicMock,
+    mock_basic: MagicMock,
+    mock_validate_catalog: MagicMock,
+) -> None:
+    bundle = MagicMock()
+    args = MagicMock()
+    args.repo_path = "/repo"
+    bundle.release_config = {
+        "catalog_templates": [
+            {"template_name": "fake-basic.yaml", "channels": ["alpha"]},
+        ]
+    }
+    mock_catalog_mapping.return_value = {
+        "template_name": "fake-basic.yaml",
+        "catalog_names": ["v4.12-fake"],
+        "type": "olm.template.basic",
+    }
+    mock_basic.return_value.catalog_names = ["v4.12-fake"]
+    mock_validate_catalog.side_effect = CalledProcessError(1, "opm validate")
+
+    with pytest.raises(CalledProcessError):
+        add_bundle_to_fbc.release_bundle_to_fbc(args, bundle)
 
 
 def test_setup_argparser() -> None:

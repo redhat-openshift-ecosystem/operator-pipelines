@@ -2,17 +2,16 @@ import pytest
 
 from unittest.mock import MagicMock, patch, call
 from subprocess import CalledProcessError
+from pathlib import Path
 
 import operatorcert.entrypoints.validate_catalog_format as validate_catalog_format
 
 
-@patch("operatorcert.entrypoints.validate_catalog_format.run_command")
-def test_validate_catalog_format(mock_run_command: MagicMock) -> None:
+@patch("operatorcert.entrypoints.validate_catalog_format.opm.validate_catalog")
+def test_validate_catalog_format(mock_validate_catalog: MagicMock) -> None:
     validate_catalog_format.validate_catalog_format("path/to/catalogs", "catalog1")
 
-    mock_run_command.assert_called_once_with(
-        ["opm", "validate", "path/to/catalogs/catalog1"]
-    )
+    mock_validate_catalog.assert_called_once_with(Path("path/to/catalogs"), "catalog1")
 
 
 @patch("operatorcert.entrypoints.validate_catalog_format.validate_catalog_format")

@@ -2,11 +2,13 @@
 
 import argparse
 import logging
+from pathlib import Path
 from subprocess import CalledProcessError
 import sys
 
+from operatorcert import opm
 from operatorcert.logger import setup_logger
-from operatorcert.utils import SplitArgs, run_command
+from operatorcert.utils import SplitArgs
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -41,14 +43,12 @@ def setup_argparser() -> argparse.ArgumentParser:
 def validate_catalog_format(catalog_path: str, catalog_name: str) -> None:
     """
     Run `opm validate` for a given catalog.
+
+    Args:
+        catalog_path: Path to the catalogs directory
+        catalog_name: Name of the catalog to validate
     """
-    cmd = [
-        "opm",
-        "validate",
-        f"{catalog_path}/{catalog_name}",
-    ]
-    LOGGER.info("Validating catalog %s", catalog_name)
-    run_command(cmd)
+    opm.validate_catalog(Path(catalog_path), catalog_name)
 
 
 def main() -> None:
