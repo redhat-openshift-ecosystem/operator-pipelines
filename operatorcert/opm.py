@@ -49,3 +49,16 @@ def render_template_to_catalog(template_path: str, catalog_path: str) -> None:
 
     with open(catalog_path, "w", encoding="utf-8") as f:
         f.write(response.stdout.decode("utf-8"))
+
+
+def validate_catalog(catalog_path: Path, catalog_name: str) -> None:
+    """
+    Run `opm validate` for a given catalog.
+
+    Args:
+        catalog_path (Path): Path to the catalogs directory
+        catalog_name (str): Name of the catalog in the catalogs directory
+    """
+    cmd = ["opm", "validate", str(catalog_path / catalog_name)]
+    LOGGER.info("Validating catalog %s", catalog_name)
+    run_command(cmd)

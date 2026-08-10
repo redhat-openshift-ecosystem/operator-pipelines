@@ -32,3 +32,10 @@ def test_render_template_to_catalog(mock_run_command: MagicMock) -> None:
     mock_run_command.assert_called_once_with(
         ["opm", "alpha", "render-template", "basic", "-o", "yaml", "template.yaml"]
     )
+
+
+@patch("operatorcert.opm.run_command")
+def test_validate_catalog(mock_run_command: MagicMock) -> None:
+    opm.validate_catalog(Path("catalogs"), "v4.14")
+
+    mock_run_command.assert_called_once_with(["opm", "validate", "catalogs/v4.14"])

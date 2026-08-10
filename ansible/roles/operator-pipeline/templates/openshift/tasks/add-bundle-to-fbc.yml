@@ -92,11 +92,6 @@ spec:
           --operator-name "$(params.operator_name)" \
           --operator-version "$(params.operator_version)"
 
-        # Loop over all catalogs in /catalogs and run opm validate to ensure the catalogs are valid
-        for catalog in ./catalogs/*; do
-          opm validate $catalog
-        done
-
     - name: commit-push-and-open-pr
       image: "$(params.pipeline_image)"
       workingDir: $(workspaces.source.path)

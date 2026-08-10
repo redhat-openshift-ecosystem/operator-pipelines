@@ -12,7 +12,7 @@ from typing import Any
 
 from ruamel.yaml import YAML
 
-from operatorcert import utils
+from operatorcert import opm, utils
 from operatorcert.logger import setup_logger
 from operatorcert.operator_repo import Bundle, Operator, Repo
 
@@ -462,6 +462,8 @@ def release_bundle_to_fbc(args: argparse.Namespace, bundle: Bundle) -> None:
             f"Release config not found for {args.operator_name} {args.operator_version}"
         )
 
+    updated_catalogs: set[str] = set()
+
     # Update a catalog template
     for release_config_template in bundle.release_config["catalog_templates"]:
         template_name = release_config_template["template_name"]
@@ -493,6 +495,11 @@ def release_bundle_to_fbc(args: argparse.Namespace, bundle: Bundle) -> None:
         template.add_new_bundle(release_config_template, args.bundle_pullspec, bundle)
         template.save()
         template.render()
+        updated_catalogs.update(template.catalog_names)
+
+    catalogs_path = Path(args.repo_path) / "catalogs"
+    for catalog_name in sorted(updated_catalogs):
+        opm.validate_catalog(catalogs_path, catalog_name)
 
 
 def main() -> None:
