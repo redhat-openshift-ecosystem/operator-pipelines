@@ -10,7 +10,7 @@ spec:
     kind: Service
     name: "{{ operator_pipeline_webhook_dispatcher_name }}"
   port:
-    targetPort: http
+    targetPort: https
   tls:
     insecureEdgeTerminationPolicy: Redirect
-    termination: edge
+    termination: reencrypt

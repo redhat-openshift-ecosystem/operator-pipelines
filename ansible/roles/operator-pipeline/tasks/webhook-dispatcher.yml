@@ -63,6 +63,13 @@
       data:
         dispatcher-config.yml: "{{ lookup('template', operator_pipeline_webhook_dispatcher_config_file) }}"
 
+- name: Create oauth-proxy cookie secret
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '../templates/openshift/webhook_dispatcher/webhook-dispatcher-oauth-cookie-secret.yml') }}"
+
 - name: Deploy webhook dispatcher
   kubernetes.core.k8s:
     state: present

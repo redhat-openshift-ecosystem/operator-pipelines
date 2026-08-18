@@ -5,12 +5,14 @@ metadata:
   name: "{{ operator_pipeline_webhook_dispatcher_name }}"
   labels:
     app: "{{ operator_pipeline_webhook_dispatcher_name }}"
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: "{{ operator_pipeline_webhook_dispatcher_tls_secret_name }}"
 spec:
   selector:
     app: "{{ operator_pipeline_webhook_dispatcher_name }}"
   ports:
-    - name: http
-      port: 80
-      targetPort: 5000
+    - name: https
+      port: 443
+      targetPort: {{ operator_pipeline_webhook_dispatcher_oauth_proxy_port | int }}
       protocol: TCP
   type: ClusterIP
