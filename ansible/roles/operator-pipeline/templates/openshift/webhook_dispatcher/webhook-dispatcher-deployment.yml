@@ -74,7 +74,46 @@ spec:
             - name: "webhook-dispatcher-config"
               mountPath: "/home/user/dispatcher-config.yml"
               subPath: dispatcher-config.yml
+        - name: oauth-proxy
+          image: "{{ operator_pipeline_webhook_dispatcher_oauth_proxy_image }}"
+          ports:
+            - containerPort: {{ operator_pipeline_webhook_dispatcher_oauth_proxy_port | int }}
+              name: https
+              protocol: TCP
+          args:
+            - --https-address=:{{ operator_pipeline_webhook_dispatcher_oauth_proxy_port }}
+            - --provider=openshift
+            - --openshift-service-account={{ operator_pipeline_webhook_dispatcher_name }}
+            - --upstream=http://localhost:5000
+            - --tls-cert=/etc/tls/private/tls.crt
+            - --tls-key=/etc/tls/private/tls.key
+            - --cookie-secret-file=/etc/oauth-cookie/cookie-secret
+            - --redirect-url=https://{{ operator_pipeline_webhook_dispatcher_route_host }}/oauth/callback
+            # If new endpoints requiring auth are created, update this.
+            - --bypass-auth-except-for=/api/v1/events/status
+            - --skip-provider-button
+            - --pass-basic-auth=false
+          volumeMounts:
+            - name: proxy-tls
+              mountPath: /etc/tls/private
+              readOnly: true
+            - name: cookie-secret
+              mountPath: /etc/oauth-cookie
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
       volumes:
         - name: "webhook-dispatcher-config"
           configMap:
             name: "{{ operator_pipeline_webhook_dispatcher_config_map_name }}"
+        - name: proxy-tls
+          secret:
+            secretName: "{{ operator_pipeline_webhook_dispatcher_tls_secret_name }}"
+        - name: cookie-secret
+          secret:
+            secretName: "{{ operator_pipeline_webhook_dispatcher_cookie_secret_name }}"

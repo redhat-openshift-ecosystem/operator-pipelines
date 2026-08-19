@@ -19,3 +19,8 @@ operator_pipeline_webhook_dispatcher_db_secret_name: "{{ operator_pipeline_webho
 operator_pipeline_webhook_dispatcher_pvc_name: "{{ operator_pipeline_webhook_dispatcher_name }}-db-pvc"
 operator_pipeline_webhook_dispatcher_config_map_name: "{{ operator_pipeline_webhook_dispatcher_name }}-config-map"
 operator_pipeline_webhook_dispatcher_config_file: "{{ operator_pipeline_webhook_dispatcher_name }}-config.yml"
+operator_pipeline_webhook_dispatcher_oauth_proxy_image: "registry.redhat.io/openshift4/ose-oauth-proxy-rhel9:latest"
+operator_pipeline_webhook_dispatcher_oauth_proxy_port: 8443
+operator_pipeline_webhook_dispatcher_tls_secret_name: "{{ operator_pipeline_webhook_dispatcher_name }}-tls"
+operator_pipeline_webhook_dispatcher_cookie_secret_name: "{{ operator_pipeline_webhook_dispatcher_name }}-oauth-cookie"
+operator_pipeline_webhook_dispatcher_route_host: "{{ operator_pipeline_webhook_dispatcher_name }}-{{ oc_namespace }}.{{ operator_pipeline_base_url }}"

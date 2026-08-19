@@ -10,6 +10,8 @@
       metadata:
         name: "{{ operator_pipeline_webhook_dispatcher_name }}"
         namespace: "{{ oc_namespace }}"
+        annotations:
+          serviceaccounts.openshift.io/oauth-redirecturi.dispatcher: "https://{{ operator_pipeline_webhook_dispatcher_route_host }}/oauth/callback"
 
 - name: Create SA token secret
   kubernetes.core.k8s:
