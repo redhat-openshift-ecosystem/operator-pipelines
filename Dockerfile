@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora:43
+FROM quay.io/fedora/fedora:44
 
 LABEL description="Cli tools for operator certification pipeline"
 LABEL summary="This image contains tools required for operator bundle certification pipeline."
@@ -22,7 +22,7 @@ COPY certs/* /etc/pki/ca-trust/source/anchors/
 RUN /usr/bin/update-ca-trust
 # This is just a temporary workaround until we figure out how to
 # override CA bundle in OCP
-RUN cp /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/custom-ca-bundle.crt
+RUN cp /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt /etc/pki/tls/certs/custom-ca-bundle.crt
 
 ENV REQUESTS_CA_BUNDLE="/etc/pki/tls/certs/custom-ca-bundle.crt"
 

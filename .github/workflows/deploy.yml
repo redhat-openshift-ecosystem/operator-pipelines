@@ -27,7 +27,7 @@ jobs:
     needs:
       - prepare-env
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -36,7 +36,7 @@ jobs:
           # kubernetes/collection is compatible.
           pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Configure stage cluster
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@126642a1c6ce512da255ef2b41e8ee90f0077474 # v9
         with:
           playbook: playbooks/config-ocp-cluster.yml
           directory: ./ansible
@@ -59,7 +59,7 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -68,7 +68,7 @@ jobs:
           # kubernetes/collection is compatible.
           pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Deploy dev environment
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@126642a1c6ce512da255ef2b41e8ee90f0077474 # v9
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -92,7 +92,7 @@ jobs:
     env:
       SHORT_SHA: ${{needs.prepare-env.outputs.short_sha}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -101,7 +101,7 @@ jobs:
           # kubernetes/collection is compatible.
           pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Deploy qa environment
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@126642a1c6ce512da255ef2b41e8ee90f0077474 # v9
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -127,7 +127,7 @@ jobs:
       - deploy-qa
       - deploy-dev
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -137,7 +137,7 @@ jobs:
           pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
 
       - name: Deploy stage environment
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@126642a1c6ce512da255ef2b41e8ee90f0077474 # v9
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -159,7 +159,7 @@ jobs:
     environment:
       name: prod
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -168,7 +168,7 @@ jobs:
           # kubernetes/collection is compatible.
           pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Configure prod cluster
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@126642a1c6ce512da255ef2b41e8ee90f0077474 # v9
         with:
           playbook: playbooks/config-ocp-cluster.yml
           directory: ./ansible
@@ -189,7 +189,7 @@ jobs:
       - prepare-env
       - configure-prod-cluster
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install dependencies
         run: |
           # Install python packages needed from ansible
@@ -198,7 +198,7 @@ jobs:
           # kubernetes/collection is compatible.
           pipx inject --force ansible-core jmespath openshift pygithub 'kubernetes==35.0.0'
       - name: Deploy prod environment
-        uses: dawidd6/action-ansible-playbook@e8303e5fa5b52015d59fd5bc8c968943bd5f349c # v6
+        uses: dawidd6/action-ansible-playbook@126642a1c6ce512da255ef2b41e8ee90f0077474 # v9
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -220,7 +220,7 @@ jobs:
     needs:
       - deploy-prod
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Bump version and push tag
         id: tag_version
@@ -229,7 +229,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a GitHub release
-        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
