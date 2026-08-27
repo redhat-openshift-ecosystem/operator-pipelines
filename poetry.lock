@@ -2466,7 +2466,7 @@ files = [
     {file = "pycparser-3.0-py3-none-any.whl", hash = "sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"},
     {file = "pycparser-3.0.tar.gz", hash = "sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29"},
 ]
-markers = {main = "implementation_name != \"PyPy\" and platform_python_implementation != \"PyPy\"", dev = "implementation_name != \"PyPy\""}
+markers = {main = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", dev = "implementation_name != \"PyPy\""}
 
 [[package]]
 name = "pydantic"
@@ -4229,24 +4229,24 @@ dev = ["doc8", "flake8", "flake8-import-order", "rstcheck[sphinx]", "ruff", "sph
 
 [[package]]
 name = "yq"
-version = "3.4.3"
+version = "4.1.2"
 description = "Command-line YAML/XML processor - jq wrapper for YAML/XML documents"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "yq-3.4.3-py3-none-any.whl", hash = "sha256:547e34bc3caacce83665fd3429bf7c85f8e8b6b9aaee3f953db1ad716ff3434d"},
-    {file = "yq-3.4.3.tar.gz", hash = "sha256:ba586a1a6f30cf705b2f92206712df2281cd320280210e7b7b80adcb8f256e3b"},
+    {file = "yq-4.1.2-py3-none-any.whl", hash = "sha256:25252ae6cc2dba71c26b262fe7f3cb2ed04ffda908556bb602c9e40e9c975c4d"},
+    {file = "yq-4.1.2.tar.gz", hash = "sha256:a8f148930f8beb3170f451d67f29cbe0b3ac713cd2fc91ecf51d43b4879e6b4c"},
 ]
 
 [package.dependencies]
 argcomplete = ">=1.8.1"
-PyYAML = ">=5.3.1"
+pyyaml = ">=5.3.1"
 tomlkit = ">=0.11.6"
 xmltodict = ">=0.11.0"
 
 [package.extras]
-tests = ["build", "coverage", "mypy", "ruff", "wheel"]
+test = ["build", "coverage", "mypy", "ruff", "wheel"]
 
 [[package]]
 name = "zipp"
@@ -4272,4 +4272,4 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "7ecde5b7f806e0ae4c76d727049feca412cc8eeb3fd3998ceb20cad452eafaf7"
+content-hash = "1b2c6c731130f55cb83a333f2a788246852c47a54a4b3206cdfc33d80d14dc67"
