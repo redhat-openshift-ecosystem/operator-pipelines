@@ -778,6 +778,85 @@ def test_ParserRules_validate_removal_fbc_fail(
 
 
 @pytest.mark.parametrize(
+    "names, expected",
+    [
+        pytest.param(
+            ("my-operator", "0.0.1"), True, id="Valid lowercase with dots and hyphens"
+        ),
+        pytest.param(("MyOperator", "1.0.0"), True, id="Valid with uppercase"),
+        pytest.param(("my_operator", "1.0.0"), True, id="Valid with underscore"),
+        pytest.param(("name;extra", "0.0.1"), False, id="Name with semicolon"),
+        pytest.param(("my-operator", "$(v)"), False, id="Version with dollar paren"),
+        pytest.param(("my-operator", "1.0`v`"), False, id="Version with backticks"),
+        pytest.param(("valid", "a|b"), False, id="Name with pipe"),
+        pytest.param(("valid", "a&b"), False, id="Name with ampersand"),
+        pytest.param((".hidden", "0.0.1"), False, id="Leading dot"),
+        pytest.param(("", "0.0.1"), False, id="Empty name"),
+    ],
+)
+def test_are_safe_filenames(names: tuple[str, ...], expected: bool) -> None:
+    assert detect_changed_operators._are_safe_filenames(*names) == expected
+
+
+@pytest.mark.parametrize(
+    "path, expected",
+    [
+        pytest.param(
+            "operators/name;extra/0.0.1/manifests/csv.yaml",
+            (None, None, None, None),
+            id="Operators - name with semicolon",
+        ),
+        pytest.param(
+            "operators/my-operator/$(v)/manifests/csv.yaml",
+            (None, None, None, None),
+            id="Operators - version with dollar paren",
+        ),
+        pytest.param(
+            "operators/a|b/c`d`/manifests/csv.yaml",
+            (None, None, None, None),
+            id="Operators - both name and version unsafe",
+        ),
+        pytest.param(
+            "catalogs/v4.15/op$(v)/catalog.json",
+            (None, None, None, None),
+            id="Catalogs - operator with dollar paren",
+        ),
+        pytest.param(
+            "catalogs/cat;extra/operator-1/catalog.json",
+            (None, None, None, None),
+            id="Catalogs - catalog name with semicolon",
+        ),
+        pytest.param(
+            "catalogs/a&b/c&d/catalog.json",
+            (None, None, None, None),
+            id="Catalogs - both name and operator unsafe",
+        ),
+        pytest.param(
+            "operators/my-operator/0.0.1/manifests/csv.yaml",
+            ("my-operator", "0.0.1", None, None),
+            id="Operators - safe name and version pass through",
+        ),
+        pytest.param(
+            "catalogs/v4.15/operator-1/catalog.json",
+            (None, None, "v4.15", "operator-1"),
+            id="Catalogs - safe catalog and operator pass through",
+        ),
+    ],
+)
+def test_find_directory_owner_safety_check(path: str, expected: Any) -> None:
+    head_repo = MagicMock()
+    base_repo = MagicMock()
+    head_repo.has.return_value = True
+    base_repo.has.return_value = False
+    head_repo.operator.return_value.has.return_value = True
+    head_repo.has_catalog.return_value = True
+    base_repo.has_catalog.return_value = False
+    head_repo.catalog.return_value.has.return_value = True
+    result = detect_changed_operators._find_directory_owner(path, head_repo, base_repo)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
     "result, expected",
     [
         pytest.param(
