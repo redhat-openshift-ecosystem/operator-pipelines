@@ -154,6 +154,21 @@ def is_catalog_operator_dir(
     return False
 
 
+def _are_safe_filenames(*names: str) -> bool:
+    """Validate given filenames are safe (e.g. in shell expansion)."""
+    safe_pattern = r"^[a-zA-Z0-9][a-zA-Z0-9._\-]*\Z"
+    is_safe = True
+    for name in names:
+        if not re.match(safe_pattern, name):
+            LOGGER.error(
+                "Filename '%s' is considered unsafe. "
+                f"Names must match pattern: {safe_pattern}",
+                name,
+            )
+            is_safe = False
+    return is_safe
+
+
 def _find_directory_owner(
     path: str, head_repo: OperatorRepo, base_repo: OperatorRepo
 ) -> tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
@@ -175,7 +190,10 @@ def _find_directory_owner(
 
     # split the relative filename into a tuple of individual components
     filename_parts = pathlib.Path(path).parts
+
     if len(filename_parts) >= 3 and filename_parts[0] == "operators":
+        if not _are_safe_filenames(filename_parts[1], filename_parts[2]):
+            return None, None, None, None
         # inside an operator directory
         is_operator, is_bundle = is_operator_bundle_dir(
             filename_parts[1], filename_parts[2], head_repo, base_repo
@@ -187,6 +205,8 @@ def _find_directory_owner(
             # (i.e.: ci.yaml, catalog-templates, Makefile)
             return filename_parts[1], None, None, None
     if len(filename_parts) >= 3 and filename_parts[0] == "catalogs":
+        if not _are_safe_filenames(filename_parts[1], filename_parts[2]):
+            return None, None, None, None
         if is_catalog_operator_dir(
             filename_parts[1], filename_parts[2], head_repo, base_repo
         ):
