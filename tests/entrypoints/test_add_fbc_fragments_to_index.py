@@ -216,28 +216,32 @@ def test_add_fbc_fragment_to_index(
     mock_results.return_value = [
         {"state": "complete", "id": 3},
     ]
-    index.add_fbc_fragment_to_index(
-        "https://iib.engineering.redhat.com",
-        [
-            (
-                "registry/index:v4.15",
-                "registry.foo/repo/foo:v4.15-fragment-sha256:1234",
-            ),
-        ],
-        "test-image-path.txt",
-        "user:token123",
-        "1711883400",
-    )
+    with patch(
+        "operatorcert.entrypoints.add_fbc_fragments_to_index.utils.copy_permanent_tags"
+    ) as mock_copy:
+        index.add_fbc_fragment_to_index(
+            "https://iib.engineering.redhat.com",
+            [
+                (
+                    "registry/index:v4.15",
+                    "registry.foo/repo/foo:v4.15-fragment-sha256:1234",
+                ),
+            ],
+            "test-image-path.txt",
+            "user:token123",
+            "1711883400",
+        )
+        mock_copy.assert_called_once_with(
+            [{"state": "complete", "id": 3}],
+            "1711883400",
+        )
     mock_iib_build.assert_called_once_with(
         "https://iib.engineering.redhat.com",
         {
             "from_index": "registry/index:v4.15",
             "fbc_fragment": "registry.foo/repo/foo:v4.15-fragment-sha256:1234",
-            "build_tags": ["v4.15", "v4.15-1711883400"],
-            # WORKAROUND: Manually overwriting index images using skopeo
-            # TODO: uncomment when overwrite token is fixed
-            # "overwrite_from_index": True,
-            # "overwrite_from_index_token": "user:token123",
+            "overwrite_from_index": True,
+            "overwrite_from_index_token": "user:token123",
         },
     )
 

@@ -50,15 +50,20 @@ def test_add_bundle_to_index(
     mock_results.reset_mock()
     mock_iib_builds.return_value = [{"state": "complete", "batch": "batch2"}]
     mock_results.return_value = {"items": [{"state": "complete", "batch": "batch2"}]}
-    index.add_bundle_to_index(
-        "redhat-isv/some-pullspec",
-        "https://iib.engineering.redhat.com",
-        ["registry/index:v4.9"],
-        "test-image-path.txt",
-        "replaces",
-        "user:token123",
-        "1711883400",
-    )
+    with patch("operatorcert.entrypoints.index.utils.copy_permanent_tags") as mock_copy:
+        index.add_bundle_to_index(
+            "redhat-isv/some-pullspec",
+            "https://iib.engineering.redhat.com",
+            ["registry/index:v4.9"],
+            "test-image-path.txt",
+            "replaces",
+            "user:token123",
+            "1711883400",
+        )
+        mock_copy.assert_called_once_with(
+            [{"state": "complete", "batch": "batch2"}],
+            "1711883400",
+        )
     mock_iib_builds.assert_called_once_with(
         "https://iib.engineering.redhat.com",
         {
@@ -68,11 +73,8 @@ def test_add_bundle_to_index(
                     "bundles": ["redhat-isv/some-pullspec"],
                     "add_arches": ["amd64", "s390x", "ppc64le"],
                     "graph_update_mode": "replaces",
-                    "build_tags": ["v4.9", "v4.9-1711883400"],
-                    # WORKAROUND: Manually overwriting index images using skopeo
-                    # TODO: uncomment when overwrite token is fixed
-                    # "overwrite_from_index": True,
-                    # "overwrite_from_index_token": "user:token123",
+                    "overwrite_from_index": True,
+                    "overwrite_from_index_token": "user:token123",
                 }
             ]
         },
