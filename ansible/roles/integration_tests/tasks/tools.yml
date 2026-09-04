@@ -8,17 +8,31 @@
         state: directory
       register: integration_tests_temp_tools_dir
 
-    - name: Download and extract the tkn binary
+    - name: Download the tkn archive
+      ansible.builtin.get_url:
+        url: https://mirror.openshift.com/pub/openshift-v4/clients/pipelines/1.20.0/tkn-linux-amd64.tar.gz
+        dest: "{{ integration_tests_temp_tools_dir.path }}/tkn-linux-amd64.tar.gz"
+        checksum: "sha256:8463aad253c470a5ac67fbef0268c2b0a7f1e16bc15c3b8dba3032b2116e2d04"
+        mode: "0644"
+
+    - name: Extract the tkn binary
       ansible.builtin.unarchive:
-        src: https://mirror.openshift.com/pub/openshift-v4/clients/pipelines/1.20.0/tkn-linux-amd64.tar.gz
+        src: "{{ integration_tests_temp_tools_dir.path }}/tkn-linux-amd64.tar.gz"
         dest: "{{ integration_tests_temp_tools_dir.path }}"
         remote_src: true
         include:
           - tkn
 
-    - name: Download and extract the opm binary
+    - name: Download the opm archive
+      ansible.builtin.get_url:
+        url: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.20.35/opm-linux-rhel9.tar.gz
+        dest: "{{ integration_tests_temp_tools_dir.path }}/opm-linux-rhel9.tar.gz"
+        checksum: "sha256:15139469ba7fd1df6f7b635469fbc248208bad81953f2a3b7886036efda98546"
+        mode: "0644"
+
+    - name: Extract the opm binary
       ansible.builtin.unarchive:
-        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest-4.20/opm-linux-rhel9.tar.gz
+        src: "{{ integration_tests_temp_tools_dir.path }}/opm-linux-rhel9.tar.gz"
         dest: "{{ integration_tests_temp_tools_dir.path }}"
         remote_src: true
         include:

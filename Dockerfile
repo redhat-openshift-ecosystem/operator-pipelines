@@ -15,6 +15,17 @@ ARG USER_UID=1000
 ARG PODMAN_USER_UID=1001
 ARG ARCH=amd64
 
+ARG OPM_VERSION=v1.71.0
+ARG OCP_VERSION=4.20.35
+ARG OPERATOR_SDK_VERSION=v1.36.1
+
+# https://github.com/operator-framework/operator-registry/releases/download/v1.71.0/linux-amd64-opm
+ARG OPM_SHA256=a9c9193dd727a11966f98919a4805328554c439d3f7e72a095b4eb4a437dcd9f
+# https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/4.20.35/openshift-client-linux.tar.gz
+ARG OC_SHA256=35ce9f9a21d1524f811f035b730aa0b51879df73343fb3d59d618b88b0f1b968
+# https://github.com/operator-framework/operator-sdk/releases/download/v1.36.1/operator-sdk_linux_amd64
+ARG OPERATOR_SDK_SHA256=25872268c422fb63a350d85741a1f26052c953c7e9654167b0e8dbd6dbfb6c1d
+
 USER root
 
 # setup certificates
@@ -54,13 +65,19 @@ RUN dnf update -y && \
 COPY config/krb5.conf /etc/krb5.conf
 COPY hacks/retry-command.sh /usr/local/bin/retry
 
+# Set the SHELL option -o pipefail before RUN with a pipe in it. (hadolint)
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Install oc, opm and operator-sdk CLI
-RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.71.0/linux-${ARCH}-opm && \
+RUN curl -LO https://github.com/operator-framework/operator-registry/releases/download/${OPM_VERSION}/linux-${ARCH}-opm && \
+  echo "${OPM_SHA256}  linux-${ARCH}-opm" | sha256sum -c - && \
   chmod +x linux-${ARCH}-opm && \
   mv linux-${ARCH}-opm /usr/local/bin/opm && \
-  curl -LO https://mirror.openshift.com/pub/openshift-v4/${ARCH}/clients/ocp/stable-4.20/openshift-client-linux.tar.gz && \
+  curl -LO https://mirror.openshift.com/pub/openshift-v4/${ARCH}/clients/ocp/${OCP_VERSION}/openshift-client-linux.tar.gz && \
+  echo "${OC_SHA256}  openshift-client-linux.tar.gz" | sha256sum -c - && \
   tar xzvf openshift-client-linux.tar.gz -C /usr/local/bin oc && \
-  curl -LO https://github.com/operator-framework/operator-sdk/releases/download/v1.36.1/operator-sdk_linux_${ARCH} && \
+  curl -LO https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_linux_${ARCH} && \
+  echo "${OPERATOR_SDK_SHA256}  operator-sdk_linux_${ARCH}" | sha256sum -c - && \
   chmod +x operator-sdk_linux_${ARCH} && \
   mv operator-sdk_linux_${ARCH} /usr/local/bin/operator-sdk
 
