@@ -106,9 +106,13 @@ jobs:
         run: pip install tox
 
       - name: Install Hadolint
+        env:
+          version: v2.14.0
+          hadolint_sha256: 6bf226944684f56c84dd014e8b979d27425c0148f61b3bd99bcc6f39e9dc5a47
         run: |
-          curl -sSL https://github.com/hadolint/hadolint/releases/download/v2.14.0/hadolint-Linux-x86_64 \
+          curl -sSL https://github.com/hadolint/hadolint/releases/download/${version}/hadolint-Linux-x86_64 \
             -o /usr/local/bin/hadolint
+          echo "${hadolint_sha256}  /usr/local/bin/hadolint" | sha256sum -c -
           chmod +x /usr/local/bin/hadolint
 
       - name: Run hadolint
