@@ -24,7 +24,7 @@ dependencies = [
     "semver (>=3.0.1)",
     "urllib3 (>=2.7.0)",
     "openshift-client (>=2.0.4)",
-    "pydantic (>=2.13.4)",
+    "pydantic (>=2.13.5)",
     "ruamel-yaml (>=0.18.10)",
     "semantic-version (>=2.10.0)",
     "sqlalchemy (>=2.0.52)",
@@ -98,14 +98,14 @@ yamllint = ">=1.32.0"
 requests-mock = ">=1.11.0"
 bandit = ">=1.7.5"
 mypy = ">=2.3.1"
-types-pyyaml = ">=6.0.12.11"
+types-pyyaml = ">=6.0.12.20260906"
 types-python-dateutil = ">=2.9.0.20260807"
-types-requests = ">=2.31.0.2"
-pylint = ">=2.17.5"
+types-requests = ">=2.33.0.20260906"
+pylint = ">=4.0.8"
 ansible-core = ">=2.17.6"
 jmespath = ">=1.0.1"
 ansible-lint = ">=26.6.0"
 colorama = ">=0.4.6"
 pip-audit = ">=2.7.3"
 pytest-asyncio = ">=1.1.0"
-tox = "^4.50.3"
+tox = "^4.61.2"
