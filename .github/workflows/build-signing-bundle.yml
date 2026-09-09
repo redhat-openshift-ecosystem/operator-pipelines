@@ -27,10 +27,12 @@ jobs:
           # any version lower than 0.27.0 incorrectly requires kubeconfig to be present
           # to be able to run `tkn bundle *` commands
           version: 0.27.0
+          tkn_sha256: f63be8c6817dd08df7c6be95490325d5298eae6558d2d86fa06ce69509b2c0be
         run: |
           echo "Installing tkn@${version}"
 
           curl -LO https://github.com/tektoncd/cli/releases/download/v${version}/tkn_${version}_Linux_x86_64.tar.gz
+          echo "${tkn_sha256}  tkn_${version}_Linux_x86_64.tar.gz" | sha256sum -c -
           sudo tar xvzf tkn_${version}_Linux_x86_64.tar.gz -C /usr/local/bin/ tkn
           tkn -h
 
