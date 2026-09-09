@@ -32,6 +32,7 @@ def test_check_operator_name_registered_for_association_same_name(
     args.key_path = "key.path"
     args.association = "ospid-123"
     args.operator_name = "operator-equal"
+    args.source = "community-operators"
 
     mock_get.status_code = 200
     mock_get.return_value.json.return_value = {
@@ -49,6 +50,27 @@ def test_check_operator_name_registered_for_association_same_name(
 
 @patch("sys.exit")
 @patch("operatorcert.entrypoints.reserve_operator_name.pyxis.get")
+def test_check_operator_name_approved_exception(
+    mock_pyxis_get: MagicMock, mock_exit: MagicMock
+) -> None:
+    args = MagicMock()
+    args.pyxis_url = "http://foo.com/"
+    args.key_path = "key.path"
+    args.association = "ospid-123"
+    args.operator_name = "operator-equal"
+    args.source = "community-operators"
+    args.approved_exceptions = ["foo", "duplicate_name"]
+
+    reserve_operator_name.check_operator_name(args)
+    # source is included in the filter due to approved exception
+    mock_pyxis_get.assert_called_once_with(
+        "http://foo.com/v1/operators/packages?filter=package_name==operator-equal;"
+        "deleted!=true;source==community-operators"
+    )
+
+
+@patch("sys.exit")
+@patch("operatorcert.entrypoints.reserve_operator_name.pyxis.get")
 def test_check_operator_name_registered_for_association_name_different(
     mock_get: MagicMock, mock_exit: MagicMock
 ) -> None:
@@ -57,6 +79,7 @@ def test_check_operator_name_registered_for_association_name_different(
     args.key_path = "key.path"
     args.association = "ospid-123"
     args.operator_name = "operator-x"
+    args.source = "community-operators"
 
     mock_get.status_code = 200
     mock_get.return_value.json.return_value = {
@@ -82,6 +105,7 @@ def test_check_operator_name_registered_for_association_not_registered(
     args.key_path = "key.path"
     args.association = "ospid-123"
     args.operator_name = "operator-available"
+    args.source = "community-operators"
 
     mock_get.return_value.status_code = 404
     mock_get.return_value.json.return_value = {}
@@ -97,7 +121,9 @@ def test_check_operator_name_taken(mock_get: MagicMock, mock_exit: MagicMock) ->
     args.pyxis_url = "http://foo.com/"
     args.key_path = "key.path"
     args.association = "ospid-123"
-    args.package_name = "operator-taken"
+    args.operator_name = "operator-taken"
+    args.source = "community-operators"
+    args.approved_exceptions = []
 
     mock_get.status_code = 200
     mock_get.return_value.json.return_value = {
@@ -110,6 +136,10 @@ def test_check_operator_name_taken(mock_get: MagicMock, mock_exit: MagicMock) ->
     }
 
     reserve_operator_name.check_operator_name(args)
+    mock_get.assert_called_once_with(
+        "http://foo.com/v1/operators/packages?filter=package_name==operator-taken;"
+        "deleted!=true"
+    )
     mock_exit.assert_called_once_with(1)
 
 
@@ -123,6 +153,7 @@ def test_check_operator_name_taken_by_same_assocation(
     args.key_path = "key.path"
     args.association = "ospid-123"
     args.package_name = "operator-taken"
+    args.source = "community-operators"
 
     mock_get.status_code = 200
     mock_get.return_value.json.return_value = {
@@ -148,6 +179,7 @@ def test_check_operator_name_available(
     args.key_path = "key.path"
     args.association = "ospid-123"
     args.package_name = "operator-available"
+    args.source = "community-operators"
 
     mock_get.return_value.status_code = 404
     mock_get.return_value.json.return_value = {}

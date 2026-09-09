@@ -10,6 +10,7 @@ from github import Auth, Github
 from operatorcert.github import add_or_remove_labels
 from operatorcert.logger import setup_logger
 from operatorcert.utils import get_repo_config
+from operatorcert.workflow_exceptions import WorkflowException, EXCEPTION_LABEL_PREFIX
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -81,10 +82,34 @@ def can_ignore_test(
     return False
 
 
+def has_exceptions(
+    exceptions: dict[str, list[str]], operator_name: str
+) -> list[WorkflowException]:
+    """
+    Check which approved exceptions the operator has.
+    Args:
+        exceptions: The value from the repository config.
+        operator_name: The name of the operator.
+    Returns:
+        List of workflow exceptions.
+    """
+    found_exceptions = []
+    for exception_type, approved_operators in exceptions.items():
+        for approved_operator in approved_operators:
+            if re.match(approved_operator, operator_name):
+                approved_exception = WorkflowException(exception_type)
+                LOGGER.info(
+                    "Operator has an approved exception for '%s'.",
+                    approved_exception.name,
+                )
+                found_exceptions.append(approved_exception)
+    return found_exceptions
+
+
 def configure_test_suite(args: argparse.Namespace, github: Github) -> None:
     """
     Configure test suite for given operator by adding/removing labels that
-    control which tests are relevant.
+    control which tests are relevant. Also manages approved exceptions.
 
     Args:
         args (argparse.Namespace): CLI arguments.
@@ -92,16 +117,19 @@ def configure_test_suite(args: argparse.Namespace, github: Github) -> None:
     """
     config = get_repo_config(args.repo_config_file)
     tests = config.get("tests", [])
-    skip_labels = set()
+    add_labels = set()
     operator_name = args.operator_name
     for test in tests:
         test_name = test.get("name")
         LOGGER.debug("Checking test %s", test_name)
         skip_test = can_ignore_test(test, operator_name)
         if skip_test:
-            skip_labels.add(f"tests/skip/{test_name}")
+            add_labels.add(f"tests/skip/{test_name}")
+    all_exceptions = config.get("allowed_exceptions", {})
+    operator_exceptions = has_exceptions(all_exceptions, operator_name)
+    add_labels.update(EXCEPTION_LABEL_PREFIX + exc.value for exc in operator_exceptions)
 
-    add_or_remove_labels(github, args.pull_request_url, list(skip_labels), [], True)
+    add_or_remove_labels(github, args.pull_request_url, list(add_labels), [], True)
 
 
 def main() -> None:

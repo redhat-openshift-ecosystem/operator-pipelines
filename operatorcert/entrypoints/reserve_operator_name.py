@@ -8,6 +8,8 @@ from urllib.parse import urljoin
 
 from operatorcert import pyxis
 from operatorcert.logger import setup_logger
+from operatorcert.utils import SplitArgs
+from operatorcert.workflow_exceptions import WorkflowException
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -29,6 +31,12 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
         "--pyxis-url",
         default="https://pyxis.engineering.redhat.com/",
         help="Base URL for Pyxis container metadata API",
+    )
+    parser.add_argument(
+        "--approved-exceptions",
+        help="Handle specific exceptions. Comma separated list of exceptions.",
+        default=[],
+        action=SplitArgs,
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
@@ -82,11 +90,22 @@ def check_operator_name(args: Any) -> None:
     Check if operator name already exist and if yes,
     validates if it match with the operator name requested.
     """
+    url_endpoint = (
+        f"v1/operators/packages?filter=package_name=={args.operator_name};deleted!=true"
+    )
+    if args.approved_exceptions:
+        for exception in set(args.approved_exceptions):
+            try:
+                match WorkflowException(exception):
+                    case WorkflowException.DUPLICATE_NAME:
+                        LOGGER.info("Operator name is only checked against")
+                        url_endpoint += f";source=={args.source}"
+            except ValueError:
+                LOGGER.error("Unknown workflow exception %s is ignored", exception)
     rsp = pyxis.get(
         urljoin(
             args.pyxis_url,
-            "v1/operators/packages?"
-            f"filter=package_name=={args.operator_name};deleted!=true",
+            url_endpoint,
         )
     )
 

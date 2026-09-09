@@ -1,7 +1,10 @@
 from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
+import pytest
+
 from operatorcert.entrypoints import apply_test_waivers
+from operatorcert.workflow_exceptions import WorkflowException
 
 
 def test_setup_argparser() -> None:
@@ -26,6 +29,30 @@ def test_can_ignore_test() -> None:
             {"name": "test3", "ignore_operators": ["^foo.*"]}, "bar"
         )
         is False
+    )
+
+
+@pytest.mark.parametrize(
+    ["exceptions", "operator_name", "expected_given_exceptions"],
+    [
+        pytest.param(
+            {"duplicate_name": ["^foo_operator"]},
+            "foo_operator_1",
+            [WorkflowException.DUPLICATE_NAME],
+            id="match duplicate name",
+        ),
+        pytest.param({"duplicate_name": ["^foo_operator"]}, "bar", [], id="no match"),
+        pytest.param({}, "spam", [], id="no exceptions configured"),
+    ],
+)
+def test_has_exceptions(
+    exceptions: dict[str, list[str]],
+    operator_name: str,
+    expected_given_exceptions: list[WorkflowException],
+) -> None:
+    assert (
+        apply_test_waivers.has_exceptions(exceptions, operator_name)
+        == expected_given_exceptions
     )
 
 
