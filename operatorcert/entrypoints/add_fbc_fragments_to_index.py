@@ -199,16 +199,9 @@ def add_fbc_fragment_to_index(
             "fbc_fragment": fragment,
         }
 
-        if build_tags_suffix:
-            version = index.split(":")[-1]
-            payload["build_tags"] = [version, f"{version}-{build_tags_suffix}"]
-
         if overwrite_token:
-            # WORKAROUND: Manually overwriting index images using skopeo
-            # TODO: uncomment when overwrite token is fixed, delete pass
-            # payload["overwrite_from_index"] = True
-            # payload["overwrite_from_index_token"] = overwrite_token
-            pass
+            payload["overwrite_from_index"] = True
+            payload["overwrite_from_index_token"] = overwrite_token
 
         resp = iib.add_fbc_build(iib_url, payload)
         request_ids.append(resp["id"])
@@ -219,6 +212,9 @@ def add_fbc_fragment_to_index(
         response.get("state") == "complete" for response in responses
     ):
         raise RuntimeError("IIB build failed")
+
+    if build_tags_suffix:
+        utils.copy_permanent_tags(responses, build_tags_suffix)
 
     output_index_image_paths(image_output, responses)
 
