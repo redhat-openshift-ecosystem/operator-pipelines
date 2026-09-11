@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
 
 from operatorcert.entrypoints import reserve_operator_name
 
@@ -20,6 +21,22 @@ def test_main(
     mock_check_association.assert_called_once()
     mock_check.assert_called_once()
     mock_reserve.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ["allowed_exceptions", "expected_result"],
+    [
+        pytest.param(["foo", "bar"], False, id="unrelated exceptions"),
+        pytest.param(["duplicate_name"], True, id="relevant exception"),
+        pytest.param(None, False, id="no exceptions"),
+    ],
+)
+def test_has_approved_duplicate_name(
+    allowed_exceptions: list[str] | None, expected_result: bool
+) -> None:
+    args = MagicMock()
+    args.approved_exceptions = allowed_exceptions
+    assert reserve_operator_name.has_approved_duplicate_name(args) == expected_result
 
 
 @patch("sys.exit")
@@ -50,6 +67,37 @@ def test_check_operator_name_registered_for_association_same_name(
 
 @patch("sys.exit")
 @patch("operatorcert.entrypoints.reserve_operator_name.pyxis.get")
+def test_check_operator_name_registered_for_association_exception(
+    mock_get: MagicMock, mock_exit: MagicMock
+) -> None:
+    args = MagicMock()
+    args.pyxis_url = "http://foo.com/"
+    args.key_path = "key.path"
+    args.association = "ospid-123"
+    args.operator_name = "operator-equal"
+    args.source = "community-operators"
+    args.approved_exceptions = ["duplicate_name"]
+
+    mock_get.status_code = 200
+    mock_get.return_value.json.return_value = {
+        "data": [
+            {
+                "association": "ospid-123",
+                "package_name": "operator-equal",
+            }
+        ]
+    }
+
+    reserve_operator_name.check_operator_name_registered_for_association(args, True)
+    mock_get.assert_called_once_with(
+        "http://foo.com/v1/operators/packages?filter=association==ospid-123;"
+        "deleted!=true;source==community-operators"
+    )
+    mock_exit.assert_not_called()
+
+
+@patch("sys.exit")
+@patch("operatorcert.entrypoints.reserve_operator_name.pyxis.get")
 def test_check_operator_name_approved_exception(
     mock_pyxis_get: MagicMock, mock_exit: MagicMock
 ) -> None:
@@ -61,7 +109,7 @@ def test_check_operator_name_approved_exception(
     args.source = "community-operators"
     args.approved_exceptions = ["foo", "duplicate_name"]
 
-    reserve_operator_name.check_operator_name(args)
+    reserve_operator_name.check_operator_name(args, True)
     # source is included in the filter due to approved exception
     mock_pyxis_get.assert_called_once_with(
         "http://foo.com/v1/operators/packages?filter=package_name==operator-equal;"

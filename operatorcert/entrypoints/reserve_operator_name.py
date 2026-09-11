@@ -43,16 +43,46 @@ def setup_argparser() -> argparse.ArgumentParser:  # pragma: no cover
     return parser
 
 
-def check_operator_name_registered_for_association(args: Any) -> None:
+def has_approved_duplicate_name(args: Any) -> bool:
+    """
+    Check if duplicate name exception is allowed for this operator.
+    Args:
+        args: The parsed argparse arguments
+
+    Returns:
+        True if the exception is allowed, False otherwise.
+    """
+    if args.approved_exceptions:
+        for exception in set(args.approved_exceptions):
+            try:
+                match WorkflowException(exception):
+                    case WorkflowException.DUPLICATE_NAME:
+                        LOGGER.info(
+                            "Operator name is only checked against "
+                            "a single catalog source."
+                        )
+                        return True
+            except ValueError:
+                LOGGER.error("Unknown workflow exception %s is ignored", exception)
+    return False
+
+
+def check_operator_name_registered_for_association(
+    args: Any, allow_duplicates: bool = False
+) -> None:
     """
     Check if for given association/isv_pid operatorPackage already exist
     and validates that the package name match operator name requested.
     """
+    url_endpoint = (
+        f"v1/operators/packages?filter=association=={args.association};deleted!=true"
+    )
+    if allow_duplicates:
+        url_endpoint += f";source=={args.source}"
     rsp = pyxis.get(
         urljoin(
             args.pyxis_url,
-            "v1/operators/packages?"
-            f"filter=association=={args.association};deleted!=true",
+            url_endpoint,
         )
     )
 
@@ -85,7 +115,7 @@ def check_operator_name_registered_for_association(args: Any) -> None:
         )
 
 
-def check_operator_name(args: Any) -> None:
+def check_operator_name(args: Any, allow_duplicates: bool = False) -> None:
     """
     Check if operator name already exist and if yes,
     validates if it match with the operator name requested.
@@ -93,15 +123,9 @@ def check_operator_name(args: Any) -> None:
     url_endpoint = (
         f"v1/operators/packages?filter=package_name=={args.operator_name};deleted!=true"
     )
-    if args.approved_exceptions:
-        for exception in set(args.approved_exceptions):
-            try:
-                match WorkflowException(exception):
-                    case WorkflowException.DUPLICATE_NAME:
-                        LOGGER.info("Operator name is only checked against")
-                        url_endpoint += f";source=={args.source}"
-            except ValueError:
-                LOGGER.error("Unknown workflow exception %s is ignored", exception)
+    if allow_duplicates:
+        url_endpoint += f";source=={args.source}"
+
     rsp = pyxis.get(
         urljoin(
             args.pyxis_url,
@@ -168,8 +192,9 @@ def main() -> None:
         log_level = "DEBUG"
     setup_logger(level=log_level)
 
-    check_operator_name_registered_for_association(args)
-    check_operator_name(args)
+    duplicate_names_allowed = has_approved_duplicate_name(args)
+    check_operator_name_registered_for_association(args, duplicate_names_allowed)
+    check_operator_name(args, duplicate_names_allowed)
     reserve_operator_name(args)
 
 
