@@ -9,21 +9,25 @@
       
       
       
+        <link rel="prev" href="../community-operators-troubleshooting/">
+      
+      
+        <link rel="next" href="../static_checks/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>Pipeline Environment Setup - Red Hat OpenShift Operators</title>
+        <title>Workflow Exceptions - Red Hat OpenShift Operators</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -42,7 +46,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -60,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pipeline-environment-setup" class="md-skip">
+        <a href="#workflow-exceptions" class="md-skip">
           Skip to content
         </a>
       
@@ -74,7 +78,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Red Hat OpenShift Operators" class="md-header__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+    <a href="../.." title="Red Hat OpenShift Operators" class="md-header__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -94,7 +98,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Pipeline Environment Setup
+              Workflow Exceptions
             
           </span>
         </div>
@@ -179,7 +183,7 @@
   
   
     <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -196,11 +200,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../users/pipelines_overview/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../pipelines_overview/" class="md-tabs__link">
           
   
   
@@ -220,7 +226,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../users/static_checks/" class="md-tabs__link">
+        <a href="../static_checks/" class="md-tabs__link">
           
   
   
@@ -240,7 +246,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../users/contributing-prerequisites/" class="md-tabs__link">
+        <a href="../contributing-prerequisites/" class="md-tabs__link">
           
   
   
@@ -260,7 +266,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../pipeline-admin-guide/" class="md-tabs__link">
+        <a href="../../pipeline-admin-guide/" class="md-tabs__link">
           
   
   
@@ -296,7 +302,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Red Hat OpenShift Operators" class="md-nav__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+    <a href="../.." title="Red Hat OpenShift Operators" class="md-nav__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -326,7 +332,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -350,28 +356,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -389,7 +398,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -407,7 +416,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/pipelines_overview/" class="md-nav__link">
+      <a href="../pipelines_overview/" class="md-nav__link">
         
   
   
@@ -435,7 +444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/isv_pipelines/" class="md-nav__link">
+      <a href="../isv_pipelines/" class="md-nav__link">
         
   
   
@@ -463,7 +472,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/contributing-via-pr/" class="md-nav__link">
+      <a href="../contributing-via-pr/" class="md-nav__link">
         
   
   
@@ -491,7 +500,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/operator-ci-yaml/" class="md-nav__link">
+      <a href="../operator-ci-yaml/" class="md-nav__link">
         
   
   
@@ -519,7 +528,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/community-operators-troubleshooting/" class="md-nav__link">
+      <a href="../community-operators-troubleshooting/" class="md-nav__link">
         
   
   
@@ -544,10 +553,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../users/workflow_exceptions/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow Exceptions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -563,6 +599,87 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#repository-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Labels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#possible-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Possible exceptions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Possible exceptions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#duplicate_name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        duplicate_name
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -636,7 +753,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/static_checks/" class="md-nav__link">
+      <a href="../static_checks/" class="md-nav__link">
         
   
   
@@ -664,7 +781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/dynamic_checks/" class="md-nav__link">
+      <a href="../dynamic_checks/" class="md-nav__link">
         
   
   
@@ -753,7 +870,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/contributing-prerequisites/" class="md-nav__link">
+      <a href="../contributing-prerequisites/" class="md-nav__link">
         
   
   
@@ -781,7 +898,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/contributing-where-to/" class="md-nav__link">
+      <a href="../contributing-where-to/" class="md-nav__link">
         
   
   
@@ -809,7 +926,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/best-practices/" class="md-nav__link">
+      <a href="../best-practices/" class="md-nav__link">
         
   
   
@@ -837,7 +954,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/fbc_onboarding/" class="md-nav__link">
+      <a href="../fbc_onboarding/" class="md-nav__link">
         
   
   
@@ -865,7 +982,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/fbc_workflow/" class="md-nav__link">
+      <a href="../fbc_workflow/" class="md-nav__link">
         
   
   
@@ -893,7 +1010,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/fbc_autorelease/" class="md-nav__link">
+      <a href="../fbc_autorelease/" class="md-nav__link">
         
   
   
@@ -921,7 +1038,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/packaging-required-criteria-ocp/" class="md-nav__link">
+      <a href="../packaging-required-criteria-ocp/" class="md-nav__link">
         
   
   
@@ -1010,7 +1127,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../pipeline-admin-guide/" class="md-nav__link">
+      <a href="../../pipeline-admin-guide/" class="md-nav__link">
         
   
   
@@ -1038,7 +1155,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../catalog_image_browser/" class="md-nav__link">
+      <a href="../../catalog_image_browser/" class="md-nav__link">
         
   
   
@@ -1066,7 +1183,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fbc-catalog-promotion/" class="md-nav__link">
+      <a href="../../fbc-catalog-promotion/" class="md-nav__link">
         
   
   
@@ -1094,7 +1211,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../local-dev-environment/" class="md-nav__link">
+      <a href="../../local-dev-environment/" class="md-nav__link">
         
   
   
@@ -1142,175 +1259,35 @@
   
 
 
-<h1 id="pipeline-environment-setup">Pipeline Environment Setup</h1>
-<p><a href="#common-for-all-the-pipelines">Common for all the pipelines</a></p>
-<p><a href="#only-ci-pipeline">Only CI Pipeline</a></p>
-<p><a href="#only-hosted-pipeline">Only Hosted Pipeline</a></p>
-<p><a href="#only-release-pipeline">Only Release Pipeline</a></p>
-<h2 id="common-for-all-the-pipelines">Common for all the pipelines:</h2>
-<h3 id="red-hat-catalog-imagestreams">Red Hat Catalog Imagestreams</h3>
-<p>The pipelines must pull the parent index images through the internal OpenShift
-registry to take advantage of the built-in credentials for Red Hat's terms-based
-registry (registry.redhat.io). This saves the user from needing to provide such
-credentials. The index generation task will always pull published index images
-through imagestreams of the same name in the current namespace. As a result,
-there is a one time configuration for each desired distribution catalog. Replace
-the <code>from</code> argument when configuring this for pre-production environments.</p>
-<pre><code class="language-bash"># Must be run once before certifying against the certified catalog.
-oc --request-timeout 10m import-image certified-operator-index \
-  --from=registry.redhat.io/redhat/certified-operator-index \
-  --reference-policy local \
-  --scheduled \
-  --confirm \
-  --all
-
-# Must be run once before certifying against the Red Hat Marketplace catalog.
-oc --request-timeout 10m import-image redhat-marketplace-index \
-  --from=registry.redhat.io/redhat/redhat-marketplace-index \
-  --reference-policy local \
-  --scheduled \
-  --confirm \
-  --all
+<h1 id="workflow-exceptions">Workflow Exceptions</h1>
+<p>Some parts of the pipeline can be changed using approved exceptions.
+The exceptions respect GitHub labels and repository configuration similarly
+to static and dynamic checks.</p>
+<p>Only repository maintainers are able to set exceptions for operators. Contact
+the repository maintainers if you need an exception for your operator.</p>
+<h2 id="repository-configuration">Repository Configuration</h2>
+<p>The configuration takes place in <code>config.yaml</code> file in the root of the operator
+repository. There, a top-level key <code>allowed_exceptions</code> handles the
+configuration. The value of this key is expected to be a mapping of an
+exception name mapped to a list of regular expressions for operators
+that have the given exception.</p>
+<h2 id="labels">Labels</h2>
+<p>The exception are also applicable with GitHub labels. The label name searched
+for is always in this format: <code>exception/&lt;exception_name&gt;</code>.</p>
+<h2 id="possible-exceptions">Possible exceptions</h2>
+<h3 id="duplicate_name"><code>duplicate_name</code></h3>
+<p>This exception allows operators to have the same name in different operator
+sources. When checking and reserving ISV operator name, this exception allows
+operators in different source catalogs (Marketplace, Certified) share the same
+name. Operators still must have a unique name within each source even with
+this exception applied.</p>
+<h2 id="example-configuration">Example configuration</h2>
+<pre><code class="language-yaml">...
+allowed_exceptions:
+  duplicate_name:
+    - '^operator_foo'
+...
 </code></pre>
-<h2 id="only-ci-pipeline">Only CI pipeline:</h2>
-<h3 id="registry-credentials">Registry Credentials</h3>
-<p>The CI pipeline can optionally be configured to push and pull images to/from a remote
-private registry. The user must create an auth secret containing the docker config.
-This secret can then be passed as a workspace named <code>registry-credentials</code> when invoking
-the pipeline.</p>
-<pre><code class="language-bash">oc create secret generic registry-dockerconfig-secret \
-  --type kubernetes.io/dockerconfigjson \
-  --from-file .dockerconfigjson=config.json
-</code></pre>
-<h3 id="git-ssh-secret">Git SSH Secret</h3>
-<p>The pipelines requires git SSH credentials with
-write access to the repository if automatic digest pinning
-is enabled using the pin_digests param. This is disabled
-by default. Before executing the pipeline the user must
-create a secret in the same namespace as the pipeline.</p>
-<p>To create the secret run the following commands (substituting your key):</p>
-<pre><code class="language-bash">cat &lt;&lt; EOF &gt; ssh-secret.yml
-kind: Secret
-apiVersion: v1
-metadata:
-  name: github-ssh-credentials
-data:
-  id_rsa: |
-    &lt; PRIVATE SSH KEY &gt;
-EOF
-
-oc create -f ssh-secret.yml
-</code></pre>
-<h3 id="container-api-access">Container API access</h3>
-<p>CI pipelines automatically upload a test results, logs and artifacts using Red Hat
-container API. This requires a partner's API key and the key needs to be created
-as a secret in OpenShift cluster before running a Tekton pipeline.</p>
-<pre><code class="language-bash">oc create secret generic pyxis-api-secret --from-literal pyxis_api_key=&lt; API KEY &gt;
-</code></pre>
-<h3 id="kubeconfig">Kubeconfig</h3>
-<p>The CI pipeline requires a kubeconfig with admin credentials. This can be created
-by logging into said cluster as an admin user.</p>
-<pre><code class="language-bash">KUBECONFIG=kubeconfig oc login -u &lt;username&gt; -p &lt;password&gt;
-oc create secret generic kubeconfig --from-file=kubeconfig=kubeconfig
-</code></pre>
-<h3 id="github-api-token">GitHub API token</h3>
-<p>To automatically open the PR with submission, pipeline must authenticate to GitHub.
-Secret containing api token should be created.</p>
-<pre><code class="language-bash">oc create secret generic github-api-token --from-literal GITHUB_TOKEN=&lt; GITHUB TOKEN &gt;
-</code></pre>
-<h2 id="only-hosted-pipeline">Only Hosted pipeline:</h2>
-<h3 id="registry-credentials_1">Registry Credentials</h3>
-<p>The hosted pipeline requires credentials to push/pull bundle and index images
-from a pre-release registry (quay.io). A registry auth secret must be created.
-This secret can then be passed as a workspace named <code>registry-credentials</code> when
-invoking the pipeline.</p>
-<pre><code class="language-bash">oc create secret generic hosted-pipeline-registry-auth-secret \
-  --type kubernetes.io/dockerconfigjson \
-  --from-file .dockerconfigjson=config.json
-</code></pre>
-<h3 id="container-api-access_1">Container API access</h3>
-<p>The hosted pipeline communicates with internal Container API that requires cert + key.
-The corresponding secret needs to be created before running the pipeline.</p>
-<pre><code class="language-bash">oc create secret generic operator-pipeline-api-certs \
-  --from-file operator-pipeline.pem \
-  --from-file operator-pipeline.key
-</code></pre>
-<h3 id="hydra-credentials">Hydra credentials</h3>
-<p>To verify publishing checklist, Hosted pipeline uses Hydra API. To authenticate
-with Hydra over basic auth, secret containing service account credentials
-should be created.</p>
-<pre><code class="language-bash">oc create secret generic hydra-credentials \
-  --from-literal username=&lt;username&gt;  \
-  --from-literal password=&lt;password&gt;
-</code></pre>
-<h3 id="github-bot-token">GitHub Bot token</h3>
-<p>To automatically merge the PR, Hosted pipeline uses GitHub API. To authenticate
-when using this method, secret containing bot token should be created.</p>
-<pre><code class="language-bash">oc create secret generic github-bot-token --from-literal github_bot_token=&lt; BOT TOKEN &gt;
-</code></pre>
-<h3 id="prow-kubeconfig">Prow-kubeconfig</h3>
-<p>Hosted preflight tests are run on the separate cluster. To provision a cluster
-destined for the tests, the pipeline uses a Prowjob. Thus, to start
-the preflight test, there needs to be a prow-specific kubeconfig.</p>
-<ul>
-<li><a href="https://github.com/kubernetes/test-infra/tree/master/prow">ProwJob</a></li>
-<li><a href="https://docs.ci.openshift.org/docs/architecture/ci-operator/">OperatorCI</a></li>
-</ul>
-<pre><code class="language-bash">oc create secret generic prow-kubeconfig \
-  --from-literal kubeconfig=&lt;kubeconfig&gt;
-</code></pre>
-<h3 id="preflight-decryption-key">Preflight decryption key</h3>
-<p>Results of the preflight tests are protected by encryption. In order to
-retrieve them from the preflight job, gpg decryption key should be supplied.</p>
-<pre><code class="language-bash">oc create secret generic preflight-decryption-key \
-  --from-literal private=&lt;private gpg key&gt; \
-  --from-literal public=&lt;public gpg key&gt;
-</code></pre>
-<h3 id="quay-oauth-token">Quay OAuth Token</h3>
-<p>A Quay OAuth token is required to set repo visibility to public.</p>
-<pre><code class="language-bash">oc create secret generic quay-oauth-token --from-literal token=&lt;token&gt;
-</code></pre>
-<h2 id="only-release-pipeline">Only Release pipeline:</h2>
-<h3 id="registry-credentials_2">Registry Credentials</h3>
-<p>The release pipeline requires credentials to push and pull the bundle image built by
-the hosted pipeline. Three registry auth secrets must be specified since different
-credentials may be required for the same registry when copying and serving the image.
-These secrets can then be passed as workspaces named <code>registry-pull-credentials</code>,
-<code>registry-push-credentials</code> and <code>registry-serve-credentials</code> when invoking the
-pipeline.</p>
-<pre><code class="language-bash">oc create secret generic release-pipeline-registry-auth-pull-secret \
-  --type kubernetes.io/dockerconfigjson \
-  --from-file .dockerconfigjson=pull-config.json
-
-oc create secret generic release-pipeline-registry-auth-push-secret \
-  --type kubernetes.io/dockerconfigjson \
-  --from-file .dockerconfigjson=push-config.json
-
-oc create secret generic release-pipeline-registry-auth-serve-secret \
-  --type kubernetes.io/dockerconfigjson \
-  --from-file .dockerconfigjson=serve-config.json
-</code></pre>
-<h3 id="kerberos-credentials">Kerberos credentials</h3>
-<p>For submitting the IIB build, you need kerberos keytab in a secret:</p>
-<pre><code class="language-bash">oc create secret generic kerberos-keytab \
-  --from-file krb5.keytab
-</code></pre>
-<h3 id="quay-credentials">Quay credentials</h3>
-<p>Release pipeline uses Quay credentials to authenticate a push to an index image
-during the IIB build.</p>
-<pre><code class="language-bash">oc create secret generic iib-quay-credentials \
-  --from-literal username=&lt;QUAY_USERNAME&gt; \
-  --from-literal password=&lt;QUAY_PASSWORD&gt;
-</code></pre>
-<h3 id="ocp-registry-kubeconfig">OCP-registry-kubeconfig</h3>
-<p>OCP clusters contains the public registries for Operator Bundle Images.
-To publish the image to this registry, Pipeline connects to OCP cluster via
-kubeconfig.
-To create the secret which contains the OCP cluster kubeconfig:</p>
-<pre><code class="language-bash">oc create secret generic ocp-registry-kubeconfig \
-  --from-literal kubeconfig=&lt;kubeconfig&gt;
-</code></pre>
-<p>Additional setup instructions for this cluster are documented <a href="rhc4tp-cluster.md">here</a>.</p>
 
 
 
@@ -1360,10 +1337,10 @@ To create the secret which contains the OCP cluster kubeconfig:</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
