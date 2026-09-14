@@ -5,6 +5,16 @@ metadata:
   name: reserve-operator-name
 spec:
   params:
+    - name: github_host_url
+      description: |
+        The GitHub host, adjust this if you run a GitHub enterprise.
+      default: "https://api.github.com"
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: token
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github
     - name: pipeline_image
     - name: association
       description: The association that the operator belongs in, usually the isv_pid.
@@ -12,6 +22,8 @@ spec:
       description: The operator name to be reserved.
     - name: source
       description: The source catalog the operator belongs to, usually "redhat-marketplace" or "certified-operators"
+    - name: pull_request_url
+      description: Pull request in GitHub to check applied labels in.
     - name: pyxis_ssl_secret_name
       description: Kubernetes secret name that contains the Pyxis SSL files.
     - name: pyxis_ssl_cert_secret_key
@@ -38,6 +50,11 @@ spec:
           value: $(params.association)
         - name: SOURCE
           value: $(params.source)
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
       volumeMounts:
         - name: pyxis-ssl-volume
           readOnly: true
@@ -50,11 +67,22 @@ spec:
           exit 0
         fi
 
+        # Get labels from the pull request
+        EXTRA_ARGS=''
+        gh pr view "$(params.pull_request_url)" --json labels > labels.json
+
+        # Following command filters out labels that start with prefix and merge them to single string separated by comma
+        EXCEPTIONS=`jq -r '.labels[] | select(.name | startswith("exception/")) | .name' labels.json | paste -sd "," |sed 's/exception\///g'`
+
+        if [[ $EXCEPTIONS != "" ]]; then
+          echo "Following exceptions applied: $EXCEPTIONS"
+          EXTRA_ARGS+=" --approved-exceptions $EXCEPTIONS"
+        fi
+
         echo "Attempting to reserve operator name for association $ASSOCIATION"
 
-        reserve-operator-name \
+        reserve-operator-name --verbose \
           --association $ASSOCIATION \
           --operator-name "$(params.operator_name)" \
           --pyxis-url "$(params.pyxis_url)" \
-          --source $SOURCE \
-          --verbose
+          --source $SOURCE $EXTRA_ARGS
