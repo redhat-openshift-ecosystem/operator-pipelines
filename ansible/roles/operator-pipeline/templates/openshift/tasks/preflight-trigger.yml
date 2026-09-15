@@ -97,7 +97,7 @@ spec:
               key: $(params.github_token_secret_key)
       script: |
         #!/usr/bin/env bash
-        set -xe
+        set -euo pipefail
 
         if [[ "$(params.pull_request_url)" == "" ]]; then
           echo "No pull request URL provided, skipping label check"
@@ -158,13 +158,12 @@ spec:
           mountPath: "/etc/gpg-key"
       script: |
           #!/usr/bin/env bash
+          set -euo pipefail
 
           if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" || -f "$(workspaces.results.path)/preflight_skipped_by_label" ]]; then
               echo "Preflight testing has been skipped"
               exit 0
           fi
-
-          set -e
 
           if [ -f "$(workspaces.credentials.path)/project_dockerconfigjson" ];
           then
@@ -203,6 +202,7 @@ spec:
           mountPath: "/etc/kubeconfig-volume"
       script: |
           #!/usr/bin/env bash
+          set -euo pipefail
 
           if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" || -f "$(workspaces.results.path)/preflight_skipped_by_label" ]]; then
               echo "Preflight testing has been skipped"
@@ -218,8 +218,6 @@ spec:
           else
               OCP_VER="${CP_VER}"
           fi
-
-          set -e
 
           if [ -f "$(workspaces.credentials.path)/project_dockerconfigjson.gpg.b64" ]
           then
@@ -265,6 +263,7 @@ spec:
           mountPath: "/etc/gpg-key"
       script: |
           #!/usr/bin/env bash
+          set -euo pipefail
           if [[ -f "$(workspaces.results.path)/preflight_skipped_by_label" ]]; then
             echo "Preflight testing has been skipped due to a label on the PR"
             exit 0
