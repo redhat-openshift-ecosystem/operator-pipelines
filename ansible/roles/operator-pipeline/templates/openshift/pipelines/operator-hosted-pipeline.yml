@@ -1151,10 +1151,6 @@ spec:
           value: "$(params.github_token_secret_key)"
         - name: preflight_result_file_path
           value: "$(tasks.preflight-trigger.results.result_output_file)"
-        - name: preflight_log_file_path
-          value: "$(tasks.preflight-trigger.results.log_output_file)"
-        - name: preflight_artifacts_output_dir
-          value: "$(tasks.preflight-trigger.results.artifacts_output_dir)"
       workspaces:
         - name: results
           workspace: results
