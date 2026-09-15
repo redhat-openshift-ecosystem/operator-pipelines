@@ -37,13 +37,6 @@ spec:
       description: A path to a preflight test results.
       type: string
 
-    - name: preflight_log_file_path
-      description: A path to a preflight log file.
-      type: string
-
-    - name: preflight_artifacts_output_dir
-      description: A path to a preflight artifacts directory.
-      type: string
 
   results:
     - name: test_result
@@ -91,9 +84,7 @@ spec:
         create-github-gist \
           --pull-request-url "$(params.request_url)" \
           --comment-prefix "Test artifacts: " \
-          "$RESULT_FILE_FILTERED" \
-          "$(params.preflight_log_file_path)" \
-          "$(params.preflight_artifacts_output_dir)"
+          "$RESULT_FILE_FILTERED"
 
         # Did the tests pass?
         echo "Checking preflight test status"
