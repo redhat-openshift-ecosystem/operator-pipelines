@@ -20,7 +20,7 @@ dependencies = [
     "stomp-py (>=8.0.1)",
     "requests-kerberos (>=0.14.0)",
     "pygithub (>=1.59.0,<2.0)",
-    "gitpython (>=3.1.61)",
+    "gitpython (>=3.1.62)",
     "semver (>=3.0.1)",
     "urllib3 (>=2.7.0)",
     "openshift-client (>=2.0.4)",
@@ -29,7 +29,7 @@ dependencies = [
     "semantic-version (>=2.10.0)",
     "sqlalchemy (>=2.0.52)",
     "flask (>=3.1.1)",
-    "psycopg2-binary (>=2.9.12)",
+    "psycopg2-binary (>=2.9.13)",
     "httpx (>=0.28.1)",
     "kubernetes (==35.0.0)",
     "cel-python (>=0.4.0)",
@@ -108,4 +108,4 @@ ansible-lint = ">=26.6.0"
 colorama = ">=0.4.6"
 pip-audit = ">=2.7.3"
 pytest-asyncio = ">=1.1.0"
-tox = "^4.61.2"
+tox = "^4.61.4"
