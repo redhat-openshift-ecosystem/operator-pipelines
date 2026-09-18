@@ -1,0 +1,67 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: resolve-sparse-checkout-dirs
+spec:
+  description: >-
+    Queries the GitHub pull request for changed files and computes the
+    minimal set of directories needed for a sparse checkout. This allows
+    the pipeline to clone only the affected operator and catalog
+    directories plus shared resources (config.yaml) instead of the
+    entire repository.
+  params:
+    - name: pipeline_image
+      description: The common pipeline image.
+
+    - name: git_pr_url
+      description: URL of the GitHub pull request
+      type: string
+
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
+
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: github_bot_token
+
+  results:
+    - name: sparse_dirs
+      description: >-
+        Comma-separated list of directories for sparse checkout.
+        Always includes config.yaml; dynamically adds
+        operators/<name> for each affected operator and
+        catalogs/<version> for each affected catalog.
+
+  steps:
+    - name: resolve-dirs
+      image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #! /usr/bin/env bash
+        set -e -o pipefail
+
+        echo "Fetching changed files for $(params.git_pr_url)"
+
+        ALL_FILES=$(gh pr diff "$(params.git_pr_url)" --name-only)
+
+        declare -A DIRS
+        DIRS["config.yaml"]=1
+
+        while IFS= read -r filepath; do
+          dir=$(echo "$filepath" | cut -d'/' -f1,2)
+          if [[ "$filepath" == operators/* || "$filepath" == catalogs/* ]]; then
+            DIRS["$dir"]=1
+          fi
+        done <<< "$ALL_FILES"
+
+        RESULT=$(printf '%s\n' "${!DIRS[@]}" | sort | paste -sd ',' -)
+
+        echo "Sparse checkout directories: $RESULT"
+        echo -n "$RESULT" > "$(results.sparse_dirs.path)"
