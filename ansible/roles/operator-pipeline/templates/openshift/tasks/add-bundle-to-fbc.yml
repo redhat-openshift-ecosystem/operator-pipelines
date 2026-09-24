@@ -109,7 +109,7 @@ spec:
               key: $(params.github_token_secret_key)
       script: |
         #! /usr/bin/env bash
-        set -xe
+        set -e
 
         if [[ "$(params.create_pull_request)" != "true" ]]; then
           echo "Skipping creating a pull request"
@@ -141,7 +141,23 @@ spec:
         export GIT_COMMITTER_EMAIL="exd-guild-isv+operators@redhat.com"
         export GIT_COMMITTER_NAME="rh-operator-bundle-bot"
 
-        # Add catalogs and templates changes to a gii and push to a new branch
+        # GitHub rejects blobs at or above 100 MB. Track only the oversized
+        # generated catalog paths, leaving normal catalog files unchanged.
+        if [[ -f .lfsconfig ]]; then
+          echo "Repositories with .lfsconfig are not supported by the pipeline" >&2
+          exit 1
+        fi
+        git lfs install --local
+        while IFS= read -r -d '' catalog_file; do
+          relative_path="${catalog_file#./}"
+          echo "Tracking oversized catalog with Git LFS: ${relative_path}"
+          git lfs track -- "${relative_path}"
+        done < <(find catalogs -type f -name 'catalog.yaml' -size +100000000c -print0)
+
+        # Add catalogs and templates changes to git and push to a new branch.
+        if [[ -f .gitattributes ]]; then
+          git add .gitattributes
+        fi
         git add operators/$(params.operator_name)/catalog-templates
         git add catalogs/*
 
