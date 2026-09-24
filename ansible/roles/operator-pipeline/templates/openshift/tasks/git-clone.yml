@@ -20,7 +20,8 @@ spec:
     your Workspace. You can clone into a subdirectory by setting this Task's
     subdirectory param. This Task also supports sparse checkouts. To perform
     a sparse checkout, pass a list of comma separated directory patterns to
-    this Task's sparseCheckoutDirectories param.
+    this Task's sparseCheckoutDirectories param. Repositories using Git LFS
+    are fetched automatically when the common pipeline image contains git-lfs.
   workspaces:
     - name: output
       description: The git repo will be cloned onto the volume backing this Workspace.
@@ -216,3 +217,55 @@ spec:
         fi
         printf "%s" "${RESULT_SHA}" > "$(results.commit.path)"
         printf "%s" "${PARAM_URL}" > "$(results.url.path)"
+
+    - name: fetch-lfs
+      image: "{{ operator_pipeline_image_pull_spec }}"
+      workingDir: $(workspaces.output.path)/$(params.subdirectory)
+      env:
+        - name: WORKSPACE_SSH_DIRECTORY_BOUND
+          value: $(workspaces.ssh-directory.bound)
+        - name: WORKSPACE_SSH_DIRECTORY_PATH
+          value: $(workspaces.ssh-directory.path)
+        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND
+          value: $(workspaces.basic-auth.bound)
+        - name: WORKSPACE_BASIC_AUTH_DIRECTORY_PATH
+          value: $(workspaces.basic-auth.path)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        if [[ ! -f .gitattributes ]] || ! grep -Eq '(^|[[:space:]])filter=lfs([[:space:]]|$)' .gitattributes; then
+          echo "No Git LFS files found; skipping LFS checkout"
+          exit 0
+        fi
+
+        if [[ -f .lfsconfig ]]; then
+          echo "Repositories with .lfsconfig are not supported by the pipeline" >&2
+          exit 1
+        fi
+
+        if ! command -v git-lfs >/dev/null 2>&1; then
+          echo "This repository uses Git LFS, but the common pipeline image does not contain git-lfs" >&2
+          exit 1
+        fi
+
+        umask 077
+        LFS_HOME="$(mktemp -d)"
+        trap 'rm -rf "${LFS_HOME}"' EXIT
+        export HOME="${LFS_HOME}"
+        if [[ "${WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND}" == "true" ]]; then
+          cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.git-credentials" "${HOME}/.git-credentials"
+          cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.gitconfig" "${HOME}/.gitconfig"
+          chmod 400 "${HOME}/.git-credentials" "${HOME}/.gitconfig"
+        fi
+        if [[ "${WORKSPACE_SSH_DIRECTORY_BOUND}" == "true" ]]; then
+          cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" "${HOME}/.ssh"
+          chmod 700 "${HOME}/.ssh"
+          chmod -R 400 "${HOME}/.ssh"/*
+        fi
+
+        export GIT_CONFIG_COUNT=1
+        export GIT_CONFIG_KEY_0=safe.directory
+        export GIT_CONFIG_VALUE_0="$(pwd)"
+        git lfs install --local
+        git lfs pull

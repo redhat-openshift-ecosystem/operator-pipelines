@@ -46,6 +46,7 @@ RUN dnf update -y && \
   gcc \
   gh \
   git \
+  git-lfs \
   gnupg2 \
   jq \
   krb5-devel \
