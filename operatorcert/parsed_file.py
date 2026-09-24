@@ -245,9 +245,10 @@ class ParserRules:
         """
         Check if there are any extra files in the PR outside of the operator
         """
-        if len(self.object.extra_files) > 0:
+        extra_files = set(self.object.extra_files) - {".gitattributes"}
+        if extra_files:
             self.errors.append(
-                f"The PR affects non-operator files: {sorted(self.object.extra_files)}"
+                f"The PR affects non-operator files: {sorted(extra_files)}"
             )
 
     def check_affected_operators(self) -> None:
