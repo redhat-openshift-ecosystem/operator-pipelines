@@ -501,6 +501,14 @@ def test_github_pr_affected_files_invalid_url(
         ),
         pytest.param(
             {
+                "extra_files": [".gitattributes"],
+            },
+            True,
+            None,
+            id="Gitattributes allowed for Git LFS",
+        ),
+        pytest.param(
+            {
                 "extra_files": [],
                 "added_operators": ["operator-e2e", "operator-clone-e2e"],
             },
