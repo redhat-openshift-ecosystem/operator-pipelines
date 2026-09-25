@@ -13,6 +13,10 @@ spec:
       description: The common pipeline image.
       default: "quay.io/redhat-isv/operator-pipelines-images:released"
 
+    - name: artifacts_base_url
+      description: Base URL to use when downloading artifacts
+      default: "https://gcs.ci.openshift.org/gcs/test-platform-results-public/logs/"
+
     - name: preflight_trigger_environment
       description: Which openshift-ci step-registry steps and ProwJob templates to use. Can be one of [preprod, prod]
 
@@ -288,6 +292,7 @@ spec:
 
           preflight-trigger artifacts \
           --environment "$(params.preflight_trigger_environment)" \
+          --artifacts-base-url "$(params.artifacts_base_url)" \
           --ocp-version "${OCP_VER}"
 
           preflight-trigger decrypt \
