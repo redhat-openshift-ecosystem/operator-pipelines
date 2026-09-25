@@ -241,8 +241,8 @@ spec:
         set -euo pipefail
 
         if ! command -v git-lfs >/dev/null 2>&1; then
-          echo "git-lfs not found in pipeline image; skipping LFS checkout"
-          exit 0
+          echo "This repository uses Git LFS but git-lfs is not installed in the pipeline image." >&2
+          exit 1
         fi
 
         if ! git lfs ls-files --name-only 2>/dev/null | grep -q .; then
@@ -280,15 +280,3 @@ spec:
 
         git lfs install --local
         git lfs pull
-
-        git submodule foreach --recursive '
-          if [ -f .lfsconfig ]; then
-            echo "Submodule with .lfsconfig is not supported by the pipeline" >&2
-            exit 1
-          fi
-          if git lfs ls-files --name-only 2>/dev/null | grep -q .; then
-            echo "Pulling Git LFS objects for submodule: $(pwd)"
-            git lfs install --local
-            git lfs pull
-          fi
-        '
