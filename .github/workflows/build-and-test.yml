@@ -119,48 +119,104 @@ jobs:
         run: |
           tox -e hadolint
 
-  build:
-    name: Build and push image
+  build-amd64:
+    name: Build (amd64)
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
+      - name: Build and push
+        uses: ./.github/actions/build-arch
+        with:
+          arch: amd64
+          # https://github.com/operator-framework/operator-registry/releases (linux-amd64-opm)
+          opm_sha256: a9c9193dd727a11966f98919a4805328554c439d3f7e72a095b4eb4a437dcd9f
+          # https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/4.20.35/
+          oc_sha256: 35ce9f9a21d1524f811f035b730aa0b51879df73343fb3d59d618b88b0f1b968
+          # https://github.com/operator-framework/operator-sdk/releases (operator-sdk_linux_amd64)
+          operator_sdk_sha256: 25872268c422fb63a350d85741a1f26052c953c7e9654167b0e8dbd6dbfb6c1d
+          registry_username: ${{ secrets.REGISTRY_USERNAME }}
+          registry_password: ${{ secrets.REGISTRY_PASSWORD }}
+
+  build-arm64:
+    name: Build (arm64)
+    # Only on push to the default branch.
+    if: >
+      github.event_name == 'push' &&
+      github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Build and push
+        uses: ./.github/actions/build-arch
+        with:
+          arch: arm64
+          # https://github.com/operator-framework/operator-registry/releases (linux-arm64-opm)
+          opm_sha256: de3d6fb55c83376c3b890ce751b819823dc7c4bf4506c04bc781c67989fad88c
+          # https://mirror.openshift.com/pub/openshift-v4/arm64/clients/ocp/4.20.35/
+          oc_sha256: 34ee513227e6b828ff902671998ad6ea4cfaebdd40fa52d17d3a6accc6f99e96
+          # https://github.com/operator-framework/operator-sdk/releases (operator-sdk_linux_arm64)
+          operator_sdk_sha256: f21905486df9f28892d7a6a25bab6ccd341ecbc204d35a1c1c175e973b734f25
+          registry_username: ${{ secrets.REGISTRY_USERNAME }}
+          registry_password: ${{ secrets.REGISTRY_PASSWORD }}
+
+  publish:
+    name: Create and push manifest
+    needs: [build-amd64, build-arm64]
+    # Continue when build-arm64 is skipped; default needs would skip publish too.
+    if: >
+      always() &&
+      needs.build-amd64.result == 'success' &&
+      (needs.build-arm64.result == 'success' || needs.build-arm64.result == 'skipped')
+    runs-on: ubuntu-latest
     steps:
       - name: Set variables
         id: set-vars
         run: |
           COMMIT_SHA=${{ github.event.pull_request.head.sha || github.sha }}
-          if [[ "${{ github.event_name }}" == "push" && "$GITHUB_REF_NAME" == "main" ]]; then
-            echo "tags=latest $COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "commit_sha=${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+          if [[ "${{ needs.build-arm64.result }}" == "success" ]]; then
+            echo "extra_tags=latest" >> "$GITHUB_OUTPUT"
           else
-            echo "tags=$COMMIT_SHA" >> $GITHUB_OUTPUT
+            echo "extra_tags=" >> "$GITHUB_OUTPUT"
           fi
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Build Image
-        id: build-image
-        uses: redhat-actions/buildah-build@719e3c40d8af9790c23eca13f7daa339f2867034 # v3.1.0
+      - name: Podman Login
+        uses: redhat-actions/podman-login@50c2d9a331bb67c8fdab99b86455fad05e2e3252 # v2.0
         with:
-          image: operator-pipelines-images
-          tags: ${{ steps.set-vars.outputs.tags }}
-          dockerfiles: |
-            ./Dockerfile
-
-      - name: Push To quay.io
-        id: push-to-quay
-        uses: redhat-actions/push-to-registry@94ade333c38ecc0e60e94785125d9a52ca423b37 # v3.0.0
-        with:
-          image: ${{ steps.build-image.outputs.image }}
-          tags: ${{ steps.build-image.outputs.tags }}
-          registry: quay.io/redhat-isv
+          registry: quay.io
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Print image url
-        run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
+      - name: Create and push manifest
+        env:
+          IMAGE: quay.io/redhat-isv/operator-pipelines-images
+          COMMIT_SHA: ${{ steps.set-vars.outputs.commit_sha }}
+          EXTRA_TAGS: ${{ steps.set-vars.outputs.extra_tags }}
+          ARCHES: ${{ needs.build-arm64.result == 'success' && 'amd64 arm64' || 'amd64' }}
+        run: |
+          set -euo pipefail
+          MANIFEST="${IMAGE}:${COMMIT_SHA}"
+          buildah manifest create "${MANIFEST}"
+          for arch in ${ARCHES}; do
+            buildah manifest add "${MANIFEST}" "${IMAGE}:${COMMIT_SHA}-linux-${arch}"
+          done
+          podman manifest push --all "${MANIFEST}" "${MANIFEST}"
+          for tag in ${EXTRA_TAGS}; do
+            podman manifest push --all "${MANIFEST}" "${IMAGE}:${tag}"
+          done
+          echo "Manifest pushed to ${MANIFEST} (arches: ${ARCHES})"
+          if [[ -n "${EXTRA_TAGS}" ]]; then
+            echo "Also tagged as: ${EXTRA_TAGS}"
+          fi
 
   integration-tests:
-    needs: [build]
+    needs: [publish]
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.label.name == 'ready-for-testing'
     timeout-minutes: 90
     strategy:

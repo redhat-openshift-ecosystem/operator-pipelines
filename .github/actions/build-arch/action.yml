@@ -1,0 +1,62 @@
+---
+name: build-arch
+description: Build operator-pipelines-images for one arch and push to Quay
+
+inputs:
+  arch:
+    description: Target architecture (amd64 or arm64)
+    required: true
+  opm_sha256:
+    description: SHA256 of the opm binary for this arch
+    required: true
+  oc_sha256:
+    description: SHA256 of the oc tarball for this arch
+    required: true
+  operator_sdk_sha256:
+    description: SHA256 of the operator-sdk binary for this arch
+    required: true
+  registry_username:
+    description: Quay username
+    required: true
+  registry_password:
+    description: Quay password
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set variables
+      id: set-vars
+      shell: bash
+      run: |
+        COMMIT_SHA=${{ github.event.pull_request.head.sha || github.sha }}
+        echo "arch_tag=${COMMIT_SHA}-linux-${{ inputs.arch }}" >> "$GITHUB_OUTPUT"
+
+    - name: Build Image
+      id: build-image
+      uses: redhat-actions/buildah-build@719e3c40d8af9790c23eca13f7daa339f2867034 # v3.1.0
+      with:
+        image: operator-pipelines-images
+        tags: ${{ steps.set-vars.outputs.arch_tag }}
+        archs: ${{ inputs.arch }}
+        dockerfiles: |
+          ./Dockerfile
+        build-args: |
+          ARCH=${{ inputs.arch }}
+          OPM_SHA256=${{ inputs.opm_sha256 }}
+          OC_SHA256=${{ inputs.oc_sha256 }}
+          OPERATOR_SDK_SHA256=${{ inputs.operator_sdk_sha256 }}
+
+    - name: Push To quay.io
+      id: push-to-quay
+      uses: redhat-actions/push-to-registry@94ade333c38ecc0e60e94785125d9a52ca423b37 # v3.0.0
+      with:
+        image: ${{ steps.build-image.outputs.image }}
+        tags: ${{ steps.build-image.outputs.tags }}
+        registry: quay.io/redhat-isv
+        username: ${{ inputs.registry_username }}
+        password: ${{ inputs.registry_password }}
+
+    - name: Print image url
+      shell: bash
+      run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
