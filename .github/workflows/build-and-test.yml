@@ -119,32 +119,83 @@ jobs:
         run: |
           tox -e hadolint
 
-  build:
-    name: Build and push image
+  set-arch:
+    # Single source of truth for which arches to build/publish.
+    # Downstream jobs reuse this list; they do not re-check the event type.
+    name: Set architecture to build and publish
     runs-on: ubuntu-latest
+    outputs:
+      arches: ${{ steps.set.outputs.arches }}
+    steps:
+      - name: Set architectures
+        id: set
+        # JSON array so build can use fromJSON() for the matrix.
+        # (Job-level if cannot use matrix together with needs — see build job.)
+        env:
+          ARCHES_JSON: ${{ '["amd64","arm64"]' }}
+        run: printf 'arches=%s\n' "${ARCHES_JSON}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build (${{ matrix.arch }})
+    needs: [set-arch]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # Driven by set-arch; avoids job-level if + matrix + needs (unsupported).
+        arch: ${{ fromJSON(needs.set-arch.outputs.arches) }}
 
     steps:
       - name: Set variables
         id: set-vars
         run: |
           COMMIT_SHA=${{ github.event.pull_request.head.sha || github.sha }}
-          if [[ "${{ github.event_name }}" == "push" && "$GITHUB_REF_NAME" == "main" ]]; then
-            echo "tags=latest $COMMIT_SHA" >> $GITHUB_OUTPUT
-          else
-            echo "tags=$COMMIT_SHA" >> $GITHUB_OUTPUT
-          fi
+          echo "commit_sha=${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "arch_tag=${COMMIT_SHA}-linux-${{ matrix.arch }}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ steps.set-vars.outputs.commit_sha }}
+
+      - name: Install qemu dependency
+        if: matrix.arch != 'amd64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+
+      # Checksums: https://github.com/operator-framework/operator-registry/releases (opm)
+      # https://mirror.openshift.com/pub/openshift-v4/<arch>/clients/ocp/4.20.35/ (oc)
+      # https://github.com/operator-framework/operator-sdk/releases (operator-sdk)
+      - name: Set checksums (amd64)
+        id: checksums-amd64
+        if: matrix.arch == 'amd64'
+        run: |
+          echo "opm_sha256=a9c9193dd727a11966f98919a4805328554c439d3f7e72a095b4eb4a437dcd9f" >> "$GITHUB_OUTPUT"
+          echo "oc_sha256=35ce9f9a21d1524f811f035b730aa0b51879df73343fb3d59d618b88b0f1b968" >> "$GITHUB_OUTPUT"
+          echo "operator_sdk_sha256=25872268c422fb63a350d85741a1f26052c953c7e9654167b0e8dbd6dbfb6c1d" >> "$GITHUB_OUTPUT"
+
+      - name: Set checksums (arm64)
+        id: checksums-arm64
+        if: matrix.arch == 'arm64'
+        run: |
+          echo "opm_sha256=de3d6fb55c83376c3b890ce751b819823dc7c4bf4506c04bc781c67989fad88c" >> "$GITHUB_OUTPUT"
+          echo "oc_sha256=34ee513227e6b828ff902671998ad6ea4cfaebdd40fa52d17d3a6accc6f99e96" >> "$GITHUB_OUTPUT"
+          echo "operator_sdk_sha256=f21905486df9f28892d7a6a25bab6ccd341ecbc204d35a1c1c175e973b734f25" >> "$GITHUB_OUTPUT"
 
       - name: Build Image
         id: build-image
         uses: redhat-actions/buildah-build@719e3c40d8af9790c23eca13f7daa339f2867034 # v3.1.0
         with:
           image: operator-pipelines-images
-          tags: ${{ steps.set-vars.outputs.tags }}
+          tags: ${{ steps.set-vars.outputs.arch_tag }}
+          archs: ${{ matrix.arch }}
           dockerfiles: |
             ./Dockerfile
+          build-args: |
+            ARCH=${{ matrix.arch }}
+            OPM_SHA256=${{ steps.checksums-amd64.outputs.opm_sha256 || steps.checksums-arm64.outputs.opm_sha256 }}
+            OC_SHA256=${{ steps.checksums-amd64.outputs.oc_sha256 || steps.checksums-arm64.outputs.oc_sha256 }}
+            OPERATOR_SDK_SHA256=${{ steps.checksums-amd64.outputs.operator_sdk_sha256 || steps.checksums-arm64.outputs.operator_sdk_sha256 }}
 
       - name: Push To quay.io
         id: push-to-quay
@@ -159,8 +210,58 @@ jobs:
       - name: Print image url
         run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
 
+  publish:
+    name: Create and push manifest
+    needs: [set-arch, build]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Set variables
+        id: set-vars
+        run: |
+          COMMIT_SHA=${{ github.event.pull_request.head.sha || github.sha }}
+          echo "commit_sha=${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Set extra tags (main)
+        id: main-tags
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: echo "extra_tags=latest" >> "$GITHUB_OUTPUT"
+
+      - name: Set extra tags (non-main)
+        id: other-tags
+        if: github.event_name != 'push' || github.ref_name != 'main'
+        run: echo "extra_tags=" >> "$GITHUB_OUTPUT"
+
+      - name: Podman Login
+        uses: redhat-actions/podman-login@50c2d9a331bb67c8fdab99b86455fad05e2e3252 # v2.0
+        with:
+          registry: quay.io
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Create and push manifest
+        env:
+          IMAGE: quay.io/redhat-isv/operator-pipelines-images
+          COMMIT_SHA: ${{ steps.set-vars.outputs.commit_sha }}
+          EXTRA_TAGS: ${{ steps.main-tags.outputs.extra_tags || steps.other-tags.outputs.extra_tags }}
+          ARCHES: ${{ join(fromJSON(needs.set-arch.outputs.arches), ' ') }}
+        run: |
+          set -euo pipefail
+          MANIFEST="${IMAGE}:${COMMIT_SHA}"
+          buildah manifest create "${MANIFEST}"
+          for arch in ${ARCHES}; do
+            buildah manifest add "${MANIFEST}" "${IMAGE}:${COMMIT_SHA}-linux-${arch}"
+          done
+          podman manifest push --all "${MANIFEST}" "${MANIFEST}"
+          for tag in ${EXTRA_TAGS}; do
+            podman manifest push --all "${MANIFEST}" "${IMAGE}:${tag}"
+          done
+          echo "Manifest pushed to ${MANIFEST} (arches: ${ARCHES})"
+          if [[ -n "${EXTRA_TAGS}" ]]; then
+            echo "Also tagged as: ${EXTRA_TAGS}"
+          fi
+
   integration-tests:
-    needs: [build]
+    needs: [publish]
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.label.name == 'ready-for-testing'
     timeout-minutes: 90
     strategy:
