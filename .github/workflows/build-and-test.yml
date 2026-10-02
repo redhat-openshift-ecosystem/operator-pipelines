@@ -132,7 +132,7 @@ jobs:
         # JSON array so build can use fromJSON() for the matrix.
         # (Job-level if cannot use matrix together with needs — see build job.)
         env:
-          ARCHES_JSON: ${{ github.event_name == 'pull_request' && '["amd64"]' || '["amd64","arm64"]' }}
+          ARCHES_JSON: ${{ '["amd64","arm64"]' }}
         run: printf 'arches=%s\n' "${ARCHES_JSON}" >> "$GITHUB_OUTPUT"
 
   build:
