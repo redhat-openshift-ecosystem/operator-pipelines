@@ -247,12 +247,14 @@ jobs:
           registry: quay.io
 
       - name: Tag image with a release tag
+        env:
+          IMAGE: quay.io/redhat-isv/operator-pipelines-images
+          SOURCE_TAG: ${{ github.sha }}
+          RELEASE_TAG: ${{ steps.tag_version.outputs.new_tag }}
         run: |
-
-          podman pull quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }}
-
-          podman tag quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} quay.io/redhat-isv/operator-pipelines-images:released
-          podman tag quay.io/redhat-isv/operator-pipelines-images:${{ github.sha }} quay.io/redhat-isv/operator-pipelines-images:${{ steps.tag_version.outputs.new_tag }}
-
-          podman push quay.io/redhat-isv/operator-pipelines-images:released
-          podman push quay.io/redhat-isv/operator-pipelines-images:${{ steps.tag_version.outputs.new_tag }}
+          set -euo pipefail
+          # Copy the whole manifest list (amd64 + arm64)
+          skopeo copy --all "docker://${IMAGE}:${SOURCE_TAG}" \
+            "docker://${IMAGE}:released"
+          skopeo copy --all "docker://${IMAGE}:${SOURCE_TAG}" \
+            "docker://${IMAGE}:${RELEASE_TAG}"
