@@ -115,3 +115,10 @@ spec:
             { echo " Error while retrieving github_usernames from the Certification Project- is the value missing?" \
             && exit 1; }
         echo -n $GITHUB_USERNAMES | tee $(results.github_usernames.path)
+
+        # Save operator_distribution to workspace for github-pipelinerun-summary task.
+        # Only applies to certified/marketplace operators.
+        # Valid values: connect, marketplace, undistributed.
+        # Defaults to empty string for all other operator types.
+        mkdir -p "$(workspaces.results.path)/summary"
+        cp "$(results.operator_distribution.path)" "$(workspaces.results.path)/summary/operator_distribution"
