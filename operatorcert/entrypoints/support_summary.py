@@ -172,7 +172,8 @@ class OCPPullRequestReview(CategoryChecker):
             str: A GitHub search query string.
         """
         return (
-            f"{self.repo_query} is:pr is:open label:operator-hosted-pipeline/passed "
+            f"{self.repo_query} is:pr is:open -is:draft "
+            f"label:operator-hosted-pipeline/passed "
             f"{EXCLUDE_FILTER}"
         )
 
@@ -314,7 +315,8 @@ class K8sPullRequestReview(CategoryChecker):
             str: A GitHub search query string.
         """
         return (
-            f"{self.repo_query} is:pr -label:authorized-changes is:open status:success "
+            f"{self.repo_query} is:pr -label:authorized-changes is:open -is:draft "
+            f"status:success "
             f"{EXCLUDE_FILTER}"
         )
 
