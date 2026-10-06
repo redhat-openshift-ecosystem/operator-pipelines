@@ -169,7 +169,7 @@ jobs:
     needs: [build-amd64, build-arm64]
     # Continue when build-arm64 is skipped; default needs would skip publish too.
     if: >
-      always() &&
+      !cancelled() &&
       needs.build-amd64.result == 'success' &&
       (needs.build-arm64.result == 'success' || needs.build-arm64.result == 'skipped')
     runs-on: ubuntu-latest
@@ -216,7 +216,12 @@ jobs:
 
   integration-tests:
     needs: [publish]
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.label.name == 'ready-for-testing'
+    # Continue when build-arm64 is skipped; default needs would skip this job too.
+    # Use !cancelled() rather than always() so a cancelled run still stops here.
+    if: >
+      !cancelled() &&
+      needs.publish.result == 'success' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.label.name == 'ready-for-testing')
     timeout-minutes: 90
     strategy:
       matrix:
