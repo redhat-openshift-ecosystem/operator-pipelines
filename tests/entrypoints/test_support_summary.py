@@ -69,7 +69,8 @@ def test_OCPPullRequestReview(mock_to_summary: MagicMock) -> None:
     gh_client = MagicMock()
     checker = support_summary.OCPPullRequestReview(gh_client, ["repo"])
     assert (
-        "repo:repo is:pr is:open label:operator-hosted-pipeline/passed" in checker.query
+        "repo:repo is:pr is:open -is:draft label:operator-hosted-pipeline/passed"
+        in checker.query
     )
 
     result = checker.run()
@@ -112,7 +113,7 @@ def test_K8sPullRequestReview(mock_to_summary: MagicMock) -> None:
     gh_client = MagicMock()
     checker = support_summary.K8sPullRequestReview(gh_client, ["repo"])
     assert (
-        "repo:repo is:pr -label:authorized-changes is:open status:success"
+        "repo:repo is:pr -label:authorized-changes is:open -is:draft status:success"
         in checker.query
     )
 
