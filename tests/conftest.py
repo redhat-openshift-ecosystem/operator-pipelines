@@ -4,7 +4,16 @@ from operatorcert.catalog.catalog import Catalog
 from operatorcert.catalog.package import CatalogPackage
 from operatorcert.catalog.channel import CatalogChannel
 from operatorcert.catalog.bundle import CatalogBundle
-from typing import Optional
+from operatorcert.static_tests.helpers import set_affected_operator_files
+from typing import Iterator, Optional
+
+
+@pytest.fixture(autouse=True)
+def reset_affected_operator_files() -> Iterator[None]:
+    """Ensure module-global affected-file state does not leak across tests."""
+    set_affected_operator_files([])
+    yield
+    set_affected_operator_files([])
 
 
 @pytest.fixture

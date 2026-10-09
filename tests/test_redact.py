@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import tempfile
 from base64 import b64encode
 from pathlib import Path
@@ -9,6 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from operatorcert.redact import (
+    paths_with_leaks,
     scan_and_redact,
     scan,
 )
@@ -19,8 +21,10 @@ INPUT_CONTENT = b"curl -H 'Authorization: bearer " + JWT_TOKEN + b" example.com\
 REDACTED_CONTENT = b"curl -H 'Authorization: bearer ***[REDACTED]*** example.com\n"
 
 
-def _scan_result_str(path: str) -> str:
-    return json.dumps({"results": [{"location": {"path": path}}]})
+def _scan_result_str(path: str, **extra: Any) -> str:
+    result: dict[str, Any] = {"location": {"path": path}}
+    result.update(extra)
+    return json.dumps({"results": [result]})
 
 
 def _make_run_side_effect(
@@ -45,7 +49,8 @@ def test_scan(mock_check_output: MagicMock) -> None:
     input_path = Path("/fake/path/testfile")
     scan_result = _scan_result_str(str(input_path))
 
-    mock_check_output.return_value = scan_result
+    # Blank lines in JSONL output are skipped (leaktk may emit them).
+    mock_check_output.return_value = f"\n{scan_result}\n\n"
 
     results = scan(input_path)
 
@@ -67,7 +72,65 @@ def test_scan(mock_check_output: MagicMock) -> None:
         ["leaktk", "listen"],
         input=expected_input,
         text=True,
+        stderr=subprocess.DEVNULL,
     )
+
+
+@patch("operatorcert.redact.subprocess.check_output")
+def test_scan_ignores_secret_fields(mock_check_output: MagicMock) -> None:
+    """Extra LeakTK fields (e.g. secret/match) must not be retained on models."""
+    input_path = Path("/fake/path/leaky-file")
+    secret = "SUPERSECRET_TOKEN_VALUE"
+    mock_check_output.return_value = _scan_result_str(
+        str(input_path), secret=secret, match=secret
+    )
+
+    results = scan(input_path)
+
+    assert results[0].results[0].location.path == input_path
+    dumped = results[0].model_dump_json()
+    assert secret not in dumped
+
+
+@patch("operatorcert.redact.subprocess.check_output")
+def test_scan_called_process_error_is_sanitized(mock_check_output: MagicMock) -> None:
+    """Non-zero LeakTK exit must not propagate stdout that may contain secrets."""
+    secret = "SUPERSECRET_TOKEN_VALUE"
+    mock_check_output.side_effect = subprocess.CalledProcessError(
+        1,
+        ["leaktk", "listen"],
+        output=json.dumps({"secret": secret}),
+    )
+
+    with pytest.raises(RuntimeError, match="LeakTK scan failed") as exc_info:
+        scan(Path("/fake/path/file"))
+
+    assert secret not in str(exc_info.value)
+    assert secret not in repr(exc_info.value)
+
+
+@patch("operatorcert.redact.subprocess.check_output")
+def test_scan_invalid_json_is_sanitized(mock_check_output: MagicMock) -> None:
+    """Unparseable LeakTK lines raise a generic error without raw payload."""
+    secret = "SUPERSECRET_TOKEN_VALUE"
+    mock_check_output.return_value = f'{{"results": "not-a-list-{secret}"}}'
+
+    with pytest.raises(RuntimeError, match="could not be parsed safely") as exc_info:
+        scan(Path("/fake/path/file"))
+
+    assert secret not in str(exc_info.value)
+
+
+@patch("operatorcert.redact.subprocess.check_output")
+def test_paths_with_leaks(mock_check_output: MagicMock) -> None:
+    """paths_with_leaks returns absolute paths reported by the scan."""
+    input_path = Path("/fake/path/leaky-file")
+    mock_check_output.return_value = _scan_result_str(str(input_path))
+
+    assert paths_with_leaks() == set()
+
+    result = paths_with_leaks(input_path)
+    assert result == {input_path.absolute()}
 
 
 @patch("operatorcert.redact.subprocess.run")
