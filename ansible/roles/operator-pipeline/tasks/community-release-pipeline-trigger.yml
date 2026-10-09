@@ -94,8 +94,8 @@
                     operator-pipelines.redhat.com/repository: $(tt.params.git_repository_full_name)
                 spec:
                   timeouts:
-                    pipeline: "4h15m0s"
-                    tasks: "4h5m"
+                    pipeline: "6h15m0s"
+                    tasks: "6h5m"
                   pipelineRef:
                     name: operator-release-pipeline
                   params:
