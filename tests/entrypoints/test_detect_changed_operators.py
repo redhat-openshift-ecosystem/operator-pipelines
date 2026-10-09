@@ -339,6 +339,11 @@ def test_detect_changes(
         "added_or_modified_catalogs": [],
         "deleted_catalogs": [],
         "catalogs_with_added_or_modified_operators": [],
+        "affected_operator_files": sorted(
+            path
+            for path in affected_files
+            if path.startswith("operators/") and (after_dir / path).is_file()
+        ),
     }
     expected = {**default_expected, **expected}
 

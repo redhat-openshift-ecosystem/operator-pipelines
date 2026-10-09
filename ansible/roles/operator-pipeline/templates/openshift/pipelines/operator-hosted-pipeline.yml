@@ -501,6 +501,9 @@ spec:
         - name: output
           workspace: results
           subPath: summary
+        - name: changes
+          workspace: results
+          subPath: changes
 
     - name: content-hash
       taskRef:

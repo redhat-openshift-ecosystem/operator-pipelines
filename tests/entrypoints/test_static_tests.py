@@ -1,9 +1,10 @@
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 from operatorcert.entrypoints import static_tests
-from operatorcert.operator_repo import Repo
+from operatorcert.operator_repo import Bundle, Operator, OperatorCatalogList, Repo
 from operatorcert.operator_repo.checks import Fail, Warn
 from tests.utils import bundle_files, catalog_files, create_files
 
@@ -128,6 +129,35 @@ def test_execute_checks(
     assert result == expected
 
 
+def test_load_affected_operator_files(tmp_path: Path) -> None:
+    assert static_tests.load_affected_operator_files(None) == []
+    assert static_tests.load_affected_operator_files(str(tmp_path / "missing")) == []
+
+    list_file = tmp_path / "affected_operator_files.txt"
+    list_file.write_text(
+        "operators/foo/ci.yaml\n\noperators/foo/bar.yaml\n",
+        encoding="utf-8",
+    )
+    assert static_tests.load_affected_operator_files(str(list_file)) == [
+        "operators/foo/ci.yaml",
+        "operators/foo/bar.yaml",
+    ]
+
+
+def test_get_objects_to_test_operator_only_no_bundle(tmp_path: Path) -> None:
+    create_files(tmp_path, bundle_files("test-operator", "0.0.1"))
+    repo = Repo(tmp_path)
+
+    objects = static_tests.get_objects_to_test(repo, "test-operator", "", "")
+
+    assert len(objects) == 2
+    assert isinstance(objects[0], Operator)
+    assert objects[0].operator_name == "test-operator"
+    assert isinstance(objects[1], OperatorCatalogList)
+    assert list(objects[1]) == []
+    assert not any(isinstance(obj, Bundle) for obj in objects)
+
+
 @patch("operatorcert.entrypoints.static_tests.execute_checks")
 @patch("operatorcert.entrypoints.static_tests.setup_logger")
 def test_static_tests_main(
@@ -150,6 +180,7 @@ def test_static_tests_main(
         ["v4.14/test-operator"],
         ["operatorcert.static_tests.community", "operatorcert.static_tests.common"],
         [],
+        [],
     )
     assert capsys.readouterr().out.strip() == '{"foo": ["bar"]}'
     mock_logger.assert_called_once_with(level="INFO")
@@ -159,6 +190,8 @@ def test_static_tests_main(
 
     out_file = tmpdir / "out.json"
     out_file_name = str(out_file)
+    affected_file = tmpdir / "affected_operator_files.txt"
+    affected_file.write_text("operators/other/ci.yaml\n", encoding="utf-8")
     args = [
         "static-tests",
         "--repo-path=/tmp/other_repo",
@@ -168,6 +201,7 @@ def test_static_tests_main(
         ["v4.14/test-operator"],
         "--suites=other_suite",
         f"--output-file={out_file_name}",
+        f"--affected-operator-files-path={affected_file}",
         "--verbose",
     ]
     mock_execute_checks.return_value = {"bar": ["baz"]}
@@ -180,6 +214,7 @@ def test_static_tests_main(
         ["v4.14/test-operator"],
         ["other_suite"],
         ["check_123", "check_456"],
+        ["operators/other/ci.yaml"],
     )
     assert out_file.read().strip() == '{"bar": ["baz"]}'
     mock_logger.assert_called_once_with(level="DEBUG")

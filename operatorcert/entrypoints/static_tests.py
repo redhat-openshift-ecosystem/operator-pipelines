@@ -3,11 +3,13 @@
 import argparse
 import json
 import logging
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from operatorcert.logger import setup_logger
 from operatorcert.operator_repo import OperatorCatalogList, Repo
 from operatorcert.operator_repo.checks import Fail, run_suite
+from operatorcert.static_tests.helpers import set_affected_operator_files
 from operatorcert.utils import SplitArgs
 
 LOGGER = logging.getLogger("operator-cert")
@@ -46,12 +48,43 @@ def setup_argparser() -> argparse.ArgumentParser:
         default=[],
         action=SplitArgs,
     )
+    parser.add_argument(
+        "--affected-operator-files-path",
+        help=(
+            "Path to a file listing repo-relative operator file paths "
+            "(one path per line) that were added or modified in the pull request"
+        ),
+        default=None,
+    )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     parser.add_argument("operator")
     parser.add_argument("bundle")
     parser.add_argument("affected_catalogs")
 
     return parser
+
+
+def load_affected_operator_files(path: Optional[str]) -> List[str]:
+    """
+    Load repo-relative operator file paths from a newline-separated file.
+
+    Args:
+        path: Filesystem path to the list file, or None/empty for no files.
+
+    Returns:
+        Non-empty stripped lines from the file, or an empty list.
+    """
+    if not path:
+        return []
+    file_path = Path(path)
+    if not file_path.is_file():
+        LOGGER.warning("Affected operator files list not found: %s", path)
+        return []
+    return [
+        line.strip()
+        for line in file_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def get_objects_to_test(
@@ -76,13 +109,14 @@ def get_objects_to_test(
     # We need to skip the test for that resource
 
     # Check if the operator and bundle exist in the repository
-    # and add them to the list of objects to test
-    if repo.has(operator_name):
+    # and add them to the list of objects to test.
+    # Empty names mean no bundle/operator change (e.g. operator-only file edits).
+    if operator_name and repo.has(operator_name):
         operator = repo.operator(operator_name)
         test_objects.append(operator)
-        if operator.has(bundle_version):
+        if bundle_version and operator.has(bundle_version):
             test_objects.append(operator.bundle(bundle_version))
-    else:
+    elif operator_name:
         LOGGER.warning("Operator %s not found in the repository", operator_name)
 
     # Check if the affected catalogs and catalog operators exist in the repository
@@ -93,16 +127,16 @@ def get_objects_to_test(
     affected_catalogs_list = [item for item in affected_catalogs.split(",") if item]
 
     for operator_catalog_path in affected_catalogs_list:
-        catalog_name, operator_name = operator_catalog_path.split("/")
+        catalog_name, catalog_operator_name = operator_catalog_path.split("/")
         if not repo.has_catalog(catalog_name) or not repo.catalog(catalog_name).has(
-            operator_name
+            catalog_operator_name
         ):
             LOGGER.warning(
                 "Catalog %s not found in the repository", operator_catalog_path
             )
             continue
         catalog = repo.catalog(catalog_name)
-        operator_catalog = catalog.operator_catalog(operator_name)
+        operator_catalog = catalog.operator_catalog(catalog_operator_name)
         operator_catalogs.append(operator_catalog)
 
     test_objects.append(OperatorCatalogList(operator_catalogs))
@@ -116,6 +150,7 @@ def execute_checks(  # pylint: disable=too-many-arguments,too-many-positional-ar
     affected_catalogs: str,
     suite_names: List[str],
     skip_tests: Optional[List[str]] = None,
+    affected_operator_files: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Run a check suite against the given target and return warnings and
@@ -129,36 +164,42 @@ def execute_checks(  # pylint: disable=too-many-arguments,too-many-positional-ar
         affected_catalogs (str): Coma separated list of affected catalogs
         suite_name (str): name of the suite to use
         skip_tests (Optional[List]): List of checks to skip
+        affected_operator_files (Optional[List]): Repo-relative paths under
+            operators/ affected by the pull request
 
     Returns:
         The results of the checks in the suite applied to the given bundle
     """
-    repo = Repo(repo_path)
-    test_objects = get_objects_to_test(
-        repo, operator_name, bundle_version, affected_catalogs
-    )
+    set_affected_operator_files(affected_operator_files or [])
+    try:
+        repo = Repo(repo_path)
+        test_objects = get_objects_to_test(
+            repo, operator_name, bundle_version, affected_catalogs
+        )
 
-    outputs = []
-    passed = True
+        outputs = []
+        passed = True
 
-    for suite_name in suite_names:
-        for result in run_suite(
-            test_objects,
-            suite_name,
-            skip_tests=skip_tests,
-        ):
-            if isinstance(result, Fail):
-                passed = False
-            item = {
-                "type": "error" if isinstance(result, Fail) else "warning",
-                "message": result.reason,
-                "test_suite": suite_name,
-            }
-            if result.check:
-                item["check"] = result.check
-            outputs.append(item)
+        for suite_name in suite_names:
+            for result in run_suite(
+                test_objects,
+                suite_name,
+                skip_tests=skip_tests,
+            ):
+                if isinstance(result, Fail):
+                    passed = False
+                item = {
+                    "type": "error" if isinstance(result, Fail) else "warning",
+                    "message": result.reason,
+                    "test_suite": suite_name,
+                }
+                if result.check:
+                    item["check"] = result.check
+                outputs.append(item)
 
-    return {"passed": passed, "outputs": outputs}
+        return {"passed": passed, "outputs": outputs}
+    finally:
+        set_affected_operator_files([])
 
 
 def main() -> None:
@@ -183,6 +224,7 @@ def main() -> None:
         args.affected_catalogs,
         args.suites,
         args.skip_tests,
+        load_affected_operator_files(args.affected_operator_files_path),
     )
 
     if args.output_file:

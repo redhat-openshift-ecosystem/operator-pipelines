@@ -54,6 +54,11 @@ spec:
     - name: output
       description: Storage for the results file (json)
 
+    - name: changes
+      description: |
+        Output from parse-repo-changes. Expected file:
+        affected_operator_files.txt (newline-separated repo-relative paths).
+
   steps:
     - name: run-suite
       image: "$(params.pipeline_image)"
@@ -68,8 +73,12 @@ spec:
         #!/usr/bin/env bash
         set -xe
 
-        if [ -z "$(params.bundle_path)" ] && [ -z "$(params.affected_catalog_operators)" ]; then
-          echo "No bundle or catalog added/changed, skipping tests"
+        AFFECTED_OPERATOR_FILES_FILE="$(workspaces.changes.path)/affected_operator_files.txt"
+
+        if [ -z "$(params.bundle_path)" ] \
+          && [ -z "$(params.affected_catalog_operators)" ] \
+          && { [ ! -f "$AFFECTED_OPERATOR_FILES_FILE" ] || [ ! -s "$AFFECTED_OPERATOR_FILES_FILE" ]; }; then
+          echo "No bundle, catalog, or operator files added/changed, skipping tests"
           echo -n "" | tee $(results.messages_count.path)
           echo -n "" | tee $(results.failures_count.path)
           exit 0
@@ -88,12 +97,21 @@ spec:
           EXTRA_ARGS+=" --skip-tests $SKIP_TESTS"
         fi
 
+        AFFECTED_FILES_ARGS=()
+        if [ -f "$AFFECTED_OPERATOR_FILES_FILE" ]; then
+          AFFECTED_FILES_ARGS=(
+            --affected-operator-files-path "$AFFECTED_OPERATOR_FILES_FILE"
+          )
+        fi
+
         JSON_RESULTS_FILE="$(workspaces.output.path)/static-test-results.json"
 
         static-tests --verbose \
           --output-file "$JSON_RESULTS_FILE" \
           --repo-path "$(workspaces.source.path)" \
-          --suites "$(params.test_suites)" $EXTRA_ARGS \
+          --suites "$(params.test_suites)" \
+          "${AFFECTED_FILES_ARGS[@]}" \
+          $EXTRA_ARGS \
           "$(params.operator_name)" "$(params.bundle_version)" \
           "$(params.affected_catalog_operators)"
 

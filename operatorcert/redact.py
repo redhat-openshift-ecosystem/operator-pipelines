@@ -12,7 +12,7 @@ import tempfile
 from pathlib import Path
 import json
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 LOGGER = logging.getLogger("operator-cert")
 
@@ -22,6 +22,8 @@ class RedactLocation(BaseModel):
     Class for tracking information about a chunk of data in files.
     """
 
+    model_config = ConfigDict(extra="ignore")
+
     path: Path
 
 
@@ -30,6 +32,8 @@ class ResultModel(BaseModel):
     Model for parsing a single result from scanning.
     """
 
+    model_config = ConfigDict(extra="ignore")
+
     location: RedactLocation
 
 
@@ -37,6 +41,8 @@ class ResultSetModel(BaseModel):
     """
     Model for parsing all results from scanning.
     """
+
+    model_config = ConfigDict(extra="ignore")
 
     results: list[ResultModel]
 
@@ -54,12 +60,30 @@ def scan(*input_paths: Path) -> list[ResultSetModel]:
         + "\n"
         for i, input_path in enumerate(input_paths)
     )
-    results_jsonl = subprocess.check_output(
-        ["leaktk", "listen"], input=requests, text=True
-    )
-    return list(
-        map(ResultSetModel.model_validate, map(json.loads, results_jsonl.splitlines()))
-    )
+    try:
+        results_jsonl = subprocess.check_output(
+            ["leaktk", "listen"],
+            input=requests,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError as exc:
+        # LeakTK output may contain secret match text; do not propagate it.
+        raise RuntimeError(
+            f"LeakTK scan failed with exit code {exc.returncode}"
+        ) from None
+
+    parsed: list[ResultSetModel] = []
+    for line in results_jsonl.splitlines():
+        if not line.strip():
+            continue
+        try:
+            parsed.append(ResultSetModel.model_validate(json.loads(line)))
+        except (json.JSONDecodeError, ValueError):
+            raise RuntimeError(
+                "LeakTK returned output that could not be parsed safely"
+            ) from None
+    return parsed
 
 
 def _redact(
@@ -119,6 +143,25 @@ def redact_results(*result_sets: ResultSetModel) -> dict[Path, Path]:
     if file_locations:
         LOGGER.critical("Found leaks in these files: %s", file_locations)
     return _redact(*file_locations)
+
+
+def paths_with_leaks(*input_paths: Path) -> set[Path]:
+    """
+    Return absolute paths that LeakTK reported as containing leaks.
+
+    Args:
+        *input_paths: Any path (directory or file) to scan.
+
+    Returns:
+        Absolute paths of files with detected leaks.
+    """
+    if not input_paths:
+        return set()
+    leaky: set[Path] = set()
+    for result_set in scan(*input_paths):
+        for result in result_set.results:
+            leaky.add(Path(result.location.path).absolute())
+    return leaky
 
 
 def scan_and_redact(*input_paths: Path) -> dict[Path, Path]:
