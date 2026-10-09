@@ -908,7 +908,7 @@ spec:
     - name: add-bundle-to-index
       runAfter:
         - get-supported-versions
-      timeout: "1h30m0s"
+      timeout: "3h30m0s"
       when:
         # Run only when a bundle is added and it doesn't use FBC
         - *bundleAdded

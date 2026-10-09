@@ -161,7 +161,7 @@ def get_build(base_url: str, request_id: int) -> Any:
 
 
 def wait_for_batch_results(
-    iib_url: str, batch_id: int, timeout: float = 90 * 60, delay: float = 20
+    iib_url: str, batch_id: int, timeout: float = 210 * 60, delay: float = 20
 ) -> Any:
     """
     Wait for IIB build till it finishes
@@ -174,7 +174,14 @@ def wait_for_batch_results(
 
     Returns:
         Any: Build response
+
+    Note:
+        Timeout is temporarily increased to 210*60 (3 hours and 30 minutes)
+        due to current longer IIB processing times for community index.
+        Will be returned back once new version of IIB is released.
+        Jira ref.: https://redhat.atlassian.net/browse/ISV-7735
     """
+    # TODO: Check on 5 Nov and revert back if able
     start_time = datetime.now()
     loop = True
 
