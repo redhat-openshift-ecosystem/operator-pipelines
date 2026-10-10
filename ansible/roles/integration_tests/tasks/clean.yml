@@ -1,6 +1,9 @@
 ---
 - name: Include cloning task
   ansible.builtin.include_tasks: tasks/clone.yml
+  when:
+    - integration_tests_git_temp_dir is not defined
+      or not (integration_tests_fbc_lfs | bool)
 
 - name: Delete remote branches
   loop:
@@ -19,3 +22,20 @@
     executable: /bin/bash
     chdir: "{{ integration_tests_git_temp_dir.path }}"
   changed_when: true
+
+- name: Prune local Git LFS objects from the test checkout
+  ansible.builtin.shell: |
+    set -euo pipefail
+    git switch --detach "origin/{{ integration_tests_git_base_branch }}"
+    git branch -D \
+      "{{ integration_tests_git_bundle_branch }}" \
+      "{{ integration_tests_git_upstream_branch }}" 2>/dev/null || true
+    git lfs prune --force
+  args:
+    executable: /bin/bash
+    chdir: "{{ integration_tests_git_temp_dir.path }}"
+  changed_when: false
+  failed_when: false
+  when:
+    - integration_tests_fbc_lfs | bool
+    - integration_tests_git_temp_dir is defined

@@ -144,6 +144,8 @@ spec:
         # GitHub rejects blobs at or above 100 MB. Track only the oversized
         # generated catalog paths, leaving normal catalog files unchanged.
         if [[ -f .lfsconfig ]]; then
+          # Do not allow repository-controlled LFS endpoints. The pipeline
+          # supports the standard GitHub LFS endpoint only.
           echo "Repositories with .lfsconfig are not supported by the pipeline" >&2
           exit 1
         fi
@@ -152,7 +154,7 @@ spec:
           relative_path="${catalog_file#./}"
           echo "Tracking oversized catalog with Git LFS: ${relative_path}"
           git lfs track -- "${relative_path}"
-        done < <(find catalogs -type f -name 'catalog.yaml' -size +100000000c -print0)
+        done < <(find catalogs -type f -name 'catalog.yaml' -size +99999999c -print0)
 
         # Add catalogs and templates changes to git and push to a new branch.
         if [[ -f .gitattributes ]]; then

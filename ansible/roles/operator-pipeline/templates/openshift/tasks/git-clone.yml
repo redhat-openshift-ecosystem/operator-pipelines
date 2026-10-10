@@ -245,7 +245,16 @@ spec:
           exit 1
         fi
 
-        if ! git lfs ls-files --name-only 2>/dev/null | grep -q .; then
+        export GIT_CONFIG_COUNT=1
+        export GIT_CONFIG_KEY_0=safe.directory
+        export GIT_CONFIG_VALUE_0="$(pwd)"
+
+        if ! lfs_files="$(git lfs ls-files --name-only)"; then
+          echo "Failed to inspect Git LFS files" >&2
+          exit 1
+        fi
+
+        if [[ -z "${lfs_files}" ]]; then
           echo "No Git LFS files found; skipping LFS checkout"
           exit 0
         fi
@@ -269,10 +278,6 @@ spec:
           chmod 700 "${HOME}/.ssh"
           chmod -R 400 "${HOME}/.ssh"/*
         fi
-
-        export GIT_CONFIG_COUNT=1
-        export GIT_CONFIG_KEY_0=safe.directory
-        export GIT_CONFIG_VALUE_0="$(pwd)"
 
         test -z "${PARAM_HTTP_PROXY}"  || export HTTP_PROXY="${PARAM_HTTP_PROXY}"
         test -z "${PARAM_HTTPS_PROXY}" || export HTTPS_PROXY="${PARAM_HTTPS_PROXY}"
