@@ -6,6 +6,27 @@
 
 This project collects Community Operators that work with OpenShift to be displayed in the embedded OperatorHub. If you are new to Operators, start [here](https://operatorframework.io/).
 
+## Install Git LFS
+
+Some FBC repositories contain generated `catalog.yaml` files managed with
+[Git LFS](https://git-lfs.com/). Install Git LFS before cloning or working with
+these repositories:
+
+```bash
+git lfs install
+```
+
+After cloning a repository, download the tracked files with:
+
+```bash
+git lfs pull
+```
+
+Without Git LFS, a tracked catalog file may appear as a small pointer file
+instead of its YAML contents. Do not remove or manually edit `.gitattributes`;
+the file defines which generated catalog files use Git LFS and is allowed in
+operator pull requests.
+
 ## Sign Your Work
 
 The contribution process works off standard git _Pull Requests_. Every PR needs to be signed. The sign-off is a simple line at the end of the explanation for a commit. Your signature certifies that you wrote the patch or otherwise have the right to contribute the material. The rules are pretty simple if you can certify the below (from [developercertificate.org](https://developercertificate.org/)):
@@ -70,5 +91,3 @@ Date:   Mon Oct 21 12:23:17 2019 -0800
 ```
 
 Notice the `Author` and `Signed-off-by` lines **must match**.
-
-
