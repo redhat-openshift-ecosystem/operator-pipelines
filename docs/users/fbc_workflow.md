@@ -127,6 +127,19 @@ catalogs
 
 ```
 
+### Git LFS for large catalogs
+
+Generated `catalog.yaml` files at or above GitHub's 100 MB blob limit are
+automatically tracked with Git LFS when the automated release pipeline creates
+a catalog pull request. Contributors must have Git LFS installed locally so
+these files are checked out as YAML rather than pointer files. See [Install Git
+LFS](./contributing-prerequisites.md#install-git-lfs).
+
+The pipeline downloads Git LFS objects during repository checkout. The
+repository must use the standard GitHub LFS configuration; repositories with a
+`.lfsconfig` file are not supported because the pipeline does not allow a
+repository to redirect LFS downloads to an arbitrary endpoint.
+
 ### Adding new bundle to Catalog
 A new bundle can be added automatically to your templates and catalogs if you use
 the automated release feature. The process is described in the

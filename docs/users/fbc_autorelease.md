@@ -16,6 +16,16 @@ The second PR is linked with it original PR and looks like [this](https://github
 
 ![Release info](../img/fbc-auto-release-pr.png)
 
+> WARNING: The generated catalog pull request may include `.gitattributes` when a catalog
+> file is too large for GitHub's regular Git blob limit. The release pipeline
+> uses Git LFS for those files and uploads the corresponding LFS objects. Do not
+> remove the `.gitattributes` change. Contributors reviewing or editing the
+> repository locally need [Git LFS installed](./contributing-prerequisites.md#install-git-lfs).
+
+> Repositories with `.lfsconfig` are not supported. The pipeline uses the
+> repository's standard GitHub LFS endpoint and rejects repository-controlled
+> LFS endpoint overrides.
+
 ## release-config.yaml
 
 If you want your operators to be automatically released to the OCP catalogs in the FBC mode,
