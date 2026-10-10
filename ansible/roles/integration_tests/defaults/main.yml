@@ -8,8 +8,17 @@ integration_tests_git_base_branch: main
 # Replace the source bundle's version
 integration_tests_operator_bundle_version: 0.0.1
 
-# Copy the bundle into this branch
-integration_tests_git_bundle_branch: "{{ integration_tests_operator_package_name }}-{{ integration_tests_operator_bundle_version }}-head"
+integration_tests_fbc_lfs: false
+integration_tests_fbc_lfs_target_size: 100000001
+integration_tests_fbc_lfs_run_id: ""
+integration_tests_fbc_lfs_branch_suffix: >-
+  {% if integration_tests_fbc_lfs | bool %}-lfs-{{ integration_tests_fbc_lfs_run_id }}{% endif %}
+
+# Copy the bundle into this branch. LFS test runs get a unique suffix so they
+# can run concurrently without sharing branches or PipelineRun selectors.
+integration_tests_git_bundle_branch: >-
+  {{ integration_tests_operator_package_name }}-{{ integration_tests_operator_bundle_version }}{{ integration_tests_fbc_lfs_branch_suffix }}-head
 
 # Raise pull requests against this upstream branch
-integration_tests_git_upstream_branch: "{{ integration_tests_operator_package_name }}-{{ integration_tests_operator_bundle_version }}-base"
+integration_tests_git_upstream_branch: >-
+  {{ integration_tests_operator_package_name }}-{{ integration_tests_operator_bundle_version }}{{ integration_tests_fbc_lfs_branch_suffix }}-base

@@ -109,6 +109,8 @@
   tags:
     - prepare-bundle
   ansible.builtin.shell: |
+    set -o pipefail
+
     UPSTREAM_BRANCH="{{ integration_tests_git_upstream_branch }}"
     SRC_OPERATOR_PACKAGE_NAME="{{ integration_tests_src_operator_package_name }}"
 
@@ -147,6 +149,29 @@
     sed -i "s/$SRC_VERSION/$DEST_VERSION/g" catalog.yaml
 
     popd
+
+    CATALOG_FILE="catalogs/$DEST_CATALOG_VERSION/$OPERATOR_PACKAGE_NAME/catalog.yaml"
+    if [[ "{{ integration_tests_fbc_lfs | bool | lower }}" == "true" ]]; then
+      TARGET_SIZE="{{ integration_tests_fbc_lfs_target_size }}"
+      printf '\n# Git LFS integration-test padding\n' >> "$CATALOG_FILE"
+
+      CURRENT_SIZE=$(wc -c < "$CATALOG_FILE")
+      REMAINING_SIZE=$((TARGET_SIZE - CURRENT_SIZE))
+      if (( REMAINING_SIZE > 0 )); then
+        head -c "$REMAINING_SIZE" /dev/zero | tr '\0' '#' >> "$CATALOG_FILE"
+      fi
+      printf '\n' >> "$CATALOG_FILE"
+
+      ACTUAL_SIZE=$(wc -c < "$CATALOG_FILE")
+      echo "Generated Git LFS test catalog size: ${ACTUAL_SIZE} bytes"
+      test "$ACTUAL_SIZE" -ge "$TARGET_SIZE"
+
+      git lfs install
+      git lfs track "$CATALOG_FILE"
+      git add .gitattributes
+      git lfs ls-files --name-only
+      git check-attr filter -- "$CATALOG_FILE"
+    fi
 
     git add catalogs
     git commit -m "[Integration Test] Add catalog for $OPERATOR_PACKAGE_NAME"

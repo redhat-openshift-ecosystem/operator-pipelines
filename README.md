@@ -197,6 +197,10 @@ This image can be overridden by passing the following to any `tkn pipeline start
 --param pipeline_image=<image-pull-spec>
 ```
 
+The common pipeline image must include `git-lfs`. The `git-clone` task uses it
+to download files tracked with Git LFS and fails if such files are present but
+the image does not provide the client.
+
 ## Testing
 The repository comes with a default configuration for integration tests. In order to
 execute tests locally a user needs an access to OCP cluster with `operator-pipelines`
