@@ -150,8 +150,13 @@ def run_operator_sdk_bundle_validate(
 
 
 def check_osdk_bundle_validate_operatorhub(bundle: Bundle) -> Iterator[CheckResult]:
-    """Run `operator-sdk bundle validate` using operatorhub settings"""
-    yield from run_operator_sdk_bundle_validate(bundle, "name=operatorhub")
+    """Run the current OperatorHub metadata validators"""
+    for selector in (
+        "name=operatorhubv2",
+        "name=capabilities",
+        "name=categories",
+    ):
+        yield from run_operator_sdk_bundle_validate(bundle, selector)
 
 
 def check_osdk_bundle_validate_operator_framework(
