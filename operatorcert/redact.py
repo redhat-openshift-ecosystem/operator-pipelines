@@ -19,17 +19,20 @@ LOGGER = logging.getLogger("operator-cert")
 # Cap logged LeakTK stderr so a noisy failure cannot flood pipeline logs.
 _MAX_LOGGED_STDERR_CHARS = 2048
 
+# Used when leaktk redact cannot safely prepare stderr for logging.
+_REDACT_FALLBACK_DIAGNOSTIC = "LeakTK stderr unavailable (redaction failed)"
+
 
 def _safe_stderr_for_log(stderr: str | None) -> str:
     """
     Prepare LeakTK stderr for logging without leaking secret match text.
 
-    Prefer running the text through ``leaktk redact``; if that fails, truncate
-    the raw stderr instead. Never use this for stdout (match payloads).
+    Prefer running the text through ``leaktk redact``. If redaction fails or
+    produces unusable output, return a generic diagnostic — never raw stderr.
+    Never use this for stdout (match payloads).
     """
     if not stderr:
         return ""
-    text = stderr
     try:
         redact_proc = subprocess.run(
             ["leaktk", "redact", "--kind", "Stdio"],
@@ -39,12 +42,16 @@ def _safe_stderr_for_log(stderr: str | None) -> str:
             stderr=subprocess.DEVNULL,
             check=False,
         )
-        if redact_proc.returncode == 0 and redact_proc.stdout is not None:
-            text = redact_proc.stdout
     except OSError:
-        # Binary missing or similar; fall back to truncated raw stderr.
-        pass
-    text = text.strip()
+        # Binary missing or similar; never log raw stderr (may contain secrets).
+        return _REDACT_FALLBACK_DIAGNOSTIC
+
+    if redact_proc.returncode != 0 or redact_proc.stdout is None:
+        return _REDACT_FALLBACK_DIAGNOSTIC
+
+    text = redact_proc.stdout.strip()
+    if not text:
+        return _REDACT_FALLBACK_DIAGNOSTIC
     if len(text) > _MAX_LOGGED_STDERR_CHARS:
         return f"{text[:_MAX_LOGGED_STDERR_CHARS]}...(truncated)"
     return text

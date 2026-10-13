@@ -11,6 +11,7 @@ import pytest
 
 from operatorcert.redact import (
     _MAX_LOGGED_STDERR_CHARS,
+    _REDACT_FALLBACK_DIAGNOSTIC,
     _safe_stderr_for_log,
     paths_with_leaks,
     scan_and_redact,
@@ -170,22 +171,54 @@ def test_safe_stderr_for_log_redacts(mock_run: MagicMock) -> None:
 
 
 @patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_falls_back_on_empty_redact_output(
+    mock_run: MagicMock,
+) -> None:
+    """Successful redact with empty stdout is treated as unusable."""
+    mock_run.return_value = MagicMock(returncode=0, stdout="   \n")
+    assert _safe_stderr_for_log("raw stderr") == _REDACT_FALLBACK_DIAGNOSTIC
+
+
+@patch("operatorcert.redact.subprocess.run")
 def test_safe_stderr_for_log_falls_back_on_redact_failure(
     mock_run: MagicMock,
 ) -> None:
-    """When redact fails, truncate the original stderr instead."""
+    """When redact fails, return a generic diagnostic (never raw stderr)."""
     mock_run.return_value = MagicMock(returncode=1, stdout="")
     long_stderr = "x" * (_MAX_LOGGED_STDERR_CHARS + 50)
-    result = _safe_stderr_for_log(long_stderr)
-    assert result.endswith("...(truncated)")
-    assert len(result) == _MAX_LOGGED_STDERR_CHARS + len("...(truncated)")
+    assert _safe_stderr_for_log(long_stderr) == _REDACT_FALLBACK_DIAGNOSTIC
 
 
 @patch("operatorcert.redact.subprocess.run")
 def test_safe_stderr_for_log_falls_back_on_oserror(mock_run: MagicMock) -> None:
-    """Missing leaktk binary falls back to truncated raw stderr."""
+    """Missing leaktk binary returns a generic diagnostic, not raw stderr."""
     mock_run.side_effect = OSError("leaktk missing")
-    assert _safe_stderr_for_log("diag line") == "diag line"
+    assert _safe_stderr_for_log("diag line") == _REDACT_FALLBACK_DIAGNOSTIC
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_never_logs_secret_on_redact_failure(
+    mock_run: MagicMock,
+) -> None:
+    """Secrets in the first 2,048 stderr chars must not appear after redact failure."""
+    secret = "SUPERSECRET_TOKEN_VALUE"
+    stderr_with_secret = secret + ("y" * (_MAX_LOGGED_STDERR_CHARS))
+    mock_run.return_value = MagicMock(returncode=1, stdout=None)
+    result = _safe_stderr_for_log(stderr_with_secret)
+    assert result == _REDACT_FALLBACK_DIAGNOSTIC
+    assert secret not in result
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_truncates_successful_redact(
+    mock_run: MagicMock,
+) -> None:
+    """Successful redact output is still length-capped for logging."""
+    long_redacted = "r" * (_MAX_LOGGED_STDERR_CHARS + 50)
+    mock_run.return_value = MagicMock(returncode=0, stdout=long_redacted)
+    result = _safe_stderr_for_log("raw stderr")
+    assert result.endswith("...(truncated)")
+    assert len(result) == _MAX_LOGGED_STDERR_CHARS + len("...(truncated)")
 
 
 @patch("operatorcert.redact.subprocess.check_output")
