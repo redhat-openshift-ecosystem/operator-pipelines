@@ -10,6 +10,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from operatorcert.redact import (
+    _MAX_LOGGED_STDERR_CHARS,
+    _safe_stderr_for_log,
     paths_with_leaks,
     scan_and_redact,
     scan,
@@ -72,7 +74,7 @@ def test_scan(mock_check_output: MagicMock) -> None:
         ["leaktk", "listen"],
         input=expected_input,
         text=True,
-        stderr=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
     )
 
 
@@ -92,21 +94,98 @@ def test_scan_ignores_secret_fields(mock_check_output: MagicMock) -> None:
     assert secret not in dumped
 
 
+@patch("operatorcert.redact.LOGGER")
+@patch("operatorcert.redact.subprocess.run")
 @patch("operatorcert.redact.subprocess.check_output")
-def test_scan_called_process_error_is_sanitized(mock_check_output: MagicMock) -> None:
-    """Non-zero LeakTK exit must not propagate stdout that may contain secrets."""
+def test_scan_called_process_error_is_sanitized(
+    mock_check_output: MagicMock,
+    mock_run: MagicMock,
+    mock_logger: MagicMock,
+) -> None:
+    """Non-zero LeakTK exit must not propagate stdout; stderr is logged safely."""
     secret = "SUPERSECRET_TOKEN_VALUE"
+    stderr_diag = "could not load scanner config"
     mock_check_output.side_effect = subprocess.CalledProcessError(
         1,
         ["leaktk", "listen"],
         output=json.dumps({"secret": secret}),
+        stderr=stderr_diag,
     )
+    redact_proc = MagicMock()
+    redact_proc.returncode = 0
+    redact_proc.stdout = stderr_diag
+    mock_run.return_value = redact_proc
 
     with pytest.raises(RuntimeError, match="LeakTK scan failed") as exc_info:
         scan(Path("/fake/path/file"))
 
     assert secret not in str(exc_info.value)
     assert secret not in repr(exc_info.value)
+    mock_run.assert_called_once_with(
+        ["leaktk", "redact", "--kind", "Stdio"],
+        input=stderr_diag,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    mock_logger.error.assert_called_once_with(
+        "LeakTK scan failed (exit %s): %s",
+        1,
+        stderr_diag,
+    )
+
+
+@patch("operatorcert.redact.LOGGER")
+@patch("operatorcert.redact.subprocess.run")
+@patch("operatorcert.redact.subprocess.check_output")
+def test_scan_called_process_error_empty_stderr(
+    mock_check_output: MagicMock,
+    mock_run: MagicMock,
+    mock_logger: MagicMock,
+) -> None:
+    """Empty stderr still logs a generic failure without invoking redact."""
+    mock_check_output.side_effect = subprocess.CalledProcessError(
+        2,
+        ["leaktk", "listen"],
+        output="",
+        stderr="",
+    )
+
+    with pytest.raises(RuntimeError, match="LeakTK scan failed"):
+        scan(Path("/fake/path/file"))
+
+    mock_run.assert_not_called()
+    mock_logger.error.assert_called_once_with(
+        "LeakTK scan failed (exit %s) with empty stderr",
+        2,
+    )
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_redacts(mock_run: MagicMock) -> None:
+    """Successful redact output is preferred for logging."""
+    mock_run.return_value = MagicMock(returncode=0, stdout="redacted-diag\n")
+    assert _safe_stderr_for_log("raw secret-ish diag") == "redacted-diag"
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_falls_back_on_redact_failure(
+    mock_run: MagicMock,
+) -> None:
+    """When redact fails, truncate the original stderr instead."""
+    mock_run.return_value = MagicMock(returncode=1, stdout="")
+    long_stderr = "x" * (_MAX_LOGGED_STDERR_CHARS + 50)
+    result = _safe_stderr_for_log(long_stderr)
+    assert result.endswith("...(truncated)")
+    assert len(result) == _MAX_LOGGED_STDERR_CHARS + len("...(truncated)")
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_falls_back_on_oserror(mock_run: MagicMock) -> None:
+    """Missing leaktk binary falls back to truncated raw stderr."""
+    mock_run.side_effect = OSError("leaktk missing")
+    assert _safe_stderr_for_log("diag line") == "diag line"
 
 
 @patch("operatorcert.redact.subprocess.check_output")

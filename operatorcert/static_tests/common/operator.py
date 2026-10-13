@@ -18,22 +18,21 @@ LOGGER = logging.getLogger("operator-cert")
 
 def check_leaks_in_changed_files(operator: Operator) -> Iterator[CheckResult]:
     """
-    Scan pull-request-affected files under this operator for secret leaks using LeakTK.
+    Scan pull-request-affected files under operators/ for secret leaks using LeakTK.
 
-    The list of affected files is provided by detect-changes via the static-tests
-    entrypoint (see set_affected_operator_files). Catalog paths are not included.
-    Fail messages report relative paths only and never include secret content.
+    Scans every path from the affected-operator-files list (all operators touched by
+    the PR), not only the suite-target operator. The list is provided by
+    detect-changes via the static-tests entrypoint (see set_affected_operator_files).
+    Catalog paths are not included. Fail messages report relative paths only and
+    never include secret content.
     """
     affected_files = get_affected_operator_files()
     if not affected_files:
         return
 
-    operator_prefix = f"operators/{operator.operator_name}/"
     repo_root = operator.repo.root
     paths_to_scan: list[Path] = []
     for rel_path in affected_files:
-        if not rel_path.startswith(operator_prefix):
-            continue
         absolute_path = repo_root / rel_path
         if absolute_path.is_file():
             paths_to_scan.append(absolute_path)
@@ -42,18 +41,16 @@ def check_leaks_in_changed_files(operator: Operator) -> Iterator[CheckResult]:
         return
 
     LOGGER.info(
-        "Scanning %d affected file(s) under %s for secret leaks",
+        "Scanning %d affected file(s) under operators/ for secret leaks",
         len(paths_to_scan),
-        operator_prefix,
     )
     try:
         leaky_paths = paths_with_leaks(*paths_to_scan)
     except Exception as exc:  # pylint: disable=broad-except
         # LeakTK stdout/errors can contain secret match text; never log or yield it.
         LOGGER.error(
-            "LeakTK failed while scanning %d file(s) under %s (%s)",
+            "LeakTK failed while scanning %d file(s) under operators/ (%s)",
             len(paths_to_scan),
-            operator_prefix,
             type(exc).__name__,
         )
         yield Fail(

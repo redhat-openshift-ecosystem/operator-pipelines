@@ -16,6 +16,39 @@ from pydantic import BaseModel, ConfigDict
 
 LOGGER = logging.getLogger("operator-cert")
 
+# Cap logged LeakTK stderr so a noisy failure cannot flood pipeline logs.
+_MAX_LOGGED_STDERR_CHARS = 2048
+
+
+def _safe_stderr_for_log(stderr: str | None) -> str:
+    """
+    Prepare LeakTK stderr for logging without leaking secret match text.
+
+    Prefer running the text through ``leaktk redact``; if that fails, truncate
+    the raw stderr instead. Never use this for stdout (match payloads).
+    """
+    if not stderr:
+        return ""
+    text = stderr
+    try:
+        redact_proc = subprocess.run(
+            ["leaktk", "redact", "--kind", "Stdio"],
+            input=stderr,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        if redact_proc.returncode == 0 and redact_proc.stdout is not None:
+            text = redact_proc.stdout
+    except OSError:
+        # Binary missing or similar; fall back to truncated raw stderr.
+        pass
+    text = text.strip()
+    if len(text) > _MAX_LOGGED_STDERR_CHARS:
+        return f"{text[:_MAX_LOGGED_STDERR_CHARS]}...(truncated)"
+    return text
+
 
 class RedactLocation(BaseModel):
     """
@@ -65,10 +98,23 @@ def scan(*input_paths: Path) -> list[ResultSetModel]:
             ["leaktk", "listen"],
             input=requests,
             text=True,
-            stderr=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
         )
     except subprocess.CalledProcessError as exc:
-        # LeakTK output may contain secret match text; do not propagate it.
+        # LeakTK stdout may contain secret match text; never log or raise it.
+        # Stderr is diagnostic; redact (or truncate) before logging.
+        safe_stderr = _safe_stderr_for_log(exc.stderr)
+        if safe_stderr:
+            LOGGER.error(
+                "LeakTK scan failed (exit %s): %s",
+                exc.returncode,
+                safe_stderr,
+            )
+        else:
+            LOGGER.error(
+                "LeakTK scan failed (exit %s) with empty stderr",
+                exc.returncode,
+            )
         raise RuntimeError(
             f"LeakTK scan failed with exit code {exc.returncode}"
         ) from None
