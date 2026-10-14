@@ -259,6 +259,9 @@ spec:
           exit 0
         fi
 
+        echo "Git LFS files detected:"
+        printf '%s\n' "${lfs_files}"
+
         if [[ -f .lfsconfig ]]; then
           echo "Repositories with .lfsconfig are not supported by the pipeline" >&2
           exit 1
@@ -283,5 +286,6 @@ spec:
         test -z "${PARAM_HTTPS_PROXY}" || export HTTPS_PROXY="${PARAM_HTTPS_PROXY}"
         test -z "${PARAM_NO_PROXY}"    || export NO_PROXY="${PARAM_NO_PROXY}"
 
-        git lfs install --local
+        echo "Downloading Git LFS files..."
         git lfs pull
+        echo "Git LFS checkout completed."
