@@ -230,6 +230,7 @@ jobs:
           - community
           - isv-fbc-bundle
           - isv-fbc-catalog
+          - isv-fbc-lfs
 
       fail-fast: false
     runs-on: ubuntu-latest
