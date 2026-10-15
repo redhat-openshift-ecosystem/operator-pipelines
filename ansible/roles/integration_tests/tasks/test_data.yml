@@ -92,6 +92,18 @@
     find "$DEST_VERSION/metadata/annotations.yaml" -type f -exec \
       sed -i "s/com.redhat.openshift.versions: v4.10/com.redhat.openshift.versions: {{ integration_tests_ocp_versions_range }}/g" {} \;
 
+    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
+      RELEASE_CONFIG_PATH="operators/$OPERATOR_PACKAGE_NAME/$DEST_VERSION/release-config.yaml"
+      CATALOG_TEMPLATE="{{ integration_tests_fbc_lfs_release_config_template }}"
+      if [[ ! -f "operators/$OPERATOR_PACKAGE_NAME/catalog-templates/$CATALOG_TEMPLATE" ]]; then
+        echo "Missing LFS integration-test catalog template: $CATALOG_TEMPLATE" >&2
+        exit 1
+      fi
+      printf 'catalog_templates:\n  - template_name: %s\n    channels:\n      - stable\n' \
+        "$CATALOG_TEMPLATE" > "$RELEASE_CONFIG_PATH"
+      echo "Generated Git LFS release configuration: $RELEASE_CONFIG_PATH"
+    fi
+
     diff -bur "$SRC_VERSION/" "$DEST_VERSION/" || true
     rm -rv "./$SRC_VERSION"
 
