@@ -12,7 +12,6 @@ integration_tests_fbc_lfs: false
 integration_tests_fbc_lfs_push: false
 integration_tests_fbc_lfs_target_size: 100000001
 integration_tests_fbc_lfs_run_id: ""
-integration_tests_fbc_lfs_release_config_template: basic.yaml
 integration_tests_fbc_lfs_branch_suffix: >-
   {% if integration_tests_fbc_lfs | bool %}-lfs-{{ integration_tests_fbc_lfs_run_id }}{% endif %}
 
