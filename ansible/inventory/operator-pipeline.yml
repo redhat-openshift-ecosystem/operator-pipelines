@@ -43,6 +43,7 @@ operator-pipeline-integration-tests:
     operator-pipeline-integration-tests-isv-fbc-bundle:
     operator-pipeline-integration-tests-isv-fbc-catalog:
     operator-pipeline-integration-tests-isv-fbc-lfs:
+    operator-pipeline-integration-tests-isv-fbc-lfs-push:
 
 operator-pipeline-integration-tests-community:
   hosts:
@@ -63,3 +64,7 @@ operator-pipeline-integration-tests-isv-fbc-catalog:
 operator-pipeline-integration-tests-isv-fbc-lfs:
   hosts:
     operator-pipeline-integration-tests-isv-fbc-lfs-project:
+
+operator-pipeline-integration-tests-isv-fbc-lfs-push:
+  hosts:
+    operator-pipeline-integration-tests-isv-fbc-lfs-push-project:
