@@ -1,0 +1,15 @@
+---
+integration_tests_operator_package_name: test-e2e-operator-fbc
+integration_tests_organization: certified-operators
+integration_tests_ci_pipeline_enabled: true
+
+integration_tests_fbc_lfs: true
+integration_tests_fbc_lfs_push: true
+integration_tests_fbc_catalog: true
+integration_tests_pr_title: "Catalog update {{ integration_tests_operator_package_name }} ({{ integration_tests_operator_bundle_version }})"
+
+integration_tests_ci_file_cert_project_id: 66a743c4ed864bc7d00e51b7
+integration_tests_ci_file_fbc_enabled: true
+integration_tests_verify_bundle_in_catalog: false
+integration_tests_ocp_versions_range: "=v4.19"
+integration_tests_catalog_versions: "v4.19"

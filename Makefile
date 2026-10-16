@@ -10,6 +10,10 @@ PIPELINE_IMAGE ?= $(PIPELINE_IMAGE_REPO):$(TAG)
 # https://github.com/redhat-openshift-ecosystem/operator-pipelines/actions/workflows/integration-tests.yml
 OPERATOR_VERSION_RELEASE ?= 1-1
 OPERATOR_VERSION ?= 0.1.$(OPERATOR_VERSION_RELEASE)
+INTEGRATION_TESTS_FBC_LFS ?= false
+INTEGRATION_TESTS_FBC_LFS_RUN_ID ?= $(shell date +%s%N)
+# Optional namespace suffix used to isolate parallel LFS tests.
+INTEGRATION_TESTS_FBC_NAMESPACE_SUFFIX ?=
 
 
 .PHONY: configure-stage-cluster
@@ -77,6 +81,26 @@ build-and-test-isv-fbc-catalog:
 	$(MAKE) build
 	$(MAKE) integration-test-isv-fbc-catalog TAG=$(TAG)
 
+.PHONY: build-and-test-isv-fbc-lfs
+build-and-test-isv-fbc-lfs:
+	@echo "Building and testing isv FBC catalog pipelines with Git LFS pull..."
+	$(MAKE) build
+	$(MAKE) integration-test-isv-fbc-lfs \
+		TAG=$(TAG) \
+		INTEGRATION_TESTS_FBC_LFS=true \
+		INTEGRATION_TESTS_FBC_LFS_RUN_ID=$(INTEGRATION_TESTS_FBC_LFS_RUN_ID) \
+		INTEGRATION_TESTS_FBC_NAMESPACE_SUFFIX=-lfs-$(INTEGRATION_TESTS_FBC_LFS_RUN_ID)
+
+.PHONY: build-and-test-isv-fbc-lfs-push
+build-and-test-isv-fbc-lfs-push:
+	@echo "Building and testing isv FBC catalog pipelines with Git LFS push..."
+	$(MAKE) build
+	$(MAKE) integration-test-isv-fbc-lfs-push \
+		TAG=$(TAG) \
+		INTEGRATION_TESTS_FBC_LFS=true \
+		INTEGRATION_TESTS_FBC_LFS_PUSH=true \
+		INTEGRATION_TESTS_FBC_LFS_RUN_ID=$(INTEGRATION_TESTS_FBC_LFS_RUN_ID)
+
 
 .PHONY: build
 build:
@@ -134,6 +158,39 @@ integration-test-isv-fbc-catalog:
 		ansible/playbooks/operator-pipeline-integration-tests.yml \
 		-e test_type=isv-fbc-catalog \
 		-e oc_namespace=$(USER)-fbc-catalog-test-$(OPERATOR_VERSION_RELEASE) \
+		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
+		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
+		-e suffix=8c6beec \
+		--skip-tags=signing-pipeline \
+		-vvvv \
+		--vault-password-file ansible/vault-password
+
+.PHONY: integration-test-isv-fbc-lfs
+integration-test-isv-fbc-lfs:
+	@echo "Running integration tests..."
+	ansible-playbook \
+		ansible/playbooks/operator-pipeline-integration-tests.yml \
+		-e test_type=isv-fbc-lfs \
+		-e integration_tests_fbc_lfs=$(INTEGRATION_TESTS_FBC_LFS) \
+		-e integration_tests_fbc_lfs_run_id=$(INTEGRATION_TESTS_FBC_LFS_RUN_ID) \
+		-e oc_namespace=$(USER)-fbc-catalog-test-$(OPERATOR_VERSION_RELEASE)$(INTEGRATION_TESTS_FBC_NAMESPACE_SUFFIX) \
+		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
+		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
+		-e suffix=8c6beec \
+		--skip-tags=signing-pipeline \
+		-vvvv \
+		--vault-password-file ansible/vault-password
+
+.PHONY: integration-test-isv-fbc-lfs-push
+integration-test-isv-fbc-lfs-push:
+	@echo "Running Git LFS push integration tests..."
+	ansible-playbook \
+		ansible/playbooks/operator-pipeline-integration-tests.yml \
+		-e test_type=isv-fbc-lfs-push \
+		-e integration_tests_fbc_lfs=$(INTEGRATION_TESTS_FBC_LFS) \
+		-e integration_tests_fbc_lfs_push=$(INTEGRATION_TESTS_FBC_LFS_PUSH) \
+		-e integration_tests_fbc_lfs_run_id=$(INTEGRATION_TESTS_FBC_LFS_RUN_ID) \
+		-e oc_namespace=$(USER)-fbc-catalog-lfs-push-test-$(OPERATOR_VERSION_RELEASE)-$(INTEGRATION_TESTS_FBC_LFS_RUN_ID) \
 		-e integration_tests_operator_bundle_version=$(OPERATOR_VERSION) \
 		-e operator_pipeline_image_pull_spec=$(PIPELINE_IMAGE) \
 		-e suffix=8c6beec \
