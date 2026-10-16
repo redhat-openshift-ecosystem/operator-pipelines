@@ -1,0 +1,104 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: resolve-sparse-checkout-dirs
+spec:
+  description: >-
+    Queries the GitHub pull request for changed files and computes the
+    minimal set of directories needed for a sparse checkout. This allows
+    the pipeline to clone only the affected operator and catalog
+    directories plus shared resources (config.yaml) instead of the
+    entire repository.
+  params:
+    - name: pipeline_image
+      description: The common pipeline image.
+
+    - name: git_pr_url
+      description: URL of the GitHub pull request
+      type: string
+
+    - name: github_token_secret_name
+      description: The name of the Kubernetes Secret that contains the GitHub token.
+      default: github-bot-token
+
+    - name: github_token_secret_key
+      description: The key within the Kubernetes Secret that contains the GitHub token.
+      default: github_bot_token
+
+  results:
+    - name: sparse_dirs
+      description: >-
+        Comma-separated list of directories for sparse checkout.
+        Always includes config.yaml; dynamically adds
+        operators/<name> for each affected operator and
+        catalogs/<version> for each affected catalog.
+
+  steps:
+    - name: resolve-dirs
+      image: "$(params.pipeline_image)"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github_token_secret_name)
+              key: $(params.github_token_secret_key)
+      script: |
+        #! /usr/bin/env bash
+        set -e -o pipefail
+
+        echo "Fetching changed files for $(params.git_pr_url)"
+
+        PR_URL="$(params.git_pr_url)"
+        # Extract the repository and pull request number for the files API.
+        if [[ "$PR_URL" =~ ^https?://[^/]+/([^/]+/[^/]+)/pull/([0-9]+) ]]; then
+          REPOSITORY="${BASH_REMATCH[1]}"
+          PR_NUMBER="${BASH_REMATCH[2]}"
+        else
+          echo "Invalid GitHub pull request URL: $PR_URL" >&2
+          exit 1
+        fi
+
+        # Keep file status so deleted bundles can be checked against catalogs.
+        ALL_FILES=$(gh api --paginate \
+          "repos/${REPOSITORY}/pulls/${PR_NUMBER}/files" \
+          --jq '.[] | [.status, .filename] | @tsv')
+
+        declare -A DIRS
+        DIRS["config.yaml"]=1
+        NEED_ALL_CATALOGS=false
+        HAS_OPERATOR_DIR=false
+
+        while IFS=$'\t' read -r status filepath; do
+          if [[ "$filepath" == operators/* ]]; then
+            dir=$(echo "$filepath" | cut -d'/' -f1,2)
+            DIRS["$dir"]=1
+            HAS_OPERATOR_DIR=true
+            if [[ "$status" == "removed" ]]; then
+              NEED_ALL_CATALOGS=true
+            fi
+          elif [[ "$filepath" == catalogs/* ]]; then
+            dir=$(echo "$filepath" | cut -d'/' -f1,2)
+            DIRS["$dir"]=1
+            if [[ "$filepath" == catalogs/*/*/* ]]; then
+              operator=$(echo "$filepath" | cut -d'/' -f3)
+              # Catalog validation also reads the operator's ci.yaml.
+              DIRS["operators/$operator"]=1
+              HAS_OPERATOR_DIR=true
+            fi
+          fi
+        done <<< "$ALL_FILES"
+
+        # Keep a valid repository shape for PRs without an operator path.
+        if [[ "$HAS_OPERATOR_DIR" == "false" ]]; then
+          DIRS["operators"]=1
+        fi
+        # Deletion checks scan all current catalogs for bundle references.
+        if [[ "$NEED_ALL_CATALOGS" == "true" ]]; then
+          DIRS["catalogs"]=1
+        fi
+
+        RESULT=$(printf '%s\n' "${!DIRS[@]}" | sort | paste -sd ',' -)
+
+        echo "Sparse checkout directories: $RESULT"
+        echo -n "$RESULT" > "$(results.sparse_dirs.path)"

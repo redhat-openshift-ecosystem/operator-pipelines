@@ -151,10 +151,27 @@ spec:
         - name: access_type
           value: "internal"
 
+    # Resolve sparse checkout directories from PR changed files
+    - name: resolve-sparse-dirs
+      runAfter:
+        - set-env
+      taskRef:
+        name: resolve-sparse-checkout-dirs
+        kind: Task
+      params:
+        - name: pipeline_image
+          value: "$(params.pipeline_image)"
+        - name: git_pr_url
+          value: "$(params.git_pr_url)"
+        - name: github_token_secret_name
+          value: "$(params.github_token_secret_name)"
+        - name: github_token_secret_key
+          value: "$(params.github_token_secret_key)"
+
     # Git clone
     - name: clone-repository
       runAfter:
-        - set-env
+        - resolve-sparse-dirs
       taskRef:
         name: git-clone
         kind: Task
@@ -163,6 +180,8 @@ spec:
           value: $(params.git_repo_url)
         - name: revision
           value: $(params.git_commit)
+        - name: sparseCheckoutDirectories
+          value: "$(tasks.resolve-sparse-dirs.results.sparse_dirs)"
         - name: gitInitImage
           value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:56e27c58ded3b0d8aab1a585ef55aa543f7cf78f36060086fec00d0a1c42bc18
       workspaces:
@@ -178,12 +197,14 @@ spec:
         name: git-clone
         kind: Task
       runAfter:
-        - set-env
+        - resolve-sparse-dirs
       params:
         - name: url
           value: "$(params.git_repo_url)"
         - name: revision
           value: "$(params.git_commit_base)"
+        - name: sparseCheckoutDirectories
+          value: "$(tasks.resolve-sparse-dirs.results.sparse_dirs)"
         - name: gitInitImage
           value: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:56e27c58ded3b0d8aab1a585ef55aa543f7cf78f36060086fec00d0a1c42bc18
       workspaces:
