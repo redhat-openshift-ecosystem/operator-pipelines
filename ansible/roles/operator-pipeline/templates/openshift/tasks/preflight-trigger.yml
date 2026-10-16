@@ -143,6 +143,29 @@ spec:
           echo -n "$(workspaces.results.path)/artifacts" | tee "$(results.artifacts_output_dir.path)"
         fi
 
+    - name: sanitize-docker-config-json
+      image: "$(params.pipeline_image)"
+      workingDir: $(workspaces.results.path)
+      script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          if [[ "$(params.skip)" == "true" || -z "$(params.bundle_path)" || -f "$(workspaces.results.path)/preflight_skipped_by_label" ]]; then
+              echo "Preflight testing has been skipped"
+              exit 0
+          fi
+
+          config_file="$(workspaces.credentials.path)/project_dockerconfigjson"
+          if [ -f "${config_file}" ];
+          then
+              # Only pass the `auths` section to other CI systems/applications.
+              # Keep this as a separate step because jq is available in the
+              # pipeline image, but not in the preflight-trigger image.
+              temp_file="${config_file}.tmp"
+              jq '{auths: .auths}' "${config_file}" > "${temp_file}"
+              mv "${temp_file}" "${config_file}"
+          fi
+
     - env:
         - name: PIPELINE_GPG_DECRYPTION_PRIVATE_KEY
           value: /etc/gpg-key/$(params.gpg_decryption_private_key_secret_key)
@@ -171,12 +194,6 @@ spec:
 
           if [ -f "$(workspaces.credentials.path)/project_dockerconfigjson" ];
           then
-              # sanitize the project_dockerconfigjson before encrypting;
-              # this ensures only the `auths` section gets passed to other CI systems/applications
-              jq '{auths: .auths}' \
-                "$(workspaces.credentials.path)/project_dockerconfigjson" > "$(workspaces.credentials.path)/project_dockerconfigjson.tmp" \
-                && mv "$(workspaces.credentials.path)/project_dockerconfigjson.tmp" "$(workspaces.credentials.path)/project_dockerconfigjson"
-
               preflight-trigger encrypt \
               --gpg-encryption-private-key "${PIPELINE_GPG_DECRYPTION_PRIVATE_KEY}" \
               --gpg-encryption-public-key "${PIPELINE_GPG_DECRYPTION_PUBLIC_KEY}" \
