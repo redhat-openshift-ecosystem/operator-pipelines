@@ -129,6 +129,20 @@ name in the CSV definition. The source of these values are:
  - `operators.operatorframework.io.bundle.package.v1` (`metadata/annotation.yaml`)
  - `csv.metadata.name` - the name without a version (`manifests/.*.clusterserviceversion.yaml`)
 
+#### check_leaks_in_changed_files
+The test scans files under `operators/` that were added or modified in the pull
+request for potential secret leaks (tokens, credentials, and similar secrets)
+using [LeakTK](https://github.com/leaktk/leaktk).
+
+All affected operator paths from the pull request are checked, including
+multi-operator non-bundle changes, not only the primary operator selected for
+other static checks. Catalog files are not scanned. The check fails if any leak
+is detected and reports the relative file path without including secret content.
+
+If this is intentional or a false positive, you can skip the check by adding
+the `tests/skip/check_leaks_in_changed_files` label to the pull request
+(or `/test skip check_leaks_in_changed_files`).
+
 #### check_bundle_images_in_fbc
 This check will ensure that all bundle images in the file based catalog for given
 operator catalog(s) use allowed image registry. Allowed registries are configured

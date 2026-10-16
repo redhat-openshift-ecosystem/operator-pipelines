@@ -497,12 +497,21 @@ def detect_changes(
         head_repo, base_repo, all_affected_catalog_operators
     )
 
+    # Operator-directory files from the PR that still exist on head (for leak scanning).
+    # Catalog paths and deleted files are intentionally excluded.
+    affected_operator_files = sorted(
+        path
+        for path in pr_files
+        if path.startswith("operators/") and (head_repo.root / path).is_file()
+    )
+
     parsed_results = ParserResults(
         affected_operators=operators,
         affected_bundles=bundles,
         affected_catalogs=catalogs,
         affected_catalog_operators=catalog_operators,
         extra_files=non_operator_files,
+        affected_operator_files=affected_operator_files,
     )
 
     return parsed_results
