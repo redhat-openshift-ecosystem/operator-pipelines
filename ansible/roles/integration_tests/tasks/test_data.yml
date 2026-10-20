@@ -30,6 +30,12 @@
     mkdir -p "operators/$OPERATOR_PACKAGE_NAME"
     cp ci.yaml "operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
 
+    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
+      grep -q "template_name: {{ integration_tests_fbc_lfs_release_config_template }}" \
+        "operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
+      echo "Validated FBC catalog mapping in operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
+    fi
+
     git add "operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
     git commit -m "Copied ci.yaml from $SRC_BRANCH"
     git push origin "$UPSTREAM_BRANCH"
@@ -95,12 +101,15 @@
     if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
       RELEASE_CONFIG_SOURCE="$SRC_VERSION/release-config.yaml"
       RELEASE_CONFIG_PATH="$DEST_VERSION/release-config.yaml"
-      if [[ ! -f "$RELEASE_CONFIG_SOURCE" ]]; then
-        echo "Missing release configuration in the source bundle: $RELEASE_CONFIG_SOURCE" >&2
-        exit 1
+      if [[ -f "$RELEASE_CONFIG_SOURCE" ]]; then
+        cp "$RELEASE_CONFIG_SOURCE" "$RELEASE_CONFIG_PATH"
+        echo "Copied bundle release configuration: $RELEASE_CONFIG_PATH"
+      else
+        CATALOG_TEMPLATE="{{ integration_tests_fbc_lfs_release_config_template }}"
+        printf 'catalog_templates:\n  - template_name: %s\n    channels:\n      - stable\n' \
+          "$CATALOG_TEMPLATE" > "$RELEASE_CONFIG_PATH"
+        echo "Generated test bundle release configuration: $RELEASE_CONFIG_PATH"
       fi
-      cp "$RELEASE_CONFIG_SOURCE" "$RELEASE_CONFIG_PATH"
-      echo "Copied bundle release configuration: $RELEASE_CONFIG_PATH"
     fi
 
     diff -bur "$SRC_VERSION/" "$DEST_VERSION/" || true

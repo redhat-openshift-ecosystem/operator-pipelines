@@ -9,4 +9,8 @@ reviewers: {{ integration_tests_ci_file_reviewers | to_yaml }}
 {% if integration_tests_ci_file_fbc_enabled is defined %}
 fbc:
   enabled: {{ integration_tests_ci_file_fbc_enabled }}
+{% if integration_tests_ci_file_fbc_catalog_mapping is defined %}
+  catalog_mapping:
+{{ integration_tests_ci_file_fbc_catalog_mapping | to_nice_yaml(indent=4) | indent(4, true) }}
+{% endif %}
 {% endif %}
