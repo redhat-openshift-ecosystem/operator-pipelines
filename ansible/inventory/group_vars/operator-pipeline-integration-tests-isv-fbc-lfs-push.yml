@@ -10,6 +10,11 @@ integration_tests_pr_title: "Catalog update {{ integration_tests_operator_packag
 
 integration_tests_ci_file_cert_project_id: 66a743c4ed864bc7d00e51b7
 integration_tests_ci_file_fbc_enabled: true
+integration_tests_ci_file_fbc_catalog_mapping:
+  - template_name: basic.yaml
+    catalog_names:
+      - v4.19
+    type: olm.template.basic
 integration_tests_verify_bundle_in_catalog: false
 integration_tests_ocp_versions_range: "=v4.19"
 integration_tests_catalog_versions: "v4.19"
