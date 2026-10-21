@@ -478,6 +478,15 @@
 </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="#check_leaks_in_changed_files">
+<span class="md-ellipsis">
+      
+        check_leaks_in_changed_files
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="#check_bundle_images_in_fbc">
 <span class="md-ellipsis">
       
@@ -905,6 +914,17 @@ name in the CSV definition. The source of these values are:</p>
 <li><code>operators.operatorframework.io.bundle.package.v1</code> (<code>metadata/annotation.yaml</code>)</li>
 <li><code>csv.metadata.name</code> - the name without a version (<code>manifests/.*.clusterserviceversion.yaml</code>)</li>
 </ul>
+<h4 id="check_leaks_in_changed_files">check_leaks_in_changed_files</h4>
+<p>The test scans files under <code>operators/</code> that were added or modified in the pull
+request for potential secret leaks (tokens, credentials, and similar secrets)
+using <a href="https://github.com/leaktk/leaktk">LeakTK</a>.</p>
+<p>All affected operator paths from the pull request are checked, including
+multi-operator non-bundle changes, not only the primary operator selected for
+other static checks. Catalog files are not scanned. The check fails if any leak
+is detected and reports the relative file path without including secret content.</p>
+<p>If this is intentional or a false positive, you can skip the check by adding
+the <code>tests/skip/check_leaks_in_changed_files</code> label to the pull request
+(or <code>/test skip check_leaks_in_changed_files</code>).</p>
 <h4 id="check_bundle_images_in_fbc">check_bundle_images_in_fbc</h4>
 <p>This check will ensure that all bundle images in the file based catalog for given
 operator catalog(s) use allowed image registry. Allowed registries are configured
