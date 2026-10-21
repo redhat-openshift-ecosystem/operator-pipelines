@@ -111,3 +111,6 @@ spec:
 
         deleted_catalog_operators="$(jq -r '.deleted_catalog_operators | join(",")' < changes.json)"
         echo -n $deleted_catalog_operators > "$(results.deleted_catalog_operators.path)"
+
+        # Newline-separated paths under operators/ (avoids Tekton result size limits).
+        jq -r '.affected_operator_files[]?' < changes.json > affected_operator_files.txt

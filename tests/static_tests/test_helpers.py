@@ -2,7 +2,20 @@ from typing import Iterator
 from unittest.mock import MagicMock, call, patch
 
 from operatorcert.operator_repo import Bundle, Operator
-from operatorcert.static_tests.helpers import skip_fbc
+from operatorcert.static_tests.helpers import (
+    get_affected_operator_files,
+    set_affected_operator_files,
+    skip_fbc,
+)
+
+
+def test_affected_operator_files_context() -> None:
+    assert get_affected_operator_files() == ()
+    set_affected_operator_files(["operators/foo/ci.yaml", "operators/foo/bar.yaml"])
+    assert get_affected_operator_files() == (
+        "operators/foo/ci.yaml",
+        "operators/foo/bar.yaml",
+    )
 
 
 @patch("operatorcert.static_tests.helpers.LOGGER")

@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import tempfile
 from base64 import b64encode
 from pathlib import Path
@@ -9,6 +10,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from operatorcert.redact import (
+    _MAX_LOGGED_STDERR_CHARS,
+    _REDACT_FALLBACK_DIAGNOSTIC,
+    _safe_stderr_for_log,
+    paths_with_leaks,
     scan_and_redact,
     scan,
 )
@@ -19,8 +24,10 @@ INPUT_CONTENT = b"curl -H 'Authorization: bearer " + JWT_TOKEN + b" example.com\
 REDACTED_CONTENT = b"curl -H 'Authorization: bearer ***[REDACTED]*** example.com\n"
 
 
-def _scan_result_str(path: str) -> str:
-    return json.dumps({"results": [{"location": {"path": path}}]})
+def _scan_result_str(path: str, **extra: Any) -> str:
+    result: dict[str, Any] = {"location": {"path": path}}
+    result.update(extra)
+    return json.dumps({"results": [result]})
 
 
 def _make_run_side_effect(
@@ -45,7 +52,8 @@ def test_scan(mock_check_output: MagicMock) -> None:
     input_path = Path("/fake/path/testfile")
     scan_result = _scan_result_str(str(input_path))
 
-    mock_check_output.return_value = scan_result
+    # Blank lines in JSONL output are skipped (leaktk may emit them).
+    mock_check_output.return_value = f"\n{scan_result}\n\n"
 
     results = scan(input_path)
 
@@ -67,7 +75,174 @@ def test_scan(mock_check_output: MagicMock) -> None:
         ["leaktk", "listen"],
         input=expected_input,
         text=True,
+        stderr=subprocess.PIPE,
     )
+
+
+@patch("operatorcert.redact.subprocess.check_output")
+def test_scan_ignores_secret_fields(mock_check_output: MagicMock) -> None:
+    """Extra LeakTK fields (e.g. secret/match) must not be retained on models."""
+    input_path = Path("/fake/path/leaky-file")
+    secret = "SUPERSECRET_TOKEN_VALUE"
+    mock_check_output.return_value = _scan_result_str(
+        str(input_path), secret=secret, match=secret
+    )
+
+    results = scan(input_path)
+
+    assert results[0].results[0].location.path == input_path
+    dumped = results[0].model_dump_json()
+    assert secret not in dumped
+
+
+@patch("operatorcert.redact.LOGGER")
+@patch("operatorcert.redact.subprocess.run")
+@patch("operatorcert.redact.subprocess.check_output")
+def test_scan_called_process_error_is_sanitized(
+    mock_check_output: MagicMock,
+    mock_run: MagicMock,
+    mock_logger: MagicMock,
+) -> None:
+    """Non-zero LeakTK exit must not propagate stdout; stderr is logged safely."""
+    secret = "SUPERSECRET_TOKEN_VALUE"
+    stderr_diag = "could not load scanner config"
+    mock_check_output.side_effect = subprocess.CalledProcessError(
+        1,
+        ["leaktk", "listen"],
+        output=json.dumps({"secret": secret}),
+        stderr=stderr_diag,
+    )
+    redact_proc = MagicMock()
+    redact_proc.returncode = 0
+    redact_proc.stdout = stderr_diag
+    mock_run.return_value = redact_proc
+
+    with pytest.raises(RuntimeError, match="LeakTK scan failed") as exc_info:
+        scan(Path("/fake/path/file"))
+
+    assert secret not in str(exc_info.value)
+    assert secret not in repr(exc_info.value)
+    mock_run.assert_called_once_with(
+        ["leaktk", "redact", "--kind", "Stdio"],
+        input=stderr_diag,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    mock_logger.error.assert_called_once_with(
+        "LeakTK scan failed (exit %s): %s",
+        1,
+        stderr_diag,
+    )
+
+
+@patch("operatorcert.redact.LOGGER")
+@patch("operatorcert.redact.subprocess.run")
+@patch("operatorcert.redact.subprocess.check_output")
+def test_scan_called_process_error_empty_stderr(
+    mock_check_output: MagicMock,
+    mock_run: MagicMock,
+    mock_logger: MagicMock,
+) -> None:
+    """Empty stderr still logs a generic failure without invoking redact."""
+    mock_check_output.side_effect = subprocess.CalledProcessError(
+        2,
+        ["leaktk", "listen"],
+        output="",
+        stderr="",
+    )
+
+    with pytest.raises(RuntimeError, match="LeakTK scan failed"):
+        scan(Path("/fake/path/file"))
+
+    mock_run.assert_not_called()
+    mock_logger.error.assert_called_once_with(
+        "LeakTK scan failed (exit %s) with empty stderr",
+        2,
+    )
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_redacts(mock_run: MagicMock) -> None:
+    """Successful redact output is preferred for logging."""
+    mock_run.return_value = MagicMock(returncode=0, stdout="redacted-diag\n")
+    assert _safe_stderr_for_log("raw secret-ish diag") == "redacted-diag"
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_falls_back_on_empty_redact_output(
+    mock_run: MagicMock,
+) -> None:
+    """Successful redact with empty stdout is treated as unusable."""
+    mock_run.return_value = MagicMock(returncode=0, stdout="   \n")
+    assert _safe_stderr_for_log("raw stderr") == _REDACT_FALLBACK_DIAGNOSTIC
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_falls_back_on_redact_failure(
+    mock_run: MagicMock,
+) -> None:
+    """When redact fails, return a generic diagnostic (never raw stderr)."""
+    mock_run.return_value = MagicMock(returncode=1, stdout="")
+    long_stderr = "x" * (_MAX_LOGGED_STDERR_CHARS + 50)
+    assert _safe_stderr_for_log(long_stderr) == _REDACT_FALLBACK_DIAGNOSTIC
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_falls_back_on_oserror(mock_run: MagicMock) -> None:
+    """Missing leaktk binary returns a generic diagnostic, not raw stderr."""
+    mock_run.side_effect = OSError("leaktk missing")
+    assert _safe_stderr_for_log("diag line") == _REDACT_FALLBACK_DIAGNOSTIC
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_never_logs_secret_on_redact_failure(
+    mock_run: MagicMock,
+) -> None:
+    """Secrets in the first 2,048 stderr chars must not appear after redact failure."""
+    secret = "SUPERSECRET_TOKEN_VALUE"
+    stderr_with_secret = secret + ("y" * (_MAX_LOGGED_STDERR_CHARS))
+    mock_run.return_value = MagicMock(returncode=1, stdout=None)
+    result = _safe_stderr_for_log(stderr_with_secret)
+    assert result == _REDACT_FALLBACK_DIAGNOSTIC
+    assert secret not in result
+
+
+@patch("operatorcert.redact.subprocess.run")
+def test_safe_stderr_for_log_truncates_successful_redact(
+    mock_run: MagicMock,
+) -> None:
+    """Successful redact output is still length-capped for logging."""
+    long_redacted = "r" * (_MAX_LOGGED_STDERR_CHARS + 50)
+    mock_run.return_value = MagicMock(returncode=0, stdout=long_redacted)
+    result = _safe_stderr_for_log("raw stderr")
+    assert result.endswith("...(truncated)")
+    assert len(result) == _MAX_LOGGED_STDERR_CHARS + len("...(truncated)")
+
+
+@patch("operatorcert.redact.subprocess.check_output")
+def test_scan_invalid_json_is_sanitized(mock_check_output: MagicMock) -> None:
+    """Unparseable LeakTK lines raise a generic error without raw payload."""
+    secret = "SUPERSECRET_TOKEN_VALUE"
+    mock_check_output.return_value = f'{{"results": "not-a-list-{secret}"}}'
+
+    with pytest.raises(RuntimeError, match="could not be parsed safely") as exc_info:
+        scan(Path("/fake/path/file"))
+
+    assert secret not in str(exc_info.value)
+
+
+@patch("operatorcert.redact.subprocess.check_output")
+def test_paths_with_leaks(mock_check_output: MagicMock) -> None:
+    """paths_with_leaks returns absolute paths reported by the scan."""
+    input_path = Path("/fake/path/leaky-file")
+    mock_check_output.return_value = _scan_result_str(str(input_path))
+
+    assert paths_with_leaks() == set()
+
+    result = paths_with_leaks(input_path)
+    assert result == {input_path.absolute()}
 
 
 @patch("operatorcert.redact.subprocess.run")

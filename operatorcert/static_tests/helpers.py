@@ -2,11 +2,27 @@
 
 import logging
 from functools import wraps
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Iterator, Sequence
 
 from operatorcert.operator_repo import Bundle, Operator
 
 LOGGER = logging.getLogger("operator-cert")
+
+_affected_operator_files: tuple[str, ...] = ()
+
+
+def set_affected_operator_files(files: Sequence[str]) -> None:
+    """
+    Set the list of repo-relative operator files affected by the pull request.
+    Used by check_leaks_in_changed_files; call before run_suite.
+    """
+    global _affected_operator_files  # pylint: disable=global-statement
+    _affected_operator_files = tuple(files)
+
+
+def get_affected_operator_files() -> tuple[str, ...]:
+    """Return repo-relative operator files affected by the pull request."""
+    return _affected_operator_files
 
 
 def skip_fbc(func: Callable[..., Any]) -> Callable[..., Any]:

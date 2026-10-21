@@ -1,7 +1,7 @@
 """Module containing data classes and validators for PR parsed files"""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import yaml
 from operatorcert import utils
@@ -166,12 +166,16 @@ class ParserResults:
         affected_catalogs: AffectedCatalogCollection,
         affected_catalog_operators: AffectedCatalogOperatorCollection,
         extra_files: set[str],
+        affected_operator_files: Optional[list[str]] = None,
     ):
         self.affected_operators = affected_operators
         self.affected_bundles = affected_bundles
         self.affected_catalogs = affected_catalogs
         self.affected_catalog_operators = affected_catalog_operators
         self.extra_files = extra_files
+        self.affected_operator_files = (
+            list(affected_operator_files) if affected_operator_files is not None else []
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -186,6 +190,7 @@ class ParserResults:
             **(self.affected_catalogs.to_dict()),
             **(self.affected_catalog_operators.to_dict()),
             "extra_files": list(self.extra_files),
+            "affected_operator_files": list(self.affected_operator_files),
         }
         self.enrich_result(result)
         return result

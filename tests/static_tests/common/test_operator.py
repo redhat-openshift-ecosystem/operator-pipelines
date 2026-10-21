@@ -1,13 +1,16 @@
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from operatorcert.operator_repo import Repo
 from operatorcert.operator_repo.checks import Fail
 from operatorcert.static_tests.common.operator import (
     check_catalog_usage_ci_config,
+    check_leaks_in_changed_files,
     check_schema_operator_ci_config,
 )
+from operatorcert.static_tests.helpers import set_affected_operator_files
 from tests.utils import bundle_files, create_files
 
 
@@ -275,3 +278,154 @@ def test_check_catalog_usage_ci_config(
     assert {
         (x.__class__, x.reason) for x in check_catalog_usage_ci_config(operator)
     } == expected_results
+
+
+def test_check_leaks_in_changed_files_no_affected_files(tmp_path: Path) -> None:
+    create_files(tmp_path, bundle_files("hello", "0.0.1"))
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    assert list(check_leaks_in_changed_files(operator)) == []
+
+
+def test_check_leaks_in_changed_files_no_existing_paths(tmp_path: Path) -> None:
+    create_files(tmp_path, bundle_files("hello", "0.0.1"))
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    set_affected_operator_files(
+        [
+            "operators/hello/missing.yaml",
+            "catalogs/v4.15/hello/catalog.yaml",
+        ]
+    )
+    assert list(check_leaks_in_changed_files(operator)) == []
+
+
+@patch("operatorcert.static_tests.common.operator.paths_with_leaks")
+def test_check_leaks_in_changed_files_scans_other_operators(
+    mock_paths_with_leaks: Any, tmp_path: Path
+) -> None:
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1"),
+        bundle_files("other", "0.0.1"),
+    )
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    other_rel = "operators/other/0.0.1/manifests/other.clusterserviceversion.yaml"
+    other_abs = (tmp_path / other_rel).resolve()
+    set_affected_operator_files(
+        [
+            other_rel,
+            "catalogs/v4.15/hello/catalog.yaml",
+        ]
+    )
+    mock_paths_with_leaks.return_value = set()
+
+    assert list(check_leaks_in_changed_files(operator)) == []
+    mock_paths_with_leaks.assert_called_once()
+    scanned_paths = mock_paths_with_leaks.call_args[0]
+    assert other_abs in scanned_paths
+    assert len(scanned_paths) == 1
+
+
+@patch("operatorcert.static_tests.common.operator.paths_with_leaks")
+def test_check_leaks_in_changed_files_multi_operator_non_bundle(
+    mock_paths_with_leaks: Any, tmp_path: Path
+) -> None:
+    create_files(
+        tmp_path,
+        bundle_files("hello", "0.0.1"),
+        bundle_files("other", "0.0.1"),
+        {"operators/hello/ci.yaml": {"reviewers": ["a"]}},
+        {"operators/other/ci.yaml": {"reviewers": ["b"]}},
+    )
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    hello_ci = "operators/hello/ci.yaml"
+    other_ci = "operators/other/ci.yaml"
+    hello_abs = (tmp_path / hello_ci).resolve()
+    other_abs = (tmp_path / other_ci).resolve()
+    set_affected_operator_files([hello_ci, other_ci])
+    mock_paths_with_leaks.return_value = {other_abs}
+
+    results = list(check_leaks_in_changed_files(operator))
+    assert len(results) == 1
+    assert isinstance(results[0], Fail)
+    assert other_ci in results[0].reason
+    assert "Potential secret leak detected" in results[0].reason
+    mock_paths_with_leaks.assert_called_once()
+    scanned_paths = set(mock_paths_with_leaks.call_args[0])
+    assert scanned_paths == {hello_abs, other_abs}
+
+
+@patch("operatorcert.static_tests.common.operator.paths_with_leaks")
+def test_check_leaks_in_changed_files_reports_leaks(
+    mock_paths_with_leaks: Any, tmp_path: Path
+) -> None:
+    create_files(tmp_path, bundle_files("hello", "0.0.1"))
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    leaky_rel = "operators/hello/0.0.1/manifests/hello.clusterserviceversion.yaml"
+    leaky_abs = (tmp_path / leaky_rel).resolve()
+    set_affected_operator_files([leaky_rel, "operators/hello/missing.yaml"])
+    mock_paths_with_leaks.return_value = {leaky_abs}
+
+    results = list(check_leaks_in_changed_files(operator))
+    assert len(results) == 1
+    assert isinstance(results[0], Fail)
+    assert leaky_rel in results[0].reason
+    assert "Potential secret leak detected" in results[0].reason
+    assert "SUPERSECRET" not in results[0].reason
+    mock_paths_with_leaks.assert_called_once()
+    scanned_paths = mock_paths_with_leaks.call_args[0]
+    assert leaky_abs in scanned_paths
+
+
+@patch("operatorcert.static_tests.common.operator.paths_with_leaks")
+def test_check_leaks_in_changed_files_outside_repo_path(
+    mock_paths_with_leaks: Any, tmp_path: Path
+) -> None:
+    create_files(tmp_path, bundle_files("hello", "0.0.1"))
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    leaky_rel = "operators/hello/0.0.1/manifests/hello.clusterserviceversion.yaml"
+    set_affected_operator_files([leaky_rel])
+    outside = Path("/tmp/outside-repo-leak")
+    mock_paths_with_leaks.return_value = {outside}
+
+    results = list(check_leaks_in_changed_files(operator))
+    assert len(results) == 1
+    assert str(outside) in results[0].reason
+
+
+@patch("operatorcert.static_tests.common.operator.paths_with_leaks")
+def test_check_leaks_in_changed_files_clean(
+    mock_paths_with_leaks: Any, tmp_path: Path
+) -> None:
+    create_files(tmp_path, bundle_files("hello", "0.0.1"))
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    leaky_rel = "operators/hello/0.0.1/manifests/hello.clusterserviceversion.yaml"
+    set_affected_operator_files([leaky_rel])
+    mock_paths_with_leaks.return_value = set()
+
+    assert list(check_leaks_in_changed_files(operator)) == []
+
+
+@patch("operatorcert.static_tests.common.operator.paths_with_leaks")
+def test_check_leaks_in_changed_files_scan_error_is_generic(
+    mock_paths_with_leaks: Any, tmp_path: Path
+) -> None:
+    create_files(tmp_path, bundle_files("hello", "0.0.1"))
+    repo = Repo(tmp_path)
+    operator = repo.operator("hello")
+    leaky_rel = "operators/hello/0.0.1/manifests/hello.clusterserviceversion.yaml"
+    set_affected_operator_files([leaky_rel])
+    secret = "SUPERSECRET_TOKEN_VALUE"
+    mock_paths_with_leaks.side_effect = RuntimeError(f"scanner boom {secret}")
+
+    results = list(check_leaks_in_changed_files(operator))
+    assert len(results) == 1
+    assert isinstance(results[0], Fail)
+    assert "internal error" in results[0].reason
+    assert secret not in results[0].reason
