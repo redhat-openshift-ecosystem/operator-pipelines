@@ -38,7 +38,11 @@
 
     git add "operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
     git commit -m "Copied ci.yaml from $SRC_BRANCH"
-    git push origin "$UPSTREAM_BRANCH"
+    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
+      echo "Deferring branch push until the bundle is committed so the release webhook sees the bundle change"
+    else
+      git push origin "$UPSTREAM_BRANCH"
+    fi
   args:
     executable: /bin/bash
     chdir: "{{ integration_tests_git_temp_dir.path }}"
@@ -119,7 +123,11 @@
 
     git add operators
     git commit -m "[Integration Test] Add $OPERATOR_PACKAGE_NAME $DEST_VERSION"
-    git push origin "$BUNDLE_BRANCH"
+    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
+      echo "Deferring branch push until the catalog is committed so the release webhook sees the complete test change"
+    else
+      git push origin "$BUNDLE_BRANCH"
+    fi
   args:
     executable: /bin/bash
     chdir: "{{ integration_tests_git_temp_dir.path }}"
@@ -151,7 +159,11 @@
     # A branch with changes for a pull request
     PR_BRANCH="{{ integration_tests_git_bundle_branch }}"
 
-    git checkout -b "$PR_BRANCH" "$UPSTREAM_BRANCH"
+    if git show-ref --verify --quiet "refs/heads/$PR_BRANCH"; then
+      git checkout "$PR_BRANCH"
+    else
+      git checkout -b "$PR_BRANCH" "$UPSTREAM_BRANCH"
+    fi
 
     git checkout "origin/$SRC_CATALOG_BRANCH" -- "catalogs/$SRC_CATALOG_VERSION/$SRC_OPERATOR_PACKAGE_NAME/catalog.yaml"
 
@@ -195,6 +207,17 @@
 
     git add catalogs
     git commit -m "[Integration Test] Add catalog for $OPERATOR_PACKAGE_NAME"
+
+    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
+      BUNDLE_PATH="operators/$OPERATOR_PACKAGE_NAME/$DEST_VERSION"
+      test -d "$BUNDLE_PATH"
+      echo "Release webhook test changes:"
+      git diff --name-status "origin/{{ integration_tests_git_base_branch }}...HEAD"
+      git diff --name-only "origin/{{ integration_tests_git_base_branch }}...HEAD" \
+        | grep -Fxq "$BUNDLE_PATH/release-config.yaml"
+      echo "Validated bundle change for release pipeline: $BUNDLE_PATH"
+    fi
+
     git push origin "$PR_BRANCH"
   args:
     executable: /bin/bash
