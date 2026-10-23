@@ -13,8 +13,8 @@ integration_tests_ci_file_fbc_enabled: true
 integration_tests_ci_file_fbc_catalog_mapping:
   - template_name: basic.yaml
     catalog_names:
-      - v4.19
+      - v4.20
     type: olm.template.basic
 integration_tests_verify_bundle_in_catalog: false
-integration_tests_ocp_versions_range: "=v4.19"
-integration_tests_catalog_versions: "v4.19"
+integration_tests_ocp_versions_range: "=v4.20"
+integration_tests_catalog_versions: "v4.20"
