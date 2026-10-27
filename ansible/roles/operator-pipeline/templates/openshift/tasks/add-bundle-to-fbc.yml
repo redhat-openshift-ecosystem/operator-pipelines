@@ -162,7 +162,7 @@ spec:
           git add .gitattributes
         fi
         git add operators/$(params.operator_name)/catalog-templates
-        git add catalogs/*
+        git add --sparse catalogs/*
 
         lfs_files="$(git lfs ls-files --name-only)"
         if [[ -n "${lfs_files}" ]]; then

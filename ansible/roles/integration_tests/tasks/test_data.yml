@@ -30,19 +30,9 @@
     mkdir -p "operators/$OPERATOR_PACKAGE_NAME"
     cp ci.yaml "operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
 
-    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
-      grep -q "template_name: {{ integration_tests_fbc_lfs_release_config_template }}" \
-        "operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
-      echo "Validated FBC catalog mapping in operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
-    fi
-
     git add "operators/$OPERATOR_PACKAGE_NAME/ci.yaml"
     git commit -m "Copied ci.yaml from $SRC_BRANCH"
-    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
-      echo "Deferring branch push until the bundle is committed so the release webhook sees the bundle change"
-    else
-      git push origin "$UPSTREAM_BRANCH"
-    fi
+    git push origin "$UPSTREAM_BRANCH"
   args:
     executable: /bin/bash
     chdir: "{{ integration_tests_git_temp_dir.path }}"
@@ -102,20 +92,6 @@
     find "$DEST_VERSION/metadata/annotations.yaml" -type f -exec \
       sed -i "s/com.redhat.openshift.versions: v4.10/com.redhat.openshift.versions: {{ integration_tests_ocp_versions_range }}/g" {} \;
 
-    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
-      RELEASE_CONFIG_SOURCE="$SRC_VERSION/release-config.yaml"
-      RELEASE_CONFIG_PATH="$DEST_VERSION/release-config.yaml"
-      if [[ -f "$RELEASE_CONFIG_SOURCE" ]]; then
-        cp "$RELEASE_CONFIG_SOURCE" "$RELEASE_CONFIG_PATH"
-        echo "Copied bundle release configuration: $RELEASE_CONFIG_PATH"
-      else
-        CATALOG_TEMPLATE="{{ integration_tests_fbc_lfs_release_config_template }}"
-        printf 'catalog_templates:\n  - template_name: %s\n    channels:\n      - stable\n' \
-          "$CATALOG_TEMPLATE" > "$RELEASE_CONFIG_PATH"
-        echo "Generated test bundle release configuration: $RELEASE_CONFIG_PATH"
-      fi
-    fi
-
     diff -bur "$SRC_VERSION/" "$DEST_VERSION/" || true
     rm -rv "./$SRC_VERSION"
 
@@ -123,11 +99,7 @@
 
     git add operators
     git commit -m "[Integration Test] Add $OPERATOR_PACKAGE_NAME $DEST_VERSION"
-    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
-      echo "Deferring branch push until the catalog is committed so the release webhook sees the complete test change"
-    else
-      git push origin "$BUNDLE_BRANCH"
-    fi
+    git push origin "$BUNDLE_BRANCH"
   args:
     executable: /bin/bash
     chdir: "{{ integration_tests_git_temp_dir.path }}"
@@ -137,8 +109,6 @@
   tags:
     - prepare-bundle
   ansible.builtin.shell: |
-    set -o pipefail
-
     UPSTREAM_BRANCH="{{ integration_tests_git_upstream_branch }}"
     SRC_OPERATOR_PACKAGE_NAME="{{ integration_tests_src_operator_package_name }}"
 
@@ -159,11 +129,7 @@
     # A branch with changes for a pull request
     PR_BRANCH="{{ integration_tests_git_bundle_branch }}"
 
-    if git show-ref --verify --quiet "refs/heads/$PR_BRANCH"; then
-      git checkout "$PR_BRANCH"
-    else
-      git checkout -b "$PR_BRANCH" "$UPSTREAM_BRANCH"
-    fi
+    git checkout -b "$PR_BRANCH" "$UPSTREAM_BRANCH"
 
     git checkout "origin/$SRC_CATALOG_BRANCH" -- "catalogs/$SRC_CATALOG_VERSION/$SRC_OPERATOR_PACKAGE_NAME/catalog.yaml"
 
@@ -182,42 +148,8 @@
 
     popd
 
-    CATALOG_FILE="catalogs/$DEST_CATALOG_VERSION/$OPERATOR_PACKAGE_NAME/catalog.yaml"
-    if [[ "{{ integration_tests_fbc_lfs | bool | lower }}" == "true" ]]; then
-      TARGET_SIZE="{{ integration_tests_fbc_lfs_target_size }}"
-      printf '\n# Git LFS integration-test padding\n' >> "$CATALOG_FILE"
-
-      CURRENT_SIZE=$(wc -c < "$CATALOG_FILE")
-      REMAINING_SIZE=$((TARGET_SIZE - CURRENT_SIZE))
-      if (( REMAINING_SIZE > 0 )); then
-        head -c "$REMAINING_SIZE" /dev/zero | tr '\0' '#' >> "$CATALOG_FILE"
-      fi
-      printf '\n' >> "$CATALOG_FILE"
-
-      ACTUAL_SIZE=$(wc -c < "$CATALOG_FILE")
-      echo "Generated Git LFS test catalog size: ${ACTUAL_SIZE} bytes"
-      test "$ACTUAL_SIZE" -ge "$TARGET_SIZE"
-
-      git lfs install
-      git lfs track "$CATALOG_FILE"
-      git add .gitattributes
-      git lfs ls-files --name-only
-      git check-attr filter -- "$CATALOG_FILE"
-    fi
-
     git add catalogs
     git commit -m "[Integration Test] Add catalog for $OPERATOR_PACKAGE_NAME"
-
-    if [[ "{{ integration_tests_fbc_lfs_push | bool | lower }}" == "true" ]]; then
-      BUNDLE_PATH="operators/$OPERATOR_PACKAGE_NAME/$DEST_VERSION"
-      test -d "$BUNDLE_PATH"
-      echo "Release webhook test changes:"
-      git diff --name-status "origin/{{ integration_tests_git_base_branch }}...HEAD"
-      git diff --name-only "origin/{{ integration_tests_git_base_branch }}...HEAD" \
-        | grep -Fxq "$BUNDLE_PATH/release-config.yaml"
-      echo "Validated bundle change for release pipeline: $BUNDLE_PATH"
-    fi
-
     git push origin "$PR_BRANCH"
   args:
     executable: /bin/bash

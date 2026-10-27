@@ -65,6 +65,9 @@ spec:
           --jq '.[] | [.status, .filename] | @tsv')
 
         declare -A DIRS
+        # Git LFS attributes are repository-wide. Keep .gitattributes in both
+        # sparse checkouts so Git LFS can identify tracked catalog pointers.
+        DIRS[".gitattributes"]=1
         DIRS["config.yaml"]=1
         NEED_ALL_CATALOGS=false
         HAS_OPERATOR_DIR=false
