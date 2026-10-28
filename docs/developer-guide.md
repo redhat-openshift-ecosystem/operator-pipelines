@@ -95,6 +95,9 @@ ansible-playbook -v \
 
 See [integration tests section in ci-cd.md](ci-cd.md#integration-tests)
 
+For the Git LFS checkout and FBC catalog push checks, see the [Git LFS flow
+testing guide](developer-guide-lfs-testing.md).
+
 #### Install tkn
 
 You should install the [tkn](https://docs.openshift.com/container-platform/4.7/cli_reference/tkn_cli/installing-tkn.html)
