@@ -10,8 +10,6 @@ PIPELINE_IMAGE ?= $(PIPELINE_IMAGE_REPO):$(TAG)
 # https://github.com/redhat-openshift-ecosystem/operator-pipelines/actions/workflows/integration-tests.yml
 OPERATOR_VERSION_RELEASE ?= 1-1
 OPERATOR_VERSION ?= 0.1.$(OPERATOR_VERSION_RELEASE)
-
-
 .PHONY: configure-stage-cluster
 configure-stage-cluster:
 	@echo "Configuring stage cluster..."

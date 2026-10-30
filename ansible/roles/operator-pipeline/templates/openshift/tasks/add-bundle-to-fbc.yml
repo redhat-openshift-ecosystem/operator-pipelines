@@ -109,7 +109,7 @@ spec:
               key: $(params.github_token_secret_key)
       script: |
         #! /usr/bin/env bash
-        set -xe
+        set -e
 
         if [[ "$(params.create_pull_request)" != "true" ]]; then
           echo "Skipping creating a pull request"
@@ -141,15 +141,52 @@ spec:
         export GIT_COMMITTER_EMAIL="exd-guild-isv+operators@redhat.com"
         export GIT_COMMITTER_NAME="rh-operator-bundle-bot"
 
-        # Add catalogs and templates changes to a gii and push to a new branch
+        # GitHub rejects blobs at or above 100 MB. Track only the oversized
+        # generated catalog paths, leaving normal catalog files unchanged.
+        if [[ -f .lfsconfig ]]; then
+          # Do not allow repository-controlled LFS endpoints. The pipeline
+          # supports the standard GitHub LFS endpoint only.
+          echo "Repositories with .lfsconfig are not supported by the pipeline" >&2
+          exit 1
+        fi
+
+        git lfs install --skip-repo
+        while IFS= read -r -d '' catalog_file; do
+          relative_path="${catalog_file#./}"
+          echo "Tracking oversized catalog with Git LFS: ${relative_path}"
+          git lfs track -- "${relative_path}"
+        done < <(find catalogs -type f -name 'catalog.yaml' -size +99999999c -print0)
+
+        # Add catalogs and templates changes to git and push to a new branch.
+        if [[ -f .gitattributes ]]; then
+          git add .gitattributes
+        fi
         git add operators/$(params.operator_name)/catalog-templates
-        git add catalogs/*
+        git add --sparse catalogs/*
+
+        lfs_files="$(git lfs ls-files --name-only)"
+        if [[ -n "${lfs_files}" ]]; then
+          echo "Git LFS files staged for push:"
+          printf '%s\n' "${lfs_files}"
+        fi
 
         FBC_UPDATE_BRANCH="add-$(params.operator_name)-$(params.operator_version)-to-fbc-$RANDOM"
 
         git checkout -b $FBC_UPDATE_BRANCH
         git commit --signoff -m "Add $(params.operator_name) $(params.operator_version) to FBC"
+        while IFS= read -r lfs_file; do
+          [[ -z "${lfs_file}" ]] && continue
+          pointer="$(git cat-file -p "HEAD:${lfs_file}")"
+          if [[ "${pointer}" != version\ https://git-lfs.github.com/spec/v1* ]]; then
+            echo "Expected an LFS pointer for ${lfs_file}" >&2
+            exit 1
+          fi
+          echo "Verified LFS pointer: ${lfs_file}"
+        done <<< "${lfs_files}"
+        echo "Uploading Git LFS objects for ${FBC_UPDATE_BRANCH}..."
+        git lfs push origin "$FBC_UPDATE_BRANCH"
         git push origin "$FBC_UPDATE_BRANCH"
+        echo "Git LFS objects and Git branch pushed successfully."
 
         cat > pr_comment.md << EOL
         ### 🚀 Automated PR: FBC Release Process
