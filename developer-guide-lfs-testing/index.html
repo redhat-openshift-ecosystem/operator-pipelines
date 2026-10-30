@@ -1,0 +1,1635 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../users/dynamic_checks/">
+      
+      
+        <link rel="next" href="../users/contributing-prerequisites/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Git LFS flow testing - Red Hat OpenShift Operators</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#local-git-lfs-integration-test" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Red Hat OpenShift Operators" class="md-header__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Red Hat OpenShift Operators
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Git LFS flow testing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/redhat-openshift-ecosystem/operator-pipelines" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    operator-pipelines
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../users/pipelines_overview/" class="md-tabs__link">
+          
+  
+  
+  Operator pipelines
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../users/static_checks/" class="md-tabs__link">
+          
+  
+  
+  Tests
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../users/contributing-prerequisites/" class="md-tabs__link">
+          
+  
+  
+  Operators
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../pipeline-admin-guide/" class="md-tabs__link">
+          
+  
+  
+  Admin
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Red Hat OpenShift Operators" class="md-nav__button md-logo" aria-label="Red Hat OpenShift Operators" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Red Hat OpenShift Operators
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/redhat-openshift-ecosystem/operator-pipelines" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    operator-pipelines
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator pipelines
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operator pipelines
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/pipelines_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/isv_pipelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ISV operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/contributing-via-pr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing via PR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/operator-ci-yaml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator CI yaml
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/community-operators-troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting for Community Operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/workflow_exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tests
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tests
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/static_checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Static checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/dynamic_checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dynamic checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git LFS flow testing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git LFS flow testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#before-you-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before you start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-build-the-test-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Build the test image
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-run-the-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Run the test
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Run the test">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#settings-that-make-this-an-lfs-push-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Settings that make this an LFS push test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-the-test-target-is-local-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important: the test target is local-only
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-inspect-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Inspect the results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-verify-the-downloaded-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Verify the downloaded object
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operators
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operators
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/contributing-prerequisites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Before submitting your Operator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/contributing-where-to/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Where to place operator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/best-practices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Best practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/fbc_onboarding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File based catalog onboarding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/fbc_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File based catalog workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/fbc_autorelease/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File based catalog auto-release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/packaging-required-criteria-ocp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OKD/OpenShift Catalogs criteria and options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admin
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Admin
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pipeline-admin-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admin guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../catalog_image_browser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalog image browser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fbc-catalog-promotion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FBC catalog promotion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../local-dev-environment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local development environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="local-git-lfs-integration-test">Local Git LFS integration test</h1>
+<p>This guide records the local integration test used for the Git LFS changes in
+<code>operator-pipelines</code>. The test verifies this flow:</p>
+<pre><code class="language-text">synthetic bundle image
+        -&gt; add-bundle-to-fbc renders a catalog larger than 100 MB
+        -&gt; commit-push-and-open-pr uploads the catalog with git lfs push
+        -&gt; git-clone downloads it with git lfs pull
+        -&gt; Ansible checks the file size and SHA-256
+</code></pre>
+<p>The test uses a synthetic bundle whose generated catalog is larger than
+100 MB. The temporary test configuration was added only to a local
+<code>operator-pipelines</code> checkout. No source or configuration changes were made to
+the external operator test repository (<code>operator-pipelines-test</code>). During a run,
+Ansible uses temporary branches in that repository for test input, then removes
+those branches during cleanup. Do not manually edit or commit test changes
+there.</p>
+<h2 id="before-you-start">Before you start</h2>
+<p>Requirements:</p>
+<ul>
+<li>A local <code>operator-pipelines</code> checkout containing the temporary LFS test
+  configuration.</li>
+<li>Git LFS, Podman, Ansible, <code>oc</code>, and <code>tkn</code>.</li>
+<li>Access to the stage OpenShift cluster.</li>
+<li>Permission to push the pipeline image and a large test image to a registry.</li>
+<li>GitHub access and the Ansible integration-test vault password.</li>
+</ul>
+<p>Confirm that <code>oc</code> is using the expected cluster and user:</p>
+<pre><code class="language-bash">oc whoami
+oc whoami --show-server
+oc auth can-i create namespace
+git lfs version
+podman version
+tkn version
+</code></pre>
+<p>Use a unique <code>OPERATOR_VERSION_RELEASE</code> value for every run. It is used in the
+OpenShift namespace, temporary branches, and pull requests, so reusing it can
+collide with another run.</p>
+<h2 id="1-build-the-test-image">1. Build the test image</h2>
+<p>The test image is a synthetic bundle with a large CSV description. OPM uses the
+description when it renders the catalog, so the generated catalog is larger
+than the 100 MB Git LFS threshold. The image is used for rendering only; it is
+not installed on the cluster.</p>
+<p>Run the following script from the <code>operator-pipelines</code> checkout. It creates the
+complete Podman build context; no files need to be added to the external
+operator test repository:</p>
+<details>
+<summary>Build-context script</summary>
+
+
+<pre><code class="language-bash">python3 - &lt;&lt;'PY'
+import json
+from pathlib import Path
+
+output = Path(&quot;/tmp/community-lfs-fixture&quot;)
+output.mkdir(parents=True, exist_ok=False)
+(output / &quot;manifests&quot;).mkdir()
+(output / &quot;metadata&quot;).mkdir()
+
+package = &quot;test-e2e-community-lfs&quot;
+annotations = {
+    &quot;operators.operatorframework.io.bundle.mediatype.v1&quot;: &quot;registry+v1&quot;,
+    &quot;operators.operatorframework.io.bundle.manifests.v1&quot;: &quot;manifests/&quot;,
+    &quot;operators.operatorframework.io.bundle.metadata.v1&quot;: &quot;metadata/&quot;,
+    &quot;operators.operatorframework.io.bundle.package.v1&quot;: package,
+    &quot;operators.operatorframework.io.bundle.channels.v1&quot;: &quot;stable&quot;,
+}
+(output / &quot;metadata/annotations.yaml&quot;).write_text(
+    json.dumps({&quot;annotations&quot;: annotations}), encoding=&quot;utf-8&quot;
+)
+(output / &quot;manifests/csv.yaml&quot;).write_text(
+    json.dumps({
+        &quot;apiVersion&quot;: &quot;operators.coreos.com/v1alpha1&quot;,
+        &quot;kind&quot;: &quot;ClusterServiceVersion&quot;,
+        &quot;metadata&quot;: {&quot;name&quot;: f&quot;{package}.v0.0.0&quot;},
+        &quot;spec&quot;: {
+            &quot;displayName&quot;: &quot;Synthetic LFS catalog fixture&quot;,
+            &quot;description&quot;: &quot;LFS render fixture. &quot; * 5_500_000,
+            &quot;version&quot;: &quot;0.0.0&quot;,
+            &quot;install&quot;: {&quot;strategy&quot;: &quot;deployment&quot;, &quot;spec&quot;: {&quot;deployments&quot;: []}},
+        },
+    }),
+    encoding=&quot;utf-8&quot;,
+)
+dockerfile = &quot;FROM scratch\n&quot;
+dockerfile += &quot;&quot;.join(
+    f&quot;LABEL {key}={json.dumps(value)}\n&quot; for key, value in annotations.items()
+)
+dockerfile += &quot;COPY manifests /manifests/\nCOPY metadata /metadata/\n&quot;
+(output / &quot;Dockerfile&quot;).write_text(dockerfile, encoding=&quot;utf-8&quot;)
+print(f&quot;Created {output}&quot;)
+PY
+</code></pre>
+
+
+</details>
+
+<p>Build and publish the test image using its digest:</p>
+<pre><code class="language-bash">export FIXTURE_IMAGE=quay.io/&lt;namespace&gt;/&lt;repository&gt;:lfs-fixture
+podman build -t &quot;$FIXTURE_IMAGE&quot; /tmp/community-lfs-fixture
+podman push --digestfile /tmp/community-lfs-fixture.digest &quot;$FIXTURE_IMAGE&quot;
+cat /tmp/community-lfs-fixture.digest
+</code></pre>
+<p>Use the resulting digest, not the mutable tag, in the test command. The script
+creates package <code>test-e2e-community-lfs</code> and bundle version <code>0.0.0</code>.</p>
+<h2 id="2-run-the-test">2. Run the test</h2>
+<p>Run this from the checkout that contains the temporary test configuration:</p>
+<pre><code class="language-bash">make build-and-test-community-fbc-lfs \
+  OPERATOR_VERSION_RELEASE=&lt;unique-release&gt; \
+  INTEGRATION_TESTS_FBC_LFS_FIXTURE_IMAGE=quay.io/&lt;namespace&gt;/&lt;repository&gt;@sha256:&lt;digest&gt;
+</code></pre>
+<p>This command builds and pushes the pipeline image, then runs the Ansible
+playbook with <code>test_type=community-fbc-lfs</code>.</p>
+<p>If the pipeline image is already available, use the same arguments with
+<code>make integration-test-community-fbc-lfs</code>:</p>
+<pre><code class="language-bash">make integration-test-community-fbc-lfs \
+  OPERATOR_VERSION_RELEASE=&lt;unique-release&gt; \
+  INTEGRATION_TESTS_FBC_LFS_FIXTURE_IMAGE=quay.io/&lt;namespace&gt;/&lt;repository&gt;@sha256:&lt;digest&gt; \
+  PIPELINE_IMAGE=quay.io/&lt;namespace&gt;/&lt;pipeline-image&gt;@sha256:&lt;digest&gt;
+</code></pre>
+<p>Ansible then:</p>
+<ol>
+<li>Clones the existing operator test repository.</li>
+<li>Creates temporary base and head branches.</li>
+<li>Adds the test <code>ci.yaml</code>, catalog template, bundle version, and
+   <code>release-config.yaml</code> to those temporary branches.</li>
+<li>Opens the bundle pull request.</li>
+<li>Lets the hosted and release pipelines generate the large catalog.</li>
+<li>Verifies the generated catalog's LFS pointer, size, and SHA-256 after
+   downloading it in a fresh checkout.</li>
+</ol>
+<p>You do not need to edit the operator test repository or create
+<code>catalogs/v4.20/test-e2e-community-lfs/catalog.yaml</code> manually. The
+<code>add-bundle-to-fbc</code> task must create that catalog; otherwise the LFS push path
+is not tested.</p>
+<p>Observed result: OPM validation passed, and a Git LFS upload/download round
+trip succeeded for a catalog of approximately 118 MB.</p>
+<h3 id="settings-that-make-this-an-lfs-push-test">Settings that make this an LFS push test</h3>
+<p>The temporary Ansible test type used these values:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>integration_tests_operator_package_name</code></td>
+<td><code>test-e2e-community-lfs</code></td>
+<td>Matches the test image and bundle PR.</td>
+</tr>
+<tr>
+<td><code>integration_tests_ci_pipeline_enabled</code></td>
+<td><code>false</code></td>
+<td>Sends the bundle directly to the hosted/release flow.</td>
+</tr>
+<tr>
+<td><code>integration_tests_fbc_catalog</code></td>
+<td><code>false</code></td>
+<td>The release pipeline must create the catalog.</td>
+</tr>
+<tr>
+<td><code>integration_tests_catalog_versions</code></td>
+<td><code>v4.20</code></td>
+<td>The catalog path is <code>catalogs/v4.20/...</code>.</td>
+</tr>
+<tr>
+<td><code>integration_tests_git_base_branch</code></td>
+<td><code>community</code></td>
+<td>Uses the community operator test setup.</td>
+</tr>
+</tbody>
+</table>
+<p>The temporary catalog template contains only the bundle image reference:</p>
+<pre><code class="language-yaml">schema: olm.template.basic
+entries:
+  - schema: olm.package
+    name: test-e2e-community-lfs
+    defaultChannel: stable
+  - schema: olm.channel
+    name: stable
+    package: test-e2e-community-lfs
+    entries:
+      - name: test-e2e-community-lfs.v0.0.0
+  - schema: olm.bundle
+    image: &lt;fixture-image-digest&gt;
+</code></pre>
+<p>Do not add a generated catalog to the test input. If the catalog already exists
+before <code>add-bundle-to-fbc</code> runs, this test no longer proves that the task can
+create and upload a large LFS-tracked catalog.</p>
+<h3 id="important-the-test-target-is-local-only">Important: the test target is local-only</h3>
+<p><code>build-and-test-community-fbc-lfs</code> was a temporary Make target in the local
+test configuration. It was removed from the regular integration-test setup
+because large-file runs made parallel tests slow and unstable. The production
+branch therefore does not contain this target.</p>
+<p>If the target is unavailable, do not modify the operator test repository to
+compensate. Use a local <code>operator-pipelines</code> checkout that contains the
+temporary test configuration, or add a new test configuration to
+<code>operator-pipelines</code> as a separate change.</p>
+<h2 id="3-inspect-the-results">3. Inspect the results</h2>
+<p>The test namespace follows this pattern:</p>
+<pre><code class="language-text">&lt;user&gt;-comm-fbc-lfs-test-&lt;unique-release&gt;
+</code></pre>
+<p>List the PipelineRuns and inspect their logs:</p>
+<pre><code class="language-bash">NAMESPACE=&lt;user&gt;-comm-fbc-lfs-test-&lt;unique-release&gt;
+oc get pipelineruns -n &quot;$NAMESPACE&quot;
+tkn pipelinerun logs &lt;pipelinerun-name&gt; -n &quot;$NAMESPACE&quot; --timestamps
+</code></pre>
+<p>For the push path, look for:</p>
+<pre><code class="language-text">Tracking oversized catalog with Git LFS
+Git LFS files staged for push
+Verified LFS pointer
+Uploading Git LFS objects
+Git LFS objects and Git branch pushed successfully.
+</code></pre>
+<p>For the pull path, look for:</p>
+<pre><code class="language-text">Git LFS files detected
+Downloading Git LFS files...
+Git LFS checkout completed.
+</code></pre>
+<h2 id="4-verify-the-downloaded-object">4. Verify the downloaded object</h2>
+<p>The Ansible test performs this check. To repeat it manually, use the generated
+catalog branch:</p>
+<pre><code class="language-bash">set -euo pipefail
+
+# Clone the branch without downloading the large LFS file yet.
+export GIT_LFS_SKIP_SMUDGE=1
+git clone --single-branch --branch &lt;generated-catalog-branch&gt; \
+  &lt;test-repository-url&gt; /tmp/lfs-verification
+cd /tmp/lfs-verification
+
+CATALOG=catalogs/v4.20/test-e2e-community-lfs/catalog.yaml
+test &quot;$(git check-attr filter -- &quot;$CATALOG&quot;)&quot; = &quot;$CATALOG: filter: lfs&quot;
+git show &quot;HEAD:$CATALOG&quot; &gt; /tmp/catalog.pointer
+git lfs pointer --check --file=/tmp/catalog.pointer
+
+EXPECTED_SIZE=$(sed -n 's/^size //p' /tmp/catalog.pointer)
+EXPECTED_SHA=$(sed -n 's/^oid sha256://p' /tmp/catalog.pointer)
+test &quot;$EXPECTED_SIZE&quot; -ge 100000000
+
+unset GIT_LFS_SKIP_SMUDGE
+git lfs pull --include=&quot;$CATALOG&quot; --exclude=&quot;&quot;
+test &quot;$(wc -c &lt; &quot;$CATALOG&quot;)&quot; -eq &quot;$EXPECTED_SIZE&quot;
+printf '%s  %s\n' &quot;$EXPECTED_SHA&quot; &quot;$CATALOG&quot; | sha256sum --check
+</code></pre>
+<p>The test passes when the pointer is valid, the catalog is at least 100 MB, and
+the downloaded file has the size and SHA-256 recorded in the pointer.</p>
+<h2 id="5-cleanup">5. Cleanup</h2>
+<p>The test setup waits for the generated catalog pull request to be merged and for
+the release pipeline triggered by that merge to succeed. Only then does it
+delete the generated catalog branch and the temporary test branches.</p>
+<p>If a pipeline fails, branches are preserved for troubleshooting. Save the logs
+first, then remove the temporary branches manually when investigation is
+complete. Deleting a branch does not necessarily reclaim remote Git LFS
+storage, so use unique test values for later runs.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>

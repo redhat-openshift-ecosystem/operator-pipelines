@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../dynamic_checks/">
+        <link rel="prev" href="../../developer-guide-lfs-testing/">
       
       
         <link rel="next" href="../contributing-where-to/">
@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
       
 
@@ -691,6 +691,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide-lfs-testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git LFS flow testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -826,6 +854,17 @@
     <span class="md-ellipsis">
       
         A primer to Openshift Community Operators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-git-lfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install Git LFS
       
     </span>
   </a>
@@ -1226,6 +1265,19 @@
 </blockquote>
 <h2 id="a-primer-to-openshift-community-operators">A primer to Openshift Community Operators</h2>
 <p>This project collects Community Operators that work with OpenShift to be displayed in the embedded OperatorHub. If you are new to Operators, start <a href="https://operatorframework.io/">here</a>.</p>
+<h2 id="install-git-lfs">Install Git LFS</h2>
+<p>Some FBC repositories contain generated <code>catalog.yaml</code> files managed with
+<a href="https://git-lfs.com/">Git LFS</a>. Install Git LFS before cloning or working with
+these repositories:</p>
+<pre><code class="language-bash">git lfs install
+</code></pre>
+<p>After cloning a repository, download the tracked files with:</p>
+<pre><code class="language-bash">git lfs pull
+</code></pre>
+<p>Without Git LFS, a tracked catalog file may appear as a small pointer file
+instead of its YAML contents. Do not remove or manually edit <code>.gitattributes</code>;
+the file defines which generated catalog files use Git LFS and is allowed in
+operator pull requests.</p>
 <h2 id="sign-your-work">Sign Your Work</h2>
 <p>The contribution process works off standard git <em>Pull Requests</em>. Every PR needs to be signed. The sign-off is a simple line at the end of the explanation for a commit. Your signature certifies that you wrote the patch or otherwise have the right to contribute the material. The rules are pretty simple if you can certify the below (from <a href="https://developercertificate.org/">developercertificate.org</a>):</p>
 <pre><code>Developer Certificate of Origin
@@ -1329,10 +1381,10 @@ Date:   Mon Oct 21 12:23:17 2019 -0800
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
     
   </body>

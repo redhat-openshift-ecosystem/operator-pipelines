@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
       
 
@@ -691,6 +691,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide-lfs-testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git LFS flow testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -983,6 +1011,17 @@
   
     <nav class="md-nav" aria-label="Generate catalogs using templates">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#git-lfs-for-large-catalogs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Git LFS for large catalogs
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#adding-new-bundle-to-catalog" class="md-nav__link">
@@ -1411,6 +1450,16 @@ catalogs
         └── catalog.yaml
 
 </code></pre>
+<h3 id="git-lfs-for-large-catalogs">Git LFS for large catalogs</h3>
+<p>Generated <code>catalog.yaml</code> files at or above GitHub's 100 MB blob limit are
+automatically tracked with Git LFS when the automated release pipeline creates
+a catalog pull request. Contributors must have Git LFS installed locally so
+these files are checked out as YAML rather than pointer files. See <a href="../contributing-prerequisites/#install-git-lfs">Install Git
+LFS</a>.</p>
+<p>The pipeline downloads Git LFS objects during repository checkout. The
+repository must use the standard GitHub LFS configuration; repositories with a
+<code>.lfsconfig</code> file are not supported because the pipeline does not allow a
+repository to redirect LFS downloads to an arbitrary endpoint.</p>
 <h3 id="adding-new-bundle-to-catalog">Adding new bundle to Catalog</h3>
 <p>A new bundle can be added automatically to your templates and catalogs if you use
 the automated release feature. The process is described in the
@@ -1549,10 +1598,10 @@ from templates and submit the resulting catalog using PR workflow.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "toc.integrate"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
     
   </body>
