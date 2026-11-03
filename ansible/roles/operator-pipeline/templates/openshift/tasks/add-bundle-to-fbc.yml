@@ -159,9 +159,9 @@ spec:
 
         # Add catalogs and templates changes to git and push to a new branch.
         if [[ -f .gitattributes ]]; then
-          git add .gitattributes
+          git add --sparse .gitattributes
         fi
-        git add operators/$(params.operator_name)/catalog-templates
+        git add --sparse operators/$(params.operator_name)/catalog-templates
         git add --sparse catalogs/*
 
         lfs_files="$(git lfs ls-files --name-only)"
