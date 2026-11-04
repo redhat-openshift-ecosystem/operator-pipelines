@@ -84,6 +84,7 @@ def add_session_retries(
     total: int = 10,
     backoff_factor: float = 1,
     status_forcelist: Optional[Tuple[int, ...]] = (408, 500, 502, 503, 504),
+    allowed_methods: Optional[Tuple[str, ...]] = None,
 ) -> None:
     """
     Adds retries to a requests HTTP/HTTPS session.
@@ -96,11 +97,17 @@ def add_session_retries(
         total (int): See urllib3 docs
         backoff_factor (int): See urllib3 docs
         status_forcelist (tuple[int]|None): See urllib3 docs
+        allowed_methods (tuple[str]|None): HTTP methods to retry. Defaults to urllib3's
+            default (GET, HEAD, PUT, DELETE, OPTIONS, TRACE). Pass a custom tuple to
+            enable retries for POST or PATCH.
     """
     retries = Retry(
         total=total,
         backoff_factor=backoff_factor,
         status_forcelist=status_forcelist,
+        allowed_methods=(
+            allowed_methods if allowed_methods else Retry.DEFAULT_ALLOWED_METHODS
+        ),
         # Don't raise a MaxRetryError for codes in status_forcelist.
         # This allows for more graceful exception handling using
         # Response.raise_for_status.
