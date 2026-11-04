@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 from typing import Any, Dict, Optional, Set
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
 from operatorcert.operator_repo import Repo
@@ -119,7 +119,11 @@ def test_check_osdk_bundle_validate_operator_framework(mock_sdk: MagicMock) -> N
 def test_check_osdk_bundle_validate_operatorhub(mock_sdk: MagicMock) -> None:
     bundle = MagicMock()
     list(check_osdk_bundle_validate_operatorhub(bundle))
-    mock_sdk.assert_called_once_with(bundle, "name=operatorhub")
+    assert mock_sdk.call_args_list == [
+        call(bundle, "name=operatorhubv2"),
+        call(bundle, "name=capabilities"),
+        call(bundle, "name=categories"),
+    ]
 
 
 def _make_nested_dict(path: str, value: Any) -> Dict[str, Any]:

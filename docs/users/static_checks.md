@@ -46,7 +46,7 @@ The test is only executed for operators submitted inside the [Red Hat marketplac
 ## Community tests
 
 #### check_osdk_bundle_validate_operatorhub
-The test is based on `operator-sdk bundle validate` command with `name=operatorhub` test suite [(link)](https://sdk.operatorframework.io/docs/cli/operator-sdk_bundle_validate/#operator-sdk-bundle-validate).
+The test runs `operator-sdk bundle validate` with the `name=operatorhubv2`, `name=capabilities`, and `name=categories` validators [(reference)](https://sdk.operatorframework.io/docs/cli/operator-sdk_bundle_validate/#operator-sdk-bundle-validate).
 
 #### check_osdk_bundle_validate_operator_framework
 The test is based on `operator-sdk bundle validate` command with `suite=operatorframework` test suite [(link)](https://sdk.operatorframework.io/docs/cli/operator-sdk_bundle_validate/#operator-sdk-bundle-validate).
