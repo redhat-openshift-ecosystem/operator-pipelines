@@ -1,4 +1,24 @@
 ---
+- name: Remove stale GitHub webhooks
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_python_interpreter }}"
+      - -m
+      - operatorcert.entrypoints.remove_stale_github_webhooks
+      - --repository
+      - "{{ item }}"
+    chdir: "{{ playbook_dir }}/../.."
+  environment:
+    GITHUB_TOKEN: "{{ operator_pipeline_github_webhook_admin_personal_access_token }}"
+  loop: "{{ operator_pipeline_github_webhook_repos }}"
+  when:
+    - github_webhook_state == 'present'
+    - operator_pipeline_github_webhook_repos is defined
+  tags:
+    - webhooks
+  no_log: true
+  changed_when: true
+
 - name: Configure GitHub webhooks
   loop: "{{ operator_pipeline_github_webhook_repos }}"
   when: operator_pipeline_github_webhook_repos is defined
