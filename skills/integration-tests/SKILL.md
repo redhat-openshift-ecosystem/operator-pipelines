@@ -25,11 +25,6 @@ Integration tests create a PR in repository https://github.com/redhat-openshift-
 make build-and-deploy-playground
 ```
 
-### GitHub webhook cleanup
-
-Before an integration-test webhook is configured in the Github repository, a task cleans up all existing
-webhooks older than 7 days. This prevents stale webhooks from failed test runs accumulating.
-
 ### Running Tests
 
 Before running each test:
