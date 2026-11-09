@@ -98,6 +98,14 @@ See [integration tests section in ci-cd.md](ci-cd.md#integration-tests)
 For the Git LFS checkout and FBC catalog push checks, see the [Git LFS flow
 testing guide](developer-guide-lfs-testing.md).
 
+##### GitHub webhook cleanup
+
+Before an integration-test webhook is configured in the Github repository, a task cleans up all existing
+webhooks older than 7 days. This prevents stale webhooks from failed test runs accumulating.
+
+For this to work, local integration test runs may require additional Python dependencies, such as `semantic-version`,
+in the environment used by Ansible.
+
 #### Install tkn
 
 You should install the [tkn](https://docs.openshift.com/container-platform/4.7/cli_reference/tkn_cli/installing-tkn.html)
