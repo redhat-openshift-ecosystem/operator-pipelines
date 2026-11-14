@@ -30,6 +30,7 @@ operator_release_pipeline_registry_auth_push_path: ../../vaults/{{ env }}/regist
 operator_release_pipeline_registry_auth_serve_path: ../../vaults/{{ env }}/registry-auth/release-pipeline-serve.json
 
 operator_pipeline_kubeconfig_prow_local_path: ../../vaults/common/kubeconfig-prow
+signing_cluster_kubeconfig_local_path: ../../vaults/common/signing-preprod.kubeconfig
 operator_pipeline_github_bot_token: ../../vaults/common/github-bot-token.txt
 
 operator_pipeline_hydra_sso_token_url: https://auth.stage.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token
