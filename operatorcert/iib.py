@@ -29,6 +29,8 @@ def get_session(kerberos_auth: bool = True) -> Any:
         session,
         # The IIB sometime returns 401/403 even with valid kerberos ticket
         status_forcelist=(401, 403, 408, 500, 502, 503, 504),
+        # Enable POST retries for IIB operations since the API is idempotent
+        allowed_methods=("GET", "POST"),
     )
 
     if kerberos_auth:
