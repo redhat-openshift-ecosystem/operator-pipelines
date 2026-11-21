@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock, call
 from typing import Dict, Any
 
 import pytest
+import requests
 import yaml
 from dateutil.parser import isoparse
 
@@ -68,6 +69,26 @@ def test_get_supported_indices(mock_get: MagicMock) -> None:
         "https://foo.bar", "4.6-4.8", "certified-operators"
     )
     assert result == [{"foo": "bar"}]
+
+
+@patch("operatorcert.pyxis.get")
+def test_get_supported_indices_error(
+    mock_get: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    mock_rsp = MagicMock()
+    mock_rsp.status_code = 400
+    mock_rsp.text = '{"detail": "Unsupported version(s): (4.20,4.21)"}'
+    mock_rsp.raise_for_status.side_effect = requests.HTTPError(response=mock_rsp)
+    mock_get.return_value = mock_rsp
+
+    with pytest.raises(requests.HTTPError):
+        operatorcert.get_supported_indices(
+            "https://foo.bar", "v4.20,v4.21", "certified-operators"
+        )
+
+    assert "'v4.20,v4.21'" in caplog.text
+    assert "400" in caplog.text
+    assert "Unsupported version(s): (4.20,4.21)" in caplog.text
 
 
 @patch("operatorcert.enrich_indices_with_repo_context")
