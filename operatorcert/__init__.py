@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Tuple, Optional
 from urllib.parse import urljoin
 
+import requests
 import yaml
 from dateutil.parser import isoparse
 from operatorcert import pyxis
@@ -78,7 +79,18 @@ def get_supported_indices(
         params["ocp_versions_range"] = ocp_versions_range
 
     rsp = pyxis.get(url, params=params, auth_required=False)
-    rsp.raise_for_status()
+    try:
+        rsp.raise_for_status()
+    except requests.HTTPError:
+        LOGGER.error(
+            "Failed to get supported indices for OCP versions range %r "
+            "(organization %r): %s - %s",
+            ocp_versions_range,
+            organization,
+            rsp.status_code,
+            rsp.text,
+        )
+        raise
     return rsp.json().get("data") or []
 
 
