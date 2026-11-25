@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora:44
+FROM quay.io/fedora/fedora:45
 
 LABEL description="Cli tools for operator certification pipeline"
 LABEL summary="This image contains tools required for operator bundle certification pipeline."
